@@ -4,8 +4,11 @@ from pydantic import ValidationError
 from app.config import Settings
 
 
-def test_settings_defaults() -> None:
+def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("APP_ENV", raising=False)
+    monkeypatch.delenv("DEBUG", raising=False)
     settings = Settings(
+        _env_file=None,
         DATABASE_URL="postgresql+asyncpg://user:pass@host/db",
         JWT_SECRET="secret",
         JWT_REFRESH_SECRET="refresh",
@@ -30,7 +33,7 @@ def test_settings_require_database_and_jwt_secrets(
     monkeypatch.delenv("JWT_REFRESH_SECRET", raising=False)
 
     with pytest.raises(ValidationError):
-        Settings()
+        Settings(_env_file=None)
 
 
 def test_settings_read_from_environment(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -39,6 +42,6 @@ def test_settings_read_from_environment(monkeypatch: pytest.MonkeyPatch) -> None
     monkeypatch.setenv("JWT_SECRET", "env-secret")
     monkeypatch.setenv("JWT_REFRESH_SECRET", "env-refresh")
 
-    settings = Settings()
+    settings = Settings(_env_file=None)
 
     assert settings.APP_NAME == "Custom API"

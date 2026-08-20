@@ -1,4 +1,4 @@
-from fastapi.testclient import TestClient
+from httpx import AsyncClient
 
 from app.main import create_app
 
@@ -12,15 +12,15 @@ def test_create_app_registers_docs() -> None:
     assert app.redoc_url == "/redoc"
 
 
-def test_openapi_schema_exposes_health_endpoint(client: TestClient) -> None:
-    response = client.get("/openapi.json")
+async def test_openapi_schema_exposes_health_endpoint(client: AsyncClient) -> None:
+    response = await client.get("/openapi.json")
 
     assert response.status_code == 200
     assert "/api/v1/health" in response.json()["paths"]
 
 
-def test_docs_page_is_served(client: TestClient) -> None:
-    response = client.get("/docs")
+async def test_docs_page_is_served(client: AsyncClient) -> None:
+    response = await client.get("/docs")
 
     assert response.status_code == 200
     assert "Swagger UI" in response.text
