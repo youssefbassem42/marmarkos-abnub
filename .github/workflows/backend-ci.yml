@@ -14,6 +14,21 @@ jobs:
       run:
         working-directory: backend
 
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: marmarkos
+          POSTGRES_PASSWORD: marmarkos
+          POSTGRES_DB: marmarkos_test
+        ports:
+          - 55432:5432
+        options: >-
+          --health-cmd "pg_isready -U marmarkos -d marmarkos_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4

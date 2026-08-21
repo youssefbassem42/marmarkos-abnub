@@ -78,7 +78,8 @@ app/
 ### 5.3 attendance
 - `service_sessions`: name, `date` (indexed), start/end time, `service_type` (SUNDAY_SERVICE/LITURGY/BIBLE_STUDY/YOUTH/PRAYER_MEETING), `is_active`.
 - `attendance_records`: `user_id` + `session_id` with **unique constraint `uq_attendance_user_session`** (no double counting), denormalized indexed `attendance_date` powering analytics, `scanned_at`, `scanned_by`, `method` (QR_SCAN/MANUAL), `notes`.
-- Analytics: `count_today`, `count_this_week`, `count_this_month`, `count_between`, `attendance_percentage_between`, `daily_trend`, `absent_users_since` (ACTIVE users with no attendance since a cutoff).
+- `weekly_attendance_records`: QR check-ins for the weekly Thursday meeting — `user_id`, `meeting_date` (unique together), `check_in_at`, `status`, `recorded_by`; unique index `uq_weekly_attendance_user_meeting` (one record per member per meeting).
+- Analytics: `count_current_meeting`, `count_for_meeting`, `count_for_meetings`, `count_month_meetings`, `count_between`, `attendance_percentage_between`, `meeting_trend`, `absent_users_since` (ACTIVE users with no attendance since a cutoff).
 
 ### 5.4 blog
 - `blog_posts`: title, unique `slug`, excerpt, content, cover_image, `status` (DRAFT/PUBLISHED/ARCHIVED), `published_at`; index `(status, published_at)` for feed queries.
@@ -209,7 +210,7 @@ DATABASE_URL=postgresql+asyncpg://marmarkos:marmarkos@localhost:55432/marmarkos_
 
 ## 17. Performance Considerations
 
-- Composite + partial indexes cover the hot paths (feed listing, unread counts, daily/weekly/monthly attendance, active-QR lookup, outbox dispatch).
+- Composite + partial indexes cover the hot paths (feed listing, unread counts, per-meeting/monthly attendance, active-QR lookup, outbox dispatch).
 - `FOR UPDATE SKIP LOCKED` outbox claims scale horizontally.
 - JSONB payloads avoid schema churn for notifications/audit/outbox.
 
@@ -240,7 +241,7 @@ DATABASE_URL=postgresql+asyncpg://marmarkos:marmarkos@localhost:55432/marmarkos_
 3. **Soft ban over delete:** Users are never hard-deleted in the primary workflow; deletion cascades exist only as a safety net.
 4. **One active QR token per user:** Enforced by a partial unique index; rotation is the only supported flow.
 5. **Attendance uniqueness per session:** A member cannot be marked present twice for the same service; multiple services on the same day are distinct events.
-6. **`attendance_date` denormalized** onto records for cheap analytics; it must be kept in sync with `service_sessions.date` at write time.
+6. **`attendance_date` denormalized** onto records for cheap analytics; it must be kept in sync with `service_sessions.date` at write time. These dates are meeting dates: the weekly meeting is held on Thursday, and `weekly_attendance_records.meeting_date` always stores the Thursday of its meeting week.
 7. **Comments are soft-moderated:** Status lifecycle (VISIBLE→HIDDEN/DELETED) instead of physical deletion.
 8. **Categories, not tags:** Blog taxonomy uses a fixed set of categories for MVP simplicity.
 9. **Notifications:** `user_id = NULL` means broadcast; delivery for both broadcast and per-user rows is resolved by `list_for_user`.
@@ -249,7 +250,7 @@ DATABASE_URL=postgresql+asyncpg://marmarkos:marmarkos@localhost:55432/marmarkos_
 12. **Media stored off-platform:** Only metadata + URLs; no BLOB columns.
 13. **`audit_logs` and `user_ban_records` are append-only:** Records are never updated or deleted.
 14. **Refresh token rotation:** A refresh replaces the token (old one revoked); logout revokes all.
-15. **Timezone handling:** All timestamps UTC `timestamptz`; date arithmetic (`count_today`, week/month windows) uses the application-provided date.
+15. **Timezone handling:** All timestamps UTC `timestamptz`; date arithmetic (`count_current_meeting`, meeting/month windows) uses the application-provided date.
 16. **Outbox at-least-once:** Consumers must be idempotent; `mark_processed` is safe to call repeatedly.
 17. **Enum values are stored as VARCHAR:** `native_enum=False` keeps schema identical across Neon and local Postgres and simplifies ALTERs.
 18. **Test DB isolation:** Tests run against the disposable Docker Postgres only; Neon is never modified by the test suite.

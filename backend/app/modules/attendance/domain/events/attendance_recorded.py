@@ -14,6 +14,6 @@ class AttendanceRecorded(DomainEvent):
     aggregate_type: ClassVar[str] = "attendance_record"
 
     session_id: uuid.UUID
-    attendance_date: date
+    meeting_date: date
     method: str
     scanned_by: uuid.UUID | None = None

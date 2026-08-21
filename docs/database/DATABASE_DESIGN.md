@@ -38,7 +38,8 @@ so tests, Alembic autogenerate, and `create_all` always see the same schema.
 | Table | Purpose |
 |---|---|
 | `service_sessions` | One row per service (name, date, start/end time, `service_type` SUNDAY_SERVICE / LITURGY / BIBLE_STUDY / YOUTH / PRAYER_MEETING, `is_active`) |
-| `attendance_records` | `user_id`, `session_id`, **denormalized** `attendance_date` (indexed, powers daily/weekly/monthly analytics), `scanned_at`, `scanned_by`, `method` (QR_SCAN / MANUAL), notes. Unique `(user_id, session_id)` → no double-counting |
+| `attendance_records` | `user_id`, `session_id`, **denormalized** `attendance_date` (indexed, powers per-meeting and monthly analytics (weekly Thursday meeting)), `scanned_at`, `scanned_by`, `method` (QR_SCAN / MANUAL), notes. Unique `(user_id, session_id)` → no double-counting |
+| `weekly_attendance_records` | QR check-ins for the weekly Thursday meeting: `user_id`, **`meeting_date`** (the Thursday of the meeting week), `check_in_at`, `status` (PRESENT/ABSENT/EXCUSED), `recorded_by`. Unique `(user_id, meeting_date)` → one record per member per meeting |
 
 ### blog (`blog` module)
 | Table | Purpose |
@@ -92,6 +93,7 @@ erDiagram
     users ||--o{ user_ban_records : "banned_by / lifted_by"
     users ||--o{ refresh_tokens : "user_id"
     users ||--o{ attendance_records : "attended"
+    users ||--o{ weekly_attendance_records : "attended meeting"
     users ||--o{ blog_posts : "author"
     users ||--o{ blog_post_likes : "liked"
     users ||--o{ comments : "author"
@@ -161,6 +163,14 @@ erDiagram
         timestamptz scanned_at
         uuid scanned_by FK
         varchar method "QR_SCAN/MANUAL"
+    }
+    weekly_attendance_records {
+        uuid id PK
+        uuid user_id FK "unique(user_id, meeting_date)"
+        date meeting_date "Thursday of the meeting week, indexed"
+        timestamptz check_in_at
+        varchar status "PRESENT/ABSENT/EXCUSED, indexed"
+        uuid recorded_by FK
     }
     blog_posts {
         uuid id PK

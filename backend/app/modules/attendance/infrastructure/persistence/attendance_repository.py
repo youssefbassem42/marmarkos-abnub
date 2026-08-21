@@ -1,15 +1,25 @@
 import uuid
-from datetime import date, timedelta
+from datetime import date
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
+from app.modules.attendance.domain.meeting_schedule import (
+    current_meeting_date,
+    meeting_dates_between,
+    meetings_in_month,
+)
 from app.modules.attendance.infrastructure.persistence.models import AttendanceRecord
 
 
 class AttendanceRepository:
-    """Attendance records + analytics derived from plain SQL queries."""
+    """Attendance records + analytics derived from plain SQL queries.
+
+    The service meets once a week (Thursday), so analytics aggregate per
+    *meeting* and per *month of meetings* (4, sometimes 5) instead of per
+    calendar day.
+    """
 
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
@@ -49,16 +59,35 @@ class AttendanceRepository:
         )
         return int(result.scalar_one())
 
-    async def count_today(self) -> int:
-        return await self.count_between(date.today(), date.today())
+    async def count_for_meeting(self, meeting_date: date) -> int:
+        """Records attached to a single meeting date."""
+        return await self.count_between(meeting_date, meeting_date)
 
-    async def count_this_week(self, today: date) -> int:
-        monday = today - timedelta(days=today.weekday())
-        return await self.count_between(monday, today)
+    async def count_current_meeting(self, today: date | None = None) -> int:
+        """Records for the meeting of the current meeting week."""
+        return await self.count_for_meeting(current_meeting_date(today))
 
-    async def count_this_month(self, today: date) -> int:
-        first = today.replace(day=1)
-        return await self.count_between(first, today)
+    async def count_for_meetings(self, meetings: list[date]) -> int:
+        """Records across an explicit set of meeting dates."""
+        if not meetings:
+            return 0
+        result = await self._session.execute(
+            select(func.count(AttendanceRecord.id)).where(
+                AttendanceRecord.attendance_date.in_(meetings)
+            )
+        )
+        return int(result.scalar_one())
+
+    async def count_month_meetings(self, today: date | None = None) -> int:
+        """Records across every meeting of ``today``'s month held so far."""
+        reference = today or date.today()
+        open_meeting = current_meeting_date(reference)
+        meetings = [
+            meeting
+            for meeting in meetings_in_month(reference.year, reference.month)
+            if meeting <= open_meeting
+        ]
+        return await self.count_for_meetings(meetings)
 
     async def count_total(self) -> int:
         result = await self._session.execute(select(func.count(AttendanceRecord.id)))
@@ -99,7 +128,12 @@ class AttendanceRepository:
         )
         return list(result.scalars().all())
 
-    async def daily_trend(self, start: date, end: date) -> list[tuple[date, int]]:
+    async def meeting_trend(self, start: date, end: date) -> list[tuple[date, int]]:
+        """Attendance per meeting between ``start`` and ``end``.
+
+        Every meeting in the range is reported, including meetings with
+        no attendance (count ``0``), so charts keep a stable x-axis.
+        """
         result = await self._session.execute(
             select(AttendanceRecord.attendance_date, func.count(AttendanceRecord.id))
             .where(
@@ -108,4 +142,5 @@ class AttendanceRepository:
             .group_by(AttendanceRecord.attendance_date)
             .order_by(AttendanceRecord.attendance_date)
         )
-        return [(row[0], int(row[1])) for row in result.all()]
+        counts = {row[0]: int(row[1]) for row in result.all()}
+        return [(meeting, counts.get(meeting, 0)) for meeting in meeting_dates_between(start, end)]

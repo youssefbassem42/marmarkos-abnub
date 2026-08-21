@@ -10,6 +10,7 @@ from app.modules.attendance.domain.enums.attendance import (
     AttendanceMethod,
     ServiceType,
 )
+from app.modules.attendance.domain.meeting_schedule import current_meeting_date
 from app.modules.attendance.infrastructure.persistence.models import (
     AttendanceRecord,
     ServiceSession,
@@ -22,13 +23,13 @@ from tests.integration.database.conftest import make_user
 async def make_session(
     uow: UnitOfWork,
     *,
-    name: str = "Sunday Service",
+    name: str = "Weekly Youth Meeting",
     date_: date | None = None,
 ) -> ServiceSession:
     session = ServiceSession(
         name=name,
-        date=date_ or date.today(),
-        service_type=ServiceType.SUNDAY_SERVICE,
+        date=date_ or current_meeting_date(),
+        service_type=ServiceType.YOUTH_MEETING,
         is_active=True,
     )
     await uow.service_sessions.add(session)
@@ -80,57 +81,58 @@ async def test_duplicate_attendance_prevented(uow: UnitOfWork) -> None:
             await second.commit()
 
 
-async def test_multiple_sessions_same_day_allowed(uow: UnitOfWork) -> None:
-    """Different sessions on the same day are distinct attendance events."""
+async def test_multiple_sessions_same_meeting_date_allowed(uow: UnitOfWork) -> None:
+    """Different sessions on the same meeting date are distinct attendance events."""
     member = await make_user(uow, "multi@example.com")
-    today = date.today()
-    morning = await make_session(uow, name="Morning Service", date_=today)
-    evening = await make_session(uow, name="Evening Service", date_=today)
+    meeting = current_meeting_date()
+    morning = await make_session(uow, name="Morning Service", date_=meeting)
+    evening = await make_session(uow, name="Evening Service", date_=meeting)
     await uow.commit()
 
     await uow.attendance.add(
-        AttendanceRecord(user_id=member.id, session_id=morning.id, attendance_date=today)
+        AttendanceRecord(user_id=member.id, session_id=morning.id, attendance_date=meeting)
     )
     await uow.attendance.add(
-        AttendanceRecord(user_id=member.id, session_id=evening.id, attendance_date=today)
+        AttendanceRecord(user_id=member.id, session_id=evening.id, attendance_date=meeting)
     )
     await uow.commit()
 
-    assert await uow.attendance.count_today() == 2
+    assert await uow.attendance.count_current_meeting() == 2
 
 
 async def test_attendance_counts_and_percentage(uow: UnitOfWork) -> None:
-    today = date.today()
+    meeting = current_meeting_date()
     active_member = await make_user(uow, "stats-active@example.com")
     await make_user(uow, "stats-other@example.com")
-    session = await make_session(uow, date_=today)
+    session = await make_session(uow, date_=meeting)
     await uow.commit()
 
     await uow.attendance.add(
-        AttendanceRecord(user_id=active_member.id, session_id=session.id, attendance_date=today)
+        AttendanceRecord(user_id=active_member.id, session_id=session.id, attendance_date=meeting)
     )
     await uow.commit()
 
     assert await uow.attendance.count_total() == 1
-    assert await uow.attendance.count_today() == 1
-    assert await uow.attendance.count_this_week(today) >= 1
-    assert await uow.attendance.count_this_month(today) >= 1
-    assert await uow.attendance.count_between(today, today) == 1
+    assert await uow.attendance.count_current_meeting() == 1
+    assert await uow.attendance.count_for_meeting(meeting) == 1
+    assert await uow.attendance.count_for_meetings([meeting]) == 1
+    assert await uow.attendance.count_month_meetings(meeting) >= 1
+    assert await uow.attendance.count_between(meeting, meeting) == 1
 
-    percentage = await uow.attendance.attendance_percentage_between(today, today)
+    percentage = await uow.attendance.attendance_percentage_between(meeting, meeting)
     assert percentage is not None
     assert percentage == 50.0  # 1 of 2 active users attended
 
-    trend = await uow.attendance.daily_trend(today, today)
-    assert trend == [(today, 1)]
+    trend = await uow.attendance.meeting_trend(meeting, meeting)
+    assert trend == [(meeting, 1)]
 
 
 async def test_absent_users_detection(uow: UnitOfWork) -> None:
-    today = date.today()
+    meeting = current_meeting_date()
     present = await make_user(uow, "present@example.com")
     absent = await make_user(uow, "absent@example.com")
     inactive = await make_user(uow, "inactive@example.com")
-    session = await make_session(uow, date_=today)
+    session = await make_session(uow, date_=meeting)
     await uow.commit()
 
     async with UnitOfWork.create(async_session_factory) as second:
@@ -140,11 +142,11 @@ async def test_absent_users_detection(uow: UnitOfWork) -> None:
         await second.commit()
 
     await uow.attendance.add(
-        AttendanceRecord(user_id=present.id, session_id=session.id, attendance_date=today)
+        AttendanceRecord(user_id=present.id, session_id=session.id, attendance_date=meeting)
     )
     await uow.commit()
 
-    cutoff = today - timedelta(weeks=1)
+    cutoff = meeting - timedelta(weeks=1)
     absent_ids = await uow.attendance.absent_users_since(cutoff)
     assert present.id not in absent_ids
     assert absent.id in absent_ids

@@ -31,3 +31,9 @@ class ConflictError(AppError):
     status_code = 409
     code = "conflict"
     message = "Resource already exists"
+
+
+class ValidationError(AppError):
+    status_code = 422
+    code = "validation_error"
+    message = "Request could not be processed"

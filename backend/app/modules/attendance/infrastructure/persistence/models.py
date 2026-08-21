@@ -1,8 +1,10 @@
 """SQLAlchemy ORM models for the attendance module.
 
 Attendance is immutable: a scan record is never edited after creation.
-``attendance_date`` is a denormalized copy of the session date so weekly
-and monthly analytics queries never need to join ``service_sessions``.
+``attendance_date`` is a denormalized copy of the session date so
+per-meeting and monthly analytics queries never need to join
+``service_sessions``. The service meets weekly on Thursday, so these
+dates are meeting dates.
 """
 
 import uuid
@@ -33,11 +35,11 @@ if TYPE_CHECKING:
 
 
 class ServiceSession(UUIDPrimaryKeyMixin, Base):
-    """A church service or meeting users can attend (e.g. Sunday service).
+    """A meeting users can attend (the weekly Thursday youth meeting).
 
-    Separate from attendance records so multiple sessions per day and
-    different service types (youth meeting, camp, conference) are
-    supported without schema changes.
+    Separate from attendance records so extra sessions (camps,
+    conferences, special events) are supported without schema changes,
+    while the regular schedule stays one meeting per week.
     """
 
     __tablename__ = "service_sessions"
@@ -48,7 +50,7 @@ class ServiceSession(UUIDPrimaryKeyMixin, Base):
     end_time: Mapped[time | None] = mapped_column(Time(timezone=False))
     service_type: Mapped[ServiceType] = mapped_column(
         SAEnum(ServiceType, name="service_type", native_enum=False, length=40),
-        default=ServiceType.SUNDAY_SERVICE,
+        default=ServiceType.YOUTH_MEETING,
         nullable=False,
     )
     description: Mapped[str | None] = mapped_column(Text)

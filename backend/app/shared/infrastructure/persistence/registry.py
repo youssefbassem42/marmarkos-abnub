@@ -7,6 +7,7 @@ metadata is always complete, without scattering imports across files.
 import app.modules.admin.infrastructure.persistence.models  # noqa: F401
 import app.modules.anonymous_messages.infrastructure.persistence.models  # noqa: F401
 import app.modules.attendance.infrastructure.persistence.models  # noqa: F401
+import app.modules.attendance.infrastructure.persistence.weekly_models  # noqa: F401
 import app.modules.auth.infrastructure.persistence.models  # noqa: F401
 import app.modules.bible.infrastructure.persistence.models  # noqa: F401
 import app.modules.blog.infrastructure.persistence.models  # noqa: F401

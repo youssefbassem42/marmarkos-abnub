@@ -32,6 +32,9 @@ from app.shared.infrastructure.persistence.base import (
 
 if TYPE_CHECKING:
     from app.modules.attendance.infrastructure.persistence.models import AttendanceRecord
+    from app.modules.attendance.infrastructure.persistence.weekly_models import (
+        WeeklyAttendanceRecord,
+    )
     from app.modules.auth.infrastructure.persistence.models import RefreshToken
     from app.modules.blog.infrastructure.persistence.models import (
         BlogPost,
@@ -104,6 +107,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     refresh_tokens: Mapped[list["RefreshToken"]] = relationship(back_populates="user")
     attendance_records: Mapped[list["AttendanceRecord"]] = relationship(
         back_populates="user", foreign_keys="AttendanceRecord.user_id"
+    )
+    weekly_attendance_records: Mapped[list["WeeklyAttendanceRecord"]] = relationship(
+        back_populates="user", foreign_keys="WeeklyAttendanceRecord.user_id"
     )
     blog_posts: Mapped[list["BlogPost"]] = relationship(back_populates="author")
     blog_likes: Mapped[list["BlogPostLike"]] = relationship(back_populates="user")

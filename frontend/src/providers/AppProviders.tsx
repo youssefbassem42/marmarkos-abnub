@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RouterProvider } from "react-router-dom";
+import { LanguageProvider } from "@/i18n/LanguageProvider";
 import { router } from "@/router";
 
 const queryClient = new QueryClient({
@@ -14,7 +15,9 @@ const queryClient = new QueryClient({
 export function AppProviders() {
   return (
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <LanguageProvider>
+        <RouterProvider router={router} />
+      </LanguageProvider>
     </QueryClientProvider>
   );
 }

@@ -169,7 +169,9 @@
   --color-brand-red: var(--brand-red);
   --color-soft: var(--soft);
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
-  --font-arabic: "Cairo", "Poppins", sans-serif;
+  --font-heading: "El Messiri", "Poppins", sans-serif;
+  --font-arabic: "Markazi Text", "Poppins", sans-serif;
+  --font-verse: "Amiri", serif;
 }
 
 @layer base {
