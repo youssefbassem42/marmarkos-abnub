@@ -17,7 +17,7 @@ if TYPE_CHECKING:
 
 class QrValidationService:
     """Service to validate QR codes and resolve user identity.
-    
+
     Security principles:
     - Never trust user ID from QR payload directly
     - Validate QR token against database
@@ -31,35 +31,35 @@ class QrValidationService:
 
     async def validate_and_resolve_user(self, qr_token: str) -> User:
         """Validate QR code and return the associated user.
-        
+
         Args:
             qr_token: The QR code token string
-            
+
         Returns:
             The User entity associated with the QR code
-            
+
         Raises:
             ValidationError: If QR is invalid, inactive, or user is not active
         """
         # Hash the token to match stored hash
         token_hash = self._hash_token(qr_token)
-        
+
         # Find active QR code
         qr_code = await self._qr_repo.get_active_by_token_hash(token_hash)
         if qr_code is None:
             raise ValidationError("Invalid or inactive QR code")
-        
+
         # Resolve user
         user = await self._user_repo.get_by_id(qr_code.user_id)
         if user is None:
             raise ValidationError("User not found")
-        
+
         # Validate user status
         if user.status != UserStatus.ACTIVE:
             raise ValidationError(
                 f"User account is {user.status.value.lower()}. Cannot record attendance."
             )
-        
+
         return user
 
     def _hash_token(self, token: str) -> str:

@@ -82,9 +82,7 @@ class WeeklyAttendanceRepository:
 
         return [self._to_domain(record) for record in db_records]
 
-    async def find_by_meeting_range(
-        self, start_date: date, end_date: date
-    ) -> list[Attendance]:
+    async def find_by_meeting_range(self, start_date: date, end_date: date) -> list[Attendance]:
         """Retrieve attendance records for every meeting in a date range."""
         stmt = (
             select(WeeklyAttendanceRecord)
@@ -94,9 +92,7 @@ class WeeklyAttendanceRepository:
                     WeeklyAttendanceRecord.meeting_date <= end_date,
                 )
             )
-            .order_by(
-                WeeklyAttendanceRecord.meeting_date, WeeklyAttendanceRecord.check_in_at
-            )
+            .order_by(WeeklyAttendanceRecord.meeting_date, WeeklyAttendanceRecord.check_in_at)
         )
         result = await self._session.execute(stmt)
         db_records = result.scalars().all()
@@ -151,9 +147,7 @@ class WeeklyAttendanceRepository:
         result = await self._session.execute(stmt)
         return int(result.scalar_one())
 
-    async def counts_by_meeting(
-        self, start_date: date, end_date: date
-    ) -> dict[date, int]:
+    async def counts_by_meeting(self, start_date: date, end_date: date) -> dict[date, int]:
         """Attendance count per meeting in a range, as one grouped query.
 
         Used by the monthly analysis so a month of meetings costs a
@@ -190,9 +184,7 @@ class WeeklyAttendanceRepository:
         result = await self._session.execute(stmt)
         return int(result.scalar_one())
 
-    async def count_distinct_attendees_between(
-        self, start_date: date, end_date: date
-    ) -> int:
+    async def count_distinct_attendees_between(self, start_date: date, end_date: date) -> int:
         """Number of distinct users who attended at least one meeting."""
         stmt = select(func.count(func.distinct(WeeklyAttendanceRecord.user_id))).where(
             and_(

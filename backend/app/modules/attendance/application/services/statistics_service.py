@@ -97,15 +97,11 @@ class StatisticsService:
         counts: dict[date, int] = {}
         user_counts: dict[str, int] = {}
         if meetings:
-            counts = await self._attendance_repo.counts_by_meeting(
-                meetings[0], meetings[-1]
-            )
+            counts = await self._attendance_repo.counts_by_meeting(meetings[0], meetings[-1])
             user_counts = {
                 str(user_id): count
                 for user_id, count in (
-                    await self._attendance_repo.counts_by_user_between(
-                        meetings[0], meetings[-1]
-                    )
+                    await self._attendance_repo.counts_by_user_between(meetings[0], meetings[-1])
                 ).items()
             }
 
@@ -118,9 +114,7 @@ class StatisticsService:
                     meeting_date=meeting,
                     meeting_index_in_month=index,
                     present_count=present_count,
-                    absent_count=(
-                        max(expected_per_meeting - present_count, 0) if is_held else 0
-                    ),
+                    absent_count=(max(expected_per_meeting - present_count, 0) if is_held else 0),
                     attendance_rate=(
                         _rate(present_count, expected_per_meeting) if is_held else 0.0
                     ),
@@ -131,23 +125,15 @@ class StatisticsService:
         total_attendance = sum(stat.present_count for stat in meeting_stats)
         meetings_held = len(held)
 
-        average_attendance = (
-            round(total_attendance / meetings_held, 2) if meetings_held else 0.0
-        )
+        average_attendance = round(total_attendance / meetings_held, 2) if meetings_held else 0.0
         attendance_rate = _rate(total_attendance, expected_per_meeting * meetings_held)
 
         # Per-member view, restricted to the expected (ACTIVE) population.
         expected_users = await self._absence_service.get_expected_users()
         expected_ids = {str(user.id) for user in expected_users}
-        attended = {
-            user_id for user_id in expected_ids if user_counts.get(user_id, 0) > 0
-        }
+        attended = {user_id for user_id in expected_ids if user_counts.get(user_id, 0) > 0}
         full_attendance = (
-            {
-                user_id
-                for user_id in expected_ids
-                if user_counts.get(user_id, 0) >= meetings_held
-            }
+            {user_id for user_id in expected_ids if user_counts.get(user_id, 0) >= meetings_held}
             if meetings_held
             else set()
         )

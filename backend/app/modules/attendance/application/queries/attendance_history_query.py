@@ -60,7 +60,8 @@ class AttendanceHistoryQuery:
 
             if start_meeting or end_meeting:
                 attendance_records = [
-                    rec for rec in attendance_records
+                    rec
+                    for rec in attendance_records
                     if (start_meeting is None or rec.meeting_date >= start_meeting)
                     and (end_meeting is None or rec.meeting_date <= end_meeting)
                 ]
@@ -83,9 +84,7 @@ class AttendanceHistoryQuery:
             )
 
         if status is not None:
-            attendance_records = [
-                rec for rec in attendance_records if rec.status == status
-            ]
+            attendance_records = [rec for rec in attendance_records if rec.status == status]
 
         if not attendance_records:
             return []

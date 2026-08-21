@@ -39,36 +39,23 @@ class WeeklyAttendanceRecord(UUIDPrimaryKeyMixin, Base):
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="CASCADE"),
-        nullable=False
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     meeting_date: Mapped[date] = mapped_column(Date, nullable=False)
-    check_in_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        nullable=False
-    )
+    check_in_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     status: Mapped[str] = mapped_column(String(20), nullable=False, default="PRESENT")
     recorded_by: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("users.id", ondelete="RESTRICT"),
-        nullable=False
+        ForeignKey("users.id", ondelete="RESTRICT"), nullable=False
     )
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        nullable=False
+        DateTime(timezone=True), server_default=func.now(), nullable=False
     )
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        server_default=func.now(),
-        onupdate=func.now(),
-        nullable=False
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False
     )
 
     # Relationships
     user: Mapped["User"] = relationship(
-        foreign_keys=[user_id],
-        back_populates="weekly_attendance_records"
+        foreign_keys=[user_id], back_populates="weekly_attendance_records"
     )
-    recorder: Mapped["User"] = relationship(
-        foreign_keys=[recorded_by]
-    )
+    recorder: Mapped["User"] = relationship(foreign_keys=[recorded_by])

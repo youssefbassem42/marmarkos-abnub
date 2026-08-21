@@ -90,9 +90,7 @@ class CheckInCommand:
         user_name = self._display_name(user)
 
         # Reject a second record for the same user and meeting
-        existing = await self._attendance_repo.find_by_user_and_meeting(
-            user.id, open_meeting
-        )
+        existing = await self._attendance_repo.find_by_user_and_meeting(user.id, open_meeting)
         if existing is not None:
             raise ConflictError(
                 f"{user_name} is already recorded for the "

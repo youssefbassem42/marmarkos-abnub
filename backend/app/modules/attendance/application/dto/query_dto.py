@@ -85,9 +85,7 @@ class MeetingScheduleResponse(BaseModel):
     meeting_day: str = Field(..., description="Weekday the meeting is held on")
     total_meetings: int
     meetings: list[date]
-    open_meeting_date: date = Field(
-        ..., description="Meeting currently open for check-in"
-    )
+    open_meeting_date: date = Field(..., description="Meeting currently open for check-in")
 
 
 class AbsentUsersResponse(BaseModel):

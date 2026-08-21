@@ -66,12 +66,14 @@ class AbsenceCalculationService:
                 if not user_name:
                     user_name = user.email
 
-                absent_users.append({
-                    "user_id": str(user.id),
-                    "name": user_name,
-                    "email": user.email,
-                    "role": user.role.name.value,
-                })
+                absent_users.append(
+                    {
+                        "user_id": str(user.id),
+                        "name": user_name,
+                        "email": user.email,
+                        "role": user.role.name.value,
+                    }
+                )
 
         return len(absent_users), absent_users
 

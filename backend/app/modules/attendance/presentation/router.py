@@ -56,9 +56,7 @@ CurrentUser = Annotated[User, Depends(get_current_user)]
 DbSession = Annotated[AsyncSession, Depends(get_db_session)]
 MeetingDateParam = Annotated[date | None, _MEETING_DATE_QUERY]
 YearParam = Annotated[int | None, Query(ge=2000, le=2100, description="Calendar year")]
-MonthParam = Annotated[
-    int | None, Query(ge=1, le=12, description="Calendar month (1-12)")
-]
+MonthParam = Annotated[int | None, Query(ge=1, le=12, description="Calendar month (1-12)")]
 
 
 @router.post("/check-in", response_model=CheckInResponse, status_code=201)
@@ -234,16 +232,10 @@ async def get_monthly_statistics(
 
 @router.get("", response_model=AttendanceHistoryResponse)
 async def get_attendance_history(
-    start_date: Annotated[
-        date | None, Query(description="Any date in the first meeting week")
-    ],
-    end_date: Annotated[
-        date | None, Query(description="Any date in the last meeting week")
-    ],
+    start_date: Annotated[date | None, Query(description="Any date in the first meeting week")],
+    end_date: Annotated[date | None, Query(description="Any date in the last meeting week")],
     user_id: Annotated[UUID | None, Query(description="Filter by specific user")],
-    status: Annotated[
-        AttendanceStatus | None, Query(description="Filter by attendance status")
-    ],
+    status: Annotated[AttendanceStatus | None, Query(description="Filter by attendance status")],
     current_user: CurrentUser,
     session: DbSession,
 ) -> AttendanceHistoryResponse:

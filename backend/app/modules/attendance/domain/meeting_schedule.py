@@ -91,8 +91,10 @@ def meeting_dates_between(start: date, end: date) -> list[date]:
     if end < start:
         return []
 
-    first = start if is_meeting_date(start) else current_meeting_date(start) + timedelta(
-        days=MEETING_INTERVAL_DAYS
+    first = (
+        start
+        if is_meeting_date(start)
+        else current_meeting_date(start) + timedelta(days=MEETING_INTERVAL_DAYS)
     )
 
     meetings: list[date] = []

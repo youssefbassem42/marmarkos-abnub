@@ -86,9 +86,7 @@ async def test_check_in_records_the_current_meeting(
     assert 1 <= result.attendance.meeting_index_in_month <= 5
 
     # Verify record in database
-    stmt = select(WeeklyAttendanceRecord).where(
-        WeeklyAttendanceRecord.user_id == member_user.id
-    )
+    stmt = select(WeeklyAttendanceRecord).where(WeeklyAttendanceRecord.user_id == member_user.id)
     db_result = await db_session.execute(stmt)
     record = db_result.scalar_one()
 
@@ -143,9 +141,7 @@ async def test_duplicate_check_in_leaves_a_single_record(
     with pytest.raises(ConflictError):
         await command.execute(qr_token, admin_user)
 
-    stmt = select(WeeklyAttendanceRecord).where(
-        WeeklyAttendanceRecord.user_id == member_user.id
-    )
+    stmt = select(WeeklyAttendanceRecord).where(WeeklyAttendanceRecord.user_id == member_user.id)
     records = (await db_session.execute(stmt)).scalars().all()
     assert len(records) == 1
 
@@ -199,9 +195,7 @@ async def test_non_meeting_date_is_rejected(
 
 
 @pytest.mark.asyncio
-async def test_invalid_qr_raises_validation_error(
-    db_session: AsyncSession, admin_user: User
-):
+async def test_invalid_qr_raises_validation_error(db_session: AsyncSession, admin_user: User):
     """Test that invalid QR code raises ValidationError."""
     command = CheckInCommand(db_session)
 

@@ -159,9 +159,7 @@ async def test_monthly_statistics(
     db_session: AsyncSession, test_users: list[User], attendance_records: None
 ):
     service = StatisticsService(db_session)
-    stats = await service.calculate_monthly_statistics(
-        OPEN_MEETING.year, OPEN_MEETING.month
-    )
+    stats = await service.calculate_monthly_statistics(OPEN_MEETING.year, OPEN_MEETING.month)
 
     month_meetings = meetings_in_month(OPEN_MEETING.year, OPEN_MEETING.month)
     held = [meeting for meeting in month_meetings if meeting <= OPEN_MEETING]
@@ -231,9 +229,7 @@ async def test_history_filtered_by_meeting_range(
     db_session: AsyncSession, test_users: list[User], attendance_records: None
 ):
     query = AttendanceHistoryQuery(db_session)
-    results = await query.execute(
-        start_date=PREVIOUS_MEETING, end_date=PREVIOUS_MEETING
-    )
+    results = await query.execute(start_date=PREVIOUS_MEETING, end_date=PREVIOUS_MEETING)
 
     assert len(results) == 2
 
