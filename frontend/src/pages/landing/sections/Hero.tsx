@@ -1,21 +1,46 @@
 import { CalendarDays } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/i18n/context";
 import hero from "@/assets/hero-worship.jpg";
 import { YouthFigure } from "./YouthFigure";
 
 export function Hero() {
+  const { language } = useLanguage();
+  const isArabic = language === "ar";
+  const { t } = useTranslation("landing");
+  const { t: tCommon } = useTranslation("common");
+  const titleLines = tCommon("brand.message", {
+    returnObjects: true,
+  }) as readonly string[];
+
   return (
-    <section id="home" className="relative overflow-hidden pt-24 lg:pt-28">
+    <section
+      id="home"
+      className="relative overflow-hidden pt-24 lg:pt-28"
+    >
       <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-14 lg:grid-cols-[minmax(0,44%)_minmax(0,56%)] lg:gap-6 lg:px-8 lg:pb-20">
         <div className="reveal">
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-mint">
-            Youth Service
+            {t("hero.eyebrow")}
           </p>
-          <h1 className="mt-3 text-[clamp(2.6rem,9vw,4.6rem)] font-extrabold leading-[0.98] tracking-tight text-navy">
-            FAITH.
-            <br />
-            FRIENDS.
-            <br />
-            <span className="text-mint">PURPOSE.</span>
+          <h1
+            dir={isArabic ? "rtl" : "ltr"}
+            className={`mt-3 text-[clamp(2.6rem,9vw,4.6rem)] font-extrabold leading-[0.98] tracking-tight text-navy ${
+              isArabic ? "font-arabic" : ""
+            }`}
+          >
+            {titleLines.map((line, i) =>
+              i === titleLines.length - 1 ? (
+                <span key={line} className="text-mint">
+                  {line}
+                </span>
+              ) : (
+                <span key={line}>
+                  {line}
+                  <br />
+                </span>
+              ),
+            )}
           </h1>
           <p
             dir="rtl"
@@ -24,17 +49,24 @@ export function Hero() {
           >
             إجتماع الشباب بأبنوب
           </p>
-          <p className="mt-5 max-w-md text-[15px] leading-7 text-muted-foreground">
-            A place where young hearts encounter God, build real friendships,
-            and discover their God-given purpose.
+          <p
+            className={`mt-5 max-w-md text-[15px] leading-7 text-muted-foreground ${
+              isArabic ? "font-arabic text-lg leading-8" : ""
+            }`}
+          >
+            {tCommon("brand.supporting")}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a href="#events" className="btn-primary px-6 py-3.5 text-sm">
               <CalendarDays className="h-4 w-4" aria-hidden="true" />
-              JOIN US THIS WEEK
+              <span className={isArabic ? "font-arabic" : ""}>
+                {t("hero.ctaPrimary")}
+              </span>
             </a>
             <a href="#about" className="btn-outline px-6 py-3.5 text-sm">
-              LEARN MORE
+              <span className={isArabic ? "font-arabic" : ""}>
+                {t("hero.ctaSecondary")}
+              </span>
             </a>
           </div>
         </div>
@@ -42,7 +74,11 @@ export function Hero() {
         <div className="relative reveal">
           <img
             src={hero}
-            alt="Young people worshipping with raised hands beside a glowing cross at sunset"
+            alt={
+              isArabic
+                ? "شباب يعبدون بأيدي مرفوعة بجانب صليب مضيء عند الغروب"
+                : "Young people worshipping with raised hands beside a glowing cross at sunset"
+            }
             width={1200}
             height={912}
             className="brush-mask w-full object-cover"

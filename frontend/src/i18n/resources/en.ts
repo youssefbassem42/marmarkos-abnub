@@ -33,6 +33,93 @@ export const en = {
       ariaLabel: "Switch to Arabic",
     },
   },
+  landing: {
+    nav: {
+      home: "Home",
+      about: "About",
+      ministries: "Ministries",
+      events: "Events",
+      gallery: "Gallery",
+      contact: "Contact",
+      login: "Login",
+    },
+    hero: {
+      eyebrow: "Youth Service",
+      ctaPrimary: "JOIN US THIS WEEK",
+      ctaSecondary: "LEARN MORE",
+    },
+    pillars: {
+      heading: "WE ARE ABOUT",
+      items: [
+        {
+          title: "GROWING IN FAITH",
+          text: "We explore God's Word together and grow in our relationship with Him.",
+        },
+        {
+          title: "REAL FRIENDSHIPS",
+          text: "Building a community where you belong and can be yourself.",
+        },
+        {
+          title: "MAKING AN IMPACT",
+          text: "Empowered by God to make a difference in our church and our world.",
+        },
+        {
+          title: "LIVING WITH PURPOSE",
+          text: "Discovering the unique plan God has for your life and walking in it.",
+        },
+      ],
+    },
+    about: {
+      eyebrow: "Who we are",
+      heading: "A PLACE FOR YOU",
+      text: "We are a group of young people passionate about Jesus and living out our faith together. Whether you're new to church or have been following Jesus for a while, there's a place for you here.",
+      items: [
+        "Worship that's real",
+        "Messages that speak to life",
+        "Small groups & deep conversations",
+        "Fun events & unforgettable memories",
+      ],
+      cta: "MORE ABOUT US",
+    },
+    upcoming: {
+      eyebrow: "Upcoming Service",
+      heading: "FRIDAY YOUTH NIGHT",
+      time: "7:00 PM",
+      location: "Church Hall",
+      line1: "Worship. Word. Fellowship.",
+      line2: "You don't want to miss it!",
+      cta: "I'LL BE THERE!",
+    },
+    bibleVerse: {
+      heading: "COME AS YOU ARE",
+      line1: "No perfect people allowed!",
+      line2: "Just real hearts seeking a real God.",
+      accent: "WE CAN'T WAIT TO MEET YOU!",
+    },
+    footer: {
+      quickLinks: "Quick Links",
+      quickItems: [
+        "Home",
+        "About",
+        "Ministries",
+        "Events",
+        "Gallery",
+        "Contact",
+      ],
+      ministries: "Ministries",
+      ministryItems: [
+        "Worship",
+        "Small Groups",
+        "Outreach",
+        "Discipleship",
+        "Events",
+      ],
+      contactUs: "Contact Us",
+      addressLine1: "Youth Service",
+      addressLine2: "Abnub, Asyut, Egypt",
+      copyright: "© 2026 Youth Service. All rights reserved.",
+    },
+  },
   login: {
     card: {
       heading: "Welcome Back!",

@@ -5,18 +5,11 @@ import {
   Facebook,
   Instagram,
   Youtube,
-  Heart,
 } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/i18n/context";
+import { cn } from "@/lib/utils";
 import logo from "@/assets/church-logo.png";
-
-const quick = ["Home", "About", "Ministries", "Events", "Gallery", "Contact"];
-const ministries = [
-  "Worship",
-  "Small Groups",
-  "Outreach",
-  "Discipleship",
-  "Events",
-];
 
 const socials = [
   { Icon: Facebook, label: "Facebook" },
@@ -25,8 +18,23 @@ const socials = [
 ];
 
 export function Footer() {
+  const { language } = useLanguage();
+  const isArabic = language === "ar";
+  const { t } = useTranslation("landing");
+  const quickItems = t("footer.quickItems", {
+    returnObjects: true,
+  }) as readonly string[];
+  const ministryItems = t("footer.ministryItems", {
+    returnObjects: true,
+  }) as readonly string[];
+
   return (
-    <footer id="contact" className="bg-navy text-white">
+    <footer
+      id="contact"
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={language}
+      className="bg-navy text-white"
+    >
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))] lg:px-8">
         <div>
           <img
@@ -46,36 +54,36 @@ export function Footer() {
           </p>
         </div>
 
-        <nav aria-label="Quick links">
+        <nav aria-label={t("footer.quickLinks")}>
           <h2 className="text-sm font-extrabold uppercase tracking-[0.12em]">
-            Quick Links
+            {t("footer.quickLinks")}
           </h2>
           <ul className="mt-4 space-y-2 text-sm text-white/75">
-            {quick.map((l) => (
-              <li key={l}>
+            {quickItems.map((label, i) => (
+              <li key={label}>
                 <a
-                  href={`#${l.toLowerCase()}`}
+                  href={`#${linkSlug[i]}`}
                   className="focus-ring rounded-sm hover:text-mint"
                 >
-                  {l}
+                  {label}
                 </a>
               </li>
             ))}
           </ul>
         </nav>
 
-        <nav aria-label="Ministries">
+        <nav aria-label={t("footer.ministries")}>
           <h2 className="text-sm font-extrabold uppercase tracking-[0.12em]">
-            Ministries
+            {t("footer.ministries")}
           </h2>
           <ul className="mt-4 space-y-2 text-sm text-white/75">
-            {ministries.map((l) => (
-              <li key={l}>
+            {ministryItems.map((label) => (
+              <li key={label}>
                 <a
                   href="#ministries"
                   className="focus-ring rounded-sm hover:text-mint"
                 >
-                  {l}
+                  {label}
                 </a>
               </li>
             ))}
@@ -84,7 +92,7 @@ export function Footer() {
 
         <div>
           <h2 className="text-sm font-extrabold uppercase tracking-[0.12em]">
-            Contact Us
+            {t("footer.contactUs")}
           </h2>
           <ul className="mt-4 space-y-3 text-sm text-white/75">
             <li className="flex gap-3">
@@ -92,10 +100,10 @@ export function Footer() {
                 className="mt-0.5 h-4 w-4 shrink-0 text-mint"
                 aria-hidden="true"
               />
-              <span>
-                Your Church Name
+              <span className={isArabic ? "font-arabic" : ""}>
+                {t("footer.addressLine1")}
                 <br />
-                Your City, Country
+                {t("footer.addressLine2")}
               </span>
             </li>
             <li className="flex items-center gap-3">
@@ -105,6 +113,7 @@ export function Footer() {
               />
               <a
                 href="tel:+201234567890"
+                dir="ltr"
                 className="focus-ring rounded-sm hover:text-mint"
               >
                 +20 123 456 7890
@@ -138,17 +147,21 @@ export function Footer() {
 
       <div className="border-t border-white/12">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-5 text-xs text-white/65 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <p>© 2026 Your Church Name. All rights reserved.</p>
-          <p className="inline-flex items-center gap-1.5">
-            Made with{" "}
-            <Heart
-              className="h-3.5 w-3.5 fill-brand-red text-brand-red"
-              aria-hidden="true"
-            />{" "}
-            for God's glory
+          <p className={cn(isArabic && "font-arabic")}>
+            {t("footer.copyright")}
           </p>
         </div>
       </div>
     </footer>
   );
 }
+
+/** Anchor slugs matching the quick-link order in i18n. */
+const linkSlug = [
+  "home",
+  "about",
+  "ministries",
+  "events",
+  "gallery",
+  "contact",
+];

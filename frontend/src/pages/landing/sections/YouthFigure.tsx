@@ -4,7 +4,11 @@ type Props = {
   flip?: boolean;
 };
 
-/** Decorative raised-arms youth silhouette inspired by the church logo. */
+/**
+ * Decorative raised-arms youth silhouette inspired by the church logo.
+ * Stroke-based with rounded caps: head, torso, arms lifted in praise,
+ * and legs mid-jump.
+ */
 export function YouthFigure({
   className,
   color = "currentColor",
@@ -18,11 +22,23 @@ export function YouthFigure({
       className={className}
       style={{ color, transform: flip ? "scaleX(-1)" : undefined }}
     >
-      <g fill="currentColor">
-        <circle cx="50" cy="20" r="13" />
-        <path d="M50 35c11 0 17 7 19 15l8 26c1.6 5-5.6 8-7.6 3L64 62l-2 20 9 46c1.4 6-7.4 8.6-9.4 2.6L52 96l-9 34.6c-1.8 6-10.8 3.4-9.4-2.6l9-46-2-20-5.4 17c-2 5-9.2 2-7.6-3l8-26c2-8 8-15 19-15Z" />
-        <path d="M31 38 12 12c-3-4 3.6-8.6 6.6-4.6L38 32Z" />
-        <path d="M69 38 88 12c3-4-3.6-8.6-6.6-4.6L62 32Z" />
+      {/* head */}
+      <circle cx="50" cy="14" r="10.5" fill="currentColor" />
+      <g
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="9.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        {/* torso */}
+        <path d="M50 33c0 16-1 30-1 45" />
+        {/* arms lifted in praise */}
+        <path d="M46 40C37 34 26 22 20 8" />
+        <path d="M54 40c9-6 20-18 26-32" />
+        {/* legs mid-jump */}
+        <path d="M49 78c-4 17-7 34-9 52" />
+        <path d="M51 78c5 17 9 34 12 52" />
       </g>
     </svg>
   );
