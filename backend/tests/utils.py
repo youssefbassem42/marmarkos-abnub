@@ -12,6 +12,7 @@ from app.modules.users.infrastructure.services import generate_public_id
 
 REGISTER_URL = "/api/v1/auth/register"
 LOGIN_URL = "/api/v1/auth/login"
+GOOGLE_URL = "/api/v1/auth/google"
 REFRESH_URL = "/api/v1/auth/refresh"
 LOGOUT_URL = "/api/v1/auth/logout"
 ME_URL = "/api/v1/users/me"
@@ -31,9 +32,16 @@ async def register_user(
     password: str = DEFAULT_PASSWORD,
     **overrides: object,
 ) -> dict:
+    # Phone is unique per user: derive a pseudo-random local number.
+    default_phone = f"+2010{uuid.uuid4().int % 10**8:08d}"
     payload: dict = {
         "email": email,
         "password": password,
+        "first_name": "Test",
+        "last_name": "User",
+        "phone": default_phone,
+        "date_of_birth": "2000-01-01",
+        "address": "Abnub, Asyut, Egypt",
         **overrides,
     }
     response = await client.post(REGISTER_URL, json=payload)

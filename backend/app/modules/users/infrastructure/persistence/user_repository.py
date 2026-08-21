@@ -34,6 +34,12 @@ class UserRepository:
         result = await self._session.execute(select(User.id).where(User.email == email).limit(1))
         return result.scalar_one_or_none() is not None
 
+    async def get_by_phone(self, phone: str) -> User | None:
+        result = await self._session.execute(
+            select(User).where(User.phone == phone).limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def list_all(self) -> list[User]:
         result = await self._session.execute(
             select(User).options(selectinload(User.role)).order_by(User.created_at)

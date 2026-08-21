@@ -25,7 +25,15 @@ async def test_admin_can_list_users(client: AsyncClient, db_engine) -> None:
     await create_user_direct(engine=db_engine, email="admin@example.com", role_name=RoleName.ADMIN)
     response = await client.post(
         REGISTER_URL,
-        json={"email": "member@example.com", "password": DEFAULT_PASSWORD},
+        json={
+            "email": "member@example.com",
+            "password": DEFAULT_PASSWORD,
+            "first_name": "Member",
+            "last_name": "User",
+            "phone": "+201277788899",
+            "date_of_birth": "2000-01-01",
+            "address": "Abnub, Asyut, Egypt",
+        },
     )
     assert response.status_code == 201
 

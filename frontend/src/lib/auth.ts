@@ -40,3 +40,10 @@ export function getAuthUser(): RegisteredUser | null {
     return null;
   }
 }
+
+/** Overwrite the stored user object after a profile change. */
+export function updateStoredUser(user: RegisteredUser): void {
+  const storage =
+    localStorage.getItem(ACCESS_TOKEN_KEY) !== null ? localStorage : sessionStorage;
+  storage.setItem(USER_KEY, JSON.stringify(user));
+}

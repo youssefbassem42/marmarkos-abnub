@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     JWT_ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     JWT_REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
+    GOOGLE_CLIENT_ID: str | None = None
+    GOOGLE_CLIENT_SECRET: str | None = None
+
     CORS_ORIGINS: str = "http://localhost:5173"
 
     TELEGRAM_BOT_TOKEN: str | None = None

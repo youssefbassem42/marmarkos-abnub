@@ -42,6 +42,7 @@ export const en = {
       gallery: "Gallery",
       contact: "Contact",
       login: "Login",
+      profile: "My Profile",
     },
     hero: {
       eyebrow: "Youth Service",
@@ -120,6 +121,51 @@ export const en = {
       copyright: "© 2026 Youth Service. All rights reserved.",
     },
   },
+  profile: {
+    heading: "My Profile",
+    subtitle: "Manage your account details, photo and password.",
+    avatar: {
+      change: "Change photo",
+      uploading: "Uploading...",
+      hint: "JPEG, PNG or WebP · max 2 MB",
+      removeAlt: "Profile photo",
+    },
+    form: {
+      firstNameLabel: "First Name",
+      lastNameLabel: "Last Name",
+      emailLabel: "Email Address",
+      emailHint: "Email cannot be changed",
+      phoneLabel: "Phone Number",
+      dateOfBirthLabel: "Date of Birth",
+      addressLabel: "Address",
+      save: "SAVE CHANGES",
+      saving: "Saving...",
+    },
+    password: {
+      heading: "Password",
+      currentLabel: "Current Password",
+      noCurrentHint:
+        "Your account was created with Google — set a password to also sign in with it.",
+      newLabel: "New Password",
+      confirmLabel: "Confirm New Password",
+      cta: "UPDATE PASSWORD",
+      updating: "Updating...",
+      mismatch: "Passwords do not match.",
+      weak:
+        "Password must include uppercase and lowercase letters, a number, and a special character.",
+      success: "Password updated. Other sessions were signed out.",
+    },
+    validation: {
+      required: "This field is required",
+      phoneInvalid: "Please enter a valid phone number.",
+      dobInvalid: "Please enter a valid date of birth.",
+      saveFailed: "Could not save your changes. Please try again.",
+      uploadFailed: "Photo upload failed. Please try again.",
+      networkError:
+        "Unable to reach the server. Check your connection and try again.",
+      saved: "Profile updated successfully",
+    },
+  },
   login: {
     card: {
       heading: "Welcome Back!",
@@ -151,7 +197,6 @@ export const en = {
     createAccount: "Create an account",
     social: {
       google: "Continue with Google",
-      facebook: "Continue with Facebook",
       comingSoon: "Coming soon",
     },
   },
@@ -180,6 +225,8 @@ export const en = {
       dateOfBirthLabel: "Date of Birth",
       phoneLabel: "Phone Number (optional)",
       phonePlaceholder: "Enter your phone number",
+      addressLabel: "Address",
+      addressPlaceholder: "Enter your home address",
       iAmLabel: "I am",
       howHeardLabel: "How did you hear about us?",
       selectPlaceholder: "Select from the list",
@@ -229,7 +276,6 @@ export const en = {
     },
     social: {
       google: "Sign up with Google",
-      facebook: "Sign up with Facebook",
       comingSoon: "Coming soon",
     },
     loginPrompt: "Already have an account?",

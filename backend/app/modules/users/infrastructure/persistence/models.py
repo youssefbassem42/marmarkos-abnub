@@ -6,11 +6,12 @@ not depend on SQLAlchemy.
 """
 
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import (
     Boolean,
+    Date,
     DateTime,
     ForeignKey,
     Index,
@@ -82,7 +83,11 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     phone: Mapped[str | None] = mapped_column(String(32), unique=True, nullable=True)
     first_name: Mapped[str | None] = mapped_column(String(80))
     last_name: Mapped[str | None] = mapped_column(String(80))
+    date_of_birth: Mapped[date | None] = mapped_column(Date())
+    address: Mapped[str | None] = mapped_column(String(255))
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    # Profile photo URL (e.g. the Google account picture); images themselves
+    # are not stored locally — only a link.
     avatar: Mapped[str | None] = mapped_column(String(500))
     public_id: Mapped[str] = mapped_column(String(32), unique=True, index=True, nullable=False)
     status: Mapped[UserStatus] = mapped_column(
@@ -94,6 +99,11 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         ForeignKey("roles.id", ondelete="RESTRICT"), index=True, nullable=False
     )
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # False for accounts provisioned via Google that never chose a password;
+    # such users may set one without supplying the current password.
+    has_password: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("true"), default=True
+    )
 
     role: Mapped[Role] = relationship(back_populates="users")
     qr_code: Mapped["UserQrCode | None"] = relationship(

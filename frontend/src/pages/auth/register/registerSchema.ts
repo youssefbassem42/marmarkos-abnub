@@ -35,13 +35,16 @@ export function registerSchema(messages: RegisterValidationMessages) {
         .min(8, messages.passwordTooShort)
         .max(128, messages.passwordTooLong),
       confirmPassword: z.string().min(1, messages.required),
-      dateOfBirth: z.string().optional(),
+      dateOfBirth: z.string().min(1, messages.required),
+      address: z
+        .string()
+        .trim()
+        .min(1, messages.required)
+        .max(255, messages.nameTooLong),
       phone: z
         .string()
         .trim()
-        .regex(/^[0-9+\s-]{8,20}$/, messages.phoneInvalid)
-        .optional()
-        .or(z.literal("")),
+        .regex(/^[0-9+\s-]{8,20}$/, messages.phoneInvalid),
       iAm: z.string().min(1, messages.required),
       howHeard: z.string().min(1, messages.required),
       terms: z.boolean().refine((value) => value, {

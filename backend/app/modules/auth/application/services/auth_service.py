@@ -1,3 +1,4 @@
+import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
@@ -14,6 +15,10 @@ from app.modules.auth.infrastructure.security import (
     hash_refresh_token,
     jwt_service,
     verify_password,
+)
+from app.modules.auth.infrastructure.services.google_tokens import (
+    GoogleIdentity,
+    verify_google_id_token,
 )
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
@@ -54,6 +59,8 @@ class RegistrationService:
             phone=request.phone,
             first_name=request.first_name,
             last_name=request.last_name,
+            date_of_birth=request.date_of_birth,
+            address=request.address,
             password_hash=hash_password(request.password),
             public_id=generate_public_id(),
             role=role,
@@ -83,6 +90,52 @@ class AuthenticationService:
             raise UnauthorizedError("Invalid credentials")
         if user.status is not UserStatus.ACTIVE:
             raise ForbiddenError("Account is not active")
+        await self._uow.users.set_last_login(user, datetime.now(UTC))
+        return await self._issue_tokens(user, user_agent, ip_address)
+
+    async def google_login(
+        self,
+        credential: str,
+        user_agent: str | None = None,
+        ip_address: str | None = None,
+    ) -> AuthResult:
+        """Sign in (or provision a first-time member) from a Google ID token.
+
+        Existing accounts keep their password and data; Google sign-in simply
+        issues this app's tokens for them. New emails get an ACTIVE MEMBER
+        account with an unusable random password.
+        """
+        identity: GoogleIdentity = await verify_google_id_token(credential)
+        email = identity.email.lower()
+
+        user = await self._uow.users.get_by_email(email)
+        if user is None:
+            role = await self._uow.roles.get_by_name(RoleName.MEMBER)
+            if role is None:
+                raise RuntimeError("Default role is not configured")
+            user = User(
+                email=email,
+                first_name=identity.first_name,
+                last_name=identity.last_name,
+                avatar=identity.picture,
+                password_hash=hash_password(secrets.token_urlsafe(32)),
+                public_id=generate_public_id(),
+                role=role,
+                has_password=False,
+            )
+            await self._uow.users.add(user)
+            self._uow.record(
+                UserRegistered(
+                    aggregate_id=user.id,
+                    email=user.email,
+                    first_name=user.first_name,
+                    last_name=user.last_name,
+                )
+            )
+
+        if user.status is not UserStatus.ACTIVE:
+            raise ForbiddenError("Account is not active")
+
         await self._uow.users.set_last_login(user, datetime.now(UTC))
         return await self._issue_tokens(user, user_agent, ip_address)
 

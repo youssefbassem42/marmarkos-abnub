@@ -4,12 +4,14 @@ from app.config import settings
 from app.core.exceptions import UnauthorizedError
 from app.modules.auth.application.dto import (
     AuthResponse,
+    GoogleAuthRequest,
     LoginRequest,
     MessageResponse,
     RegisterRequest,
     TokenResponse,
 )
 from app.modules.auth.application.services import AuthenticationService, RegistrationService
+from app.modules.auth.infrastructure.services import require_google_client_id
 from app.modules.auth.presentation.cookies import (
     REFRESH_TOKEN_COOKIE_NAME,
     clear_refresh_token_cookie,
@@ -36,6 +38,29 @@ async def login(
 ) -> AuthResponse:
     result = await AuthenticationService(session).login(
         payload,
+        user_agent=request.headers.get("user-agent"),
+        ip_address=request.client.host if request.client else None,
+    )
+    set_refresh_token_cookie(response, result.refresh_token, _REFRESH_COOKIE_MAX_AGE)
+    return AuthResponse(
+        access_token=result.access_token,
+        expires_in=result.expires_in,
+        user=map_user_to_response(result.user),
+    )
+
+
+@router.post("/google", response_model=AuthResponse)
+async def google_auth(
+    payload: GoogleAuthRequest, request: Request, response: Response, session: SessionDependency
+) -> AuthResponse:
+    """Sign in with Google.
+
+    The body carries the Google Identity Services ID token; it is verified
+    against Google's signing keys and exchanged for this API's tokens.
+    """
+    require_google_client_id()
+    result = await AuthenticationService(session).google_login(
+        payload.credential,
         user_agent=request.headers.get("user-agent"),
         ip_address=request.client.host if request.client else None,
     )

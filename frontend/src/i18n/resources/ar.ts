@@ -43,6 +43,7 @@ export const ar = {
       gallery: "معرض الصور",
       contact: "تواصل معنا",
       login: "تسجيل الدخول",
+      profile: "ملفي الشخصي",
     },
     hero: {
       eyebrow: "خدمة الشباب",
@@ -121,6 +122,49 @@ export const ar = {
       copyright: "© 2026 خدمة الشباب. جميع الحقوق محفوظة.",
     },
   },
+  profile: {
+    heading: "ملفي الشخصي",
+    subtitle: "إدارة بيانات حسابك وصورتك وكلمة المرور.",
+    avatar: {
+      change: "تغيير الصورة",
+      uploading: "جارٍ الرفع...",
+      hint: "JPEG أو PNG أو WebP · بحد أقصى 2 ميجابايت",
+      removeAlt: "الصورة الشخصية",
+    },
+    form: {
+      firstNameLabel: "الاسم الأول",
+      lastNameLabel: "اسم العائلة",
+      emailLabel: "البريد الإلكتروني",
+      emailHint: "لا يمكن تغيير البريد الإلكتروني",
+      phoneLabel: "رقم الهاتف",
+      dateOfBirthLabel: "تاريخ الميلاد",
+      addressLabel: "العنوان",
+      save: "حفظ التغييرات",
+      saving: "جارٍ الحفظ...",
+    },
+    password: {
+      heading: "كلمة المرور",
+      currentLabel: "كلمة المرور الحالية",
+      noCurrentHint:
+        "تم إنشاء حسابك عبر Google — يمكنك تعيين كلمة مرور لتسجيل الدخول بها أيضًا.",
+      newLabel: "كلمة المرور الجديدة",
+      confirmLabel: "تأكيد كلمة المرور الجديدة",
+      cta: "تحديث كلمة المرور",
+      updating: "جارٍ التحديث...",
+      mismatch: "كلمتا المرور غير متطابقتين.",
+      weak: "يجب أن تحتوي كلمة المرور على أحرف كبيرة وصغيرة ورقم ورمز خاص.",
+      success: "تم تحديث كلمة المرور. تم تسجيل خروج الجلسات الأخرى.",
+    },
+    validation: {
+      required: "هذا الحقل مطلوب",
+      phoneInvalid: "يرجى إدخال رقم هاتف صالح.",
+      dobInvalid: "يرجى إدخال تاريخ ميلاد صحيح.",
+      saveFailed: "تعذر حفظ التغييرات. حاول مرة أخرى.",
+      uploadFailed: "فشل رفع الصورة. حاول مرة أخرى.",
+      networkError: "تعذّر الاتصال بالخادم. تحقق من اتصالك وحاول مرة أخرى.",
+      saved: "تم تحديث الملف الشخصي بنجاح",
+    },
+  },
   login: {
     card: {
       heading: "مرحبًا بعودتك!",
@@ -152,7 +196,6 @@ export const ar = {
     createAccount: "إنشاء حساب",
     social: {
       google: "المتابعة باستخدام Google",
-      facebook: "المتابعة باستخدام Facebook",
       comingSoon: "قريبًا",
     },
   },
@@ -181,6 +224,8 @@ export const ar = {
       dateOfBirthLabel: "تاريخ الميلاد",
       phoneLabel: "رقم الهاتف (اختياري)",
       phonePlaceholder: "أدخل رقم هاتفك",
+      addressLabel: "العنوان",
+      addressPlaceholder: "أدخل عنوان منزلك",
       iAmLabel: "أنا",
       howHeardLabel: "كيف سمعت عنا؟",
       selectPlaceholder: "اختر من القائمة",
@@ -228,7 +273,6 @@ export const ar = {
     },
     social: {
       google: "التسجيل باستخدام Google",
-      facebook: "التسجيل باستخدام Facebook",
       comingSoon: "قريبًا",
     },
     loginPrompt: "لديك حساب بالفعل؟",

@@ -20,6 +20,8 @@ async def test_register_success_creates_active_user(client: AsyncClient) -> None
             "first_name": "New",
             "last_name": "User",
             "phone": "+201234567890",
+            "date_of_birth": "2000-01-01",
+            "address": "Abnub, Asyut, Egypt",
         },
     )
 
@@ -44,7 +46,16 @@ async def test_register_rejects_duplicate_email(client: AsyncClient) -> None:
     await register_user(client, email="dup@example.com")
 
     response = await client.post(
-        REGISTER_URL, json={"email": "dup@example.com", "password": "StrongPass123!"}
+        REGISTER_URL,
+        json={
+            "email": "dup@example.com",
+            "password": "StrongPass123!",
+            "first_name": "Dup",
+            "last_name": "User",
+            "phone": "+201255566677",
+            "date_of_birth": "2000-01-01",
+            "address": "Abnub, Asyut, Egypt",
+        },
     )
 
     assert response.status_code == 409

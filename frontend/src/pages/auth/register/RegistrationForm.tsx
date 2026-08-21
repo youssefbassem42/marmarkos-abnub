@@ -1,13 +1,14 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Calendar, Mail, Phone, UserPlus } from "lucide-react";
+import { Calendar, Mail, MapPin, Phone, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ApiError, registerUser } from "@/lib/api";
+import { ApiError, googleLogin, registerUser } from "@/lib/api";
+import { saveAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { FormField } from "./FormField";
 import { SelectField } from "./SelectField";
@@ -23,6 +24,7 @@ type RegisterFormProps = {
 export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
   const { t } = useTranslation("register");
   const isArabic = lang === "ar";
+  const navigate = useNavigate();
   const inputClass = cn(
     "h-11 rounded-xl border-border bg-background px-3 focus-ring",
     isArabic ? "font-arabic text-lg placeholder:text-base" : "text-base",
@@ -58,6 +60,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
       password: "",
       confirmPassword: "",
       dateOfBirth: "",
+      address: "",
       phone: "",
       iAm: "",
       howHeard: "",
@@ -67,6 +70,18 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
 
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
+
+  // Google sign-in authenticates (or provisions) the member immediately.
+  const handleGoogleCredential = async (credential: string) => {
+    setSubmitError(null);
+    try {
+      const { access_token: accessToken, user } = await googleLogin(credential);
+      saveAuth({ accessToken, user }, true);
+      navigate("/");
+    } catch {
+      setSubmitError(t("apiErrors.networkError"));
+    }
+  };
   const iAm = watch("iAm");
   const howHeard = watch("howHeard");
   const terms = watch("terms");
@@ -94,7 +109,9 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
         password: values.password,
         first_name: values.firstName,
         last_name: values.lastName,
-        phone: values.phone || undefined,
+        phone: values.phone,
+        date_of_birth: values.dateOfBirth,
+        address: values.address,
       });
       onSuccess(values.email);
     } catch (error) {
@@ -220,6 +237,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
         <FormField
           id="dateOfBirth"
           label={t("form.dateOfBirthLabel")}
+          required
           error={errors.dateOfBirth?.message}
         >
           <div className="relative">
@@ -245,6 +263,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
         <FormField
           id="phone"
           label={t("form.phoneLabel")}
+          required
           error={errors.phone?.message}
         >
           <div className="relative">
@@ -270,6 +289,33 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
           </div>
         </FormField>
       </div>
+
+      <FormField
+        id="address"
+        label={t("form.addressLabel")}
+        required
+        error={errors.address?.message}
+      >
+        <div className="relative">
+          <MapPin
+            className="pointer-events-none absolute inset-y-0 start-3 my-auto h-4 w-4 text-muted-foreground"
+            aria-hidden="true"
+          />
+          <Input
+            id="address"
+            type="text"
+            placeholder={t("form.addressPlaceholder")}
+            autoComplete="street-address"
+            aria-invalid={Boolean(errors.address)}
+            className={cn(
+              inputClass,
+              "ps-9 pe-3",
+              isArabic ? "font-arabic" : "",
+            )}
+            {...register("address")}
+          />
+        </div>
+      </FormField>
 
       <div className="grid gap-5 sm:grid-cols-2">
         <FormField
@@ -393,8 +439,8 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
 
       <SocialAuthButtons
         googleLabel={t("social.google")}
-        facebookLabel={t("social.facebook")}
         comingSoonLabel={t("social.comingSoon")}
+        onCredential={handleGoogleCredential}
       />
 
       <p
