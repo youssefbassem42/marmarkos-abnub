@@ -1,109 +1,25 @@
-import { useEffect, useRef } from "react";
 import { useLanguage } from "@/i18n/context";
-
-interface GoogleCredentialResponse {
-  credential?: string;
-}
-
-interface GoogleAccountsId {
-  initialize: (config: {
-    client_id: string;
-    callback: (response: GoogleCredentialResponse) => void;
-  }) => void;
-  renderButton: (parent: HTMLElement, options: Record<string, unknown>) => void;
-}
-
-declare global {
-  interface Window {
-    google?: { accounts?: { id?: GoogleAccountsId } };
-  }
-}
-
-const GOOGLE_GSI_SRC = "https://accounts.google.com/gsi/client";
-let gsiScriptPromise: Promise<void> | null = null;
-const gsiInitialized = new Set<string>();
-
-/** Load the Google Identity Services script once per page. */
-function loadGoogleIdentityServices(): Promise<void> {
-  if (!gsiScriptPromise) {
-    gsiScriptPromise = new Promise((resolve, reject) => {
-      if (window.google?.accounts?.id) {
-        resolve();
-        return;
-      }
-      const script = document.createElement("script");
-      script.src = GOOGLE_GSI_SRC;
-      script.async = true;
-      script.defer = true;
-      script.onload = () => resolve();
-      script.onerror = () => reject(new Error("Failed to load Google script"));
-      document.head.appendChild(script);
-    });
-  }
-  return gsiScriptPromise;
-}
+import { googleSignInUrl } from "@/lib/api";
+import { cn } from "@/lib/utils";
 
 interface SocialAuthButtonsProps {
   googleLabel: string;
   comingSoonLabel: string;
-  /** Receives the Google ID token after the user completes the Google flow. */
-  onCredential: (credential: string) => void;
 }
 
+/**
+ * "Continue with Google" via the backend's OAuth redirect flow:
+ * the anchor sends the browser to GET /api/v1/auth/google/login, which
+ * redirects to Google and later back to /google/callback on this app.
+ * No popup, so no popup-blocker or third-party-cookie problems.
+ */
 export function SocialAuthButtons({
   googleLabel,
   comingSoonLabel,
-  onCredential,
 }: SocialAuthButtonsProps) {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
   const { language } = useLanguage();
-
-  // Always call the latest handler without re-rendering the Google button.
-  const onCredentialRef = useRef(onCredential);
-  useEffect(() => {
-    onCredentialRef.current = onCredential;
-  }, [onCredential]);
-
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  // Initialize Google once per client ID; re-render the button on locale change.
-  useEffect(() => {
-    if (!clientId) return;
-    let cancelled = false;
-
-    loadGoogleIdentityServices()
-      .then(() => {
-        const container = containerRef.current;
-        const id = window.google?.accounts?.id;
-        if (cancelled || !container || !id) return;
-
-        if (!gsiInitialized.has(clientId)) {
-          id.initialize({
-            client_id: clientId,
-            callback: (response) => {
-              if (response.credential) {
-                onCredentialRef.current(response.credential);
-              }
-            },
-          });
-          gsiInitialized.add(clientId);
-        }
-        container.innerHTML = "";
-        id.renderButton(container, {
-          size: "large",
-          shape: "pill",
-          width: 320,
-          locale: language === "ar" ? "ar" : "en",
-        });
-      })
-      .catch(() => {
-        /* Script blocked; the disabled fallback styling stays. */
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [clientId, language]);
+  const isArabic = language === "ar";
 
   if (!clientId) {
     return (
@@ -120,20 +36,17 @@ export function SocialAuthButtons({
   }
 
   return (
-    <div
+    <a
+      href={googleSignInUrl()}
       aria-label={googleLabel}
-      className="relative flex w-full items-center justify-center rounded-xl border border-border bg-background px-4 py-3 text-lg font-medium text-navy transition-colors hover:bg-soft focus-within:ring-2 focus-within:ring-mint/60"
+      className={cn(
+        "focus-ring flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-lg font-medium text-navy transition-colors hover:bg-soft",
+        isArabic ? "font-arabic" : "",
+      )}
     >
-      <span className="pointer-events-none flex items-center gap-2">
-        <GoogleGlyph />
-        {googleLabel}
-      </span>
-      {/* The real Google button is rendered invisibly on top so clicks open the official popup while our branding stays visible. */}
-      <div
-        ref={containerRef}
-        className="absolute inset-0 overflow-hidden opacity-0"
-      />
-    </div>
+      <GoogleGlyph />
+      {googleLabel}
+    </a>
   );
 }
 

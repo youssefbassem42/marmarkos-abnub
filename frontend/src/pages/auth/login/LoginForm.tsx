@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ApiError, googleLogin, loginUser } from "@/lib/api";
+import { ApiError, loginUser } from "@/lib/api";
 import { saveAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import { PasswordField } from "../components/PasswordField";
@@ -68,27 +68,6 @@ export function LoginForm({ lang }: LoginFormProps) {
       }
     }
   });
-
-  const handleGoogleCredential = async (credential: string) => {
-    setSubmitError(null);
-    try {
-      const { access_token: accessToken, user } = await googleLogin(credential);
-      saveAuth({ accessToken, user }, rememberMe);
-      // Google cannot provide birth date / address: first-time users are sent
-      // to their profile to complete the mandatory fields.
-      if (!user.date_of_birth || !user.address) {
-        navigate("/profile");
-      } else {
-        navigate("/");
-      }
-    } catch (error) {
-      if (error instanceof ApiError) {
-        setSubmitError(t("validation.loginFailed"));
-      } else {
-        setSubmitError(t("validation.networkError"));
-      }
-    }
-  };
 
   return (
     <form onSubmit={onSubmit} noValidate className="space-y-5">
@@ -229,7 +208,6 @@ export function LoginForm({ lang }: LoginFormProps) {
       <SocialAuthButtons
         googleLabel={t("social.google")}
         comingSoonLabel={t("social.comingSoon")}
-        onCredential={handleGoogleCredential}
       />
 
       <p

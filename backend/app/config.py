@@ -17,6 +17,9 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str | None = None
     GOOGLE_CLIENT_SECRET: str | None = None
 
+    # Where the browser is sent back after the Google OAuth redirect flow.
+    FRONTEND_URL: str = "http://localhost:5173"
+
     CORS_ORIGINS: str = "http://localhost:5173"
 
     TELEGRAM_BOT_TOKEN: str | None = None

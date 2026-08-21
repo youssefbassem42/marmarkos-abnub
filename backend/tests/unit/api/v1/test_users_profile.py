@@ -4,7 +4,15 @@ import pytest
 from httpx import AsyncClient
 
 from app.modules.auth.infrastructure.services.google_tokens import GoogleIdentity
-from tests.utils import GOOGLE_URL, LOGIN_URL, ME_URL, REFRESH_URL, bearer, register_user
+from tests.utils import (
+    GOOGLE_CALLBACK_URL,
+    GOOGLE_LOGIN_URL,
+    LOGIN_URL,
+    ME_URL,
+    REFRESH_URL,
+    bearer,
+    register_user,
+)
 
 PROFILE_FIELDS = {
     "first_name": "Updated",
@@ -145,27 +153,28 @@ async def test_change_password_revokes_old_refresh_tokens(client: AsyncClient) -
 async def test_google_provisioned_user_can_set_password_without_current(
     client: AsyncClient, db_engine, monkeypatch: pytest.MonkeyPatch
 ) -> None:
+    monkeypatch.setattr("app.config.settings.GOOGLE_CLIENT_ID", "test-client-id")
+    monkeypatch.setattr("app.config.settings.GOOGLE_CLIENT_SECRET", "test-secret")
+    identity = GoogleIdentity("sub-1", "google-only@example.com", "Goo", "Gle", None)
     monkeypatch.setattr(
-        "app.modules.auth.application.services.auth_service.verify_google_id_token",
-        AsyncMock(
-            return_value=GoogleIdentity(
-                sub="sub-1",
-                email="google-only@example.com",
-                first_name="Goo",
-                last_name="Gle",
-                picture=None,
-            )
-        ),
+        "app.modules.auth.presentation.router.exchange_google_code",
+        AsyncMock(return_value=identity),
     )
-    created = await client.post(GOOGLE_URL, json={"credential": "x" * 40})
-    assert created.status_code == 200
-    assert created.json()["user"]["has_password"] is False
 
-    headers = bearer(created.json()["access_token"])
+    # Walk the redirect flow to provision the member and get a token.
+    started = await client.get(GOOGLE_LOGIN_URL, follow_redirects=False)
+    assert started.status_code == 303
+    state = started.headers["set-cookie"].split(";")[0].split("=", 1)[1]
+    callback = await client.get(
+        f"{GOOGLE_CALLBACK_URL}?code=abc&state={state}", follow_redirects=False
+    )
+    assert callback.status_code == 303
+    token = callback.headers["location"].split("access_token=")[1].split("&")[0]
+
     response = await client.post(
         f"{ME_URL}/password",
         json={"new_password": "BrandNew123!"},
-        headers=headers,
+        headers=bearer(token),
     )
 
     assert response.status_code == 200

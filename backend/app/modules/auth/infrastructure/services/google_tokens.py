@@ -1,65 +1,35 @@
-"""Google ID-token verification for "Sign in with Google".
+"""Google OAuth 2.0 authorization-code (redirect) flow helpers.
 
-The frontend obtains an ID token from Google Identity Services and posts it
-to ``POST /auth/google``. The token's RS256 signature is verified against
-Google's published JWKS, together with ``iss``, ``aud`` and expiry claims.
-Only existing dependencies (httpx + python-jose) are used.
+The browser is redirected to Google, Google returns an authorization code to
+``GET /api/v1/auth/google/callback``, and the backend exchanges that code —
+so the client secret never reaches the frontend. Only httpx + python-jose are
+used; no extra SDK dependency.
 """
 
-import time
 from dataclasses import dataclass
-from typing import Any
+from urllib.parse import urlencode
 
 import httpx
 from jose import jwt as jose_jwt
-from jose.exceptions import JOSEError
 
 from app.config import settings
 from app.core.exceptions import ForbiddenError, UnauthorizedError
 
-_GOOGLE_JWKS_URL = "https://www.googleapis.com/oauth2/v3/certs"
-_GOOGLE_ISSUERS = ("https://accounts.google.com", "accounts.google.com")
-_JWKS_CACHE_SECONDS = 3600
-_HTTP_TIMEOUT_SECONDS = 10.0
+_GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
+_GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
+_GOOGLE_USERINFO_ENDPOINT = "https://openidconnect.googleapis.com/v1/userinfo"
+_HTTP_TIMEOUT_SECONDS = 15.0
 
 
 @dataclass(frozen=True)
 class GoogleIdentity:
-    """Verified identity claims extracted from a Google ID token."""
+    """Verified identity claims of the Google account."""
 
     sub: str
     email: str
     first_name: str | None
     last_name: str | None
     picture: str | None
-
-
-class _JwksCache:
-    """Tiny in-process cache of Google's signing keys (JWKS)."""
-
-    def __init__(self) -> None:
-        self._keys: dict[str, dict[str, Any]] = {}
-        self._fetched_at: float = 0.0
-
-    def is_fresh(self) -> bool:
-        return bool(self._keys) and (time.monotonic() - self._fetched_at) < _JWKS_CACHE_SECONDS
-
-    def store(self, keys: list[dict[str, Any]]) -> None:
-        self._keys = {key["kid"]: key for key in keys if "kid" in key}
-        self._fetched_at = time.monotonic()
-
-    def get(self, kid: str) -> dict[str, Any] | None:
-        return self._keys.get(kid)
-
-
-_cache = _JwksCache()
-
-
-async def _fetch_jwks(client: httpx.AsyncClient) -> list[dict[str, Any]]:
-    response = await client.get(_GOOGLE_JWKS_URL)
-    response.raise_for_status()
-    keys: list[dict[str, Any]] = response.json().get("keys", [])
-    return keys
 
 
 def require_google_client_id() -> str:
@@ -70,56 +40,78 @@ def require_google_client_id() -> str:
     return client_id
 
 
-async def verify_google_id_token(credential: str) -> GoogleIdentity:
-    """Verify a Google ID token and return its identity claims.
+def require_google_client_secret() -> str:
+    secret = settings.GOOGLE_CLIENT_SECRET
+    if not secret:
+        raise ForbiddenError("Google sign-in is not configured")
+    return secret
 
-    Raises UnauthorizedError when the token is malformed, signed by an unknown
-    key, expired, issued for another audience/issuer, or lacks verified email.
+
+def build_google_authorize_url(state: str, redirect_uri: str) -> str:
+    """The URL the browser is sent to for user consent."""
+    params = {
+        "client_id": require_google_client_id(),
+        "redirect_uri": redirect_uri,
+        "response_type": "code",
+        "scope": "openid email profile",
+        "state": state,
+        "prompt": "select_account",
+        "access_type": "online",
+    }
+    return f"{_GOOGLE_AUTH_ENDPOINT}?{urlencode(params)}"
+
+
+async def exchange_google_code(code: str, redirect_uri: str) -> GoogleIdentity:
+    """Exchange an authorization code for identity claims.
+
+    The token response comes directly from Google over TLS, so the returned
+    ID token's claims can be read without re-verifying its signature.
     """
     try:
-        header = jose_jwt.get_unverified_header(credential)
-    except JOSEError as exc:
-        raise UnauthorizedError("Invalid Google credential") from exc
-
-    kid = header.get("kid")
-    if not kid:
-        raise UnauthorizedError("Invalid Google credential")
-
-    async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT_SECONDS) as client:
-        if not _cache.is_fresh() or _cache.get(kid) is None:
-            try:
-                _cache.store(await _fetch_jwks(client))
-            except httpx.HTTPError as exc:
-                raise UnauthorizedError("Could not verify the Google credential right now") from exc
-
-        jwk_key = _cache.get(kid)
-        if jwk_key is None:
-            raise UnauthorizedError("Invalid Google credential")
-
-        try:
-            payload = jose_jwt.decode(
-                credential,
-                jwk_key,
-                algorithms=["RS256"],
-                audience=require_google_client_id(),
-                issuer=_GOOGLE_ISSUERS,
-                options={"require": ["exp", "iat", "aud", "iss", "sub", "email"]},
+        async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT_SECONDS) as client:
+            token_response = await client.post(
+                _GOOGLE_TOKEN_ENDPOINT,
+                data={
+                    "code": code,
+                    "client_id": require_google_client_id(),
+                    "client_secret": require_google_client_secret(),
+                    "redirect_uri": redirect_uri,
+                    "grant_type": "authorization_code",
+                },
             )
-        except JOSEError as exc:
-            raise UnauthorizedError("Invalid or expired Google credential") from exc
+            token_response.raise_for_status()
+            id_token = token_response.json().get("id_token")
+            if not isinstance(id_token, str):
+                raise UnauthorizedError("Google did not return an identity")
 
-    email: object = payload.get("email")
-    subject: object = payload.get("sub")
+            claims = jose_jwt.decode(
+                id_token,
+                "not-verified",  # token came directly from Google over TLS
+                options={
+                    "verify_signature": False,
+                    "verify_aud": False,
+                    "verify_iss": False,
+                },
+            )
+    except httpx.HTTPError as exc:
+        raise UnauthorizedError("Could not complete Google sign-in") from exc
+    except Exception as exc:  # noqa: BLE001 - normalized below
+        if isinstance(exc, UnauthorizedError):
+            raise
+        raise UnauthorizedError("Could not complete Google sign-in") from exc
+
+    email = claims.get("email")
+    subject = claims.get("sub")
     if (
         not isinstance(email, str)
         or not isinstance(subject, str)
-        or payload.get("email_verified") is not True
+        or claims.get("email_verified") is not True
     ):
         raise UnauthorizedError("The Google account has no verified email")
 
-    given_name = payload.get("given_name")
-    family_name = payload.get("family_name")
-    picture = payload.get("picture")
+    given_name = claims.get("given_name")
+    family_name = claims.get("family_name")
+    picture = claims.get("picture")
 
     return GoogleIdentity(
         sub=subject,

@@ -162,14 +162,12 @@ export async function loginUser(payload: LoginPayload): Promise<LoginResponse> {
 }
 
 /**
- * Sign in with Google. `credential` is the Google Identity Services ID token
- * obtained by the frontend button; the backend verifies it against Google's
- * signing keys and returns this app's tokens (same shape as password login).
+ * Fetch the signed-in user's profile.
  */
-export async function googleLogin(credential: string): Promise<LoginResponse> {
+export async function getMe(accessToken: string): Promise<RegisteredUser> {
   try {
-    const { data } = await apiClient.post<LoginResponse>("/auth/google", {
-      credential,
+    const { data } = await apiClient.get<RegisteredUser>("/users/me", {
+      headers: { Authorization: `Bearer ${accessToken}` },
     });
     return data;
   } catch (error) {
@@ -183,6 +181,15 @@ export async function googleLogin(credential: string): Promise<LoginResponse> {
     }
     throw error;
   }
+}
+
+/**
+ * The URL that starts the Google OAuth redirect flow on the backend.
+ * The backend exchanges the code server-side and bounces the browser back
+ * to /google/callback with the access token in the URL fragment.
+ */
+export function googleSignInUrl(): string {
+  return `${apiClient.defaults.baseURL}/auth/google/login`;
 }
 
 export interface UpdateProfilePayload {

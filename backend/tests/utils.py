@@ -12,7 +12,8 @@ from app.modules.users.infrastructure.services import generate_public_id
 
 REGISTER_URL = "/api/v1/auth/register"
 LOGIN_URL = "/api/v1/auth/login"
-GOOGLE_URL = "/api/v1/auth/google"
+GOOGLE_LOGIN_URL = "/api/v1/auth/google/login"
+GOOGLE_CALLBACK_URL = "/api/v1/auth/google/callback"
 REFRESH_URL = "/api/v1/auth/refresh"
 LOGOUT_URL = "/api/v1/auth/logout"
 ME_URL = "/api/v1/users/me"

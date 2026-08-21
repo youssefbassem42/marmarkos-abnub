@@ -16,10 +16,7 @@ from app.modules.auth.infrastructure.security import (
     jwt_service,
     verify_password,
 )
-from app.modules.auth.infrastructure.services.google_tokens import (
-    GoogleIdentity,
-    verify_google_id_token,
-)
+from app.modules.auth.infrastructure.services.google_tokens import GoogleIdentity
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.domain.events import UserRegistered
@@ -95,17 +92,16 @@ class AuthenticationService:
 
     async def google_login(
         self,
-        credential: str,
+        identity: GoogleIdentity,
         user_agent: str | None = None,
         ip_address: str | None = None,
     ) -> AuthResult:
-        """Sign in (or provision a first-time member) from a Google ID token.
+        """Sign in (or provision a first-time member) from a Google identity.
 
         Existing accounts keep their password and data; Google sign-in simply
         issues this app's tokens for them. New emails get an ACTIVE MEMBER
         account with an unusable random password.
         """
-        identity: GoogleIdentity = await verify_google_id_token(credential)
         email = identity.email.lower()
 
         user = await self._uow.users.get_by_email(email)
