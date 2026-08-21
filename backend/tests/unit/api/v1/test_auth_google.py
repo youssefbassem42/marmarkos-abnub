@@ -29,9 +29,7 @@ def patch_exchange(monkeypatch: pytest.MonkeyPatch):
 
     def _patch(identity: GoogleIdentity | None = None) -> AsyncMock:
         mock = AsyncMock(return_value=identity or IDENTITY)
-        monkeypatch.setattr(
-            "app.modules.auth.presentation.router.exchange_google_code", mock
-        )
+        monkeypatch.setattr("app.modules.auth.presentation.router.exchange_google_code", mock)
         return mock
 
     return _patch
@@ -76,9 +74,7 @@ async def test_callback_provisions_new_member_and_redirects(
 
     # The access token from the fragment works and belongs to a new member.
     token = location.split("access_token=")[1].split("&")[0]
-    me = await client.get(
-        "/api/v1/users/me", headers={"Authorization": f"Bearer {token}"}
-    )
+    me = await client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
     assert me.status_code == 200
     body = me.json()
     assert body["email"] == "googler@example.com"
@@ -87,9 +83,7 @@ async def test_callback_provisions_new_member_and_redirects(
     assert body["has_password"] is False
 
 
-async def test_callback_links_existing_account(
-    client: AsyncClient, patch_exchange
-) -> None:
+async def test_callback_links_existing_account(client: AsyncClient, patch_exchange) -> None:
     user = await register_user_via_api(client)
     patch_exchange(GoogleIdentity(IDENTITY.sub, user["email"], None, None, None))
 
@@ -100,9 +94,7 @@ async def test_callback_links_existing_account(
 
     assert response.status_code == 303
     token = response.headers["location"].split("access_token=")[1].split("&")[0]
-    me = await client.get(
-        "/api/v1/users/me", headers={"Authorization": f"Bearer {token}"}
-    )
+    me = await client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
     assert me.json()["email"] == user["email"]
     # The pre-existing profile wins over the Google claims.
     assert me.json()["first_name"] == "Existing"

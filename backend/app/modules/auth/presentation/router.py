@@ -43,13 +43,8 @@ def _google_redirect_uri(request: Request) -> str:
 async def google_login_start(request: Request) -> RedirectResponse:
     """Kick off the OAuth redirect flow: send the browser to Google."""
     frontend = settings.FRONTEND_URL.rstrip("/")
-    if not (
-        settings.GOOGLE_CLIENT_ID
-        and settings.GOOGLE_CLIENT_SECRET
-    ):
-        return RedirectResponse(
-            f"{frontend}/google/callback#error=not_configured", status_code=303
-        )
+    if not (settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET):
+        return RedirectResponse(f"{frontend}/google/callback#error=not_configured", status_code=303)
 
     state = secrets.token_urlsafe(32)
     response = RedirectResponse(
