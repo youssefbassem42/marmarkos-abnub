@@ -21,6 +21,7 @@ declare global {
 
 const GOOGLE_GSI_SRC = "https://accounts.google.com/gsi/client";
 let gsiScriptPromise: Promise<void> | null = null;
+const gsiInitialized = new Set<string>();
 
 /** Load the Google Identity Services script once per page. */
 function loadGoogleIdentityServices(): Promise<void> {
@@ -65,6 +66,7 @@ export function SocialAuthButtons({
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Initialize Google once per client ID; re-render the button on locale change.
   useEffect(() => {
     if (!clientId) return;
     let cancelled = false;
@@ -75,14 +77,17 @@ export function SocialAuthButtons({
         const id = window.google?.accounts?.id;
         if (cancelled || !container || !id) return;
 
-        id.initialize({
-          client_id: clientId,
-          callback: (response) => {
-            if (response.credential) {
-              onCredentialRef.current(response.credential);
-            }
-          },
-        });
+        if (!gsiInitialized.has(clientId)) {
+          id.initialize({
+            client_id: clientId,
+            callback: (response) => {
+              if (response.credential) {
+                onCredentialRef.current(response.credential);
+              }
+            },
+          });
+          gsiInitialized.add(clientId);
+        }
         container.innerHTML = "";
         id.renderButton(container, {
           size: "large",
