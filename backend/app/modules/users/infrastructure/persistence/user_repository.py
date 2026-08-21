@@ -35,9 +35,7 @@ class UserRepository:
         return result.scalar_one_or_none() is not None
 
     async def get_by_phone(self, phone: str) -> User | None:
-        result = await self._session.execute(
-            select(User).where(User.phone == phone).limit(1)
-        )
+        result = await self._session.execute(select(User).where(User.phone == phone).limit(1))
         return result.scalar_one_or_none()
 
     async def list_all(self) -> list[User]:

@@ -98,9 +98,7 @@ async def test_google_login_rejects_inactive_account(
     assert response.status_code == 403
 
 
-async def test_google_login_rejects_invalid_credential(
-    client: AsyncClient, patch_verify
-) -> None:
+async def test_google_login_rejects_invalid_credential(client: AsyncClient, patch_verify) -> None:
     mock = patch_verify()
     mock.side_effect = UnauthorizedError("Invalid or expired Google credential")
 
@@ -119,9 +117,7 @@ async def test_google_login_disabled_without_client_id(
     assert response.status_code == 403
 
 
-async def test_login_still_works_after_google_changes(
-    client: AsyncClient, db_engine
-) -> None:
+async def test_login_still_works_after_google_changes(client: AsyncClient, db_engine) -> None:
     await _register(client, "password-user@example.com")
     response = await client.post(
         LOGIN_URL,

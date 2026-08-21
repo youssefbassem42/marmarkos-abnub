@@ -90,9 +90,7 @@ async def verify_google_id_token(credential: str) -> GoogleIdentity:
             try:
                 _cache.store(await _fetch_jwks(client))
             except httpx.HTTPError as exc:
-                raise UnauthorizedError(
-                    "Could not verify the Google credential right now"
-                ) from exc
+                raise UnauthorizedError("Could not verify the Google credential right now") from exc
 
         jwk_key = _cache.get(kid)
         if jwk_key is None:

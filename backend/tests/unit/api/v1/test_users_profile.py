@@ -24,9 +24,7 @@ async def register_and_login(client: AsyncClient, email: str = "profile@example.
     from tests.utils import LOGIN_URL
 
     user = await register_user(client, email=email)
-    response = await client.post(
-        LOGIN_URL, json={"email": email, "password": "StrongPass123!"}
-    )
+    response = await client.post(LOGIN_URL, json={"email": email, "password": "StrongPass123!"})
     assert response.status_code == 200
     return response.json(), user
 
@@ -52,9 +50,7 @@ async def test_get_me_returns_all_profile_fields(client: AsyncClient) -> None:
 async def test_update_me_changes_all_editable_fields(client: AsyncClient) -> None:
     auth, _ = await register_and_login(client)
 
-    response = await client.patch(
-        ME_URL, json=PROFILE_FIELDS, headers=bearer(auth["access_token"])
-    )
+    response = await client.patch(ME_URL, json=PROFILE_FIELDS, headers=bearer(auth["access_token"]))
 
     assert response.status_code == 200
     body = response.json()
@@ -142,9 +138,7 @@ async def test_change_password_revokes_old_refresh_tokens(client: AsyncClient) -
     assert response.status_code == 200
 
     # The first session's refresh token was revoked by the password change.
-    refreshed = await client.post(
-        REFRESH_URL, headers={"Cookie": refresh_cookie}
-    )
+    refreshed = await client.post(REFRESH_URL, headers={"Cookie": refresh_cookie})
     assert refreshed.status_code == 401
 
 
@@ -193,9 +187,7 @@ async def test_avatar_upload_sets_url_when_configured(client: AsyncClient) -> No
         )
 
     assert response.status_code == 200, response.text
-    assert (
-        response.json()["avatar"] == "https://res.cloudinary.com/demo/avatar.jpg"
-    )
+    assert response.json()["avatar"] == "https://res.cloudinary.com/demo/avatar.jpg"
 
 
 async def test_avatar_upload_rejected_without_cloudinary(client: AsyncClient) -> None:
