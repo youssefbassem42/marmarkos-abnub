@@ -33,6 +33,12 @@ _OAUTH_STATE_COOKIE = "google_oauth_state"
 _OAUTH_STATE_MAX_AGE = 600
 
 
+def _frontend_url() -> str:
+    """Frontend origin, tolerant of a scheme-less env value."""
+    url = settings.FRONTEND_URL.rstrip("/")
+    return url if url.startswith(("http://", "https://")) else f"https://{url}"
+
+
 def _google_redirect_uri(request: Request) -> str:
     """Callback URL on this API deployment; must match Google Console."""
     base = str(request.base_url).rstrip("/")
@@ -42,7 +48,7 @@ def _google_redirect_uri(request: Request) -> str:
 @router.get("/google/login")
 async def google_login_start(request: Request) -> RedirectResponse:
     """Kick off the OAuth redirect flow: send the browser to Google."""
-    frontend = settings.FRONTEND_URL.rstrip("/")
+    frontend = _frontend_url()
     if not (settings.GOOGLE_CLIENT_ID and settings.GOOGLE_CLIENT_SECRET):
         return RedirectResponse(f"{frontend}/google/callback#error=not_configured", status_code=303)
 
@@ -72,7 +78,7 @@ async def google_login_callback(
     error: str | None = None,
 ) -> RedirectResponse:
     """Handle Google's redirect: verify state, sign the user in, bounce home."""
-    frontend = settings.FRONTEND_URL.rstrip("/")
+    frontend = _frontend_url()
 
     def back(fragment: str) -> RedirectResponse:
         return RedirectResponse(f"{frontend}/google/callback{fragment}", status_code=303)
