@@ -25,7 +25,7 @@ export function Hero() {
           </p>
           <h1
             dir={isArabic ? "rtl" : "ltr"}
-            className={`mt-3 text-[clamp(2.6rem,9vw,4.6rem)] font-extrabold leading-[0.98] tracking-tight text-navy ${
+            className={`mt-3 text-[clamp(2.6rem,9vw,4.6rem)] font-extrabold leading-[0.98] tracking-tight text-ink ${
               isArabic ? "font-arabic" : ""
             }`}
           >
@@ -45,7 +45,7 @@ export function Hero() {
           <p
             dir="rtl"
             lang="ar"
-            className="font-arabic mt-4 w-fit text-2xl font-bold text-navy lg:text-3xl"
+            className="font-arabic mt-4 w-fit text-2xl font-bold text-ink lg:text-3xl"
           >
             إجتماع الشباب بأبنوب
           </p>

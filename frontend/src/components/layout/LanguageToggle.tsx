@@ -24,7 +24,7 @@ export function LanguageToggle({ className, tone = "light" }: LanguageToggleProp
       className={cn(
         "focus-ring inline-flex h-10 shrink-0 items-center gap-2 rounded-full border px-3.5 text-sm font-bold shadow-sm transition-colors",
         tone === "light"
-          ? "border-border bg-white text-navy hover:bg-soft"
+          ? "border-border bg-card text-ink hover:bg-secondary"
           : "border-white/30 bg-white/10 text-white hover:bg-white/20",
         isArabic ? "font-arabic" : "",
         className,

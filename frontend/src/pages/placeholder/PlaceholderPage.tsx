@@ -25,7 +25,7 @@ export function PlaceholderPage({ titleKey }: PlaceholderPageProps) {
         <span className="grid h-20 w-20 place-items-center rounded-full bg-mint/15">
           <Construction className="h-10 w-10 text-mint" aria-hidden="true" />
         </span>
-        <h1 className={cn("text-3xl font-extrabold tracking-tight text-navy", isArabic && "font-arabic")}>
+        <h1 className={cn("text-3xl font-extrabold tracking-tight text-ink", isArabic && "font-arabic")}>
           {title}
         </h1>
         <p className={cn("max-w-md leading-relaxed text-muted-foreground", isArabic && "font-arabic text-lg")}>

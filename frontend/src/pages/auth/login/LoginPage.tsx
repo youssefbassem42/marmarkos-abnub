@@ -16,7 +16,7 @@ export function LoginPage() {
     >
       <Navbar variant="auth" />
 
-      <main className="flex min-h-[calc(100vh-61px)] flex-col lg:flex-row" dir="ltr">
+      <main className="flex min-h-[calc(100vh-61px)] flex-col lg:flex-row">
         <BrandPanel lang={language} />
         <AuthCard lang={language} />
       </main>

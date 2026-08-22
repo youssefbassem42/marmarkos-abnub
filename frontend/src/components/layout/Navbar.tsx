@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "@/assets/church-logo.png";
 import { LanguageToggle } from "./LanguageToggle";
+import { ThemeToggle } from "./ThemeToggle";
 import { useLanguage } from "@/i18n/context";
 import { logoutUser } from "@/lib/api";
 import { clearAuth, getAccessToken, getAuthUser } from "@/lib/auth";
@@ -61,7 +62,7 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
       isArabic ? "font-arabic text-base" : "",
       isActive
         ? "border-b-2 border-brand-blue text-brand-blue"
-        : "text-navy",
+        : "text-ink",
     );
 
   return (
@@ -110,7 +111,7 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
               <Link
                 to="/notifications"
                 aria-label={t("nav.notifications")}
-                className="focus-ring relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-navy transition-colors hover:bg-secondary"
+                className="focus-ring relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-ink transition-colors hover:bg-secondary"
               >
                 <Bell className="h-5 w-5" aria-hidden="true" />
               </Link>
@@ -170,14 +171,19 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
                 onClick={() => setOpen((v) => !v)}
                 aria-expanded={open}
                 aria-label={open ? "Close menu" : "Open menu"}
-                className="focus-ring inline-flex h-11 w-11 items-center justify-center rounded-xl text-navy lg:hidden"
+                className="focus-ring inline-flex h-11 w-11 items-center justify-center rounded-xl text-ink lg:hidden"
               >
                 {open ? <X /> : <Menu />}
               </button>
             </>
           )}
 
-          {isAuth && <LanguageToggle />}
+          {isAuth && (
+            <>
+              <ThemeToggle />
+              <LanguageToggle />
+            </>
+          )}
         </div>
       </nav>
 
@@ -190,7 +196,7 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
                   to={item.to}
                   onClick={() => setOpen(false)}
                   className={cn(
-                    "focus-ring block rounded-lg px-2 py-3 text-base font-medium text-navy hover:bg-secondary",
+                    "focus-ring block rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary",
                     isArabic ? "font-arabic text-lg" : "",
                   )}
                 >
@@ -203,7 +209,7 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
                 to="/notifications"
                 onClick={() => setOpen(false)}
                 className={cn(
-                  "focus-ring flex items-center gap-2 rounded-lg px-2 py-3 text-base font-medium text-navy hover:bg-secondary",
+                  "focus-ring flex items-center gap-2 rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary",
                   isArabic ? "font-arabic text-lg" : "",
                 )}
               >
@@ -212,7 +218,10 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
               </Link>
             </li>
             <li className="flex items-center justify-between gap-3 pt-3 pb-4">
-              <LanguageToggle />
+              <div className="flex items-center gap-2">
+                <LanguageToggle />
+                <ThemeToggle />
+              </div>
               {authenticated ? (
                 <button
                   type="button"

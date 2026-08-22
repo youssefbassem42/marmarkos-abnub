@@ -17,7 +17,7 @@ export function SuccessState({ lang }: SuccessStateProps) {
       <span className="grid h-16 w-16 place-items-center rounded-full bg-mint/15">
         <CheckCircle2 className="h-9 w-9 text-mint" aria-hidden="true" />
       </span>
-      <h2 className="mt-5 font-heading text-3xl font-bold text-navy">
+      <h2 className="mt-5 font-heading text-3xl font-bold text-ink">
         {t("validation.successTitle")}
       </h2>
       <p

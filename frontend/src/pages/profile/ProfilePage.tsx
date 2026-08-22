@@ -200,7 +200,7 @@ export function ProfilePage() {
 
       <main className="mx-auto max-w-3xl px-5 pb-16 pt-28 lg:px-8">
         <header className="text-center">
-          <h1 className={cn("text-3xl font-extrabold tracking-tight text-navy", isArabic && "font-arabic")}>
+          <h1 className={cn("text-3xl font-extrabold tracking-tight text-ink", isArabic && "font-arabic")}>
             {t("heading")}
           </h1>
           <p className={cn("mt-2 text-muted-foreground", isArabic ? "font-arabic text-lg" : "text-sm")}>
@@ -240,7 +240,7 @@ export function ProfilePage() {
             />
           </div>
           <div className="text-center sm:text-start">
-            <p className={cn("font-bold text-navy", isArabic ? "font-arabic text-xl" : "text-lg")}>
+            <p className={cn("font-bold text-ink", isArabic ? "font-arabic text-xl" : "text-lg")}>
               {user.first_name} {user.last_name}
             </p>
             <p className="text-sm text-muted-foreground">{t("avatar.hint")}</p>
@@ -260,7 +260,7 @@ export function ProfilePage() {
             )}
           </div>
           <div className="flex-1">
-            <h2 className={cn("flex items-center justify-center gap-2 font-extrabold text-navy sm:justify-start", isArabic ? "font-arabic text-xl" : "text-lg")}>
+            <h2 className={cn("flex items-center justify-center gap-2 font-extrabold text-ink sm:justify-start", isArabic ? "font-arabic text-xl" : "text-lg")}>
               <QrCode className="h-5 w-5 text-mint" aria-hidden="true" />
               {t("qr.title")}
             </h2>
@@ -273,7 +273,7 @@ export function ProfilePage() {
               onClick={() => void loadQr()}
               disabled={qrLoading}
               className={cn(
-                "mt-3 h-10 rounded-xl border-navy px-4 text-sm font-semibold text-navy focus-ring",
+                "mt-3 h-10 rounded-xl border-navy px-4 text-sm font-semibold text-ink focus-ring",
                 isArabic && "font-arabic",
               )}
             >
@@ -335,7 +335,7 @@ export function ProfilePage() {
           noValidate
           className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:p-8"
         >
-          <h2 className={cn("flex items-center gap-2 font-extrabold text-navy", isArabic ? "font-arabic text-xl" : "text-lg")}>
+          <h2 className={cn("flex items-center gap-2 font-extrabold text-ink", isArabic ? "font-arabic text-xl" : "text-lg")}>
             <KeyRound className="h-5 w-5 text-mint" aria-hidden="true" />
             {t("password.heading")}
           </h2>
@@ -375,7 +375,7 @@ export function ProfilePage() {
             type="submit"
             disabled={savingPassword}
             className={cn(
-              "h-12 w-full rounded-xl border border-navy bg-transparent text-base font-semibold text-navy transition-colors hover:bg-soft focus-ring disabled:cursor-not-allowed disabled:opacity-60",
+              "h-12 w-full rounded-xl border border-navy bg-transparent text-base font-semibold text-ink transition-colors hover:bg-soft focus-ring disabled:cursor-not-allowed disabled:opacity-60",
               isArabic && "font-arabic",
             )}
           >

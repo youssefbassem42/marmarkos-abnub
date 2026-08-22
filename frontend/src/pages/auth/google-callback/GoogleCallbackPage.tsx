@@ -95,7 +95,7 @@ export function GoogleCallbackPage() {
         ) : (
           <>
             <XCircle className="h-12 w-12 text-brand-red" aria-hidden="true" />
-            <p className={cn("text-navy", isArabic ? "font-arabic text-xl" : "text-base")}>
+            <p className={cn("text-ink", isArabic ? "font-arabic text-xl" : "text-base")}>
               {errorMessage ??
                 (isArabic
                   ? "تعذّر إكمال تسجيل الدخول عبر Google."

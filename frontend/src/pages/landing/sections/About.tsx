@@ -22,7 +22,7 @@ export function About() {
           </p>
           <h2
             className={cn(
-              "mt-3 text-[clamp(1.9rem,4vw,2.5rem)] font-extrabold tracking-tight text-navy",
+              "mt-3 text-[clamp(1.9rem,4vw,2.5rem)] font-extrabold tracking-tight text-ink",
               isArabic ? "font-arabic text-[clamp(2rem,4vw,2.8rem)]" : "",
             )}
           >
@@ -48,7 +48,7 @@ export function About() {
                 </span>
                 <span
                   className={cn(
-                    "text-sm text-navy",
+                    "text-sm text-ink",
                     isArabic ? "font-arabic text-base" : "",
                   )}
                 >

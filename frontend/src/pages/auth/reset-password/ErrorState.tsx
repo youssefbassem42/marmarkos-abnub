@@ -17,7 +17,7 @@ export function ErrorState({ lang }: ErrorStateProps) {
       <span className="grid h-16 w-16 place-items-center rounded-full bg-brand-red/10">
         <ShieldAlert className="h-9 w-9 text-brand-red" aria-hidden="true" />
       </span>
-      <h2 className="mt-5 font-heading text-3xl font-bold text-navy">
+      <h2 className="mt-5 font-heading text-3xl font-bold text-ink">
         {t("errorState.title")}
       </h2>
       <p
@@ -38,7 +38,7 @@ export function ErrorState({ lang }: ErrorStateProps) {
         asChild
         variant="outline"
         className={cn(
-          "mt-3 h-12 w-full max-w-xs rounded-xl border-navy text-navy focus-ring",
+          "mt-3 h-12 w-full max-w-xs rounded-xl border-navy text-ink focus-ring",
           isArabic ? "font-arabic text-lg" : "text-base font-semibold",
         )}
       >

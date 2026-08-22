@@ -179,7 +179,7 @@ export function ResetPasswordForm({
         asChild
         variant="outline"
         className={cn(
-          "h-12 w-full rounded-xl border-navy text-navy focus-ring",
+          "h-12 w-full rounded-xl border-navy text-ink focus-ring",
           isArabic ? "font-arabic text-lg" : "text-base font-semibold",
         )}
       >

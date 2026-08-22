@@ -27,7 +27,7 @@ export function SocialAuthButtons({
         type="button"
         disabled
         title={comingSoonLabel}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-lg font-medium text-navy transition-colors hover:bg-soft focus-ring disabled:cursor-not-allowed disabled:opacity-60"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-lg font-medium text-ink transition-colors hover:bg-soft focus-ring disabled:cursor-not-allowed disabled:opacity-60"
       >
         <GoogleGlyph />
         {googleLabel}
@@ -40,7 +40,7 @@ export function SocialAuthButtons({
       href={googleSignInUrl()}
       aria-label={googleLabel}
       className={cn(
-        "focus-ring flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-lg font-medium text-navy transition-colors hover:bg-soft",
+        "focus-ring flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-lg font-medium text-ink transition-colors hover:bg-soft",
         isArabic ? "font-arabic" : "",
       )}
     >

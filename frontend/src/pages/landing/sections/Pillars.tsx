@@ -25,7 +25,7 @@ export function Pillars() {
           <span className="h-px flex-1 bg-border" />
           <h2
             className={cn(
-              "text-center text-2xl font-extrabold tracking-tight text-navy lg:text-[28px]",
+              "text-center text-2xl font-extrabold tracking-tight text-ink lg:text-[28px]",
               isArabic ? "font-arabic text-3xl" : "",
             )}
           >
@@ -55,7 +55,7 @@ export function Pillars() {
                 </span>
                 <h3
                   className={cn(
-                    "mt-6 text-[15px] font-extrabold tracking-tight text-navy",
+                    "mt-6 text-[15px] font-extrabold tracking-tight text-ink",
                     isArabic ? "text-xl" : "",
                   )}
                 >

@@ -252,3 +252,59 @@
     transition: none;
   }
 }
+/* ---- Dark mode (brand-tuned): deep navy surfaces, mint accent ---- */
+.dark {
+  --background: #0f1929;
+  --foreground: #dbe7f5;
+  --card: #182740;
+  --card-foreground: #dbe7f5;
+  --popover: #182740;
+  --popover-foreground: #dbe7f5;
+  --primary: var(--brand-mint);
+  --primary-foreground: #0f1929;
+  --secondary: #152238;
+  --secondary-foreground: #dbe7f5;
+  --muted: #152238;
+  --muted-foreground: #93a7c4;
+  --accent: #1d2f4d;
+  --accent-foreground: #dbe7f5;
+  --destructive: var(--brand-red);
+  --destructive-foreground: #ffffff;
+  --border: rgba(219, 231, 245, 0.14);
+  --input: rgba(219, 231, 245, 0.18);
+  --ring: var(--brand-mint);
+  --soft: #131f33;
+
+  /* Ink = strong text color; flips from navy to a light tint on dark so
+     headings stay readable on navy surfaces. */
+  --ink: #dbe7f5;
+
+  /* Brand accents stay identical in both modes (design guide §4). */
+  --brand-navy: #253d63;
+  --brand-blue: #6ea8dd;
+  --brand-orange: #f96702;
+  --brand-mint: #53cb9e;
+  --brand-red: #e04a3a;
+}
+
+@theme inline {
+  --color-ink: var(--ink);
+}
+
+/* Dark-mode adjustments for the brand button utilities */
+.dark .btn-outline {
+  border-color: var(--ink);
+  background-color: transparent;
+  color: var(--ink);
+  &:hover {
+    background-color: rgba(219, 231, 245, 0.08);
+  }
+}
+
+.dark .btn-primary {
+  background-color: var(--brand-mint);
+  color: #0f1929;
+  &:hover {
+    background-color: #46b78c;
+  }
+}

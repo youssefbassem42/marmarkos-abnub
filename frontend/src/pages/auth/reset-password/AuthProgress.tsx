@@ -50,7 +50,7 @@ export function AuthProgress({ lang }: AuthProgressProps) {
                   isArabic
                     ? "font-arabic text-sm sm:text-base"
                     : "text-xs font-medium sm:text-sm",
-                  isActive && "font-bold text-navy",
+                  isActive && "font-bold text-ink",
                   isCompleted && "font-semibold text-mint",
                   !isActive && !isCompleted && "text-gray-400",
                 )}

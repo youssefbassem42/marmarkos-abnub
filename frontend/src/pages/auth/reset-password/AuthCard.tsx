@@ -33,7 +33,7 @@ export function AuthCard({ lang, token, stage, onSuccess }: AuthCardProps) {
                 <span className="grid h-14 w-14 place-items-center rounded-full bg-mint/15">
                   <Lock className="h-7 w-7 text-mint" aria-hidden="true" />
                 </span>
-                <h2 className="mt-4 font-heading text-3xl font-bold text-navy">
+                <h2 className="mt-4 font-heading text-3xl font-bold text-ink">
                   {t("card.heading")}
                 </h2>
                 <p

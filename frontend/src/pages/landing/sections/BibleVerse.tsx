@@ -45,7 +45,7 @@ export function BibleVerse() {
         >
           <h2
             className={cn(
-              "text-xl font-extrabold tracking-tight text-navy",
+              "text-xl font-extrabold tracking-tight text-ink",
               isArabic ? "font-arabic text-2xl" : "",
             )}
           >
