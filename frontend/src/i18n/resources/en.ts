@@ -4,6 +4,7 @@ export const en = {
     retry: "Try again",
     loading: "Loading...",
     adminPanel: "Admin panel",
+    back: "Back",
     errors: {
       unknown: "Something went wrong. Please try again.",
     },

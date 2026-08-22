@@ -32,6 +32,7 @@ export function AttendanceLayout() {
           <AdminTopbar
             title={t("checkIn.title")}
             subtitle={t("checkIn.subtitle")}
+            backHref="/"
           />
           <div className="mx-auto w-full max-w-5xl px-5 py-6 lg:px-8">
             <Outlet />
