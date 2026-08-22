@@ -116,6 +116,8 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
                 <Bell className="h-5 w-5" aria-hidden="true" />
               </Link>
 
+              <ThemeToggle className="hidden sm:inline-flex" />
+
               <LanguageToggle className="ml-1 hidden sm:inline-flex" />
 
               {authenticated ? (
