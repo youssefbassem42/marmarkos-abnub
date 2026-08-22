@@ -58,17 +58,20 @@ def is_meeting_date(value: date) -> bool:
     return value.weekday() == MEETING_WEEKDAY
 
 
-def current_meeting_date(reference: date | None = None) -> date:
+def current_meeting_date(reference: date) -> date:
     """Return the meeting ``reference`` belongs to.
 
     This is the meeting day of the current meeting week: ``reference``
     itself when it is a Thursday, otherwise the most recent Thursday
     before it. Never returns a date in the future relative to
     ``reference``.
+
+    The caller owns the clock: pass ``today_local()`` from
+    ``app.core.time``. There is deliberately no default so the server
+    clock can never be used by accident.
     """
-    today = reference or date.today()
-    days_since_meeting = (today.weekday() - MEETING_WEEKDAY) % MEETING_INTERVAL_DAYS
-    return today - timedelta(days=days_since_meeting)
+    days_since_meeting = (reference.weekday() - MEETING_WEEKDAY) % MEETING_INTERVAL_DAYS
+    return reference - timedelta(days=days_since_meeting)
 
 
 def meeting_week_end(meeting_date: date) -> date:
@@ -76,12 +79,12 @@ def meeting_week_end(meeting_date: date) -> date:
     return meeting_date + timedelta(days=MEETING_INTERVAL_DAYS - 1)
 
 
-def next_meeting_date(reference: date | None = None) -> date:
+def next_meeting_date(reference: date) -> date:
     """Return the first meeting strictly after ``reference``."""
     return current_meeting_date(reference) + timedelta(days=MEETING_INTERVAL_DAYS)
 
 
-def previous_meeting_date(reference: date | None = None) -> date:
+def previous_meeting_date(reference: date) -> date:
     """Return the meeting immediately before ``reference``'s meeting."""
     return current_meeting_date(reference) - timedelta(days=MEETING_INTERVAL_DAYS)
 

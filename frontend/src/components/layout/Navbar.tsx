@@ -1,5 +1,12 @@
 import { useEffect, useState } from "react";
-import { Bell, LogOut, Menu, User as UserIcon, X } from "lucide-react";
+import {
+  Bell,
+  CalendarCheck,
+  LogOut,
+  Menu,
+  User as UserIcon,
+  X,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "@/assets/church-logo.png";
@@ -7,7 +14,12 @@ import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { useLanguage } from "@/i18n/context";
 import { logoutUser } from "@/lib/api";
-import { clearAuth, getAccessToken, getAuthUser } from "@/lib/auth";
+import {
+  clearAuth,
+  getAccessToken,
+  getAuthUser,
+  isAttendanceManager,
+} from "@/lib/auth";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,17 +41,23 @@ const NAV_ITEMS: NavItem[] = [
   { key: "aboutUs", to: "/about-us" },
 ];
 
-export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }) {
+export function Navbar({
+  variant = "landing",
+}: {
+  variant?: "landing" | "auth";
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
   const { language } = useLanguage();
   const isArabic = language === "ar";
   const { t } = useTranslation("landing");
+  const { t: tAttendance } = useTranslation("attendance");
   const navigate = useNavigate();
   const isAuth = variant === "auth";
   // Read per render: remounts on every route change keep this fresh.
   const authenticated = Boolean(getAccessToken());
   const user = getAuthUser();
+  const attendanceManager = isAttendanceManager();
 
   useEffect(() => {
     if (isAuth) return;
@@ -60,9 +78,7 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
     cn(
       "focus-ring rounded-sm pb-1 text-[15px] font-medium transition-colors hover:text-brand-blue",
       isArabic ? "font-arabic text-base" : "",
-      isActive
-        ? "border-b-2 border-brand-blue text-brand-blue"
-        : "text-ink",
+      isActive ? "border-b-2 border-brand-blue text-brand-blue" : "text-ink",
     );
 
   return (
@@ -101,11 +117,22 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
               <ul className="hidden items-center gap-6 lg:flex">
                 {NAV_ITEMS.map((item) => (
                   <li key={item.key}>
-                    <NavLink to={item.to} end={item.to === "/"} className={navLinkClass}>
+                    <NavLink
+                      to={item.to}
+                      end={item.to === "/"}
+                      className={navLinkClass}
+                    >
                       {t(`nav.${item.key}`)}
                     </NavLink>
                   </li>
                 ))}
+                {attendanceManager && (
+                  <li>
+                    <NavLink to="/attendance/check-in" className={navLinkClass}>
+                      {tAttendance("nav.checkIn")}
+                    </NavLink>
+                  </li>
+                )}
               </ul>
 
               <Link
@@ -143,14 +170,23 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-44">
                     <DropdownMenuItem asChild>
-                      <Link to="/profile" className={cn("cursor-pointer", isArabic && "font-arabic")}>
+                      <Link
+                        to="/profile"
+                        className={cn(
+                          "cursor-pointer",
+                          isArabic && "font-arabic",
+                        )}
+                      >
                         <UserIcon className="me-2 h-4 w-4" aria-hidden="true" />
                         {t("nav.profile")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuItem
                       onClick={() => void handleSignOut()}
-                      className={cn("cursor-pointer text-brand-red", isArabic && "font-arabic")}
+                      className={cn(
+                        "cursor-pointer text-brand-red",
+                        isArabic && "font-arabic",
+                      )}
                     >
                       <LogOut className="me-2 h-4 w-4" aria-hidden="true" />
                       {t("nav.signOut")}
@@ -191,7 +227,10 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
 
       {open && !isAuth && (
         <div className="border-t border-border bg-background lg:hidden">
-          <ul dir={isArabic ? "rtl" : "ltr"} className="mx-auto max-w-7xl px-5 py-3">
+          <ul
+            dir={isArabic ? "rtl" : "ltr"}
+            className="mx-auto max-w-7xl px-5 py-3"
+          >
             {NAV_ITEMS.map((item) => (
               <li key={item.key}>
                 <Link
@@ -206,6 +245,21 @@ export function Navbar({ variant = "landing" }: { variant?: "landing" | "auth" }
                 </Link>
               </li>
             ))}
+            {attendanceManager && (
+              <li>
+                <Link
+                  to="/attendance/check-in"
+                  onClick={() => setOpen(false)}
+                  className={cn(
+                    "focus-ring flex items-center gap-2 rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary",
+                    isArabic ? "font-arabic text-lg" : "",
+                  )}
+                >
+                  <CalendarCheck className="h-5 w-5" aria-hidden="true" />
+                  {tAttendance("nav.checkIn")}
+                </Link>
+              </li>
+            )}
             <li>
               <Link
                 to="/notifications"

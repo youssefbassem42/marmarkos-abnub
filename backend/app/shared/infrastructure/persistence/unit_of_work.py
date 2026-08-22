@@ -23,6 +23,9 @@ from app.modules.attendance.infrastructure.persistence.attendance_repository imp
 from app.modules.attendance.infrastructure.persistence.service_session_repository import (
     ServiceSessionRepository,
 )
+from app.modules.attendance.infrastructure.persistence.weekly_attendance_repository import (
+    WeeklyAttendanceRepository,
+)
 from app.modules.auth.infrastructure.persistence.refresh_token_repository import (
     RefreshTokenRepository,
 )
@@ -134,6 +137,10 @@ class UnitOfWork:
     @property
     def attendance(self) -> AttendanceRepository:
         return AttendanceRepository(self._session)
+
+    @property
+    def weekly_attendance(self) -> WeeklyAttendanceRepository:
+        return WeeklyAttendanceRepository(self._session)
 
     @property
     def blog_posts(self) -> BlogPostRepository:

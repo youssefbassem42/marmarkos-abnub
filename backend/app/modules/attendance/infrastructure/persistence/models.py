@@ -1,5 +1,11 @@
 """SQLAlchemy ORM models for the attendance module.
 
+LEGACY / FROZEN (decision D-8): ``ServiceSession`` and
+``AttendanceRecord`` belong to the pre-weekly attendance model. No
+Phase 2 endpoint uses them; they must not be extended, migrated, or
+dropped during Sprint 2 (a Phase 3 decision). Live attendance lives in
+``weekly_models.py``.
+
 Attendance is immutable: a scan record is never edited after creation.
 ``attendance_date`` is a denormalized copy of the session date so
 per-meeting and monthly analytics queries never need to join

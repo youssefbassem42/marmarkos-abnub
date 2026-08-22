@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
+  CalendarCheck,
   Camera,
   CheckCircle2,
   KeyRound,
@@ -17,11 +18,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/layout/Navbar";
 import { useLanguage } from "@/i18n/context";
-import { apiClient, ApiError, changePassword, updateProfile, uploadAvatar } from "@/lib/api";
+import { AttendanceStatusBadge } from "@/modules/attendance/components/AttendanceStatusBadge";
+import { useMyAttendance } from "@/modules/attendance/hooks/useMyAttendance";
+import {
+  apiClient,
+  ApiError,
+  changePassword,
+  updateProfile,
+  uploadAvatar,
+} from "@/lib/api";
 import { getAccessToken, getAuthUser, updateStoredUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
 type Status = { kind: "ok" | "error"; text: string } | null;
+
+/** Current calendar month for the self-service attendance query. */
+function currentYearMonth(): { year: number; month: number } {
+  const now = new Date();
+  return { year: now.getFullYear(), month: now.getMonth() + 1 };
+}
 
 export function ProfilePage() {
   const { language } = useLanguage();
@@ -51,6 +66,9 @@ export function ProfilePage() {
   // Attendance QR (backend issues a fresh token and returns an SVG)
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
+
+  const { year: myYear, month: myMonth } = currentYearMonth();
+  const myAttendance = useMyAttendance(myYear, myMonth);
 
   const loadQr = async () => {
     if (!getAccessToken()) return;
@@ -83,7 +101,6 @@ export function ProfilePage() {
         return null;
       });
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Signed-in users only.
@@ -156,12 +173,12 @@ export function ProfilePage() {
       setPasswordStatus({ kind: "error", text: t("password.mismatch") });
       return;
     }
-    if (
-      !(/[a-z]/.test(newPassword) &&
-        /[A-Z]/.test(newPassword) &&
-        /\d/.test(newPassword) &&
-        /[^A-Za-z0-9]/.test(newPassword))
-    ) {
+    if (!(
+      /[a-z]/.test(newPassword) &&
+      /[A-Z]/.test(newPassword) &&
+      /\d/.test(newPassword) &&
+      /[^A-Za-z0-9]/.test(newPassword)
+    )) {
       setPasswordStatus({ kind: "error", text: t("password.weak") });
       return;
     }
@@ -192,18 +209,33 @@ export function ProfilePage() {
     }
   };
 
-  const initials = `${(user.first_name ?? "?")[0]}${(user.last_name ?? "")[0] ?? ""}`.toUpperCase();
+  const initials =
+    `${(user.first_name ?? "?")[0]}${(user.last_name ?? "")[0] ?? ""}`.toUpperCase();
 
   return (
-    <div dir={isArabic ? "rtl" : "ltr"} lang={language} className="min-h-screen bg-background">
+    <div
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={language}
+      className="min-h-screen bg-background"
+    >
       <Navbar />
 
       <main className="mx-auto max-w-3xl px-5 pb-16 pt-28 lg:px-8">
         <header className="text-center">
-          <h1 className={cn("text-3xl font-extrabold tracking-tight text-ink", isArabic && "font-arabic")}>
+          <h1
+            className={cn(
+              "text-3xl font-extrabold tracking-tight text-ink",
+              isArabic && "font-arabic",
+            )}
+          >
             {t("heading")}
           </h1>
-          <p className={cn("mt-2 text-muted-foreground", isArabic ? "font-arabic text-lg" : "text-sm")}>
+          <p
+            className={cn(
+              "mt-2 text-muted-foreground",
+              isArabic ? "font-arabic text-lg" : "text-sm",
+            )}
+          >
             {t("subtitle")}
           </p>
         </header>
@@ -240,7 +272,12 @@ export function ProfilePage() {
             />
           </div>
           <div className="text-center sm:text-start">
-            <p className={cn("font-bold text-ink", isArabic ? "font-arabic text-xl" : "text-lg")}>
+            <p
+              className={cn(
+                "font-bold text-ink",
+                isArabic ? "font-arabic text-xl" : "text-lg",
+              )}
+            >
               {user.first_name} {user.last_name}
             </p>
             <p className="text-sm text-muted-foreground">{t("avatar.hint")}</p>
@@ -254,17 +291,30 @@ export function ProfilePage() {
               <img src={qrUrl} alt={t("qr.title")} className="h-full w-full" />
             ) : (
               <QrCode
-                className={cn("h-16 w-16 text-border", qrLoading && "animate-pulse")}
+                className={cn(
+                  "h-16 w-16 text-border",
+                  qrLoading && "animate-pulse",
+                )}
                 aria-hidden="true"
               />
             )}
           </div>
           <div className="flex-1">
-            <h2 className={cn("flex items-center justify-center gap-2 font-extrabold text-ink sm:justify-start", isArabic ? "font-arabic text-xl" : "text-lg")}>
+            <h2
+              className={cn(
+                "flex items-center justify-center gap-2 font-extrabold text-ink sm:justify-start",
+                isArabic ? "font-arabic text-xl" : "text-lg",
+              )}
+            >
               <QrCode className="h-5 w-5 text-mint" aria-hidden="true" />
               {t("qr.title")}
             </h2>
-            <p className={cn("mt-1 text-sm leading-6 text-muted-foreground", isArabic && "font-arabic")}>
+            <p
+              className={cn(
+                "mt-1 text-sm leading-6 text-muted-foreground",
+                isArabic && "font-arabic",
+              )}
+            >
               {t("qr.hint")}
             </p>
             <Button
@@ -277,11 +327,119 @@ export function ProfilePage() {
                 isArabic && "font-arabic",
               )}
             >
-              <RefreshCw className={cn("me-2 h-4 w-4", qrLoading && "animate-spin")} aria-hidden="true" />
+              <RefreshCw
+                className={cn("me-2 h-4 w-4", qrLoading && "animate-spin")}
+                aria-hidden="true"
+              />
               {t("qr.refresh")}
             </Button>
           </div>
         </section>
+
+        {/* My attendance (US-012): sits directly under the QR card. */}
+        {myAttendance.data &&
+          (() => {
+            const my = myAttendance;
+            return (
+              <section className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)]">
+                <h2
+                  className={cn(
+                    "flex items-center justify-between gap-2 font-extrabold text-ink sm:justify-start",
+                    isArabic ? "font-arabic text-xl" : "text-lg",
+                  )}
+                >
+                  <CalendarCheck
+                    className="h-5 w-5 text-mint"
+                    aria-hidden="true"
+                  />
+                  {t("attendance.title")}
+                  <span
+                    className={cn(
+                      "ms-auto text-sm font-semibold text-muted-foreground",
+                      isArabic && "font-arabic",
+                    )}
+                    dir="ltr"
+                  >
+                    {my.data.year}/{String(my.data.month).padStart(2, "0")}
+                  </span>
+                </h2>
+
+                <div className="mt-4 grid grid-cols-3 gap-3 text-center">
+                  <div className="rounded-xl bg-secondary px-3 py-3">
+                    <p className="font-heading text-2xl font-bold text-ink">
+                      {my.data.meetings_held}
+                    </p>
+                    <p
+                      className={cn(
+                        "text-xs text-muted-foreground",
+                        isArabic && "font-arabic",
+                      )}
+                    >
+                      {t("attendance.held")}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-mint/10 px-3 py-3">
+                    <p className="font-heading text-2xl font-bold text-emerald-700">
+                      {my.data.attended_count}
+                    </p>
+                    <p
+                      className={cn(
+                        "text-xs text-muted-foreground",
+                        isArabic && "font-arabic",
+                      )}
+                    >
+                      {t("attendance.attended")}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-secondary px-3 py-3">
+                    <p
+                      className="font-heading text-2xl font-bold text-ink"
+                      dir="ltr"
+                    >
+                      {my.data.attendance_rate}%
+                    </p>
+                    <p
+                      className={cn(
+                        "text-xs text-muted-foreground",
+                        isArabic && "font-arabic",
+                      )}
+                    >
+                      {t("attendance.rate")}
+                    </p>
+                  </div>
+                </div>
+
+                {my.data.records.length > 0 && (
+                  <ul className="mt-4 divide-y divide-border">
+                    {[...my.data.records].reverse().map((record) => (
+                      <li
+                        key={record.meeting_date}
+                        className="flex items-center justify-between gap-3 py-2.5"
+                      >
+                        <span
+                          className={cn(
+                            "text-sm text-ink",
+                            isArabic ? "font-arabic" : "",
+                          )}
+                          dir="auto"
+                        >
+                          {new Intl.DateTimeFormat(
+                            language === "ar" ? "ar-EG" : "en-GB",
+                            {
+                              weekday: "long",
+                              day: "numeric",
+                              month: "long",
+                            },
+                          ).format(new Date(record.meeting_date))}
+                        </span>
+                        <AttendanceStatusBadge status={record.status} />
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            );
+          })()}
 
         {/* Profile fields */}
         <form
@@ -290,29 +448,90 @@ export function ProfilePage() {
           className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:p-8"
         >
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label={t("form.firstNameLabel")} htmlFor="firstName" icon={<User className="h-4 w-4" />}>
-              <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} autoComplete="given-name" className={inputClass} />
+            <Field
+              label={t("form.firstNameLabel")}
+              htmlFor="firstName"
+              icon={<User className="h-4 w-4" />}
+            >
+              <Input
+                id="firstName"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                autoComplete="given-name"
+                className={inputClass}
+              />
             </Field>
-            <Field label={t("form.lastNameLabel")} htmlFor="lastName" icon={<User className="h-4 w-4" />}>
-              <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} autoComplete="family-name" className={inputClass} />
+            <Field
+              label={t("form.lastNameLabel")}
+              htmlFor="lastName"
+              icon={<User className="h-4 w-4" />}
+            >
+              <Input
+                id="lastName"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                autoComplete="family-name"
+                className={inputClass}
+              />
             </Field>
           </div>
 
-          <Field label={t("form.emailLabel")} htmlFor="email" icon={<Mail className="h-4 w-4" />} hint={t("form.emailHint")}>
-            <Input id="email" value={user.email} disabled dir="ltr" className={cn(inputClass, "cursor-not-allowed opacity-70")} />
+          <Field
+            label={t("form.emailLabel")}
+            htmlFor="email"
+            icon={<Mail className="h-4 w-4" />}
+            hint={t("form.emailHint")}
+          >
+            <Input
+              id="email"
+              value={user.email}
+              disabled
+              dir="ltr"
+              className={cn(inputClass, "cursor-not-allowed opacity-70")}
+            />
           </Field>
 
           <div className="grid gap-5 sm:grid-cols-2">
-            <Field label={t("form.phoneLabel")} htmlFor="phone" icon={<Phone className="h-4 w-4" />}>
-              <Input id="phone" type="tel" dir="ltr" inputMode="tel" value={phone} onChange={(e) => setPhone(e.target.value)} autoComplete="tel" className={cn(inputClass, "ps-9 pe-3 text-start")} />
+            <Field
+              label={t("form.phoneLabel")}
+              htmlFor="phone"
+              icon={<Phone className="h-4 w-4" />}
+            >
+              <Input
+                id="phone"
+                type="tel"
+                dir="ltr"
+                inputMode="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                autoComplete="tel"
+                className={cn(inputClass, "ps-9 pe-3 text-start")}
+              />
             </Field>
             <Field label={t("form.dateOfBirthLabel")} htmlFor="dateOfBirth">
-              <Input id="dateOfBirth" type="date" max={new Date().toISOString().slice(0, 10)} value={dateOfBirth} onChange={(e) => setDateOfBirth(e.target.value)} className={inputClass} />
+              <Input
+                id="dateOfBirth"
+                type="date"
+                max={new Date().toISOString().slice(0, 10)}
+                value={dateOfBirth}
+                onChange={(e) => setDateOfBirth(e.target.value)}
+                className={inputClass}
+              />
             </Field>
           </div>
 
-          <Field label={t("form.addressLabel")} htmlFor="address" icon={<MapPin className="h-4 w-4" />}>
-            <Input id="address" value={address} onChange={(e) => setAddress(e.target.value)} autoComplete="street-address" className={cn(inputClass, "ps-9 pe-3")} />
+          <Field
+            label={t("form.addressLabel")}
+            htmlFor="address"
+            icon={<MapPin className="h-4 w-4" />}
+          >
+            <Input
+              id="address"
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              autoComplete="street-address"
+              className={cn(inputClass, "ps-9 pe-3")}
+            />
           </Field>
 
           <StatusBanner status={profileStatus} />
@@ -335,13 +554,23 @@ export function ProfilePage() {
           noValidate
           className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:p-8"
         >
-          <h2 className={cn("flex items-center gap-2 font-extrabold text-ink", isArabic ? "font-arabic text-xl" : "text-lg")}>
+          <h2
+            className={cn(
+              "flex items-center gap-2 font-extrabold text-ink",
+              isArabic ? "font-arabic text-xl" : "text-lg",
+            )}
+          >
             <KeyRound className="h-5 w-5 text-mint" aria-hidden="true" />
             {t("password.heading")}
           </h2>
 
           {!user.has_password && (
-            <p className={cn("rounded-xl bg-blue-50 px-4 py-3 text-sm text-brand-blue", isArabic && "font-arabic")}>
+            <p
+              className={cn(
+                "rounded-xl bg-blue-50 px-4 py-3 text-sm text-brand-blue",
+                isArabic && "font-arabic",
+              )}
+            >
               {t("password.noCurrentHint")}
             </p>
           )}
@@ -362,10 +591,26 @@ export function ProfilePage() {
 
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label={t("password.newLabel")} htmlFor="newPassword">
-              <Input id="newPassword" type="password" dir="ltr" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} autoComplete="new-password" className={inputClass} />
+              <Input
+                id="newPassword"
+                type="password"
+                dir="ltr"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                autoComplete="new-password"
+                className={inputClass}
+              />
             </Field>
             <Field label={t("password.confirmLabel")} htmlFor="confirmPassword">
-              <Input id="confirmPassword" type="password" dir="ltr" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} autoComplete="new-password" className={inputClass} />
+              <Input
+                id="confirmPassword"
+                type="password"
+                dir="ltr"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                autoComplete="new-password"
+                className={inputClass}
+              />
             </Field>
           </div>
 
@@ -384,7 +629,13 @@ export function ProfilePage() {
         </form>
 
         <p className="mt-8 text-center text-sm text-muted-foreground">
-          <Link to="/" className={cn("font-semibold text-brand-blue underline-offset-4 hover:underline", isArabic && "font-arabic")}>
+          <Link
+            to="/"
+            className={cn(
+              "font-semibold text-brand-blue underline-offset-4 hover:underline",
+              isArabic && "font-arabic",
+            )}
+          >
             ← /
           </Link>
         </p>
@@ -434,7 +685,9 @@ function StatusBanner({ status }: { status: Status }) {
           : "border border-brand-red/30 bg-brand-red/5 text-brand-red",
       )}
     >
-      {status.kind === "ok" && <CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
+      {status.kind === "ok" && (
+        <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+      )}
       {status.text}
     </div>
   );

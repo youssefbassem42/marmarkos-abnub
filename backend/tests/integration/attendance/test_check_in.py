@@ -2,13 +2,15 @@
 
 import hashlib
 import uuid
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 import pytest
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.core.exceptions.errors import ConflictError, ForbiddenError, ValidationError
+from app.core.time import local_datetime, today_local
 from app.modules.attendance.application.commands.check_in_command import CheckInCommand
 from app.modules.attendance.domain.meeting_schedule import (
     MEETING_INTERVAL_DAYS,
@@ -20,7 +22,14 @@ from app.modules.attendance.infrastructure.persistence.weekly_models import (
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.infrastructure.persistence.models import User, UserQrCode
+from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 from tests.integration.attendance.conftest import create_user
+
+
+def _on_time_now() -> datetime:
+    """A clock pinned just before the meeting start + grace threshold."""
+    meeting = current_meeting_date(today_local())
+    return local_datetime(meeting, settings.MEETING_START_TIME) - timedelta(minutes=30)
 
 
 @pytest.fixture
@@ -71,9 +80,9 @@ async def test_check_in_records_the_current_meeting(
 ):
     """A scan on any weekday is attributed to the current meeting."""
     member_user, qr_token = member_with_qr
-    open_meeting = current_meeting_date()
+    open_meeting = current_meeting_date(today_local())
 
-    command = CheckInCommand(db_session)
+    command = CheckInCommand(UnitOfWork(db_session), now=_on_time_now)
     result = await command.execute(qr_token, admin_user)
 
     assert result.success is True
@@ -84,6 +93,9 @@ async def test_check_in_records_the_current_meeting(
     assert result.attendance.meeting_date == open_meeting
     assert result.attendance.meeting_date.weekday() == 3  # Thursday
     assert 1 <= result.attendance.meeting_index_in_month <= 5
+    assert result.attendance.method == "QR_SCAN"
+    assert result.attendance.recorded_by == admin_user.id
+    assert result.attendance.recorded_by_name == "Admin User"
 
     # Verify record in database
     stmt = select(WeeklyAttendanceRecord).where(WeeklyAttendanceRecord.user_id == member_user.id)
@@ -93,7 +105,9 @@ async def test_check_in_records_the_current_meeting(
     assert record.user_id == member_user.id
     assert record.recorded_by == admin_user.id
     assert record.status == "PRESENT"
+    assert record.method == "QR_SCAN"
     assert record.meeting_date == open_meeting
+    assert record.check_in_at.tzinfo is not None  # BR-1: aware UTC storage
 
 
 @pytest.mark.asyncio
@@ -102,9 +116,9 @@ async def test_explicit_open_meeting_date_is_accepted(
 ):
     """Passing the open meeting explicitly records the same meeting."""
     _, qr_token = member_with_qr
-    open_meeting = current_meeting_date()
+    open_meeting = current_meeting_date(today_local())
 
-    command = CheckInCommand(db_session)
+    command = CheckInCommand(UnitOfWork(db_session))
     result = await command.execute(qr_token, admin_user, meeting_date=open_meeting)
 
     assert result.attendance.meeting_date == open_meeting
@@ -117,7 +131,7 @@ async def test_duplicate_check_in_raises_conflict(
     """Attendance cannot be taken twice for the same user and meeting."""
     _, qr_token = member_with_qr
 
-    command = CheckInCommand(db_session)
+    command = CheckInCommand(UnitOfWork(db_session))
 
     await command.execute(qr_token, admin_user)
 
@@ -125,7 +139,7 @@ async def test_duplicate_check_in_raises_conflict(
         await command.execute(qr_token, admin_user)
 
     assert "already recorded" in str(exc_info.value)
-    assert current_meeting_date().isoformat() in str(exc_info.value)
+    assert current_meeting_date(today_local()).isoformat() in str(exc_info.value)
 
 
 @pytest.mark.asyncio
@@ -135,7 +149,7 @@ async def test_duplicate_check_in_leaves_a_single_record(
     """A rejected duplicate must not create a second row."""
     member_user, qr_token = member_with_qr
 
-    command = CheckInCommand(db_session)
+    command = CheckInCommand(UnitOfWork(db_session))
     await command.execute(qr_token, admin_user)
 
     with pytest.raises(ConflictError):
@@ -152,9 +166,9 @@ async def test_future_meeting_is_rejected(
 ):
     """Attendance cannot be taken for a meeting that has not happened."""
     _, qr_token = member_with_qr
-    next_meeting = current_meeting_date() + timedelta(days=MEETING_INTERVAL_DAYS)
+    next_meeting = current_meeting_date(today_local()) + timedelta(days=MEETING_INTERVAL_DAYS)
 
-    command = CheckInCommand(db_session)
+    command = CheckInCommand(UnitOfWork(db_session))
 
     with pytest.raises(ValidationError) as exc_info:
         await command.execute(qr_token, admin_user, meeting_date=next_meeting)
@@ -168,9 +182,9 @@ async def test_past_meeting_is_rejected(
 ):
     """Attendance cannot be back-dated to a closed meeting."""
     _, qr_token = member_with_qr
-    previous_meeting = current_meeting_date() - timedelta(days=MEETING_INTERVAL_DAYS)
+    previous_meeting = current_meeting_date(today_local()) - timedelta(days=MEETING_INTERVAL_DAYS)
 
-    command = CheckInCommand(db_session)
+    command = CheckInCommand(UnitOfWork(db_session))
 
     with pytest.raises(ValidationError) as exc_info:
         await command.execute(qr_token, admin_user, meeting_date=previous_meeting)
@@ -184,9 +198,9 @@ async def test_non_meeting_date_is_rejected(
 ):
     """Only Thursdays are meeting dates."""
     _, qr_token = member_with_qr
-    not_a_meeting = current_meeting_date() + timedelta(days=1)  # Friday
+    not_a_meeting = current_meeting_date(today_local()) + timedelta(days=1)  # Friday
 
-    command = CheckInCommand(db_session)
+    command = CheckInCommand(UnitOfWork(db_session))
 
     with pytest.raises(ValidationError) as exc_info:
         await command.execute(qr_token, admin_user, meeting_date=not_a_meeting)
@@ -197,7 +211,7 @@ async def test_non_meeting_date_is_rejected(
 @pytest.mark.asyncio
 async def test_invalid_qr_raises_validation_error(db_session: AsyncSession, admin_user: User):
     """Test that invalid QR code raises ValidationError."""
-    command = CheckInCommand(db_session)
+    command = CheckInCommand(UnitOfWork(db_session))
 
     with pytest.raises(ValidationError) as exc_info:
         await command.execute("invalid_qr_token", admin_user)
@@ -212,7 +226,7 @@ async def test_member_cannot_check_in_others(
     """Test that members cannot record attendance (only admin/servant can)."""
     _, qr_token = member_with_qr
 
-    command = CheckInCommand(db_session)
+    command = CheckInCommand(UnitOfWork(db_session))
 
     with pytest.raises(ForbiddenError) as exc_info:
         await command.execute(qr_token, member_user)
@@ -231,7 +245,7 @@ async def test_inactive_user_qr_raises_validation_error(
     member_user.status = UserStatus.SUSPENDED
     await db_session.commit()
 
-    command = CheckInCommand(db_session)
+    command = CheckInCommand(UnitOfWork(db_session))
 
     with pytest.raises(ValidationError) as exc_info:
         await command.execute(qr_token, admin_user)

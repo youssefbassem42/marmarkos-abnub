@@ -6,6 +6,7 @@ roles, so each test starts from a clean database.
 
 import uuid
 from collections.abc import AsyncIterator
+from datetime import datetime
 
 import pytest_asyncio
 from sqlalchemy import select
@@ -32,6 +33,7 @@ async def create_user(
     first_name: str,
     last_name: str = "Test",
     status: UserStatus = UserStatus.ACTIVE,
+    created_at: datetime | None = None,
 ) -> User:
     """Create a user with the given role (roles are seeded by conftest)."""
     result = await session.execute(select(Role).where(Role.name == role_name))
@@ -47,6 +49,9 @@ async def create_user(
         first_name=first_name,
         last_name=last_name,
     )
+    if created_at is not None:
+        # BR-4: expected population depends on when the account existed.
+        user.created_at = created_at
     session.add(user)
     await session.commit()
 

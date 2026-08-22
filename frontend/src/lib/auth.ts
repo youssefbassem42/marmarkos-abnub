@@ -44,6 +44,32 @@ export function getAuthUser(): RegisteredUser | null {
 /** Overwrite the stored user object after a profile change. */
 export function updateStoredUser(user: RegisteredUser): void {
   const storage =
-    localStorage.getItem(ACCESS_TOKEN_KEY) !== null ? localStorage : sessionStorage;
+    localStorage.getItem(ACCESS_TOKEN_KEY) !== null
+      ? localStorage
+      : sessionStorage;
   storage.setItem(USER_KEY, JSON.stringify(user));
+}
+
+export type UserRole = "ADMIN" | "SERVANT" | "MEMBER";
+
+/** The stored user's role, or null when signed out / unknown. */
+export function getUserRole(): UserRole | null {
+  const user = getAuthUser();
+  if (!user) return null;
+  return user.role === "ADMIN" ||
+    user.role === "SERVANT" ||
+    user.role === "MEMBER"
+    ? user.role
+    : null;
+}
+
+/** True when the signed-in user holds any of the given roles. */
+export function hasAnyRole(...roles: UserRole[]): boolean {
+  const role = getUserRole();
+  return role !== null && roles.includes(role);
+}
+
+/** Attendance management is ADMIN + SERVANT only (BR-7). */
+export function isAttendanceManager(): boolean {
+  return hasAnyRole("ADMIN", "SERVANT");
 }

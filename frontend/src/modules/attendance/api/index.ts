@@ -2,114 +2,117 @@
  * Attendance API client (weekly Thursday meetings)
  */
 
-import { apiClient } from '../../../lib/api';
+import { apiClient } from "@/lib/api";
 import type {
   AbsentUsersResponse,
   AttendanceHistoryResponse,
   CheckInRequest,
   CheckInResponse,
+  ExcuseResponse,
   MeetingAttendanceResponse,
   MeetingScheduleResponse,
   MeetingStatisticsResponse,
   MonthlyStatisticsResponse,
-} from '../types';
+  MyAttendanceResponse,
+} from "../types";
 
-/**
- * Extract a displayable message from an API error.
- *
- * The backend returns `{ detail: { code, message } }` for handled errors and
- * `{ detail: [{ msg }] }` for FastAPI validation errors, so `detail` must
- * never be rendered directly.
- */
-export function getApiErrorMessage(error: unknown, fallback = 'Request failed'): string {
-  const detail = (error as { response?: { data?: { detail?: unknown } } })?.response?.data?.detail;
-
-  if (typeof detail === 'string') {
-    return detail;
-  }
-
-  if (Array.isArray(detail)) {
-    const first = detail[0] as { msg?: unknown } | undefined;
-    if (first && typeof first.msg === 'string') {
-      return first.msg;
-    }
-  }
-
-  if (detail && typeof detail === 'object') {
-    const message = (detail as { message?: unknown }).message;
-    if (typeof message === 'string') {
-      return message;
-    }
-  }
-
-  const message = (error as { message?: unknown })?.message;
-  return typeof message === 'string' && message ? message : fallback;
-}
+// Compatibility re-export: one error-mapping implementation lives in lib/api.
+export { getApiErrorMessage } from "@/lib/api";
 
 export const attendanceApi = {
-  /**
-   * Record attendance for the current meeting via QR code
-   */
+  /** Record attendance for the current meeting via QR code */
   checkIn: async (data: CheckInRequest): Promise<CheckInResponse> => {
-    const response = await apiClient.post('/attendance/check-in', data);
+    const response = await apiClient.post("/attendance/check-in", data);
     return response.data;
   },
 
-  /**
-   * Get the attendance of one meeting (any date is snapped to its meeting)
-   */
-  getMeetingAttendance: async (meetingDate?: string): Promise<MeetingAttendanceResponse> => {
+  /** Get the attendance of one meeting (any date is snapped to its meeting) */
+  getMeetingAttendance: async (
+    meetingDate?: string,
+  ): Promise<MeetingAttendanceResponse> => {
     const params = meetingDate ? { meeting_date: meetingDate } : {};
-    const response = await apiClient.get('/attendance/meeting', { params });
+    const response = await apiClient.get("/attendance/meeting", { params });
     return response.data;
   },
 
-  /**
-   * Get the meeting calendar of a month (4 meetings, 5 in long months)
-   */
-  getMeetingSchedule: async (year?: number, month?: number): Promise<MeetingScheduleResponse> => {
+  /** Get the meeting calendar of a month (4 meetings, 5 in long months) */
+  getMeetingSchedule: async (
+    year?: number,
+    month?: number,
+  ): Promise<MeetingScheduleResponse> => {
     const params = { ...(year ? { year } : {}), ...(month ? { month } : {}) };
-    const response = await apiClient.get('/attendance/meetings', { params });
+    const response = await apiClient.get("/attendance/meetings", { params });
     return response.data;
   },
 
-  /**
-   * Get users who missed a meeting
-   */
-  getAbsentUsers: async (meetingDate?: string): Promise<AbsentUsersResponse> => {
+  /** Get users who missed a meeting */
+  getAbsentUsers: async (
+    meetingDate?: string,
+  ): Promise<AbsentUsersResponse> => {
     const params = meetingDate ? { meeting_date: meetingDate } : {};
-    const response = await apiClient.get('/attendance/absent', { params });
+    const response = await apiClient.get("/attendance/absent", { params });
     return response.data;
   },
 
-  /**
-   * Get statistics for one meeting
-   */
-  getMeetingStatistics: async (meetingDate?: string): Promise<MeetingStatisticsResponse> => {
+  /** Get statistics for one meeting */
+  getMeetingStatistics: async (
+    meetingDate?: string,
+  ): Promise<MeetingStatisticsResponse> => {
     const params = meetingDate ? { meeting_date: meetingDate } : {};
-    const response = await apiClient.get('/attendance/statistics/meeting', { params });
+    const response = await apiClient.get("/attendance/statistics/meeting", {
+      params,
+    });
     return response.data;
   },
 
-  /**
-   * Get the monthly analysis across the month's meetings
-   */
-  getMonthlyStatistics: async (year?: number, month?: number): Promise<MonthlyStatisticsResponse> => {
+  /** Get the monthly analysis across the month's meetings */
+  getMonthlyStatistics: async (
+    year?: number,
+    month?: number,
+  ): Promise<MonthlyStatisticsResponse> => {
     const params = { ...(year ? { year } : {}), ...(month ? { month } : {}) };
-    const response = await apiClient.get('/attendance/statistics/monthly', { params });
+    const response = await apiClient.get("/attendance/statistics/monthly", {
+      params,
+    });
     return response.data;
   },
 
-  /**
-   * Get meeting attendance history with filters
-   */
+  /** Get paginated meeting attendance history with filters */
   getAttendanceHistory: async (params?: {
     start_date?: string;
     end_date?: string;
     user_id?: string;
     status?: string;
+    page?: number;
+    size?: number;
+    sort?: "meeting_date" | "check_in_at";
+    order?: "asc" | "desc";
   }): Promise<AttendanceHistoryResponse> => {
-    const response = await apiClient.get('/attendance', { params });
+    const response = await apiClient.get("/attendance", { params });
+    return response.data;
+  },
+
+  /** The calling member's own attendance for one calendar month */
+  getMyAttendance: async (
+    year?: number,
+    month?: number,
+  ): Promise<MyAttendanceResponse> => {
+    const params = { ...(year ? { year } : {}), ...(month ? { month } : {}) };
+    const response = await apiClient.get("/attendance/me", { params });
+    return response.data;
+  },
+
+  /** ADMIN-only correction: mark a record of the open meeting EXCUSED */
+  excuseAttendance: async (
+    attendanceId: string,
+    reason?: string,
+  ): Promise<ExcuseResponse> => {
+    const response = await apiClient.post(
+      `/attendance/${attendanceId}/excuse`,
+      {
+        reason: reason ?? null,
+      },
+    );
     return response.data;
   },
 };

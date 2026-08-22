@@ -19,17 +19,33 @@ export function PlaceholderPage({ titleKey }: PlaceholderPageProps) {
   const title = t(`nav.${titleKey}`);
 
   return (
-    <div dir={isArabic ? "rtl" : "ltr"} lang={language} className="min-h-screen bg-background">
+    <div
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={language}
+      className="min-h-screen bg-background"
+    >
       <Navbar />
       <main className="mx-auto flex max-w-3xl flex-col items-center gap-5 px-5 pb-24 pt-40 text-center">
         <span className="grid h-20 w-20 place-items-center rounded-full bg-mint/15">
           <Construction className="h-10 w-10 text-mint" aria-hidden="true" />
         </span>
-        <h1 className={cn("text-3xl font-extrabold tracking-tight text-ink", isArabic && "font-arabic")}>
+        <h1
+          className={cn(
+            "text-3xl font-extrabold tracking-tight text-ink",
+            isArabic && "font-arabic",
+          )}
+        >
           {title}
         </h1>
-        <p className={cn("max-w-md leading-relaxed text-muted-foreground", isArabic && "font-arabic text-lg")}>
-          {isArabic ? "هذه الصفحة قيد الإنشاء — عرفنا قريبًا!" : "This page is under construction — check back soon!"}
+        <p
+          className={cn(
+            "max-w-md leading-relaxed text-muted-foreground",
+            isArabic && "font-arabic text-lg",
+          )}
+        >
+          {isArabic
+            ? "هذه الصفحة قيد الإنشاء — عرفنا قريبًا!"
+            : "This page is under construction — check back soon!"}
         </p>
         <Link
           to="/"

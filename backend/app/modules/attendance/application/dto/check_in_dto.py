@@ -3,7 +3,9 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+from app.modules.attendance.domain.enums import AttendanceMethod
 
 
 class CheckInRequest(BaseModel):
@@ -17,10 +19,16 @@ class CheckInRequest(BaseModel):
             "currently open meeting; past and future meetings are rejected."
         ),
     )
+    method: AttendanceMethod = Field(
+        AttendanceMethod.QR_SCAN,
+        description="How the code was captured: QR_SCAN (camera) or MANUAL (typed).",
+    )
 
 
 class AttendanceDTO(BaseModel):
     """Attendance record data transfer object."""
+
+    model_config = ConfigDict(from_attributes=True)
 
     id: UUID
     user_id: UUID
@@ -31,13 +39,31 @@ class AttendanceDTO(BaseModel):
     )
     check_in_at: datetime
     status: str
-
-    class Config:
-        from_attributes = True
+    method: str = Field(..., description="Scan method: QR_SCAN or MANUAL")
+    recorded_by: UUID = Field(..., description="Admin who performed the scan")
+    recorded_by_name: str = Field(..., description="Display name of the recording admin")
 
 
 class CheckInResponse(BaseModel):
     """Response after successful check-in."""
+
+    success: bool
+    message: str
+    attendance: AttendanceDTO
+
+
+class ExcuseRequest(BaseModel):
+    """Request body for correcting a record to EXCUSED."""
+
+    reason: str | None = Field(
+        None,
+        description="Optional free-text justification, stored in the audit log",
+        max_length=500,
+    )
+
+
+class ExcuseResponse(BaseModel):
+    """Response after marking a record EXCUSED."""
 
     success: bool
     message: str

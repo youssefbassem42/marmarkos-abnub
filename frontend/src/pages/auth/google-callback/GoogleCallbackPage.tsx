@@ -81,27 +81,49 @@ export function GoogleCallbackPage() {
   }, [location.hash, navigate, isArabic]);
 
   return (
-    <div dir={isArabic ? "rtl" : "ltr"} lang={language} className="min-h-screen bg-background">
+    <div
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={language}
+      className="min-h-screen bg-background"
+    >
       <Navbar variant="auth" />
 
       <main className="flex min-h-[calc(100vh-61px)] flex-col items-center justify-center gap-4 px-5 text-center">
         {phase === "working" ? (
           <>
-            <Loader2 className="h-10 w-10 animate-spin text-mint" aria-hidden="true" />
-            <p className={cn("text-muted-foreground", isArabic && "font-arabic text-lg")}>
-              {isArabic ? "جارٍ إكمال تسجيل الدخول..." : t("form.googleFinishing")}
+            <Loader2
+              className="h-10 w-10 animate-spin text-mint"
+              aria-hidden="true"
+            />
+            <p
+              className={cn(
+                "text-muted-foreground",
+                isArabic && "font-arabic text-lg",
+              )}
+            >
+              {isArabic
+                ? "جارٍ إكمال تسجيل الدخول..."
+                : t("form.googleFinishing")}
             </p>
           </>
         ) : (
           <>
             <XCircle className="h-12 w-12 text-brand-red" aria-hidden="true" />
-            <p className={cn("text-ink", isArabic ? "font-arabic text-xl" : "text-base")}>
+            <p
+              className={cn(
+                "text-ink",
+                isArabic ? "font-arabic text-xl" : "text-base",
+              )}
+            >
               {errorMessage ??
                 (isArabic
                   ? "تعذّر إكمال تسجيل الدخول عبر Google."
                   : "Could not complete Google sign-in.")}
             </p>
-            <Button asChild className="h-11 rounded-xl bg-navy px-6 text-white hover:bg-navy/90 focus-ring">
+            <Button
+              asChild
+              className="h-11 rounded-xl bg-navy px-6 text-white hover:bg-navy/90 focus-ring"
+            >
               <Link to="/login">{t("form.backToLogin")}</Link>
             </Button>
           </>

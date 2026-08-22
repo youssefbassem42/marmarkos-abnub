@@ -10,7 +10,10 @@ interface LanguageToggleProps {
 }
 
 /** AR/EN pill button; shows the language you can switch TO. */
-export function LanguageToggle({ className, tone = "light" }: LanguageToggleProps) {
+export function LanguageToggle({
+  className,
+  tone = "light",
+}: LanguageToggleProps) {
   const { language, setLanguage } = useLanguage();
   const { t } = useTranslation("common");
   const isArabic = language === "ar";

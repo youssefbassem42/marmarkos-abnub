@@ -151,6 +151,21 @@
   --brand-red: #9e150b;
   --soft: oklch(0.975 0.006 240);
 
+  /* Ink = strong text color; a real light-mode token so `text-ink` never
+     relies on inheritance (DEF-11). */
+  --ink: #253d63;
+
+  /* Semantic status tokens for the attendance UI (BR-2/§3.8). */
+  --status-late: var(--brand-orange);
+  --status-absent: var(--brand-red);
+
+  /* Charts on-brand: attended / late / absent / error / navy (TASK-205). */
+  --chart-1: var(--brand-mint);
+  --chart-2: var(--brand-blue);
+  --chart-3: var(--brand-orange);
+  --chart-4: var(--brand-red);
+  --chart-5: var(--brand-navy);
+
   --background: oklch(1 0 0);
   --foreground: #253d63;
   --primary: #253d63;
@@ -168,6 +183,8 @@
   --color-mint: var(--brand-mint);
   --color-brand-red: var(--brand-red);
   --color-soft: var(--soft);
+  --color-status-late: var(--status-late);
+  --color-status-absent: var(--status-absent);
   --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
   --font-heading: "El Messiri", "Poppins", sans-serif;
   --font-arabic: "Markazi Text", "Poppins", sans-serif;
@@ -252,6 +269,49 @@
     transition: none;
   }
 }
+
+/* QR scanner scan line sweep (TASK-301). */
+@keyframes scanner-sweep {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(150px);
+  }
+}
+
+.scanner-line {
+  animation: scanner-sweep 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .scanner-line {
+    animation: none;
+  }
+}
+
+/* Recent check-in row fade/slide-in (TASK-306). */
+@keyframes recent-row-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.recent-row {
+  animation: recent-row-in 250ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .recent-row {
+    animation: none;
+  }
+}
 /* ---- Dark mode (brand-tuned): deep navy surfaces, mint accent ---- */
 .dark {
   --background: #0f1929;
@@ -279,12 +339,22 @@
      headings stay readable on navy surfaces. */
   --ink: #dbe7f5;
 
+  --status-late: var(--brand-orange);
+  --status-absent: var(--brand-red);
+
   /* Brand accents stay identical in both modes (design guide §4). */
   --brand-navy: #253d63;
   --brand-blue: #6ea8dd;
   --brand-orange: #f96702;
   --brand-mint: #53cb9e;
   --brand-red: #e04a3a;
+
+  /* Dark-mode chart variants keep the same semantic order. */
+  --chart-1: var(--brand-mint);
+  --chart-2: var(--brand-blue);
+  --chart-3: var(--brand-orange);
+  --chart-4: var(--brand-red);
+  --chart-5: var(--brand-navy);
 }
 
 @theme inline {

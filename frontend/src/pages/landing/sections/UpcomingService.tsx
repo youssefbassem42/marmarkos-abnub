@@ -9,10 +9,7 @@ export function UpcomingService() {
   const { t } = useTranslation("landing");
 
   return (
-    <section
-      id="events"
-      className="bg-navy py-14 text-white lg:py-16"
-    >
+    <section id="events" className="bg-navy py-14 text-white lg:py-16">
       <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-10 lg:px-8">
         <span className="grid h-24 w-24 shrink-0 place-items-center rounded-full bg-white text-ink shadow-lg lg:h-28 lg:w-28">
           <CalendarDays className="h-12 w-12" aria-hidden="true" />

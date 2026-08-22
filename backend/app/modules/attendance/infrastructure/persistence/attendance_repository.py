@@ -1,3 +1,12 @@
+"""Legacy service-session attendance repository.
+
+LEGACY / FROZEN (decision D-8): this repository serves the legacy
+``service_sessions`` / ``attendance_records`` tables. No Phase 2
+endpoint uses it and it must not be extended, migrated, or dropped
+during Sprint 2; a Phase 3 decision will retire or repurpose it.
+Live attendance lives in ``weekly_attendance_repository``.
+"""
+
 import uuid
 from datetime import date
 
@@ -65,7 +74,9 @@ class AttendanceRepository:
 
     async def count_current_meeting(self, today: date | None = None) -> int:
         """Records for the meeting of the current meeting week."""
-        return await self.count_for_meeting(current_meeting_date(today))
+        # Legacy module (frozen by decision D-8): falls back to the server
+        # clock exactly as it did before the platform clock existed.
+        return await self.count_for_meeting(current_meeting_date(today or date.today()))
 
     async def count_for_meetings(self, meetings: list[date]) -> int:
         """Records across an explicit set of meeting dates."""

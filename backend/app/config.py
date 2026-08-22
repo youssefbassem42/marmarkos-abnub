@@ -33,6 +33,22 @@ class Settings(BaseSettings):
     CLOUDINARY_API_KEY: str | None = None
     CLOUDINARY_API_SECRET: str | None = None
 
+    # -- Attendance (Phase 2) ------------------------------------------------
+    # IANA name of the single platform timezone. Every "which meeting is
+    # open", "what date is it" and check-in timestamp is computed here.
+    PLATFORM_TIMEZONE: str = "Africa/Cairo"
+    # Local time the weekly meeting starts; scans later than start +
+    # grace are recorded as LATE (BR-2).
+    MEETING_START_TIME: str = "19:00"
+    # Minutes after MEETING_START_TIME still counted as on-time.
+    MEETING_LATE_GRACE_MINUTES: int = 15
+    # Local time on the meeting day after which the absent list becomes
+    # final (BR-5).
+    MEETING_ABSENCE_CUTOFF_TIME: str = "21:00"
+    # History pagination defaults (route GET /attendance).
+    ATTENDANCE_HISTORY_PAGE_SIZE: int = 20
+    ATTENDANCE_HISTORY_MAX_PAGE_SIZE: int = 100
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

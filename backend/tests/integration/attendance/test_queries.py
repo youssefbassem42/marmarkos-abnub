@@ -1,11 +1,12 @@
 """Integration tests for meeting attendance queries, absence and statistics."""
 
 import uuid
-from datetime import datetime, timedelta
+from datetime import UTC, datetime, timedelta
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.time import today_local
 from app.modules.attendance.application.queries.attendance_history_query import (
     AttendanceHistoryQuery,
 )
@@ -30,14 +31,21 @@ from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.infrastructure.persistence.models import User
 from tests.integration.attendance.conftest import create_user
 
-OPEN_MEETING = current_meeting_date()
+OPEN_MEETING = current_meeting_date(today_local())
 PREVIOUS_MEETING = previous_meeting_date(OPEN_MEETING)
 
 
 @pytest.fixture
 async def test_users(db_session: AsyncSession) -> list[User]:
-    """Five ACTIVE members (the expected population)."""
+    """Five ACTIVE members (the expected population for every meeting).
+
+    ``created_at`` is pinned before the previous meeting week so BR-4
+    keeps all five members expected at every held meeting of the month.
+    """
     users = []
+    registered_before_all_meetings = datetime.combine(
+        PREVIOUS_MEETING - timedelta(days=7), datetime.min.time(), tzinfo=UTC
+    )
     for index in range(5):
         users.append(
             await create_user(
@@ -45,6 +53,7 @@ async def test_users(db_session: AsyncSession) -> list[User]:
                 email=f"user{index}@test.com",
                 role_name=RoleName.MEMBER,
                 first_name=f"User{index}",
+                created_at=registered_before_all_meetings,
             )
         )
     return users
@@ -61,7 +70,7 @@ async def attendance_records(db_session: AsyncSession, test_users: list[User]) -
                 id=uuid.uuid4(),
                 user_id=user.id,
                 meeting_date=OPEN_MEETING,
-                check_in_at=datetime.now(),
+                check_in_at=datetime.now(UTC),
                 status="PRESENT",
                 recorded_by=recorder_id,
             )
@@ -73,7 +82,7 @@ async def attendance_records(db_session: AsyncSession, test_users: list[User]) -
                 id=uuid.uuid4(),
                 user_id=user.id,
                 meeting_date=PREVIOUS_MEETING,
-                check_in_at=datetime.now() - timedelta(days=7),
+                check_in_at=datetime.now(UTC) - timedelta(days=7),
                 status="PRESENT",
                 recorded_by=recorder_id,
             )
@@ -125,7 +134,7 @@ async def test_absence_calculation_for_the_open_meeting(
     absent_count, absent_users = await service.calculate_absent_users(OPEN_MEETING)
 
     assert absent_count == 2
-    absent_ids = {uuid.UUID(user["user_id"]) for user in absent_users}
+    absent_ids = {user.user_id for user in absent_users}
     assert absent_ids == {test_users[3].id, test_users[4].id}
 
 
@@ -208,9 +217,10 @@ async def test_history_defaults_to_the_last_four_meetings(
     db_session: AsyncSession, test_users: list[User], attendance_records: None
 ):
     query = AttendanceHistoryQuery(db_session)
-    results = await query.execute()
+    results, total = await query.execute()
 
     assert len(results) == 5  # 3 at the open meeting + 2 at the previous one
+    assert total == 5
 
 
 @pytest.mark.asyncio
@@ -218,7 +228,7 @@ async def test_history_filtered_by_user(
     db_session: AsyncSession, test_users: list[User], attendance_records: None
 ):
     query = AttendanceHistoryQuery(db_session)
-    results = await query.execute(user_id=test_users[0].id)
+    results, _total = await query.execute(user_id=test_users[0].id)
 
     assert len(results) == 2
     assert {record.meeting_date for record in results} == {OPEN_MEETING, PREVIOUS_MEETING}
@@ -229,7 +239,7 @@ async def test_history_filtered_by_meeting_range(
     db_session: AsyncSession, test_users: list[User], attendance_records: None
 ):
     query = AttendanceHistoryQuery(db_session)
-    results = await query.execute(start_date=PREVIOUS_MEETING, end_date=PREVIOUS_MEETING)
+    results, _total = await query.execute(start_date=PREVIOUS_MEETING, end_date=PREVIOUS_MEETING)
 
     assert len(results) == 2
 
@@ -241,7 +251,7 @@ async def test_history_snaps_calendar_dates_to_meetings(
     """Passing a Friday must not silently drop that week's records."""
     friday = OPEN_MEETING + timedelta(days=1)
     query = AttendanceHistoryQuery(db_session)
-    results = await query.execute(start_date=friday, end_date=friday)
+    results, _total = await query.execute(start_date=friday, end_date=friday)
 
     assert len(results) == 3
 

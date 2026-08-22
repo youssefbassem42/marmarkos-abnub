@@ -1,8 +1,14 @@
-"""Repository interfaces for the attendance module (incl. analytics)."""
+"""Repository interfaces for the attendance module (incl. analytics).
+
+``WeeklyAttendanceRepositoryProtocol`` is a live contract: the concrete
+:class:`app.modules.attendance.infrastructure.persistence.weekly_attendance_repository.WeeklyAttendanceRepository`
+explicitly inherits it, so ``mypy`` fails when the implementation
+drifts from the declared interface.
+"""
 
 import uuid
 from datetime import date
-from typing import Protocol
+from typing import Literal, Protocol
 
 from app.modules.attendance.domain.entities import Attendance
 from app.modules.attendance.domain.enums import AttendanceStatus
@@ -10,6 +16,7 @@ from app.modules.attendance.infrastructure.persistence.models import (
     AttendanceRecord,
     ServiceSession,
 )
+from app.modules.users.infrastructure.persistence.models import User
 
 
 class ServiceSessionRepository(Protocol):
@@ -50,10 +57,12 @@ class AttendanceRepository(Protocol):
     async def list_between(self, start: date, end: date) -> list[AttendanceRecord]: ...
 
 
-class WeeklyAttendanceRepository(Protocol):
+class WeeklyAttendanceRepositoryProtocol(Protocol):
     """QR check-in records, one per user per weekly meeting."""
 
     async def add(self, attendance: Attendance) -> Attendance: ...
+
+    async def update(self, attendance: Attendance) -> Attendance: ...
 
     async def get_by_id(self, attendance_id: uuid.UUID) -> Attendance | None: ...
 
@@ -67,7 +76,45 @@ class WeeklyAttendanceRepository(Protocol):
 
     async def find_by_user(self, user_id: uuid.UUID) -> list[Attendance]: ...
 
+    async def find_by_user_between(
+        self, user_id: uuid.UUID, start_date: date, end_date: date
+    ) -> list[Attendance]: ...
+
+    async def find_users_by_meeting(
+        self, meeting_date: date
+    ) -> list[tuple[Attendance, User | None, User | None]]: ...
+
+    async def search(
+        self,
+        *,
+        start: date | None = None,
+        end: date | None = None,
+        user_id: uuid.UUID | None = None,
+        status: AttendanceStatus | None = None,
+        limit: int = 20,
+        offset: int = 0,
+        sort: Literal["meeting_date", "check_in_at"] = "meeting_date",
+        descending: bool = True,
+    ) -> list[tuple[Attendance, User | None, User | None]]: ...
+
+    async def count_search(
+        self,
+        *,
+        start: date | None = None,
+        end: date | None = None,
+        user_id: uuid.UUID | None = None,
+        status: AttendanceStatus | None = None,
+    ) -> int: ...
+
     async def count_by_meeting(self, meeting_date: date) -> int: ...
+
+    async def count_attended_by_meeting(self, meeting_date: date) -> int: ...
+
+    async def counts_attended_by_meeting(self, dates: list[date]) -> dict[date, int]: ...
+
+    async def counts_by_meeting_and_status(
+        self, dates: list[date]
+    ) -> dict[date, dict[str, int]]: ...
 
     async def count_by_meeting_and_status(
         self, meeting_date: date, status: AttendanceStatus
@@ -84,3 +131,7 @@ class WeeklyAttendanceRepository(Protocol):
     async def counts_by_user_between(
         self, start_date: date, end_date: date
     ) -> dict[uuid.UUID, int]: ...
+
+
+#: Kept for backwards compatibility with earlier imports.
+WeeklyAttendanceRepository = WeeklyAttendanceRepositoryProtocol

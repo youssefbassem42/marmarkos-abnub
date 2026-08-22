@@ -1,10 +1,14 @@
 """Attendance domain entity."""
 
 import uuid
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date, datetime
 
-from app.modules.attendance.domain.enums import AttendanceStatus
+from app.modules.attendance.domain.enums import (
+    ATTENDED_STATUSES,
+    AttendanceMethod,
+    AttendanceStatus,
+)
 from app.modules.attendance.domain.meeting_schedule import (
     is_meeting_date,
     meeting_index_in_month,
@@ -22,6 +26,8 @@ class Attendance:
     - Once created, an attendance record captures the moment of check-in
     - ``meeting_date`` is separate from ``check_in_at`` so a scan made
       later in the meeting week still reports against the right meeting
+    - ``method`` records how the check-in was captured (QR scan or
+      manual code entry)
     """
 
     id: uuid.UUID
@@ -32,11 +38,22 @@ class Attendance:
     recorded_by: uuid.UUID
     created_at: datetime
     updated_at: datetime
+    method: AttendanceMethod = field(default=AttendanceMethod.QR_SCAN)
 
     @property
     def is_present(self) -> bool:
         """Check if the user is marked as present."""
         return self.status == AttendanceStatus.PRESENT
+
+    @property
+    def is_late(self) -> bool:
+        """Check if the user checked in after the late grace period."""
+        return self.status == AttendanceStatus.LATE
+
+    @property
+    def is_attended(self) -> bool:
+        """Check if the record counts as attended (present or late, BR-3)."""
+        return self.status in ATTENDED_STATUSES
 
     @property
     def is_absent(self) -> bool:

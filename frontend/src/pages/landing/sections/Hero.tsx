@@ -14,10 +14,7 @@ export function Hero() {
   }) as readonly string[];
 
   return (
-    <section
-      id="home"
-      className="relative overflow-hidden pt-24 lg:pt-28"
-    >
+    <section id="home" className="relative overflow-hidden pt-24 lg:pt-28">
       <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 pb-14 lg:grid-cols-[minmax(0,44%)_minmax(0,56%)] lg:gap-6 lg:px-8 lg:pb-20">
         <div className="reveal">
           <p className="text-sm font-bold uppercase tracking-[0.18em] text-mint">

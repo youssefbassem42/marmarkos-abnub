@@ -30,6 +30,8 @@ const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
 
+type Side = "left" | "right";
+
 type SidebarContextProps = {
   state: "expanded" | "collapsed";
   open: boolean;
@@ -37,6 +39,7 @@ type SidebarContextProps = {
   openMobile: boolean;
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
+  side: Side;
   toggleSidebar: () => void;
 };
 
@@ -57,6 +60,7 @@ const SidebarProvider = React.forwardRef<
     defaultOpen?: boolean;
     open?: boolean;
     onOpenChange?: (open: boolean) => void;
+    side?: Side;
   }
 >(
   (
@@ -64,6 +68,7 @@ const SidebarProvider = React.forwardRef<
       defaultOpen = true,
       open: openProp,
       onOpenChange: setOpenProp,
+      side: sideProp,
       className,
       style,
       children,
@@ -73,6 +78,7 @@ const SidebarProvider = React.forwardRef<
   ) => {
     const isMobile = useIsMobile();
     const [openMobile, setOpenMobile] = React.useState(false);
+    const side: Side = sideProp ?? "left";
 
     // This is the internal state of the sidebar.
     // We use openProp and setOpenProp for control from outside the component.
@@ -126,12 +132,14 @@ const SidebarProvider = React.forwardRef<
         open,
         setOpen,
         isMobile,
+        side,
         openMobile,
         setOpenMobile,
         toggleSidebar,
       }),
       [
         state,
+        side,
         open,
         setOpen,
         isMobile,
@@ -570,7 +578,7 @@ const SidebarMenuButton = React.forwardRef<
     ref,
   ) => {
     const Comp = asChild ? Slot : "button";
-    const { isMobile, state } = useSidebar();
+    const { isMobile, state, side } = useSidebar();
 
     const button = (
       <Comp
@@ -597,7 +605,7 @@ const SidebarMenuButton = React.forwardRef<
       <Tooltip>
         <TooltipTrigger asChild>{button}</TooltipTrigger>
         <TooltipContent
-          side="right"
+          side={side}
           align="center"
           hidden={state !== "collapsed" || isMobile}
           {...tooltip}

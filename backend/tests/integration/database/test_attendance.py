@@ -6,6 +6,7 @@ import pytest
 from sqlalchemy.exc import IntegrityError
 
 from app.core.database import async_session_factory
+from app.core.time import today_local
 from app.modules.attendance.domain.enums.attendance import (
     AttendanceMethod,
     ServiceType,
@@ -28,7 +29,7 @@ async def make_session(
 ) -> ServiceSession:
     session = ServiceSession(
         name=name,
-        date=date_ or current_meeting_date(),
+        date=date_ or current_meeting_date(today_local()),
         service_type=ServiceType.YOUTH_MEETING,
         is_active=True,
     )
@@ -84,7 +85,7 @@ async def test_duplicate_attendance_prevented(uow: UnitOfWork) -> None:
 async def test_multiple_sessions_same_meeting_date_allowed(uow: UnitOfWork) -> None:
     """Different sessions on the same meeting date are distinct attendance events."""
     member = await make_user(uow, "multi@example.com")
-    meeting = current_meeting_date()
+    meeting = current_meeting_date(today_local())
     morning = await make_session(uow, name="Morning Service", date_=meeting)
     evening = await make_session(uow, name="Evening Service", date_=meeting)
     await uow.commit()
@@ -101,7 +102,7 @@ async def test_multiple_sessions_same_meeting_date_allowed(uow: UnitOfWork) -> N
 
 
 async def test_attendance_counts_and_percentage(uow: UnitOfWork) -> None:
-    meeting = current_meeting_date()
+    meeting = current_meeting_date(today_local())
     active_member = await make_user(uow, "stats-active@example.com")
     await make_user(uow, "stats-other@example.com")
     session = await make_session(uow, date_=meeting)
@@ -128,7 +129,7 @@ async def test_attendance_counts_and_percentage(uow: UnitOfWork) -> None:
 
 
 async def test_absent_users_detection(uow: UnitOfWork) -> None:
-    meeting = current_meeting_date()
+    meeting = current_meeting_date(today_local())
     present = await make_user(uow, "present@example.com")
     absent = await make_user(uow, "absent@example.com")
     inactive = await make_user(uow, "inactive@example.com")

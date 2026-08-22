@@ -115,10 +115,11 @@ async def test_all_workflow_events_serialize(uow: UnitOfWork) -> None:
         ),
         AttendanceRecorded(
             aggregate_id=uuid.uuid4(),
-            session_id=uuid.uuid4(),
+            user_id=user.id,
             meeting_date=datetime.now(UTC).date(),
+            status="PRESENT",
             method="QR_SCAN",
-            scanned_by=user.id,
+            recorded_by=user.id,
         ),
     ]
     for event in events:

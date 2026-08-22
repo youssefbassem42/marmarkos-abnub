@@ -20,11 +20,51 @@ ME_URL = "/api/v1/users/me"
 QR_URL = "/api/v1/users/me/qr"
 USERS_URL = "/api/v1/users"
 
+# -- Attendance (Phase 2) ----------------------------------------------------
+ATTENDANCE_CHECK_IN_URL = "/api/v1/attendance/check-in"
+ATTENDANCE_MEETING_URL = "/api/v1/attendance/meeting"
+ATTENDANCE_MEETINGS_URL = "/api/v1/attendance/meetings"
+ATTENDANCE_ABSENT_URL = "/api/v1/attendance/absent"
+ATTENDANCE_STATS_MEETING_URL = "/api/v1/attendance/statistics/meeting"
+ATTENDANCE_STATS_MONTHLY_URL = "/api/v1/attendance/statistics/monthly"
+ATTENDANCE_HISTORY_URL = "/api/v1/attendance"
+ATTENDANCE_ME_URL = "/api/v1/attendance/me"
+ATTENDANCE_EXCUSE_URL = "/api/v1/attendance/{attendance_id}/excuse"
+
+
+def attendance_excuse_url(attendance_id: str) -> str:
+    return ATTENDANCE_EXCUSE_URL.format(attendance_id=attendance_id)
+
+
 DEFAULT_PASSWORD = "StrongPass123!"
 
 
 def bearer(token: str) -> dict[str, str]:
     return {"Authorization": f"Bearer {token}"}
+
+
+async def create_qr_for_user(
+    engine: AsyncEngine,
+    user_id: uuid.UUID,
+    token: str,
+    *,
+    is_active: bool = True,
+) -> None:
+    """Insert an active QR identity for a directly-created user."""
+    import hashlib
+
+    from app.modules.users.infrastructure.persistence.models import UserQrCode
+
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    async with engine.begin() as conn:
+        await conn.execute(
+            insert(UserQrCode).values(
+                id=uuid.uuid4(),
+                user_id=user_id,
+                token_hash=token_hash,
+                is_active=is_active,
+            )
+        )
 
 
 async def register_user(
