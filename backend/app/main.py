@@ -1,5 +1,6 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 
 from app.api.router import api_router
 from app.config import settings
@@ -13,6 +14,16 @@ def create_app() -> FastAPI:
         docs_url="/docs",
         redoc_url="/redoc",
     )
+
+    @application.middleware("http")
+    async def cors_safe_errors(request: Request, call_next):
+        try:
+            return await call_next(request)
+        except Exception:
+            return JSONResponse(
+                {"detail": {"code": "internal_error", "message": "Internal server error"}},
+                status_code=500,
+            )
 
     application.add_middleware(
         CORSMiddleware,
