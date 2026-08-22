@@ -58,7 +58,10 @@ export function ProfilePage() {
     try {
       const response = await apiClient.get<string>("/users/me/qr", {
         responseType: "text",
-        headers: { Accept: "image/svg+xml" },
+        headers: {
+          Accept: "image/svg+xml",
+          Authorization: `Bearer ${getAccessToken()}`,
+        },
       });
       const blob = new Blob([response.data], { type: "image/svg+xml" });
       setQrUrl((previous) => {
