@@ -3,6 +3,7 @@ export const en = {
     comingSoon: "Coming soon",
     retry: "Try again",
     loading: "Loading...",
+    adminPanel: "Admin panel",
     errors: {
       unknown: "Something went wrong. Please try again.",
     },

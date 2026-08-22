@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import {
   Bell,
   CalendarCheck,
+  LayoutDashboard,
   LogOut,
   Menu,
+  ScanLine,
   User as UserIcon,
   X,
 } from "lucide-react";
@@ -18,6 +20,7 @@ import {
   clearAuth,
   getAccessToken,
   getAuthUser,
+  getUserRole,
   isAttendanceManager,
 } from "@/lib/auth";
 import {
@@ -51,6 +54,7 @@ export function Navbar({
   const { language } = useLanguage();
   const isArabic = language === "ar";
   const { t } = useTranslation("landing");
+  const { t: tCommon } = useTranslation("common");
   const { t: tAttendance } = useTranslation("attendance");
   const navigate = useNavigate();
   const isAuth = variant === "auth";
@@ -181,6 +185,40 @@ export function Navbar({
                         {t("nav.profile")}
                       </Link>
                     </DropdownMenuItem>
+                    {attendanceManager && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to="/attendance/check-in"
+                          className={cn(
+                            "cursor-pointer",
+                            isArabic && "font-arabic",
+                          )}
+                        >
+                          <ScanLine
+                            className="me-2 h-4 w-4"
+                            aria-hidden="true"
+                          />
+                          {tAttendance("nav.checkIn")}
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
+                    {getUserRole() === "ADMIN" && (
+                      <DropdownMenuItem asChild>
+                        <Link
+                          to="/attendance/dashboard"
+                          className={cn(
+                            "cursor-pointer",
+                            isArabic && "font-arabic",
+                          )}
+                        >
+                          <LayoutDashboard
+                            className="me-2 h-4 w-4"
+                            aria-hidden="true"
+                          />
+                          {tCommon("adminPanel")}
+                        </Link>
+                      </DropdownMenuItem>
+                    )}
                     <DropdownMenuItem
                       onClick={() => void handleSignOut()}
                       className={cn(

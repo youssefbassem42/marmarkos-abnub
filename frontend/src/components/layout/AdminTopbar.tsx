@@ -1,9 +1,21 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Bell, ChevronDown, LogOut, User as UserIcon } from "lucide-react";
+import {
+  Bell,
+  ChevronDown,
+  LayoutDashboard,
+  LogOut,
+  ScanLine,
+  User as UserIcon,
+} from "lucide-react";
 import { useLanguage } from "@/i18n/context";
 import { logoutUser } from "@/lib/api";
-import { clearAuth, getAuthUser } from "@/lib/auth";
+import {
+  clearAuth,
+  getAuthUser,
+  getUserRole,
+  isAttendanceManager,
+} from "@/lib/auth";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -28,6 +40,7 @@ interface AdminTopbarProps {
 export function AdminTopbar({ title, subtitle }: AdminTopbarProps) {
   const { t } = useTranslation("common");
   const { t: tLanding } = useTranslation("landing");
+  const { t: tAttendance } = useTranslation("attendance");
   const { language } = useLanguage();
   const isArabic = language === "ar";
   const navigate = useNavigate();
@@ -132,6 +145,31 @@ export function AdminTopbar({ title, subtitle }: AdminTopbarProps) {
                   {tLanding("nav.profile")}
                 </Link>
               </DropdownMenuItem>
+              {isAttendanceManager() && (
+                <DropdownMenuItem asChild>
+                  <Link
+                    to="/attendance/check-in"
+                    className={cn("cursor-pointer", isArabic && "font-arabic")}
+                  >
+                    <ScanLine className="me-2 h-4 w-4" aria-hidden="true" />
+                    {tAttendance("nav.checkIn")}
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {getUserRole() === "ADMIN" && (
+                <DropdownMenuItem asChild>
+                  <Link
+                    to="/attendance/dashboard"
+                    className={cn("cursor-pointer", isArabic && "font-arabic")}
+                  >
+                    <LayoutDashboard
+                      className="me-2 h-4 w-4"
+                      aria-hidden="true"
+                    />
+                    {t("adminPanel")}
+                  </Link>
+                </DropdownMenuItem>
+              )}
               <DropdownMenuItem
                 onClick={() => void handleSignOut()}
                 className={cn(

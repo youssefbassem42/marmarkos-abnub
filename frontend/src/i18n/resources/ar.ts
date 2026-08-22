@@ -3,6 +3,7 @@ export const ar = {
     comingSoon: "قريبًا",
     retry: "حاول مرة أخرى",
     loading: "جارٍ التحميل...",
+    adminPanel: "لوحة التحكم",
     errors: {
       unknown: "حدث خطأ غير متوقع. حاول مرة أخرى.",
     },
