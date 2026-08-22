@@ -272,3 +272,13 @@ export async function uploadAvatar(file: File, accessToken: string): Promise<Reg
     throw error;
   }
 }
+
+/** Sign out: revokes the refresh session server-side (best effort) and is
+ * always paired with clearing the local session in the UI. */
+export async function logoutUser(): Promise<void> {
+  try {
+    await apiClient.post("/auth/logout");
+  } catch {
+    /* local sign-out proceeds regardless */
+  }
+}

@@ -36,13 +36,14 @@ export const en = {
   landing: {
     nav: {
       home: "Home",
-      about: "About",
-      ministries: "Ministries",
-      events: "Events",
+      anonymous: "Anonymous Messages",
+      blog: "Blog",
       gallery: "Gallery",
-      contact: "Contact",
+      aboutUs: "About Us",
+      notifications: "Notifications",
       login: "Login",
       profile: "My Profile",
+      signOut: "Sign Out",
     },
     hero: {
       eyebrow: "Youth Service",
@@ -154,6 +155,11 @@ export const en = {
       weak:
         "Password must include uppercase and lowercase letters, a number, and a special character.",
       success: "Password updated. Other sessions were signed out.",
+    },
+    qr: {
+      title: "My Attendance QR Code",
+      hint: "Show this to the scanner to record your attendance",
+      refresh: "Refresh code",
     },
     validation: {
       required: "This field is required",

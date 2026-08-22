@@ -1,18 +1,23 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Camera, CheckCircle2, KeyRound, Mail, MapPin, Phone, User } from "lucide-react";
+import {
+  Camera,
+  CheckCircle2,
+  KeyRound,
+  Mail,
+  MapPin,
+  Phone,
+  QrCode,
+  RefreshCw,
+  User,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/layout/Navbar";
 import { useLanguage } from "@/i18n/context";
-import {
-  ApiError,
-  changePassword,
-  updateProfile,
-  uploadAvatar,
-} from "@/lib/api";
+import { apiClient, ApiError, changePassword, updateProfile, uploadAvatar } from "@/lib/api";
 import { getAccessToken, getAuthUser, updateStoredUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -42,6 +47,41 @@ export function ProfilePage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordStatus, setPasswordStatus] = useState<Status>(null);
+
+  // Attendance QR (backend issues a fresh token and returns an SVG)
+  const [qrUrl, setQrUrl] = useState<string | null>(null);
+  const [qrLoading, setQrLoading] = useState(false);
+
+  const loadQr = async () => {
+    if (!getAccessToken()) return;
+    setQrLoading(true);
+    try {
+      const response = await apiClient.get<string>("/users/me/qr", {
+        responseType: "text",
+        headers: { Accept: "image/svg+xml" },
+      });
+      const blob = new Blob([response.data], { type: "image/svg+xml" });
+      setQrUrl((previous) => {
+        if (previous) URL.revokeObjectURL(previous);
+        return URL.createObjectURL(blob);
+      });
+    } catch {
+      /* keep previous code visible; the refresh button retries */
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    void loadQr();
+    return () => {
+      setQrUrl((previous) => {
+        if (previous) URL.revokeObjectURL(previous);
+        return null;
+      });
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Signed-in users only.
   useEffect(() => {
@@ -201,6 +241,42 @@ export function ProfilePage() {
               {user.first_name} {user.last_name}
             </p>
             <p className="text-sm text-muted-foreground">{t("avatar.hint")}</p>
+          </div>
+        </section>
+
+        {/* Attendance QR */}
+        <section className="mt-6 flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-6 text-center shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:flex-row sm:text-start">
+          <div className="grid h-40 w-40 shrink-0 place-items-center rounded-xl bg-white p-2 shadow-sm">
+            {qrUrl ? (
+              <img src={qrUrl} alt={t("qr.title")} className="h-full w-full" />
+            ) : (
+              <QrCode
+                className={cn("h-16 w-16 text-border", qrLoading && "animate-pulse")}
+                aria-hidden="true"
+              />
+            )}
+          </div>
+          <div className="flex-1">
+            <h2 className={cn("flex items-center justify-center gap-2 font-extrabold text-navy sm:justify-start", isArabic ? "font-arabic text-xl" : "text-lg")}>
+              <QrCode className="h-5 w-5 text-mint" aria-hidden="true" />
+              {t("qr.title")}
+            </h2>
+            <p className={cn("mt-1 text-sm leading-6 text-muted-foreground", isArabic && "font-arabic")}>
+              {t("qr.hint")}
+            </p>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => void loadQr()}
+              disabled={qrLoading}
+              className={cn(
+                "mt-3 h-10 rounded-xl border-navy px-4 text-sm font-semibold text-navy focus-ring",
+                isArabic && "font-arabic",
+              )}
+            >
+              <RefreshCw className={cn("me-2 h-4 w-4", qrLoading && "animate-spin")} aria-hidden="true" />
+              {t("qr.refresh")}
+            </Button>
           </div>
         </section>
 

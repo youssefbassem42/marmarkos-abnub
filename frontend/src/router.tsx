@@ -6,6 +6,7 @@ import { ForgotPasswordPage } from "@/pages/auth/forgot-password/ForgotPasswordP
 import { ResetPasswordPage } from "@/pages/auth/reset-password/ResetPasswordPage";
 import { GoogleCallbackPage } from "@/pages/auth/google-callback/GoogleCallbackPage";
 import { ProfilePage } from "@/pages/profile/ProfilePage";
+import { PlaceholderPage } from "@/pages/placeholder/PlaceholderPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 
 export const router = createBrowserRouter([
@@ -36,6 +37,26 @@ export const router = createBrowserRouter([
   {
     path: "/profile",
     element: <ProfilePage />,
+  },
+  {
+    path: "/anonymous-messages",
+    element: <PlaceholderPage titleKey="anonymous" />,
+  },
+  {
+    path: "/blog",
+    element: <PlaceholderPage titleKey="blog" />,
+  },
+  {
+    path: "/gallery",
+    element: <PlaceholderPage titleKey="gallery" />,
+  },
+  {
+    path: "/about-us",
+    element: <PlaceholderPage titleKey="aboutUs" />,
+  },
+  {
+    path: "/notifications",
+    element: <PlaceholderPage titleKey="notifications" />,
   },
   {
     path: "*",
