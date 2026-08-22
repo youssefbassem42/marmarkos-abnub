@@ -128,7 +128,7 @@ async def test_callback_rejects_inactive_account(
     )
 
     assert response.status_code == 303
-    assert response.headers["location"].endswith("#error=sign_in_failed")
+    assert response.headers["location"].endswith("#error=account_inactive")
 
 
 async def test_callback_surfaces_google_errors(client: AsyncClient) -> None:

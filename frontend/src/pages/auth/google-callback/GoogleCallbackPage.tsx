@@ -36,7 +36,15 @@ export function GoogleCallbackPage() {
           ? isArabic
             ? "تسجيل الدخول عبر Google غير مُهيأ بعد."
             : "Google sign-in is not configured yet."
-          : null,
+          : error === "account_inactive"
+            ? isArabic
+              ? "هذا الحساب غير نشط. تواصل مع الإدارة."
+              : "This account is not active. Contact an administrator."
+            : error === "identity_failed"
+              ? isArabic
+                ? "لم نتمكن من التحقق من حساب Google (تحقق من تأكيد البريد الإلكتروني)."
+                : "We could not verify your Google account (check its email verification)."
+              : null,
       );
       setPhase("failed");
       return;

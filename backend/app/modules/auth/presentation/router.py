@@ -1,10 +1,11 @@
+import logging
 import secrets
 
 from fastapi import APIRouter, Request, Response
 from fastapi.responses import RedirectResponse
 
 from app.config import settings
-from app.core.exceptions import AppError, UnauthorizedError
+from app.core.exceptions import AppError, ForbiddenError, UnauthorizedError
 from app.modules.auth.application.dto import (
     AuthResponse,
     LoginRequest,
@@ -27,6 +28,8 @@ from app.modules.users.application.dto import UserResponse
 from app.modules.users.application.mappers.user_mapper import map_user_to_response
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
+
+logger = logging.getLogger(__name__)
 
 _REFRESH_COOKIE_MAX_AGE = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 _OAUTH_STATE_COOKIE = "google_oauth_state"
@@ -97,7 +100,14 @@ async def google_login_callback(
             user_agent=request.headers.get("user-agent"),
             ip_address=request.client.host if request.client else None,
         )
+    except ForbiddenError as exc:
+        logger.warning("Google sign-in rejected: %s", exc)
+        return back("#error=account_inactive")
+    except UnauthorizedError as exc:
+        logger.warning("Google identity verification failed: %s", exc)
+        return back("#error=identity_failed")
     except AppError:
+        logger.exception("Google sign-in failed")
         return back("#error=sign_in_failed")
 
     success = back(f"#access_token={result.access_token}&expires_in={result.expires_in}")
