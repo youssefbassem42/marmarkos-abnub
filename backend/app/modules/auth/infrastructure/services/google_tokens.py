@@ -6,14 +6,19 @@ so the client secret never reaches the frontend. Only httpx + python-jose are
 used; no extra SDK dependency.
 """
 
+import logging
 from dataclasses import dataclass
+from typing import Any
 from urllib.parse import urlencode
 
 import httpx
 from jose import jwt as jose_jwt
+from jose.exceptions import JOSEError
 
 from app.config import settings
 from app.core.exceptions import ForbiddenError, UnauthorizedError
+
+logger = logging.getLogger(__name__)
 
 _GOOGLE_AUTH_ENDPOINT = "https://accounts.google.com/o/oauth2/v2/auth"
 _GOOGLE_TOKEN_ENDPOINT = "https://oauth2.googleapis.com/token"
@@ -79,25 +84,30 @@ async def exchange_google_code(code: str, redirect_uri: str) -> GoogleIdentity:
                     "grant_type": "authorization_code",
                 },
             )
-            token_response.raise_for_status()
-            id_token = token_response.json().get("id_token")
-            if not isinstance(id_token, str):
-                raise UnauthorizedError("Google did not return an identity")
+            if token_response.status_code != 200:
+                logger.warning(
+                    "Google token endpoint returned %s: %s",
+                    token_response.status_code,
+                    token_response.text[:500],
+                )
+                raise UnauthorizedError("Could not complete Google sign-in")
+            token_payload: dict[str, Any] = token_response.json()
 
-            claims = jose_jwt.decode(
-                id_token,
-                "not-verified",  # token came directly from Google over TLS
-                options={
-                    "verify_signature": False,
-                    "verify_aud": False,
-                    "verify_iss": False,
-                },
-            )
     except httpx.HTTPError as exc:
+        logger.warning("Google token exchange HTTP error: %s", exc)
         raise UnauthorizedError("Could not complete Google sign-in") from exc
-    except Exception as exc:  # noqa: BLE001 - normalized below
-        if isinstance(exc, UnauthorizedError):
-            raise
+
+    id_token = token_payload.get("id_token")
+    if not isinstance(id_token, str):
+        logger.warning(
+            "Google token response missing id_token; keys=%s", list(token_payload)
+        )
+        raise UnauthorizedError("Google did not return an identity")
+
+    try:
+        claims = jose_jwt.get_unverified_claims(id_token)
+    except JOSEError as exc:
+        logger.warning("Could not parse Google ID token claims: %s", exc)
         raise UnauthorizedError("Could not complete Google sign-in") from exc
 
     email = claims.get("email")
@@ -107,6 +117,12 @@ async def exchange_google_code(code: str, redirect_uri: str) -> GoogleIdentity:
         or not isinstance(subject, str)
         or claims.get("email_verified") is not True
     ):
+        logger.warning(
+            "Google identity claims incomplete: email=%r verified=%r sub=%s",
+            email,
+            claims.get("email_verified"),
+            subject is not None,
+        )
         raise UnauthorizedError("The Google account has no verified email")
 
     given_name = claims.get("given_name")
