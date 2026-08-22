@@ -1,14 +1,17 @@
 import axios from "axios";
 
 function resolveApiBaseUrl(): string {
-  const raw = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
+  let raw = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
   // Guard against a base URL set without its scheme (axios would then treat
   // "example.com/api/v1" as a relative path on the current origin).
-  if (/^https?:\/\//i.test(raw)) return raw;
-  if (raw.startsWith("localhost") || raw.startsWith("127.")) {
-    return `http://${raw}`;
+  if (!/^https?:\/\//i.test(raw)) {
+    raw = raw.startsWith("localhost") || raw.startsWith("127.")
+      ? `http://${raw}`
+      : `https://${raw}`;
   }
-  return `https://${raw}`;
+  // All backend routes live under /api/v1; tolerate a bare host.
+  const trimmed = raw.replace(/\/+$/, "");
+  return /\/api\/v\d+$/.test(trimmed) ? trimmed : `${trimmed}/api/v1`;
 }
 
 export const apiClient = axios.create({ baseURL: resolveApiBaseUrl() });
