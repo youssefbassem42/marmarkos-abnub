@@ -3,6 +3,9 @@
 from datetime import UTC, date, datetime
 from zoneinfo import ZoneInfo
 
+import pytest
+
+from app.config import settings
 from app.core.time import local_datetime, today_local
 from app.modules.attendance.application.services.absence_service import (
     AbsenceCalculationService,
@@ -11,6 +14,14 @@ from app.modules.attendance.domain.enums import ATTENDED_STATUSES, AttendanceSta
 from app.modules.attendance.domain.meeting_schedule import current_meeting_date
 
 CAIRO = ZoneInfo("Africa/Cairo")
+
+
+@pytest.fixture(autouse=True)
+def _deterministic_meeting_window(monkeypatch):
+    """Pin the meeting window so tests never drift with local .env values."""
+    monkeypatch.setattr(settings, "MEETING_START_TIME", "19:00")
+    monkeypatch.setattr(settings, "MEETING_LATE_GRACE_MINUTES", 15)
+    monkeypatch.setattr(settings, "MEETING_ABSENCE_CUTOFF_TIME", "21:00")
 
 
 def _service(today=None, now=None) -> AbsenceCalculationService:

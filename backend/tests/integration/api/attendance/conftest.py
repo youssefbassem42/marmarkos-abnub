@@ -2,13 +2,13 @@
 
 import uuid
 
+import pytest
 import pytest_asyncio
 from httpx import AsyncClient
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.modules.users.domain.enums.role_name import RoleName
 from tests.utils import (
-    DEFAULT_PASSWORD,
     create_qr_for_user,
     create_user_direct,
     login,
@@ -46,6 +46,30 @@ async def _headers_for(
     from tests.utils import bearer
 
     return bearer(auth["access_token"])
+
+
+@pytest_asyncio.fixture()
+async def member_with_pin(db_engine: AsyncEngine) -> tuple[uuid.UUID, str]:
+    """A MEMBER whose attendance PIN is the literal "42424"."""
+    from sqlalchemy import update
+
+    from app.modules.users.application.services.attendance_pin import (
+        hash_attendance_pin,
+    )
+    from app.modules.users.infrastructure.persistence.models import User
+
+    member_id = await create_user_direct(
+        db_engine,
+        email="pinned.member@test.com",
+        role_name=RoleName.MEMBER,
+    )
+    async with db_engine.begin() as conn:
+        await conn.execute(
+            update(User)
+            .where(User.id == member_id)
+            .values(attendance_pin_hash=hash_attendance_pin("42424"))
+        )
+    return member_id, "42424"
 
 
 @pytest_asyncio.fixture()

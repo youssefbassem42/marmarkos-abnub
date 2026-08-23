@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { QrCode } from "lucide-react";
+import { KeyRound, QrCode, ScanLine } from "lucide-react";
 import { ApiError } from "@/lib/api";
 import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { QRScanner, type CameraFailure } from "../components/QRScanner";
 import { ManualCodeEntry } from "../components/ManualCodeEntry";
+import { PinEntry } from "../components/PinEntry";
 import { ScanTips } from "../components/ScanTips";
 import { ScanResultCard } from "../components/ScanResultCard";
 import { MeetingStatsCard } from "../components/MeetingStatsCard";
@@ -60,10 +61,16 @@ export function CheckInPage() {
 
   const [state, setState] = useState<ScanState>({ kind: "idle" });
   const [torchAvailable, setTorchAvailable] = useState(false);
+  /** Which identifier the servant is working with: camera/QR or typed PIN */
+  const [mode, setMode] = useState<"qr" | "pin">("qr");
+  /** Bumped after every submission so PinEntry boxes clear for the next one */
+  const [pinNonce, setPinNonce] = useState(0);
 
   const checkIn = useCheckIn();
   const resumeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const manualEntryRef = useRef<HTMLDivElement>(null);
+  const modeRef = useRef(mode);
+  modeRef.current = mode;
 
   const clearResumeTimer = useCallback(() => {
     if (resumeTimer.current !== null) {
@@ -80,48 +87,51 @@ export function CheckInPage() {
       clearResumeTimer();
       resumeTimer.current = setTimeout(() => {
         resumeTimer.current = null;
-        setState({ kind: "scanning" });
+        // In PIN mode "ready" is the empty entry, not the camera.
+        setState(
+          modeRef.current === "pin" ? { kind: "idle" } : { kind: "scanning" },
+        );
       }, delay);
     },
     [clearResumeTimer],
   );
 
-  const submitCode = useCallback(
-    (qrCode: string) => {
+  const submitIdentifier = useCallback(
+    (payload: { qr_code: string } | { pin: string }) => {
       clearResumeTimer();
-      setState({ kind: "processing", code: qrCode });
-      checkIn.mutate(
-        { qr_code: qrCode },
-        {
-          onSuccess: (response) => {
-            setState({ kind: "success", record: response.attendance });
-            scheduleResume(SUCCESS_RESUME_MS);
-          },
-          onError: (error) => {
-            if (!(error instanceof ApiError)) {
-              setState({ kind: "network", message: t("errors.network") });
-              scheduleResume(ERROR_RESUME_MS);
-              return;
-            }
-            const key = errorKey(error);
-            const message =
-              (key ? t(`errors.${key}`) : undefined) ??
-              error.message ??
-              t("errors.unknown");
-
-            if (key === "conflict") setState({ kind: "duplicate", message });
-            else if (key === "validation")
-              setState({ kind: "invalid", message });
-            else if (key === "forbidden")
-              setState({ kind: "forbidden", message });
-            else if (key === "unauthorized")
-              setState({ kind: "network", message });
-            else setState({ kind: "network", message });
-
-            if (key !== "forbidden") scheduleResume(ERROR_RESUME_MS);
-          },
+      setState({
+        kind: "processing",
+        code: "qr_code" in payload ? payload.qr_code : payload.pin,
+      });
+      setPinNonce((nonce) => nonce + 1);
+      checkIn.mutate(payload, {
+        onSuccess: (response) => {
+          setState({ kind: "success", record: response.attendance });
+          scheduleResume(SUCCESS_RESUME_MS);
         },
-      );
+        onError: (error) => {
+          if (!(error instanceof ApiError)) {
+            setState({ kind: "network", message: t("errors.network") });
+            scheduleResume(ERROR_RESUME_MS);
+            return;
+          }
+          const key = errorKey(error);
+          const message =
+            (key ? t(`errors.${key}`) : undefined) ??
+            error.message ??
+            t("errors.unknown");
+
+          if (key === "conflict") setState({ kind: "duplicate", message });
+          else if (key === "validation") setState({ kind: "invalid", message });
+          else if (key === "forbidden")
+            setState({ kind: "forbidden", message });
+          else if (key === "unauthorized")
+            setState({ kind: "network", message });
+          else setState({ kind: "network", message });
+
+          if (key !== "forbidden") scheduleResume(ERROR_RESUME_MS);
+        },
+      });
     },
     [checkIn, clearResumeTimer, scheduleResume, t],
   );
@@ -134,7 +144,7 @@ export function CheckInPage() {
     manualEntryRef.current?.scrollIntoView({ block: "nearest" });
   }, []);
 
-  // Keyboard: Enter restarts scanning from a result; M focuses manual entry.
+  // Keyboard: Enter restarts from a result; M focuses manual entry (QR mode).
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
       const isResult =
@@ -145,9 +155,12 @@ export function CheckInPage() {
         state.kind === "network";
       if (event.key === "Enter" && isResult) {
         event.preventDefault();
-        setState({ kind: "scanning" });
+        setState(
+          modeRef.current === "pin" ? { kind: "idle" } : { kind: "scanning" },
+        );
       }
       if (
+        modeRef.current === "qr" &&
         (event.key === "m" || event.key === "M") &&
         !event.metaKey &&
         !event.ctrlKey
@@ -158,6 +171,16 @@ export function CheckInPage() {
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
   }, [state.kind]);
+
+  // Switching tabs resets any in-flight result back to the fresh entry.
+  const switchMode = useCallback(
+    (next: "qr" | "pin") => {
+      clearResumeTimer();
+      setMode(next);
+      setState({ kind: "idle" });
+    },
+    [clearResumeTimer],
+  );
 
   const cameraActive = state.kind === "scanning" || state.kind === "processing";
 
@@ -181,7 +204,9 @@ export function CheckInPage() {
       case "network":
         return t("checkIn.result.networkTitle");
       default:
-        return t("checkIn.scanner.readyTitle");
+        return mode === "pin"
+          ? t("checkIn.pin.readyTitle")
+          : t("checkIn.scanner.readyTitle");
     }
   })();
 
@@ -192,12 +217,16 @@ export function CheckInPage() {
       case "processing":
         return t("checkIn.scanner.processingSubtitle");
       default:
-        return t("checkIn.scanner.readySubtitle");
+        return mode === "pin"
+          ? t("checkIn.pin.readySubtitle")
+          : t("checkIn.scanner.readySubtitle");
     }
   })();
 
   const showCamera =
-    state.kind !== "permission-denied" && state.kind !== "unsupported";
+    mode === "qr" &&
+    state.kind !== "permission-denied" &&
+    state.kind !== "unsupported";
 
   const manualExpanded =
     state.kind === "permission-denied" || state.kind === "unsupported";
@@ -222,6 +251,38 @@ export function CheckInPage() {
     <div dir={isArabic ? "rtl" : "ltr"} lang={language} className="space-y-6">
       {/* Scanner card */}
       <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_2px_24px_rgba(37,61,99,0.08)]">
+        {/* Mode tabs: camera QR vs typed PIN (offline fallback) */}
+        <div
+          role="tablist"
+          aria-label={t("checkIn.tabs.label")}
+          className="mx-auto mb-5 grid w-full max-w-xs grid-cols-2 gap-1 rounded-xl border border-border bg-muted/60 p-1"
+        >
+          {(
+            [
+              { value: "qr", label: t("checkIn.tabs.scan"), icon: ScanLine },
+              { value: "pin", label: t("checkIn.tabs.pin"), icon: KeyRound },
+            ] as const
+          ).map(({ value, label, icon: Icon }) => (
+            <button
+              key={value}
+              type="button"
+              role="tab"
+              aria-selected={mode === value}
+              onClick={() => switchMode(value)}
+              className={cn(
+                "focus-ring inline-flex items-center justify-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition-colors",
+                mode === value
+                  ? "bg-navy text-white shadow-sm"
+                  : "text-muted-foreground hover:text-ink",
+                isArabic && "font-arabic",
+              )}
+            >
+              <Icon className="h-4 w-4" aria-hidden="true" />
+              {label}
+            </button>
+          ))}
+        </div>
+
         <div className="flex flex-col items-center text-center">
           <span className="grid h-16 w-16 place-items-center rounded-full bg-mint/15">
             <QrCode className="h-8 w-8 text-mint" aria-hidden="true" />
@@ -245,53 +306,73 @@ export function CheckInPage() {
           </p>
         </div>
 
-        <div className="mt-5">
-          {showCamera ? (
-            <QRScanner
-              onScan={submitCode}
-              isProcessing={state.kind === "processing"}
-              paused={
-                state.kind === "success" ||
-                state.kind === "duplicate" ||
-                state.kind === "invalid" ||
-                state.kind === "forbidden" ||
-                state.kind === "network"
-              }
-              onFailure={handleCameraFailure}
-              onTorchAvailable={() => setTorchAvailable(true)}
+        {mode === "pin" ? (
+          <div className="py-8">
+            <PinEntry
+              key={pinNonce}
+              isPending={state.kind === "processing"}
+              onSubmit={(pin) => submitIdentifier({ pin })}
             />
-          ) : (
-            <div className="grid aspect-video place-items-center rounded-2xl bg-muted">
-              <p className="max-w-xs px-4 text-sm text-muted-foreground">
-                {state.kind === "permission-denied"
-                  ? t("checkIn.scanner.permissionBody")
-                  : t("checkIn.scanner.unsupportedBody")}
-              </p>
+            <p
+              className={cn(
+                "mt-4 text-center text-xs text-muted-foreground",
+                isArabic && "font-arabic",
+              )}
+            >
+              {t("checkIn.pin.hint")}
+            </p>
+          </div>
+        ) : (
+          <>
+            <div className="mt-5">
+              {showCamera ? (
+                <QRScanner
+                  onScan={(code) => submitIdentifier({ qr_code: code })}
+                  isProcessing={state.kind === "processing"}
+                  paused={
+                    state.kind === "success" ||
+                    state.kind === "duplicate" ||
+                    state.kind === "invalid" ||
+                    state.kind === "forbidden" ||
+                    state.kind === "network"
+                  }
+                  onFailure={handleCameraFailure}
+                  onTorchAvailable={() => setTorchAvailable(true)}
+                />
+              ) : (
+                <div className="grid aspect-video place-items-center rounded-2xl bg-muted">
+                  <p className="max-w-xs px-4 text-sm text-muted-foreground">
+                    {state.kind === "permission-denied"
+                      ? t("checkIn.scanner.permissionBody")
+                      : t("checkIn.scanner.unsupportedBody")}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
-        </div>
 
-        {/* torch pill renders inside QRScanner only when capable */}
+            {/* torch pill renders inside QRScanner only when capable */}
 
-        <div className="my-4 flex items-center gap-3" aria-hidden="true">
-          <span className="h-px flex-1 bg-border" />
-          <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-            {isArabic ? "أو" : "OR"}
-          </span>
-          <span className="h-px flex-1 bg-border" />
-        </div>
+            <div className="my-4 flex items-center gap-3" aria-hidden="true">
+              <span className="h-px flex-1 bg-border" />
+              <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {isArabic ? "أو" : "OR"}
+              </span>
+              <span className="h-px flex-1 bg-border" />
+            </div>
 
-        <div ref={manualEntryRef}>
-          <ManualCodeEntry
-            expanded={manualExpanded}
-            isPending={state.kind === "processing"}
-            onSubmit={(code) => submitCode(code)}
-          />
-        </div>
+            <div ref={manualEntryRef}>
+              <ManualCodeEntry
+                expanded={manualExpanded}
+                isPending={state.kind === "processing"}
+                onSubmit={(code) => submitIdentifier({ qr_code: code })}
+              />
+            </div>
 
-        <div className="mt-4">
-          <ScanTips />
-        </div>
+            <div className="mt-4">
+              <ScanTips />
+            </div>
+          </>
+        )}
       </section>
 
       {/* Result card */}
@@ -304,7 +385,9 @@ export function CheckInPage() {
               record={resultState.record}
               onScanNext={() => {
                 clearResumeTimer();
-                setState({ kind: "scanning" });
+                setState(
+                  mode === "pin" ? { kind: "idle" } : { kind: "scanning" },
+                );
               }}
             />
           ) : (
@@ -316,7 +399,11 @@ export function CheckInPage() {
                   ? undefined
                   : () => {
                       clearResumeTimer();
-                      setState({ kind: "scanning" });
+                      setState(
+                        mode === "pin"
+                          ? { kind: "idle" }
+                          : { kind: "scanning" },
+                      );
                     }
               }
             />

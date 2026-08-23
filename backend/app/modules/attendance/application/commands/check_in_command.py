@@ -25,7 +25,12 @@ from app.modules.attendance.domain.meeting_schedule import (
 from app.modules.attendance.infrastructure.services.qr_validation_service import (
     QrValidationService,
 )
+from app.modules.users.application.services.attendance_pin import (
+    PIN_UNKNOWN_MESSAGE,
+    hash_attendance_pin,
+)
 from app.modules.users.domain.enums.role_name import RoleName
+from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.infrastructure.persistence.models import User
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
@@ -89,7 +94,7 @@ class CheckInCommand:
         meeting_date: date | None = None,
         method: AttendanceMethod = AttendanceMethod.QR_SCAN,
     ) -> CheckInResponse:
-        """Execute check-in command.
+        """Execute check-in command from a QR token.
 
         Args:
             qr_code: QR code token to validate
@@ -115,6 +120,51 @@ class CheckInCommand:
         # Validate QR and resolve user
         user = await self._qr_service.validate_and_resolve_user(qr_code)
 
+        return await self._record(user, open_meeting, admin_user, method)
+
+    async def execute_by_pin(
+        self,
+        pin: str,
+        admin_user: User,
+        meeting_date: date | None = None,
+    ) -> CheckInResponse:
+        """Execute check-in from the member's attendance PIN.
+
+        The offline fallback: when a member cannot show their QR code at
+        all (e.g. no internet on their phone), the servant types the
+        member's five-digit PIN instead. The deterministic peppered hash
+        resolves to exactly one account — global uniqueness of stored
+        PINs is what keeps the lookup unambiguous.
+
+        Raises:
+            ForbiddenError: If admin lacks permission
+            ValidationError: If no member holds this PIN, the holder is
+                not active, or the meeting is not open
+            ConflictError: If the holder is already recorded for the meeting
+        """
+        self._validate_admin_permission(admin_user)
+        open_meeting = self._resolve_open_meeting(meeting_date)
+
+        pin_hash = hash_attendance_pin(pin)
+        user = await self._uow.users.get_by_attendance_pin_hash(pin_hash)
+        if user is None:
+            raise ValidationError(PIN_UNKNOWN_MESSAGE)
+
+        if user.status != UserStatus.ACTIVE:
+            raise ValidationError(
+                f"User account is {user.status.value.lower()}. Cannot record attendance."
+            )
+
+        return await self._record(user, open_meeting, admin_user, AttendanceMethod.PIN)
+
+    async def _record(
+        self,
+        user: User,
+        open_meeting: date,
+        admin_user: User,
+        method: AttendanceMethod,
+    ) -> CheckInResponse:
+        """Shared tail of both entry points: duplicate guard + BR-8 write."""
         user_name = self._display_name(user)
         duplicate_message = (
             f"{user_name} is already recorded for the "
@@ -129,10 +179,7 @@ class CheckInCommand:
         # Derive status from the meeting's configured start time plus the
         # late grace period (BR-2).
         now = self._now()
-        threshold = local_datetime(open_meeting, settings.MEETING_START_TIME) + timedelta(
-            minutes=settings.MEETING_LATE_GRACE_MINUTES
-        )
-        status = AttendanceStatus.LATE if to_local(now) > threshold else AttendanceStatus.PRESENT
+        status = derive_check_in_status(now, open_meeting)
         attendance = Attendance(
             id=uuid.uuid4(),
             user_id=user.id,

@@ -38,6 +38,16 @@ class UserRepository:
         result = await self._session.execute(select(User).where(User.phone == phone).limit(1))
         return result.scalar_one_or_none()
 
+    async def get_by_attendance_pin_hash(self, pin_hash: str) -> User | None:
+        """Resolve a typed attendance PIN to its unique holder (or none)."""
+        result = await self._session.execute(
+            select(User)
+            .options(selectinload(User.role))
+            .where(User.attendance_pin_hash == pin_hash)
+            .limit(1)
+        )
+        return result.scalar_one_or_none()
+
     async def list_all(self) -> list[User]:
         result = await self._session.execute(
             select(User).options(selectinload(User.role)).order_by(User.created_at)

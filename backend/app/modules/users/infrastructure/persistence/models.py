@@ -104,6 +104,12 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     has_password: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("true"), default=True
     )
+    # Peppered SHA-256 of the member's self-chosen attendance PIN. Nullable
+    # (most members never set one) and globally UNIQUE: the check-in screen
+    # resolves a typed PIN to exactly one account or none.
+    attendance_pin_hash: Mapped[str | None] = mapped_column(
+        String(64), unique=True, index=True, nullable=True
+    )
 
     role: Mapped[Role] = relationship(back_populates="users")
     qr_code: Mapped["UserQrCode | None"] = relationship(

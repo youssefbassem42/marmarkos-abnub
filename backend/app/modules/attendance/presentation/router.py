@@ -91,17 +91,24 @@ async def check_in(
     current_user: AttendanceManager,
     uow: Uow,
 ) -> CheckInResponse:
-    """Record attendance for the current weekly meeting by scanning a QR code.
+    """Record attendance for the current weekly meeting.
+
+    Two identifiers are accepted, exactly one per request:
+
+    * ``qr_code`` -- the member's QR token (camera scan or typed), or
+    * ``pin`` -- the member's self-chosen five-digit PIN for when they
+      cannot show their QR code at all (e.g. no internet on their phone).
 
     Scanning works on any weekday: the record is attributed to the
     meeting of the current meeting week (Thursday through Wednesday).
     Attendance can never be recorded twice for the same user and meeting,
-    nor for a future or already closed meeting. A scan later than the
-    meeting start time plus the grace period is recorded as LATE.
+    nor for a future or already closed meeting. A check-in later than the
+    meeting start time plus the grace period is recorded as LATE. PIN
+    entries always carry method ``PIN`` regardless of ``request.method``.
 
     Args:
-        request: Check-in request containing the QR code, an optional
-            expected meeting date and the scan method
+        request: Check-in request containing exactly one of qr_code /
+            pin, an optional expected meeting date and the scan method
         current_user: The authenticated admin or servant
         uow: Unit of work; record, outbox event and audit row commit
             atomically
@@ -112,12 +119,18 @@ async def check_in(
     Raises:
         403: If user lacks permission to record attendance
         409: If the user is already recorded for this meeting
-        422: If the QR code is invalid, the user account is not active,
-            or the requested meeting is not the open one
+        422: If the QR code/PIN is invalid, the user account is not
+            active, or the requested meeting is not the open one
     """
     command = CheckInCommand(uow)
+    if request.pin is not None:
+        return await command.execute_by_pin(
+            pin=request.pin,
+            admin_user=current_user,
+            meeting_date=request.meeting_date,
+        )
     return await command.execute(
-        qr_code=request.qr_code,
+        qr_code=request.qr_code or "",
         admin_user=current_user,
         meeting_date=request.meeting_date,
         method=request.method,

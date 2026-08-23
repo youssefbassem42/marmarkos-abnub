@@ -1,13 +1,25 @@
 import uuid
 from datetime import UTC, datetime
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.exceptions import ConflictError, ForbiddenError, NotFoundError, UnauthorizedError
+from app.core.exceptions import (
+    ConflictError,
+    ForbiddenError,
+    NotFoundError,
+    UnauthorizedError,
+    ValidationError,
+)
 from app.modules.auth.infrastructure.security import hash_password, verify_password
 from app.modules.users.application.dto.profile_update import (
     ChangePasswordRequest,
     UpdateProfileRequest,
+)
+from app.modules.users.application.services.attendance_pin import (
+    PIN_TAKEN_MESSAGE,
+    hash_attendance_pin,
+    validate_pin_format,
 )
 from app.modules.users.infrastructure.persistence.models import User
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
@@ -56,6 +68,37 @@ class ProfileCommandService:
         user.avatar = avatar_url
         await self._uow.commit()
         return user
+
+    async def set_attendance_pin(self, user: User, pin: str) -> None:
+        """Create or replace the member's attendance PIN.
+
+        The PIN is checked against the global uniqueness constraint so a
+        typed PIN always resolves to exactly one account. A concurrent
+        claim of the same PIN loses the race at the database and is
+        reported with the same friendly conflict message.
+        """
+        validate_pin_format(pin)
+        pin_hash = hash_attendance_pin(pin)
+
+        holder = await self._uow.users.get_by_attendance_pin_hash(pin_hash)
+        if holder is not None and holder.id != user.id:
+            raise ConflictError(PIN_TAKEN_MESSAGE)
+
+        user.attendance_pin_hash = pin_hash
+        try:
+            await self._uow.commit()
+        except IntegrityError as exc:
+            await self._uow.rollback()
+            raise ConflictError(PIN_TAKEN_MESSAGE) from exc
+
+    async def delete_attendance_pin(self, user: User) -> None:
+        """Remove the PIN; idempotent — deleting twice stays a success."""
+        user.attendance_pin_hash = None
+        try:
+            await self._uow.commit()
+        except IntegrityError as exc:  # pragma: no cover - cannot occur on delete
+            await self._uow.rollback()
+            raise ValidationError("Could not delete the attendance PIN") from exc
 
 
 def ensure_can_manage(user: User, target_id: uuid.UUID) -> None:

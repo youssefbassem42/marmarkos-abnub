@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime
 
 from httpx import AsyncClient
 from sqlalchemy import insert, select
@@ -115,6 +116,7 @@ async def create_user_direct(
     password: str = DEFAULT_PASSWORD,
     role_name: RoleName = RoleName.MEMBER,
     status: UserStatus = UserStatus.ACTIVE,
+    created_at: datetime | None = None,
 ) -> uuid.UUID:
     async with engine.begin() as conn:
         role_id = (await conn.execute(select(Role.id).where(Role.name == role_name))).scalar_one()
@@ -127,6 +129,7 @@ async def create_user_direct(
                 public_id=generate_public_id(),
                 status=status,
                 role_id=role_id,
+                **({"created_at": created_at} if created_at is not None else {}),
             )
         )
         return user_id

@@ -4,6 +4,7 @@ from enum import StrEnum
 class AttendanceMethod(StrEnum):
     QR_SCAN = "QR_SCAN"
     MANUAL = "MANUAL"
+    PIN = "PIN"
 
 
 class ServiceType(StrEnum):

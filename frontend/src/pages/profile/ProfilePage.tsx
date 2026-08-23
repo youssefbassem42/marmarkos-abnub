@@ -20,6 +20,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { useLanguage } from "@/i18n/context";
 import { AttendanceStatusBadge } from "@/modules/attendance/components/AttendanceStatusBadge";
 import { useMyAttendance } from "@/modules/attendance/hooks/useMyAttendance";
+import { AttendancePinCard } from "./AttendancePinCard";
 import {
   apiClient,
   ApiError,
@@ -335,6 +336,9 @@ export function ProfilePage() {
             </Button>
           </div>
         </section>
+
+        {/* Attendance PIN: offline fallback when the QR can't be shown. */}
+        <AttendancePinCard />
 
         {/* My attendance (US-012): sits directly under the QR card. */}
         {myAttendance.data &&

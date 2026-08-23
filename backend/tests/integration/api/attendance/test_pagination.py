@@ -8,17 +8,17 @@ from httpx import AsyncClient
 from sqlalchemy import insert
 from sqlalchemy.ext.asyncio import AsyncEngine
 
-from app.modules.attendance.infrastructure.persistence.weekly_models import (
-    WeeklyAttendanceRecord,
-)
+from app.core.time import today_local
 from app.modules.attendance.domain.meeting_schedule import (
     current_meeting_date,
     meeting_dates_between,
 )
-from app.core.time import today_local
+from app.modules.attendance.infrastructure.persistence.weekly_models import (
+    WeeklyAttendanceRecord,
+)
+from app.modules.users.domain.enums.role_name import RoleName
 from tests.integration.api.attendance.conftest import _headers_for
 from tests.utils import ATTENDANCE_HISTORY_URL, create_user_direct
-from app.modules.users.domain.enums.role_name import RoleName
 
 
 @pytest.mark.asyncio
@@ -34,11 +34,11 @@ async def test_pagination_metadata_and_pages(
     )[-3:]
 
     member_ids = []
-    for index in range(5):
+    for _index in range(5):
         member_ids.append(
             await create_user_direct(
                 db_engine,
-                email=f"page.m{index}@test.com",
+                email=f"page.m{_index}@test.com",
                 role_name=RoleName.MEMBER,
                 created_at=datetime(2026, 1, 1, tzinfo=UTC),
             )
@@ -46,7 +46,7 @@ async def test_pagination_metadata_and_pages(
 
     rows = []
     for meeting_index, meeting in enumerate(meetings):
-        for user_index, user_id in enumerate(member_ids[: 2 + meeting_index]):
+        for user_id in member_ids[: 2 + meeting_index]:
             rows.append(
                 {
                     "id": uuid_module.uuid4(),
@@ -62,7 +62,9 @@ async def test_pagination_metadata_and_pages(
     async with db_engine.begin() as conn:
         await conn.execute(insert(WeeklyAttendanceRecord).values(rows))
 
-    headers = await _headers_for(client, db_engine, admin_email, RoleName.ADMIN)
+    headers = await _headers_for(
+        client, db_engine, "page.login@test.com", RoleName.ADMIN
+    )
 
     page_one = await client.get(f"{ATTENDANCE_HISTORY_URL}?size=5&page=1", headers=headers)
     assert page_one.status_code == 200, page_one.text
@@ -129,7 +131,9 @@ async def test_status_and_user_filters_are_sql_side(
             )
         )
 
-    headers = await _headers_for(client, db_engine, admin_email, RoleName.ADMIN)
+    headers = await _headers_for(
+        client, db_engine, "page.login@test.com", RoleName.ADMIN
+    )
     filtered = await client.get(
         f"{ATTENDANCE_HISTORY_URL}?user_id={member_id}&status=LATE", headers=headers
     )

@@ -54,7 +54,7 @@ class WeeklyAttendanceRecord(UUIDPrimaryKeyMixin, Base):
             name="ck_weekly_attendance_status",
         ),
         CheckConstraint(
-            "method IN ('QR_SCAN', 'MANUAL')",
+            "method IN ('QR_SCAN', 'MANUAL', 'PIN')",
             name="ck_weekly_attendance_method",
         ),
     )

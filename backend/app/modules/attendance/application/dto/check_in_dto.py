@@ -3,15 +3,25 @@
 from datetime import date, datetime
 from uuid import UUID
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from app.modules.attendance.domain.enums import AttendanceMethod
 
 
 class CheckInRequest(BaseModel):
-    """Request to record attendance for the current meeting via QR code."""
+    """Request to record attendance for the current meeting.
 
-    qr_code: str = Field(..., description="QR code token to validate")
+    Exactly one identifier must be supplied: ``qr_code`` (scanned or
+    typed QR token) or ``pin`` (the member's five-digit attendance PIN
+    for when they cannot show their QR code at all).
+    """
+
+    qr_code: str | None = Field(None, description="QR code token to validate")
+    pin: str | None = Field(
+        None,
+        pattern=r"^\d{5}$",
+        description="The member's five-digit attendance PIN",
+    )
     meeting_date: date | None = Field(
         None,
         description=(
@@ -21,8 +31,17 @@ class CheckInRequest(BaseModel):
     )
     method: AttendanceMethod = Field(
         AttendanceMethod.QR_SCAN,
-        description="How the code was captured: QR_SCAN (camera) or MANUAL (typed).",
+        description=(
+            "How the code was captured: QR_SCAN (camera), MANUAL (typed "
+            "token) or PIN. Ignored when ``pin`` is used — recorded as PIN."
+        ),
     )
+
+    @model_validator(mode="after")
+    def exactly_one_identifier(self) -> "CheckInRequest":
+        if bool(self.qr_code) == bool(self.pin):
+            raise ValueError("Provide exactly one of qr_code or pin")
+        return self
 
 
 class AttendanceDTO(BaseModel):

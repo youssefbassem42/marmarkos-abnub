@@ -5,9 +5,13 @@
  * A month therefore holds 4 meetings (5 when it has five Thursdays).
  */
 
+/** Attendance is recorded per weekly meeting (Thursday), never per day.
+ *  A month therefore holds 4 meetings (5 when it has five Thursdays).
+ */
+
 export type AttendanceStatusValue = "PRESENT" | "LATE" | "ABSENT" | "EXCUSED";
 
-export type AttendanceMethodValue = "QR_SCAN" | "MANUAL";
+export type AttendanceMethodValue = "QR_SCAN" | "MANUAL" | "PIN";
 
 export interface AttendanceRecord {
   id: string;
@@ -25,7 +29,14 @@ export interface AttendanceRecord {
 }
 
 export interface CheckInRequest {
-  qr_code: string;
+  /** QR token from camera scan or manual typing */
+  qr_code?: string;
+  /**
+   * The member's self-chosen 5-digit PIN — offline fallback for when
+   * they cannot show their QR code at all. Takes precedence server-side;
+   * exactly one of qr_code/pin must be sent.
+   */
+  pin?: string;
   /** Optional; must be the currently open meeting when provided */
   meeting_date?: string;
   /** How the code was captured; defaults to a camera scan */

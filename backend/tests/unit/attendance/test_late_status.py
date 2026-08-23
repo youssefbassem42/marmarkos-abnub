@@ -3,6 +3,9 @@
 from datetime import UTC, date, datetime, timedelta
 from zoneinfo import ZoneInfo
 
+import pytest
+
+from app.config import settings
 from app.modules.attendance.application.commands.check_in_command import (
     derive_check_in_status,
 )
@@ -10,6 +13,14 @@ from app.modules.attendance.domain.enums import AttendanceStatus
 
 CAIRO = ZoneInfo("Africa/Cairo")
 MEETING = date(2026, 8, 20)  # a Thursday
+
+
+@pytest.fixture(autouse=True)
+def _deterministic_meeting_window(monkeypatch):
+    """Pin the meeting window so tests never drift with local .env values."""
+    monkeypatch.setattr(settings, "MEETING_START_TIME", "19:00")
+    monkeypatch.setattr(settings, "MEETING_LATE_GRACE_MINUTES", 15)
+    monkeypatch.setattr(settings, "MEETING_ABSENCE_CUTOFF_TIME", "21:00")
 
 
 def _local(hour: int, minute: int) -> datetime:

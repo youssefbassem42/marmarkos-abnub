@@ -56,6 +56,17 @@ export const en = {
     checkIn: {
       title: "Check-in Scanner",
       subtitle: "Scan a user QR code to check them in",
+      tabs: {
+        label: "Check-in method",
+        scan: "Scan QR",
+        pin: "PIN code",
+      },
+      pin: {
+        readyTitle: "Enter member PIN",
+        readySubtitle: "For members who cannot show their QR code",
+        hint: "The 5-digit PIN — submits automatically when complete.",
+        digitLabel: "Digit {{position}}",
+      },
       scanner: {
         readyTitle: "Ready to scan",
         readySubtitle: "Position the QR code within the frame",
@@ -206,6 +217,7 @@ export const en = {
     method: {
       QR_SCAN: "QR scan",
       MANUAL: "Manual",
+      PIN: "PIN",
     },
     errors: {
       unauthorized: "Please sign in again",
@@ -293,6 +305,25 @@ export const en = {
   profile: {
     heading: "My Profile",
     subtitle: "Manage your account details, photo and password.",
+    pin: {
+      title: "Attendance PIN",
+      description:
+        "Choose a 5-digit PIN a servant can type instead of your QR code when you cannot open the app (e.g. no internet on your phone). Keep it private.",
+      setLabel: "PIN configured",
+      change: "Change",
+      cancel: "Cancel",
+      delete: "Delete PIN",
+      deleteTitle: "Delete your attendance PIN?",
+      deleteBody:
+        "You will not be able to check in without your QR code until you configure a new PIN.",
+      saved: "PIN saved",
+      deleted: "PIN deleted",
+      taken:
+        "This PIN is already used by another member — choose a different one",
+      saveFailed: "Could not save the PIN. Please try again.",
+      deleteFailed: "Could not delete the PIN. Please try again.",
+      loadFailed: "Could not load your PIN status. Please refresh the page.",
+    },
     avatar: {
       change: "Change photo",
       uploading: "Uploading...",

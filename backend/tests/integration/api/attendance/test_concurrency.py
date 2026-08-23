@@ -14,10 +14,10 @@ from app.core.exceptions.errors import ConflictError
 from app.core.time import local_datetime, today_local
 from app.modules.attendance.application.commands.check_in_command import CheckInCommand
 from app.modules.attendance.domain.meeting_schedule import current_meeting_date
+from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.infrastructure.persistence.models import UserQrCode
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 from tests.integration.attendance.conftest import create_user
-from app.modules.users.domain.enums.role_name import RoleName
 
 
 @pytest.mark.asyncio

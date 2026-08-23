@@ -31,3 +31,19 @@ class ChangePasswordRequest(BaseModel):
 
     current_password: str | None = Field(default=None, min_length=1, max_length=128)
     new_password: str = Field(min_length=8, max_length=128)
+
+
+class AttendancePinRequest(BaseModel):
+    """Body for creating or replacing the member's attendance PIN."""
+
+    pin: str = Field(
+        ...,
+        pattern=r"^[0-9]{5}$",
+        description="Exactly five digits, chosen by the member; globally unique",
+    )
+
+
+class AttendancePinStatus(BaseModel):
+    """Whether the authenticated member currently has a PIN configured."""
+
+    set: bool

@@ -116,3 +116,25 @@ export const attendanceApi = {
     return response.data;
   },
 };
+
+/**
+ * The member's self-chosen attendance PIN (offline check-in fallback).
+ * Lives under /users/me on the wire but belongs to this feature.
+ */
+export const attendancePinApi = {
+  /** Whether the signed-in member currently has a PIN configured */
+  getStatus: async (): Promise<{ set: boolean }> => {
+    const response = await apiClient.get("/users/me/attendance-pin");
+    return response.data;
+  },
+
+  /** Create or replace the PIN; 409 conflict when another member holds it */
+  set: async (pin: string): Promise<void> => {
+    await apiClient.put("/users/me/attendance-pin", { pin });
+  },
+
+  /** Remove the PIN; idempotent */
+  remove: async (): Promise<void> => {
+    await apiClient.delete("/users/me/attendance-pin");
+  },
+};

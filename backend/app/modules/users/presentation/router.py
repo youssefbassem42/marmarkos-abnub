@@ -10,6 +10,8 @@ from app.modules.auth.presentation.dependencies import (
 )
 from app.modules.users.application.dto import UserResponse
 from app.modules.users.application.dto.profile_update import (
+    AttendancePinRequest,
+    AttendancePinStatus,
     ChangePasswordRequest,
     UpdateProfileRequest,
 )
@@ -80,6 +82,35 @@ async def get_me_qr(
 ) -> Response:
     svg = await ProfileQueryService(session).get_qr(current_user)
     return Response(content=svg, media_type="image/svg+xml")
+
+
+@router.get("/me/attendance-pin", response_model=AttendancePinStatus)
+async def get_attendance_pin(
+    current_user: Annotated[User, Depends(get_current_user)],
+) -> AttendancePinStatus:
+    """Whether the member has configured an attendance PIN (never the PIN)."""
+    return AttendancePinStatus(set=current_user.attendance_pin_hash is not None)
+
+
+@router.put("/me/attendance-pin", status_code=204)
+async def set_attendance_pin(
+    payload: AttendancePinRequest,
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: SessionDependency,
+) -> Response:
+    """Create or replace the member's own attendance PIN."""
+    await ProfileCommandService(session).set_attendance_pin(current_user, payload.pin)
+    return Response(status_code=204)
+
+
+@router.delete("/me/attendance-pin", status_code=204)
+async def delete_attendance_pin(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: SessionDependency,
+) -> Response:
+    """Remove the attendance PIN; idempotent."""
+    await ProfileCommandService(session).delete_attendance_pin(current_user)
+    return Response(status_code=204)
 
 
 @router.get("", response_model=list[UserResponse])

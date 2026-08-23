@@ -5,7 +5,7 @@ from datetime import timedelta
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import select, text
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.core.time import today_local
@@ -13,6 +13,7 @@ from app.modules.attendance.domain.meeting_schedule import (
     MEETING_INTERVAL_DAYS,
     current_meeting_date,
 )
+from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
 from tests.integration.api.attendance.conftest import _headers_for
 from tests.utils import (
@@ -55,7 +56,6 @@ async def test_duplicate_scan_conflict_envelope(
     db_engine: AsyncEngine,
     member_with_qr: tuple,
 ):
-    from tests.utils import bearer
 
     admin = await _headers_for(client, db_engine, "dup.a@test.com", RoleName.ADMIN)
     member = await _headers_for(client, db_engine, "dup.m@test.com", RoleName.MEMBER)
@@ -195,7 +195,7 @@ async def test_excuse_of_past_record_is_rejected(
     db_engine: AsyncEngine,
 ):
     """A record whose meeting is already closed cannot be corrected."""
-    from datetime import datetime, UTC
+    from datetime import UTC, datetime
 
     from sqlalchemy import insert
 

@@ -11,9 +11,9 @@ from tests.utils import (
     ATTENDANCE_CHECK_IN_URL,
     ATTENDANCE_EXCUSE_URL,
     ATTENDANCE_HISTORY_URL,
-    ATTENDANCE_MEETINGS_URL,
-    ATTENDANCE_MEETING_URL,
     ATTENDANCE_ME_URL,
+    ATTENDANCE_MEETING_URL,
+    ATTENDANCE_MEETINGS_URL,
     ATTENDANCE_STATS_MEETING_URL,
     ATTENDANCE_STATS_MONTHLY_URL,
 )
@@ -90,7 +90,6 @@ async def test_excuse_is_admin_only(
     member_with_qr: tuple,
 ):
     from tests.utils import (
-        ATTENDANCE_CHECK_IN_URL,
         attendance_excuse_url,
     )
 
