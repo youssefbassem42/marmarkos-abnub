@@ -5,26 +5,19 @@ WORKDIR /app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
-COPY pyproject.toml .
-
+# Install the project itself so dependencies stay defined in one place
+# (pyproject.toml). python:3.12-slim has no OS zoneinfo database; the
+# tzdata wheel pulled in here is what makes ZoneInfo("Africa/Cairo") work.
+COPY pyproject.toml README.md ./
+COPY app ./app
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir \
-       fastapi \
-       "uvicorn[standard]" \
-       pydantic \
-       pydantic-settings \
-       sqlalchemy \
-       asyncpg \
-       alembic \
-       python-jose \
-       passlib \
-       bcrypt \
-       python-multipart \
-       httpx \
-       email-validator
+    && pip install --no-cache-dir .
 
-COPY . .
+COPY alembic.ini ./
+COPY alembic ./alembic
+COPY scripts/entrypoint.sh ./scripts/entrypoint.sh
+RUN chmod +x scripts/entrypoint.sh
 
 EXPOSE 8000
 
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["./scripts/entrypoint.sh"]
