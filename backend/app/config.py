@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     PLATFORM_TIMEZONE: str = "Africa/Cairo"
     # Local time the weekly meeting starts; scans later than start +
     # grace are recorded as LATE (BR-2).
-    MEETING_START_TIME: str = "19:00"
+    MEETING_START_TIME: str = "18:00"
     # Minutes after MEETING_START_TIME still counted as on-time.
     MEETING_LATE_GRACE_MINUTES: int = 15
     # Local time on the meeting day after which the absent list becomes
