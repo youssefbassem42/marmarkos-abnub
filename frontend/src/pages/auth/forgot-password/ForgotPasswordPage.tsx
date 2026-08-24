@@ -8,6 +8,7 @@ import { AuthCard } from "./AuthCard";
 export function ForgotPasswordPage() {
   const { language } = useLanguage();
   const [stage, setStage] = useState<"form" | "success">("form");
+  const [sentEmail, setSentEmail] = useState<string | undefined>(undefined);
   const isArabic = language === "ar";
 
   return (
@@ -23,7 +24,11 @@ export function ForgotPasswordPage() {
         <AuthCard
           lang={language}
           stage={stage}
-          onSuccess={() => setStage("success")}
+          sentEmail={sentEmail}
+          onSuccess={(email) => {
+            setSentEmail(email);
+            setStage("success");
+          }}
         />
       </main>
 

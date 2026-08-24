@@ -25,9 +25,21 @@ class Settings(BaseSettings):
     TELEGRAM_BOT_TOKEN: str | None = None
     TELEGRAM_CHAT_ID: str | None = None
 
+    # Mail service component: "auto" picks gmail/brevo from credentials,
+    # "console" only logs (development).
+    MAIL_PROVIDER: str = "auto"
     BREVO_API_KEY: str | None = None
     BREVO_SENDER_EMAIL: str | None = None
     BREVO_SENDER_NAME: str = "Marmarkos ABNUB"
+
+    # Gmail SMTP transport (app password; the address mails are sent from).
+    GMAIL_EMAIL: str | None = None
+    GMAIL_APP_PASSWORD: str | None = None
+
+    # -- Account verification & password recovery -----------------------------
+    # Lifespan of single-use links sent by the mail service component.
+    EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS: int = 24
+    PASSWORD_RESET_TOKEN_EXPIRE_MINUTES: int = 60
 
     CLOUDINARY_CLOUD_NAME: str | None = None
     CLOUDINARY_API_KEY: str | None = None

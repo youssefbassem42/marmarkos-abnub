@@ -19,7 +19,14 @@ function resolveApiBaseUrl(): string {
 export const apiClient = axios.create({ baseURL: resolveApiBaseUrl() });
 
 /** Paths that must never carry the bearer token. */
-const AUTH_FREE_PREFIXES = ["/auth/login", "/auth/register", "/auth/google"];
+const AUTH_FREE_PREFIXES = [
+  "/auth/login",
+  "/auth/register",
+  "/auth/google",
+  "/auth/verify-email",
+  "/auth/resend-verification",
+  "/auth/password",
+];
 
 apiClient.interceptors.request.use((config) => {
   const url = config.url ?? "";
@@ -133,6 +140,7 @@ export interface RegisteredUser {
   public_id: string;
   created_at: string;
   has_password: boolean;
+  email_verified: boolean;
 }
 
 /** Register a new member. Returns the created user (no tokens on register). */
@@ -151,10 +159,8 @@ export interface RequestPasswordResetPayload {
 }
 
 /**
- * Pending backend integration: the forgot-password endpoint does not exist on
- * the API yet. This is the agreed contract (POST /auth/password/forgot with
- * the email); the page connects to it automatically once the backend exposes
- * it.
+ * Ask the API to email a password reset link. The backend always answers
+ * with a neutral success so it never reveals which emails exist.
  */
 export async function requestPasswordReset(
   payload: RequestPasswordResetPayload,
@@ -167,16 +173,28 @@ export interface ResetPasswordPayload {
   password: string;
 }
 
-/**
- * Pending backend integration: the password-reset endpoint does not exist on
- * the API yet. This is the agreed contract (POST /auth/password/reset with the
- * token from the email link); the page connects to it automatically once the
- * backend exposes it.
- */
+/** Consume the emailed reset token and set the new password. */
 export async function resetPassword(
   payload: ResetPasswordPayload,
 ): Promise<void> {
   await apiClient.post("/auth/password/reset", payload);
+}
+
+export interface VerifyEmailPayload {
+  token: string;
+}
+
+/** Consume the emailed verification token and activate the account. */
+export async function verifyEmail(payload: VerifyEmailPayload): Promise<void> {
+  await apiClient.post("/auth/verify-email", payload);
+}
+
+/**
+ * Re-send the verification link for an address that has not been
+ * confirmed yet. The backend answers neutrally (no account enumeration).
+ */
+export async function resendVerificationEmail(email: string): Promise<void> {
+  await apiClient.post("/auth/resend-verification", { email });
 }
 
 export interface LoginPayload {

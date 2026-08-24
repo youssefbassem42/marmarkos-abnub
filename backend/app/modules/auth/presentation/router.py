@@ -8,12 +8,21 @@ from app.config import settings
 from app.core.exceptions import AppError, ForbiddenError, UnauthorizedError
 from app.modules.auth.application.dto import (
     AuthResponse,
+    ForgotPasswordRequest,
     LoginRequest,
     MessageResponse,
     RegisterRequest,
+    ResendVerificationRequest,
+    ResetPasswordRequest,
     TokenResponse,
+    VerifyEmailRequest,
 )
-from app.modules.auth.application.services import AuthenticationService, RegistrationService
+from app.modules.auth.application.services import (
+    AuthenticationService,
+    EmailVerificationService,
+    PasswordResetService,
+    RegistrationService,
+)
 from app.modules.auth.infrastructure.services import (
     build_google_authorize_url,
     exchange_google_code,
@@ -120,6 +129,40 @@ async def google_login_callback(
 async def register(payload: RegisterRequest, session: SessionDependency) -> UserResponse:
     user = await RegistrationService(session).register(payload)
     return map_user_to_response(user)
+
+
+@router.post("/verify-email", response_model=MessageResponse)
+async def verify_email(payload: VerifyEmailRequest, session: SessionDependency) -> MessageResponse:
+    """Consume the emailed token and activate the account."""
+    await EmailVerificationService(session).confirm(payload.token)
+    return MessageResponse(message="Email verified successfully")
+
+
+@router.post("/resend-verification", response_model=MessageResponse)
+async def resend_verification(
+    payload: ResendVerificationRequest, session: SessionDependency
+) -> MessageResponse:
+    """Re-send the verification link (quiet no-op for unknown addresses)."""
+    await EmailVerificationService(session).resend(payload.email.lower())
+    return MessageResponse(message="If the account exists, a verification email has been sent")
+
+
+@router.post("/password/forgot", response_model=MessageResponse)
+async def forgot_password(
+    payload: ForgotPasswordRequest, session: SessionDependency
+) -> MessageResponse:
+    """Email a reset link; always succeeds to avoid address enumeration."""
+    await PasswordResetService(session).request_reset(payload)
+    return MessageResponse(message="If an account exists for this email, a reset link has been sent")
+
+
+@router.post("/password/reset", response_model=MessageResponse)
+async def reset_password(
+    payload: ResetPasswordRequest, session: SessionDependency
+) -> MessageResponse:
+    """Consume the emailed token and set the new password."""
+    await PasswordResetService(session).reset(payload)
+    return MessageResponse(message="Password has been reset successfully")
 
 
 @router.post("/login", response_model=AuthResponse)

@@ -1,6 +1,7 @@
 from app.core.exceptions.errors import (
     AppError,
     ConflictError,
+    EmailNotVerifiedError,
     ForbiddenError,
     NotFoundError,
     UnauthorizedError,
@@ -11,6 +12,7 @@ from app.core.exceptions.handlers import register_exception_handlers
 __all__ = [
     "AppError",
     "ConflictError",
+    "EmailNotVerifiedError",
     "ForbiddenError",
     "NotFoundError",
     "UnauthorizedError",

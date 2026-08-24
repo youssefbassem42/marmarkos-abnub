@@ -5,6 +5,8 @@ import { RegisterPage } from "@/pages/auth/register/RegisterPage";
 import { LoginPage } from "@/pages/auth/login/LoginPage";
 import { ForgotPasswordPage } from "@/pages/auth/forgot-password/ForgotPasswordPage";
 import { ResetPasswordPage } from "@/pages/auth/reset-password/ResetPasswordPage";
+import { CheckEmailPage } from "@/pages/auth/verify-email/CheckEmailPage";
+import { VerifyEmailResultPage } from "@/pages/auth/verify-email/VerifyEmailResultPage";
 import { GoogleCallbackPage } from "@/pages/auth/google-callback/GoogleCallbackPage";
 import { ProfilePage } from "@/pages/profile/ProfilePage";
 import { PlaceholderPage } from "@/pages/placeholder/PlaceholderPage";
@@ -58,6 +60,17 @@ export const router = createBrowserRouter([
   {
     path: "/google/callback",
     element: <GoogleCallbackPage />,
+  },
+  {
+    // Step after registration: the account exists but stays inactive
+    // until the emailed verification link is confirmed.
+    path: "/verify-email",
+    element: <CheckEmailPage />,
+  },
+  {
+    // Target of the link inside the verification email.
+    path: "/verify-email/confirm",
+    element: <VerifyEmailResultPage />,
   },
   {
     path: "/profile",
@@ -117,20 +130,35 @@ export const router = createBrowserRouter([
     element: <PlaceholderPage titleKey="anonymous" />,
   },
   {
+    // Private section: content is members-only until signed in.
     path: "/blog",
-    element: <PlaceholderPage titleKey="blog" />,
+    element: (
+      <RequireAuth>
+        <PlaceholderPage titleKey="blog" />
+      </RequireAuth>
+    ),
   },
   {
+    // Private section: content is members-only until signed in.
     path: "/gallery",
-    element: <PlaceholderPage titleKey="gallery" />,
+    element: (
+      <RequireAuth>
+        <PlaceholderPage titleKey="gallery" />
+      </RequireAuth>
+    ),
   },
   {
     path: "/about-us",
     element: <PlaceholderPage titleKey="aboutUs" />,
   },
   {
+    // Private: notifications are personal to the signed-in member.
     path: "/notifications",
-    element: <PlaceholderPage titleKey="notifications" />,
+    element: (
+      <RequireAuth>
+        <PlaceholderPage titleKey="notifications" />
+      </RequireAuth>
+    ),
   },
   {
     path: "*",

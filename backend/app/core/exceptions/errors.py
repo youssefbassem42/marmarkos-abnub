@@ -21,6 +21,14 @@ class ForbiddenError(AppError):
     message = "Insufficient permissions"
 
 
+class EmailNotVerifiedError(AppError):
+    """Credentials are valid but the address has not been confirmed yet."""
+
+    status_code = 403
+    code = "email_not_verified"
+    message = "Please verify your email address before signing in"
+
+
 class NotFoundError(AppError):
     status_code = 404
     code = "not_found"

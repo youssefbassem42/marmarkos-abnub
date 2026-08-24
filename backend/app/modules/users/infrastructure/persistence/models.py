@@ -104,6 +104,12 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     has_password: Mapped[bool] = mapped_column(
         Boolean, nullable=False, server_default=text("true"), default=True
     )
+    # False until the member confirms ownership of the address through the
+    # verification link. Unverified accounts exist in the database but can
+    # never sign in, so dummy registrations never become usable identities.
+    email_verified: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, server_default=text("false"), default=False
+    )
     # Peppered SHA-256 of the member's self-chosen attendance PIN. Nullable
     # (most members never set one) and globally UNIQUE: the check-in screen
     # resolves a typed PIN to exactly one account or none.

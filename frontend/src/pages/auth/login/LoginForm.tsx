@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -23,6 +23,7 @@ export function LoginForm({ lang }: LoginFormProps) {
   const { t } = useTranslation("login");
   const isArabic = lang === "ar";
   const navigate = useNavigate();
+  const location = useLocation();
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [rememberMe, setRememberMe] = useState(false);
 
@@ -55,11 +56,23 @@ export function LoginForm({ lang }: LoginFormProps) {
         password: values.password,
       });
       saveAuth({ accessToken, user }, rememberMe);
-      navigate("/");
+      // Private pages bounce here with a `from` location; honor it.
+      const from = (location.state as { from?: { pathname: string } } | null)
+        ?.from;
+      navigate(from?.pathname ?? "/");
     } catch (error) {
       if (error instanceof ApiError) {
+        if (error.code === "email_not_verified") {
+          // Credentials were correct — finish the verification step first.
+          navigate(`/verify-email?email=${encodeURIComponent(values.email)}`, {
+            replace: true,
+          });
+          return;
+        }
         if (error.status === 401) {
           setSubmitError(t("validation.invalidCredentials"));
+        } else if (error.status === 403) {
+          setSubmitError(t("validation.accountInactive"));
         } else {
           setSubmitError(t("validation.loginFailed"));
         }

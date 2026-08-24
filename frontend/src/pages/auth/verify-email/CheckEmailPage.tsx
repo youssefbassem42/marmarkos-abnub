@@ -1,0 +1,68 @@
+import { useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/i18n/context";
+import { Navbar } from "@/components/layout/Navbar";
+import { AuthFooter } from "../components/AuthFooter";
+import { BrandPanel } from "../components/BrandPanel";
+import { CheckEmailCard } from "../components/CheckEmailCard";
+import { resendVerificationEmail } from "@/lib/api";
+
+/**
+ * Step after registration (or an unverified login attempt): the account
+ * is created but inactive until the emailed link is confirmed. Offers a
+ * resend with cooldown — the standard "check your mail" layout.
+ */
+export function CheckEmailPage() {
+  const [searchParams] = useSearchParams();
+  const email = searchParams.get("email") ?? undefined;
+  const { language } = useLanguage();
+  const { t } = useTranslation("verification");
+  const isArabic = language === "ar";
+
+  useEffect(() => {
+    document.title = t("checkEmail.title");
+  }, [t]);
+
+  return (
+    <div
+      dir={isArabic ? "rtl" : "ltr"}
+      lang={language}
+      className="min-h-screen bg-background"
+    >
+      <Navbar variant="auth" />
+
+      <main className="flex min-h-[calc(100vh-61px)] flex-col lg:flex-row">
+        <BrandPanel lang={language} />
+        <section
+          dir={isArabic ? "rtl" : "ltr"}
+          lang={language}
+          className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14"
+        >
+          <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:p-10">
+            <CheckEmailCard
+              lang={language}
+              email={email}
+              title={t("checkEmail.heading")}
+              description={
+                email
+                  ? t("checkEmail.descriptionWithEmail")
+                  : t("checkEmail.description")
+              }
+              note={t("checkEmail.note")}
+              resendLabel={t("checkEmail.resend")}
+              resendHidden={!email}
+              onResend={() => {
+                if (!email) return Promise.reject(new Error("missing email"));
+                return resendVerificationEmail(email);
+              }}
+              backToLoginLabel={t("checkEmail.backToLogin")}
+            />
+          </div>
+        </section>
+      </main>
+
+      <AuthFooter lang={language} />
+    </div>
+  );
+}

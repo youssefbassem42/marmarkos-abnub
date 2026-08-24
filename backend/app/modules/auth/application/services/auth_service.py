@@ -1,3 +1,4 @@
+import logging
 import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
@@ -5,10 +6,16 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.core.exceptions import ConflictError, ForbiddenError, UnauthorizedError
+from app.core.exceptions import (
+    ConflictError,
+    EmailNotVerifiedError,
+    ForbiddenError,
+    UnauthorizedError,
+)
 from app.modules.auth.application.dto.login_request import LoginRequest
 from app.modules.auth.application.dto.register_request import RegisterRequest
-from app.modules.auth.infrastructure.persistence.models import RefreshToken
+from app.modules.auth.domain.enums.auth_token_purpose import AuthTokenPurpose
+from app.modules.auth.infrastructure.persistence.models import AuthToken, RefreshToken
 from app.modules.auth.infrastructure.security import (
     generate_refresh_token,
     hash_password,
@@ -17,6 +24,7 @@ from app.modules.auth.infrastructure.security import (
     verify_password,
 )
 from app.modules.auth.infrastructure.services.google_tokens import GoogleIdentity
+from app.modules.notifications.infrastructure.email import EmailService
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.domain.events import UserRegistered
@@ -38,10 +46,14 @@ class RegistrationService:
 
     The domain event is persisted into the outbox in the same commit,
     so downstream notifications (email/welcome) can never be lost.
+    The account starts with ``email_verified=False`` and a verification
+    link goes out right after commit — until the address is confirmed
+    the account exists but can never sign in.
     """
 
     def __init__(self, session: AsyncSession) -> None:
         self._uow = UnitOfWork(session)
+        self._email = EmailService()
 
     async def register(self, request: RegisterRequest) -> User:
         if await self._uow.users.exists_by_email(request.email):
@@ -52,7 +64,7 @@ class RegistrationService:
             raise RuntimeError("Default role is not configured")
 
         user = User(
-            email=request.email,
+            email=request.email.lower(),
             phone=request.phone,
             first_name=request.first_name,
             last_name=request.last_name,
@@ -61,6 +73,7 @@ class RegistrationService:
             password_hash=hash_password(request.password),
             public_id=generate_public_id(),
             role=role,
+            email_verified=False,
         )
         await self._uow.users.add(user)
         self._uow.record(
@@ -72,7 +85,37 @@ class RegistrationService:
             )
         )
         await self._uow.commit()
+
+        await self._send_verification_link(user)
         return user
+
+    async def _send_verification_link(self, user: User) -> None:
+        raw = generate_refresh_token()
+        token = AuthToken(
+            user_id=user.id,
+            token_hash=hash_refresh_token(raw),
+            purpose=AuthTokenPurpose.EMAIL_VERIFICATION,
+            expires_at=datetime.now(UTC)
+            + timedelta(hours=settings.EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS),
+        )
+        self._uow.session.add(token)
+        await self._uow.commit()
+
+        origin = settings.FRONTEND_URL.rstrip("/")
+        if not origin.startswith(("http://", "https://")):
+            origin = f"https://{origin}"
+        verify_url = f"{origin}/verify-email/confirm?token={raw}"
+        sent = await self._email.send_verification_email(
+            to_email=user.email,
+            first_name=user.first_name,
+            verify_url=verify_url,
+            expire_hours=settings.EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS,
+        )
+        if not sent:
+            logging.getLogger(__name__).warning(
+                "Verification email could not be delivered to %s; the member can use resend.",
+                user.email,
+            )
 
 
 class AuthenticationService:
@@ -82,9 +125,11 @@ class AuthenticationService:
     async def login(
         self, request: LoginRequest, user_agent: str | None = None, ip_address: str | None = None
     ) -> AuthResult:
-        user = await self._uow.users.get_by_email(request.email)
+        user = await self._uow.users.get_by_email(request.email.lower())
         if user is None or not verify_password(request.password, user.password_hash):
             raise UnauthorizedError("Invalid credentials")
+        if not user.email_verified:
+            raise EmailNotVerifiedError()
         if user.status is not UserStatus.ACTIVE:
             raise ForbiddenError("Account is not active")
         await self._uow.users.set_last_login(user, datetime.now(UTC))
@@ -118,6 +163,8 @@ class AuthenticationService:
                 public_id=generate_public_id(),
                 role=role,
                 has_password=False,
+                # Google already proved ownership of this address.
+                email_verified=True,
             )
             await self._uow.users.add(user)
             self._uow.record(
@@ -128,6 +175,10 @@ class AuthenticationService:
                     last_name=user.last_name,
                 )
             )
+        elif not user.email_verified:
+            # A pending sign-up confirmed through Google sign-in.
+            user.email_verified = True
+            await self._uow.session.flush()
 
         if user.status is not UserStatus.ACTIVE:
             raise ForbiddenError("Account is not active")

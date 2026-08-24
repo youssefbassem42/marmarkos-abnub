@@ -7,10 +7,11 @@ import { SuccessState } from "./SuccessState";
 interface AuthCardProps {
   lang: "ar" | "en";
   stage: "form" | "success";
-  onSuccess: () => void;
+  sentEmail?: string;
+  onSuccess: (email: string) => void;
 }
 
-export function AuthCard({ lang, stage, onSuccess }: AuthCardProps) {
+export function AuthCard({ lang, stage, sentEmail, onSuccess }: AuthCardProps) {
   const { t } = useTranslation("forgotPassword");
   const isArabic = lang === "ar";
 
@@ -22,7 +23,7 @@ export function AuthCard({ lang, stage, onSuccess }: AuthCardProps) {
     >
       <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:p-10">
         {stage === "success" ? (
-          <SuccessState lang={lang} />
+          <SuccessState lang={lang} email={sentEmail} />
         ) : (
           <>
             <div className="mb-8 flex flex-col items-center text-center">

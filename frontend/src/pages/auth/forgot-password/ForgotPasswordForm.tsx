@@ -16,7 +16,7 @@ import {
 
 interface ForgotPasswordFormProps {
   lang: "ar" | "en";
-  onSuccess: () => void;
+  onSuccess: (email: string) => void;
 }
 
 export function ForgotPasswordForm({
@@ -48,7 +48,7 @@ export function ForgotPasswordForm({
     setSubmitError(null);
     try {
       await requestPasswordReset({ email: values.email });
-      onSuccess();
+      onSuccess(values.email);
     } catch (error) {
       if (error instanceof ApiError) {
         setSubmitError(t("validation.requestFailed"));

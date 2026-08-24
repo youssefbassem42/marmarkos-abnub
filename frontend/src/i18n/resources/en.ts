@@ -401,6 +401,8 @@ export const en = {
       emailInvalid: "Please enter a valid email address.",
       passwordRequired: "Please enter your password.",
       invalidCredentials: "Invalid email or password.",
+      accountInactive:
+        "This account is not active yet. Check your inbox for the verification email.",
       networkError: "Unable to connect. Please try again.",
       loginFailed: "Something went wrong. Please try again.",
     },
@@ -572,6 +574,40 @@ export const en = {
       message:
         "This password reset link is no longer valid. Please request a new password reset link.",
       requestNewLink: "REQUEST NEW RESET LINK",
+    },
+  },
+  verification: {
+    sentTo: "Verification email sent to",
+    resent: "Email sent again! Please check your inbox.",
+    resendFailed: "Couldn't send the email right now. Please try again.",
+    sending: "Sending...",
+    resendIn: "You can request a new link in {{seconds}}s",
+    spamHint:
+      "Tip: if the email doesn't arrive within a few minutes, check your spam or junk folder.",
+    checkEmail: {
+      title: "Check Your Email",
+      heading: "Check Your Email!",
+      descriptionWithEmail:
+        "We've sent a verification link to activate your account:",
+      description:
+        "We've sent a verification link to your inbox. Open it to activate your account.",
+      note: "The link is valid for 24 hours and works only once.",
+      resend: "RESEND VERIFICATION EMAIL",
+      backToLogin: "BACK TO LOGIN",
+    },
+    confirm: {
+      title: "Confirming your email...",
+      verifyingTitle: "Verifying your email...",
+      verifyingMessage: "One moment while we confirm your verification link.",
+      successTitle: "Email Verified!",
+      successMessage:
+        "Your account is now active. Welcome to the Marmarkos Abnub youth community — sign in to get started.",
+      successCta: "SIGN IN NOW",
+      errorTitle: "Link Expired or Invalid",
+      errorMessage:
+        "This verification link is no longer valid. We can send you a fresh one right away.",
+      resendCta: "RESEND VERIFICATION EMAIL",
+      loginLink: "Back to login",
     },
   },
 } as const;
