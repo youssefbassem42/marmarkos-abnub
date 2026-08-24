@@ -45,8 +45,6 @@ export function registerSchema(messages: RegisterValidationMessages) {
         .string()
         .trim()
         .regex(/^[0-9+\s-]{8,20}$/, messages.phoneInvalid),
-      iAm: z.string().min(1, messages.required),
-      howHeard: z.string().min(1, messages.required),
       terms: z.boolean().refine((value) => value, {
         message: messages.termsRequired,
       }),

@@ -27,6 +27,12 @@ class RegisterRequest(BaseModel):
             raise ValueError("This field is required")
         return value
 
+    @field_validator("email")
+    @classmethod
+    def normalize_email(cls, value: str) -> str:
+        """Lower-case the address so lookups always match what we store."""
+        return value.strip().lower()
+
     @model_validator(mode="after")
     def birth_date_in_the_past(self) -> "RegisterRequest":
         from datetime import date as _date

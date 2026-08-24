@@ -442,28 +442,10 @@ export const en = {
       phonePlaceholder: "Enter your phone number",
       addressLabel: "Address",
       addressPlaceholder: "Enter your home address",
-      iAmLabel: "I am",
-      howHeardLabel: "How did you hear about us?",
-      selectPlaceholder: "Select from the list",
       showPassword: "Show password",
       hidePassword: "Hide password",
       cta: "CREATE ACCOUNT",
       ctaLoading: "Creating account...",
-    },
-    options: {
-      iAm: {
-        member: "Young person",
-        servant: "Servant",
-        leader: "Leader",
-        other: "Other",
-      },
-      howHeard: {
-        friend: "Friend",
-        church: "Church service",
-        social: "Social media",
-        event: "Event",
-        other: "Other",
-      },
     },
     validation: {
       required: "This field is required",

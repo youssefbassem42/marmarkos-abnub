@@ -3,6 +3,7 @@ import secrets
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -75,7 +76,13 @@ class RegistrationService:
             role=role,
             email_verified=False,
         )
-        await self._uow.users.add(user)
+        try:
+            await self._uow.users.add(user)
+        except IntegrityError as exc:
+            # The pre-insert check can miss (casing typed differently, or a
+            # concurrent sign-up); the unique constraints are the truth.
+            await self._uow.rollback()
+            raise self._conflict_from_integrity(exc) from exc
         self._uow.record(
             UserRegistered(
                 aggregate_id=user.id,
@@ -88,6 +95,15 @@ class RegistrationService:
 
         await self._send_verification_link(user)
         return user
+
+    @staticmethod
+    def _conflict_from_integrity(exc: IntegrityError) -> ConflictError:
+        detail = str(getattr(exc, "orig", exc)).lower()
+        if "phone" in detail:
+            return ConflictError("An account with this phone number already exists")
+        if "email" in detail:
+            return ConflictError("An account with this email already exists")
+        return ConflictError("An account with these details already exists")
 
     async def _send_verification_link(self, user: User) -> None:
         raw = generate_refresh_token()

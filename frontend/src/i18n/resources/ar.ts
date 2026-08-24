@@ -454,28 +454,10 @@ export const ar = {
       phonePlaceholder: "أدخل رقم هاتفك",
       addressLabel: "العنوان",
       addressPlaceholder: "أدخل عنوان منزلك",
-      iAmLabel: "أنا",
-      howHeardLabel: "كيف سمعت عنا؟",
-      selectPlaceholder: "اختر من القائمة",
       showPassword: "إظهار كلمة المرور",
       hidePassword: "إخفاء كلمة المرور",
       cta: "إنشاء حساب",
       ctaLoading: "جارٍ إنشاء الحساب...",
-    },
-    options: {
-      iAm: {
-        member: "شاب",
-        servant: "خادم",
-        leader: "قائد",
-        other: "أخرى",
-      },
-      howHeard: {
-        friend: "صديق",
-        church: "اجتماع الكنيسة",
-        social: "وسائل التواصل الاجتماعي",
-        event: "فعالية",
-        other: "أخرى",
-      },
     },
     validation: {
       required: "هذا الحقل مطلوب",

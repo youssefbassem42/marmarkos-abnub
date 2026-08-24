@@ -10,7 +10,6 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ApiError, registerUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { FormField } from "./FormField";
-import { SelectField } from "./SelectField";
 import { PasswordField } from "../components/PasswordField";
 import { SocialAuthButtons } from "../components/SocialAuthButtons";
 import { registerSchema, type RegisterFormValues } from "./registerSchema";
@@ -60,32 +59,13 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
       dateOfBirth: "",
       address: "",
       phone: "",
-      iAm: "",
-      howHeard: "",
       terms: false,
     },
   });
 
   const password = watch("password");
   const confirmPassword = watch("confirmPassword");
-  const iAm = watch("iAm");
-  const howHeard = watch("howHeard");
   const terms = watch("terms");
-
-  const iAmOptions = [
-    { value: "member", label: t("options.iAm.member") },
-    { value: "servant", label: t("options.iAm.servant") },
-    { value: "leader", label: t("options.iAm.leader") },
-    { value: "other", label: t("options.iAm.other") },
-  ];
-
-  const howHeardOptions = [
-    { value: "friend", label: t("options.howHeard.friend") },
-    { value: "church", label: t("options.howHeard.church") },
-    { value: "social", label: t("options.howHeard.social") },
-    { value: "event", label: t("options.howHeard.event") },
-    { value: "other", label: t("options.howHeard.other") },
-  ];
 
   const onSubmit = handleSubmit(async (values) => {
     setSubmitError(null);
@@ -302,44 +282,6 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
           />
         </div>
       </FormField>
-
-      <div className="grid gap-5 sm:grid-cols-2">
-        <FormField
-          id="iAm"
-          label={t("form.iAmLabel")}
-          required
-          error={errors.iAm?.message}
-        >
-          <SelectField
-            id="iAm"
-            value={iAm}
-            onChange={(value) =>
-              setValue("iAm", value, { shouldValidate: true })
-            }
-            placeholder={t("form.selectPlaceholder")}
-            options={iAmOptions}
-            invalid={Boolean(errors.iAm)}
-          />
-        </FormField>
-
-        <FormField
-          id="howHeard"
-          label={t("form.howHeardLabel")}
-          required
-          error={errors.howHeard?.message}
-        >
-          <SelectField
-            id="howHeard"
-            value={howHeard}
-            onChange={(value) =>
-              setValue("howHeard", value, { shouldValidate: true })
-            }
-            placeholder={t("form.selectPlaceholder")}
-            options={howHeardOptions}
-            invalid={Boolean(errors.howHeard)}
-          />
-        </FormField>
-      </div>
 
       <div className="flex items-start gap-3">
         <Checkbox
