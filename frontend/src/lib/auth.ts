@@ -50,6 +50,14 @@ export function updateStoredUser(user: RegisteredUser): void {
   storage.setItem(USER_KEY, JSON.stringify(user));
 }
 
+export function updateAccessToken(accessToken: string): void {
+  const storage =
+    localStorage.getItem(ACCESS_TOKEN_KEY) !== null
+      ? localStorage
+      : sessionStorage;
+  storage.setItem(ACCESS_TOKEN_KEY, accessToken);
+}
+
 export type UserRole = "ADMIN" | "SERVANT" | "MEMBER";
 
 /** The stored user's role, or null when signed out / unknown. */

@@ -1,22 +1,37 @@
 import axios from "axios";
-import { getAccessToken } from "@/lib/auth";
+import type { InternalAxiosRequestConfig } from "axios";
+import { clearAuth, getAccessToken, updateAccessToken } from "@/lib/auth";
 
 function resolveApiBaseUrl(): string {
-  let raw = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
+  const raw =
+    import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
+
+  if (raw.startsWith("/")) {
+    const trimmed = raw.replace(/\/+$/, "");
+    return /\/api\/v\d+$/.test(trimmed) ? trimmed : `${trimmed}/api/v1`;
+  }
+
   // Guard against a base URL set without its scheme (axios would then treat
   // "example.com/api/v1" as a relative path on the current origin).
-  if (!/^https?:\/\//i.test(raw)) {
-    raw =
-      raw.startsWith("localhost") || raw.startsWith("127.")
-        ? `http://${raw}`
-        : `https://${raw}`;
+  let absolute = raw;
+  if (!/^https?:\/\//i.test(absolute)) {
+    absolute =
+      absolute.startsWith("localhost") || absolute.startsWith("127.")
+        ? `http://${absolute}`
+        : `https://${absolute}`;
   }
   // All backend routes live under /api/v1; tolerate a bare host.
-  const trimmed = raw.replace(/\/+$/, "");
+  const trimmed = absolute.replace(/\/+$/, "");
   return /\/api\/v\d+$/.test(trimmed) ? trimmed : `${trimmed}/api/v1`;
 }
 
-export const apiClient = axios.create({ baseURL: resolveApiBaseUrl() });
+// withCredentials lets the HttpOnly refresh cookie ride along. It is required
+// only for cross-origin calls, but it is correct in both setups and keeps the
+// silent-refresh flow working if the API ever moves off this origin.
+export const apiClient = axios.create({
+  baseURL: resolveApiBaseUrl(),
+  withCredentials: true,
+});
 
 /** Paths that must never carry the bearer token. */
 const AUTH_FREE_PREFIXES = [
@@ -90,9 +105,80 @@ export function toApiError(error: unknown): ApiError {
   return new ApiError(status, message ?? "Request failed", code);
 }
 
+/**
+ * Silent access-token refresh.
+ *
+ * The access token lives 30 minutes; the refresh token is an HttpOnly cookie
+ * scoped to /api/v1/auth. Before this existed, an expired access token meant
+ * every request 401'd forever while the stored user object kept the UI looking
+ * signed in — a session that was dead but invisible.
+ *
+ * This is the only response interceptor: it must see the raw AxiosError, so
+ * the ApiError conversion happens here at the end of the chain rather than in
+ * a separate earlier interceptor.
+ */
+const REFRESH_URL = "/auth/refresh";
+
+type RetriableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
+
+/** Shared so a burst of parallel 401s triggers exactly one refresh. */
+let refreshInFlight: Promise<string> | null = null;
+
+async function requestFreshAccessToken(): Promise<string> {
+  const { data } = await apiClient.post<TokenResponse>(REFRESH_URL);
+  updateAccessToken(data.access_token);
+  return data.access_token;
+}
+
+function refreshAccessToken(): Promise<string> {
+  refreshInFlight ??= requestFreshAccessToken().finally(() => {
+    refreshInFlight = null;
+  });
+  return refreshInFlight;
+}
+
+function abandonSession(): void {
+  clearAuth();
+  if (typeof window === "undefined") return;
+  if (window.location.pathname === "/login") return;
+  window.location.assign("/login");
+}
+
 apiClient.interceptors.response.use(
   (response) => response,
-  (error: unknown) => Promise.reject(toApiError(error)),
+  async (error: unknown) => {
+    if (!axios.isAxiosError(error)) {
+      return Promise.reject(toApiError(error));
+    }
+
+    const config = error.config as RetriableConfig | undefined;
+    const url = config?.url ?? "";
+    const refreshable =
+      error.response?.status === 401 &&
+      config !== undefined &&
+      config._retried !== true &&
+      // Never recurse through the refresh call, and never fight a genuine
+      // bad-credentials 401 from login itself.
+      !url.startsWith("/auth/") &&
+      getAccessToken() !== null;
+
+    if (!refreshable) {
+      return Promise.reject(toApiError(error));
+    }
+
+    config._retried = true;
+    try {
+      const accessToken = await refreshAccessToken();
+      // Overwrite rather than fill in: callers that pass an explicit
+      // Authorization header are holding the token that just expired.
+      config.headers.Authorization = `Bearer ${accessToken}`;
+      return await apiClient.request(config);
+    } catch {
+      // The refresh cookie is gone or revoked: this session is finished.
+      abandonSession();
+      return Promise.reject(toApiError(error));
+    }
+  },
 );
 
 export class ApiError extends Error {
@@ -213,6 +299,13 @@ export interface LoginResponse {
   token_type: string;
   expires_in: number;
   user: RegisteredUser;
+}
+
+/** Body of POST /auth/refresh — a new access token, no user object. */
+export interface TokenResponse {
+  access_token: string;
+  token_type: string;
+  expires_in: number;
 }
 
 /** Sign in with email and password. The refresh token is set as an HttpOnly cookie by the API. */
