@@ -5,6 +5,7 @@ class Settings(BaseSettings):
     APP_NAME: str = "Marmarkos ABNUB API"
     APP_ENV: str = "development"
     DEBUG: bool = True
+    EXPOSE_ERROR_DETAILS: bool = False
 
     DATABASE_URL: str
 
