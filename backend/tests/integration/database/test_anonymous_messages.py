@@ -28,12 +28,23 @@ async def test_anonymous_message_persists_without_user_identity(
 
 
 async def test_table_has_no_identity_columns(db_session) -> None:
+    # D-1: the guarantee is "no account linkage", not "no identity data".
+    # The two optional self-declared fields below are typed by the sender
+    # on the public form; nothing derived from an account/IP/session may
+    # ever become a column here.
     columns = {column.name for column in inspect(AnonymousMessage).columns}
     assert "user_id" not in columns
     assert "email" not in columns
     assert "phone" not in columns
     assert "author_id" not in columns
     assert "sender" not in columns
+    assert "ip_address" not in columns
+    assert "user_agent" not in columns
+    assert "session_id" not in columns
+
+    nullable = {column.name: column.nullable for column in inspect(AnonymousMessage).columns}
+    assert nullable["sender_name"] is True
+    assert nullable["sender_phone"] is True
 
 
 async def test_message_lifecycle_sent_via_telegram(uow: UnitOfWork) -> None:
@@ -50,6 +61,8 @@ async def test_message_lifecycle_sent_via_telegram(uow: UnitOfWork) -> None:
     assert stored.telegram_status is TelegramStatus.SENT
     assert stored.telegram_message_id == "12345"
     assert stored.sent_at is not None
+    assert stored.attempts == 1
+    assert stored.last_attempt_at is not None
 
 
 async def test_message_failure_path(uow: UnitOfWork) -> None:
@@ -59,11 +72,16 @@ async def test_message_failure_path(uow: UnitOfWork) -> None:
 
     await uow.anonymous_messages.mark_failed(message, "Telegram API timeout")
     await uow.commit()
+    await uow.anonymous_messages.mark_failed(message, "Telegram API timeout again")
+    await uow.commit()
 
     stored = await uow.anonymous_messages.get_by_id(message.id)
     assert stored is not None
     assert stored.status is MessageStatus.FAILED
-    assert stored.failure_reason == "Telegram API timeout"
+    assert stored.failure_reason == "Telegram API timeout again"
+    # BR-14: every attempt increments the counter.
+    assert stored.attempts == 2
+    assert stored.last_attempt_at is not None
 
 
 async def test_claim_pending_is_exclusive(uow: UnitOfWork) -> None:

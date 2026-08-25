@@ -1,5 +1,6 @@
 """Check-in use case for weekly meeting attendance."""
 
+import logging
 import uuid
 from collections.abc import Callable
 from datetime import date, datetime, timedelta
@@ -25,6 +26,9 @@ from app.modules.attendance.domain.meeting_schedule import (
 from app.modules.attendance.infrastructure.services.qr_validation_service import (
     QrValidationService,
 )
+from app.modules.notifications.application.services.notification_service import (
+    NotificationService,
+)
 from app.modules.users.application.services.attendance_pin import (
     PIN_UNKNOWN_MESSAGE,
     hash_attendance_pin,
@@ -33,6 +37,8 @@ from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.infrastructure.persistence.models import User
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
+
+logger = logging.getLogger(__name__)
 
 
 def derive_check_in_status(now: datetime, meeting_date: date) -> AttendanceStatus:
@@ -219,6 +225,18 @@ class CheckInCommand:
                     "method": method.value,
                 },
             )
+            # BR-10: the ATTENDANCE notification joins the same Unit of
+            # Work, but it must never abort a check-in that already
+            # succeeded — any failure is logged and swallowed.
+            try:
+                await NotificationService(self._uow).notify_attendance_recorded(
+                    user_id=user.id, meeting_date=open_meeting, status=status
+                )
+            except Exception:
+                logger.exception(
+                    "Attendance notification failed for user %s; check-in stands",
+                    user.id,
+                )
             await self._uow.commit()
         except IntegrityError as exc:
             await self._uow.rollback()

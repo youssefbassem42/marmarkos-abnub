@@ -99,9 +99,7 @@ async def exchange_google_code(code: str, redirect_uri: str) -> GoogleIdentity:
 
     id_token = token_payload.get("id_token")
     if not isinstance(id_token, str):
-        logger.warning(
-            "Google token response missing id_token; keys=%s", list(token_payload)
-        )
+        logger.warning("Google token response missing id_token; keys=%s", list(token_payload))
         raise UnauthorizedError("Google did not return an identity")
 
     try:

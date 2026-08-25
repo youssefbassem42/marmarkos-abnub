@@ -61,6 +61,24 @@ class Settings(BaseSettings):
     ATTENDANCE_HISTORY_PAGE_SIZE: int = 20
     ATTENDANCE_HISTORY_MAX_PAGE_SIZE: int = 100
 
+    # -- Notifications & anonymous messages (Phase 4) ------------------------
+    # Feed pagination (route GET /notifications).
+    NOTIFICATIONS_PAGE_SIZE: int = 20
+    NOTIFICATIONS_MAX_PAGE_SIZE: int = 100
+    # Simultaneous inline sends during a broadcast email fan-out (BR-8).
+    NOTIFICATION_EMAIL_CONCURRENCY: int = 10
+    # Anonymous message bounds (BR-16).
+    ANONYMOUS_MESSAGE_MIN_LENGTH: int = 10
+    ANONYMOUS_MESSAGE_MAX_LENGTH: int = 1000
+    # Rate limits (BR-15, D-22): in-memory sliding windows, per instance.
+    ANONYMOUS_MESSAGE_RATE_LIMIT_PER_IP: int = 5  # per hour
+    ANONYMOUS_MESSAGE_RATE_LIMIT_PER_USER: int = 10  # per day
+    # Telegram delivery of anonymous messages (D-20): one chat, forward only.
+    TELEGRAM_TIMEOUT_SECONDS: float = 15.0
+    TELEGRAM_SEND_ATTEMPTS: int = 2  # inline attempts within one request
+    # Read X-Forwarded-For first hop as the client IP (behind a reverse proxy).
+    TRUST_PROXY_HEADERS: bool = False
+
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",

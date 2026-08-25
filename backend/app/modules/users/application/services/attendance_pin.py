@@ -20,9 +20,7 @@ from app.core.exceptions.errors import ValidationError
 PIN_LENGTH = 5
 PIN_PATTERN = re.compile(rf"^[0-9]{{{PIN_LENGTH}}}$")
 
-PIN_TAKEN_MESSAGE = (
-    "This PIN is already used by another member. Please choose a different one."
-)
+PIN_TAKEN_MESSAGE = "This PIN is already used by another member. Please choose a different one."
 PIN_UNKNOWN_MESSAGE = "No member is registered with this PIN"
 
 
@@ -33,15 +31,11 @@ def validate_pin_format(pin: str) -> None:
         ValidationError: If ``pin`` is not ``NNNNN``.
     """
     if not PIN_PATTERN.fullmatch(pin):
-        raise ValidationError(
-            f"The attendance PIN must be exactly {PIN_LENGTH} digits"
-        )
+        raise ValidationError(f"The attendance PIN must be exactly {PIN_LENGTH} digits")
 
 
 def hash_attendance_pin(pin: str) -> str:
     """Deterministic peppered hash used for storage and lookup."""
     validate_pin_format(pin)
-    pepper = hashlib.sha256(
-        f"attendance-pin:{settings.JWT_SECRET}".encode()
-    ).hexdigest()
+    pepper = hashlib.sha256(f"attendance-pin:{settings.JWT_SECRET}".encode()).hexdigest()
     return hashlib.sha256(f"{pepper}:{pin}".encode()).hexdigest()

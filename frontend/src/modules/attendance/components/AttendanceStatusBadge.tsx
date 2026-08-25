@@ -6,7 +6,7 @@ import type { AttendanceStatusValue } from "../types";
 const STATUS_STYLES = {
   PRESENT: {
     Icon: CheckCircle2,
-    className: "bg-mint/15 text-emerald-700 border-mint/40",
+    className: "bg-mint/15 text-ink border-mint/40",
   },
   LATE: {
     Icon: Clock,

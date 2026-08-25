@@ -250,7 +250,7 @@ export function CheckInPage() {
   return (
     <div dir={isArabic ? "rtl" : "ltr"} lang={language} className="space-y-6">
       {/* Scanner card */}
-      <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_2px_24px_rgba(37,61,99,0.08)]">
+      <section className="rounded-2xl border border-border bg-card p-5 card-elevated">
         {/* Mode tabs: camera QR vs typed PIN (offline fallback) */}
         <div
           role="tablist"

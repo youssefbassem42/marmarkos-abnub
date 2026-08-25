@@ -23,3 +23,14 @@ if (typeof window !== "undefined" && !window.matchMedia) {
 import i18n from "@/i18n";
 
 await i18n.changeLanguage("ar");
+
+// ResizeObserver stub: Radix Switch/popover content measures itself.
+class ResizeObserverStub {
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+}
+if (typeof window !== "undefined" && !window.ResizeObserver) {
+  window.ResizeObserver =
+    ResizeObserverStub as unknown as typeof ResizeObserver;
+}

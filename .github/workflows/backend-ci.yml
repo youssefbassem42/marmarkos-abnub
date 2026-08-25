@@ -50,8 +50,7 @@ jobs:
         run: ruff format --check .
 
       - name: MyPy
-        run: mypy app
-        continue-on-error: true
+        run: DEBUG=true mypy app
 
       - name: Tests
         run: pytest

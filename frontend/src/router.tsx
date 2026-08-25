@@ -36,6 +36,29 @@ const AttendanceHistoryPage = lazy(() =>
   })),
 );
 
+const NotificationsPage = lazy(() =>
+  import("@/modules/notifications/pages/NotificationsPage").then((m) => ({
+    default: m.NotificationsPage,
+  })),
+);
+const AdminNotificationsPage = lazy(() =>
+  import("@/modules/notifications/pages/AdminNotificationsPage").then((m) => ({
+    default: m.AdminNotificationsPage,
+  })),
+);
+const AnonymousMessagePage = lazy(() =>
+  import("@/modules/anonymous-messages/pages/AnonymousMessagePage").then(
+    (m) => ({
+      default: m.AnonymousMessagePage,
+    }),
+  ),
+);
+const AdminAnonymousMessagesPage = lazy(() =>
+  import("@/modules/anonymous-messages/pages/AdminAnonymousMessagesPage").then(
+    (m) => ({ default: m.AdminAnonymousMessagesPage }),
+  ),
+);
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -80,11 +103,15 @@ export const router = createBrowserRouter([
       </RequireAuth>
     ),
   },
+
+  // -- Admin section (D-15): everything staff-facing lives under /admin ----
   {
     // ADMIN + SERVANT only; a signed-in MEMBER sees the visible 403 page.
+    path: "/admin",
     element: <RequireRole roles={["ADMIN", "SERVANT"]} />,
     errorElement: <ForbiddenPage />,
     children: [
+      { index: true, element: <Navigate to="/admin/dashboard" replace /> },
       {
         element: <AttendanceLayout />,
         children: [
@@ -102,7 +129,7 @@ export const router = createBrowserRouter([
         element: <AdminLayout />,
         children: [
           {
-            path: "attendance/dashboard",
+            path: "dashboard",
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <AttendanceDashboardPage />
@@ -117,17 +144,60 @@ export const router = createBrowserRouter([
               </Suspense>
             ),
           },
+          {
+            path: "notifications",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <AdminNotificationsPage />
+              </Suspense>
+            ),
+          },
+          {
+            // ADMIN-only: SERVANT gets the visible 403 page, not a blank.
+            path: "anonymous-messages",
+            element: <RequireRole roles={["ADMIN"]} />,
+            children: [
+              {
+                index: true,
+                element: (
+                  <Suspense fallback={<PageSkeleton />}>
+                    <AdminAnonymousMessagesPage />
+                  </Suspense>
+                ),
+              },
+            ],
+          },
         ],
       },
     ],
   },
+
+  // -- Legacy attendance paths: bookmarks keep working (R-4) ---------------
   {
     path: "/attendance",
-    element: <Navigate to="/attendance/check-in" replace />,
+    element: <Navigate to="/admin/attendance/check-in" replace />,
   },
   {
+    path: "/attendance/check-in",
+    element: <Navigate to="/admin/attendance/check-in" replace />,
+  },
+  {
+    path: "/attendance/dashboard",
+    element: <Navigate to="/admin/dashboard" replace />,
+  },
+  {
+    path: "/attendance/history",
+    element: <Navigate to="/admin/attendance/history" replace />,
+  },
+
+  {
+    // Public (D-9): anyone may submit; no token required.
     path: "/anonymous-messages",
-    element: <PlaceholderPage titleKey="anonymous" />,
+    element: (
+      <Suspense fallback={<PageSkeleton />}>
+        <AnonymousMessagePage />
+      </Suspense>
+    ),
   },
   {
     // Private section: content is members-only until signed in.
@@ -156,7 +226,9 @@ export const router = createBrowserRouter([
     path: "/notifications",
     element: (
       <RequireAuth>
-        <PlaceholderPage titleKey="notifications" />
+        <Suspense fallback={<PageSkeleton />}>
+          <NotificationsPage />
+        </Suspense>
       </RequireAuth>
     ),
   },

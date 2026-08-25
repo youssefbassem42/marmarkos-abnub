@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface PlaceholderPageProps {
   /** i18n key under landing.nav, e.g. "blog" */
-  titleKey: "anonymous" | "blog" | "gallery" | "aboutUs" | "notifications";
+  titleKey: "blog" | "gallery" | "aboutUs";
 }
 
 /** Temporary stand-in page for sections under construction. */
@@ -16,6 +16,7 @@ export function PlaceholderPage({ titleKey }: PlaceholderPageProps) {
   const { language } = useLanguage();
   const isArabic = language === "ar";
   const { t } = useTranslation("landing");
+  const { t: tCommon } = useTranslation("common");
   const title = t(`nav.${titleKey}`);
 
   return (
@@ -43,9 +44,7 @@ export function PlaceholderPage({ titleKey }: PlaceholderPageProps) {
             isArabic && "font-arabic text-lg",
           )}
         >
-          {isArabic
-            ? "هذه الصفحة قيد الإنشاء — عرفنا قريبًا!"
-            : "This page is under construction — check back soon!"}
+          {tCommon("placeholder.body")}
         </p>
         <Link
           to="/"

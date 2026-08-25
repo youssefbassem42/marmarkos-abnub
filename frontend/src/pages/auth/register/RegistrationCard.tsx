@@ -28,7 +28,7 @@ export function RegistrationCard({ lang }: RegistrationCardProps) {
       lang={lang}
       className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14"
     >
-      <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:p-10">
+      <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 card-elevated sm:p-10">
         <div className="mb-8 flex flex-col items-center text-center">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-mint/15">
             <UserRound className="h-7 w-7 text-mint" aria-hidden="true" />

@@ -1,3 +1,4 @@
+import uuid
 from unittest.mock import AsyncMock
 
 import pytest
@@ -161,22 +162,13 @@ async def test_password_login_still_works(client: AsyncClient, db_engine) -> Non
 
 
 async def register_user_via_api(client: AsyncClient) -> dict:
-    import uuid
+    from tests.utils import DEFAULT_PASSWORD, register_user
 
-    from tests.utils import REGISTER_URL
-
-    email = f"existing-{uuid.uuid4().hex[:8]}@example.com"
-    response = await client.post(
-        REGISTER_URL,
-        json={
-            "email": email,
-            "password": "StrongPass123!",
-            "first_name": "Existing",
-            "last_name": "Member",
-            "phone": f"+2010{uuid.uuid4().int % 10**8:08d}",
-            "date_of_birth": "1999-01-01",
-            "address": "Abnub, Asyut, Egypt",
-        },
+    return await register_user(
+        client,
+        email=f"existing-{uuid.uuid4().hex[:8]}@example.com",
+        password=DEFAULT_PASSWORD,
+        first_name="Existing",
+        last_name="Member",
+        date_of_birth="1999-01-01",
     )
-    assert response.status_code == 201, response.text
-    return response.json()

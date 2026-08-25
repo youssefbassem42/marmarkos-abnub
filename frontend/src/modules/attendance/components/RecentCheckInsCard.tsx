@@ -26,7 +26,7 @@ export function RecentCheckInsCard() {
     <section
       dir={isArabic ? "rtl" : "ltr"}
       lang={language}
-      className="rounded-2xl border border-border bg-card p-5 shadow-[0_2px_24px_rgba(37,61,99,0.08)]"
+      className="rounded-2xl border border-border bg-card p-5 card-elevated"
     >
       <header className="flex items-baseline justify-between gap-3">
         <h2
@@ -38,7 +38,7 @@ export function RecentCheckInsCard() {
           {t("checkIn.recent.title")}
         </h2>
         <Link
-          to="/attendance/history"
+          to="/admin/attendance/history"
           className="focus-ring shrink-0 rounded-sm text-sm font-semibold text-brand-blue underline-offset-4 hover:underline"
         >
           {t("checkIn.recent.viewAll")}
@@ -117,7 +117,7 @@ export function RecentCheckInsCard() {
                   {t("status.LATE")}
                 </span>
               ) : (
-                <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-mint/40 bg-mint/15 px-2.5 py-1 text-xs font-semibold text-emerald-700">
+                <span className="inline-flex shrink-0 items-center gap-1 rounded-full border border-mint/40 bg-mint/15 px-2.5 py-1 text-xs font-semibold text-ink">
                   <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
                   {t("checkIn.recent.badge")}
                 </span>

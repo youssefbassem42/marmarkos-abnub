@@ -19,9 +19,6 @@ export function BrandPanel({
   const { t } = useTranslation("common");
   const isArabic = lang === "ar";
   const isLight = variant === "light";
-  const message = t("brand.message", {
-    returnObjects: true,
-  }) as readonly string[];
 
   return (
     <aside
@@ -54,7 +51,7 @@ export function BrandPanel({
         <div
           className={cn(
             "flex h-20 w-28 items-center justify-center rounded-xl",
-            isLight && "bg-white shadow-[0_2px_18px_rgba(37,61,99,0.12)]",
+            isLight && "bg-white shadow-[var(--shadow-card-strong)]",
           )}
         >
           <img
@@ -77,43 +74,15 @@ export function BrandPanel({
           {t("brand.name")}
         </p>
 
-        <h1
-          className={cn(
-            "mt-3 font-heading text-4xl font-bold leading-snug lg:text-5xl",
-            isLight ? "text-ink" : "text-white",
-          )}
-        >
-          {isArabic ? (
-            <>
-              {message[0]}
-              <br />
-              {message[1]}
-              <br />
-              <span className="text-mint">{message[2]}</span>
-            </>
-          ) : (
-            message.map((word, index) => (
-              <span
-                key={word}
-                className={
-                  index === message.length - 1 ? "text-mint" : undefined
-                }
-              >
-                {word}{" "}
-              </span>
-            ))
-          )}
-        </h1>
+        <BrandMessageHeading
+          lang={lang}
+          className={isLight ? "text-ink" : "text-white"}
+        />
 
-        <p
-          className={cn(
-            "mt-6 max-w-md leading-relaxed",
-            isLight ? "text-ink/75" : "text-white/85",
-            isArabic ? "font-arabic text-xl" : "text-lg",
-          )}
-        >
-          {t("brand.supporting")}
-        </p>
+        <BrandSupportingLine
+          lang={lang}
+          className={isLight ? "text-ink/75" : "text-white/85"}
+        />
 
         <img
           src={hero}
@@ -122,25 +91,96 @@ export function BrandPanel({
           className="brush-mask mt-8 w-full max-w-md rounded-lg object-cover"
         />
 
-        <figure
-          className={cn(
-            "-mx-6 mt-10 max-w-md border-s-4 border-mint bg-navy px-6 py-6 lg:-ms-12",
-          )}
-        >
-          <Quote className="h-6 w-6 fill-mint text-mint" aria-hidden="true" />
-          <blockquote
-            className={cn(
-              "mt-3 font-verse leading-relaxed text-white",
-              isArabic ? "text-2xl" : "text-xl",
-            )}
-          >
-            {t("brand.verse")}
-          </blockquote>
-          <figcaption className="mt-3 text-sm font-semibold tracking-wide text-mint">
-            {t("brand.verseRef")}
-          </figcaption>
-        </figure>
+        <BrandVerseBlock
+          lang={lang}
+          className="-mx-6 mt-10 max-w-md lg:-ms-12"
+        />
       </div>
     </aside>
+  );
+}
+
+interface BrandPieceProps {
+  lang: "ar" | "en";
+  className?: string;
+}
+
+/** FAITH. / FRIENDS. / PURPOSE. — shared by the auth panel and sidebar. */
+export function BrandMessageHeading({ lang, className }: BrandPieceProps) {
+  const { t } = useTranslation("common");
+  const isArabic = lang === "ar";
+  const message = t("brand.message", {
+    returnObjects: true,
+  }) as readonly string[];
+
+  return (
+    <h1
+      className={cn(
+        "mt-3 font-heading text-4xl font-bold leading-snug lg:text-5xl",
+        className,
+      )}
+    >
+      {isArabic ? (
+        <>
+          {message[0]}
+          <br />
+          {message[1]}
+          <br />
+          <span className="text-mint">{message[2]}</span>
+        </>
+      ) : (
+        message.map((word, index) => (
+          <span
+            key={word}
+            className={index === message.length - 1 ? "text-mint" : undefined}
+          >
+            {word}{" "}
+          </span>
+        ))
+      )}
+    </h1>
+  );
+}
+
+/** The one-line mission statement under the message heading. */
+export function BrandSupportingLine({ lang, className }: BrandPieceProps) {
+  const { t } = useTranslation("common");
+  const isArabic = lang === "ar";
+
+  return (
+    <p
+      className={cn(
+        "mt-6 max-w-md leading-relaxed",
+        isArabic ? "font-arabic text-xl" : "text-lg",
+        className,
+      )}
+    >
+      {t("brand.supporting")}
+    </p>
+  );
+}
+
+/** Scripture quotation in Amiri with the mint reference. */
+export function BrandVerseBlock({ lang, className }: BrandPieceProps) {
+  const { t } = useTranslation("common");
+  const isArabic = lang === "ar";
+
+  return (
+    <figure
+      className={cn("border-s-4 border-mint bg-navy px-6 py-6", className)}
+    >
+      <Quote className="h-6 w-6 fill-mint text-mint" aria-hidden="true" />
+      <blockquote
+        className={cn(
+          "mt-3 font-verse leading-relaxed text-white",
+          isArabic ? "text-2xl" : "text-xl",
+        )}
+      >
+        {t("brand.verse")}
+      </blockquote>
+      <figcaption className="mt-3 text-sm font-semibold tracking-wide text-mint">
+        {t("brand.verseRef")}
+      </figcaption>
+    </figure>
   );
 }

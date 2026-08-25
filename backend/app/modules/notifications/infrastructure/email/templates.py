@@ -60,7 +60,7 @@ def _paragraph(text: str, rtl: bool, size: int = 16) -> str:
     direction = "rtl" if rtl else "ltr"
     return (
         f'<p style="margin:0 0 14px;font-family:{_FONT_AR_STACK if rtl else FONT_EN};'
-        f'font-size:{size}px;line-height:{1.9 if rtl else 1.65};color:{NAVY};'
+        f"font-size:{size}px;line-height:{1.9 if rtl else 1.65};color:{NAVY};"
         f'text-align:{("right" if rtl else "left")};direction:{direction};">{text}</p>'
     )
 
@@ -68,11 +68,14 @@ def _paragraph(text: str, rtl: bool, size: int = 16) -> str:
 def _section_html(section: EmailSection) -> str:
     parts: list[str] = ['<tr><td style="padding:0 40px 8px;">']
     if section.heading:
+        heading_font = _FONT_AR_STACK if section.rtl else FONT_EN
+        heading_align = "right" if section.rtl else "left"
+        heading_dir = "rtl" if section.rtl else "ltr"
         parts.append(
-            f'<h3 style="margin:18px 0 10px;font-family:{_FONT_AR_STACK if section.rtl else FONT_EN};'
-            f'font-size:20px;font-weight:700;color:{NAVY};'
-            f'text-align:{("right" if section.rtl else "left")};'
-            f'direction:{("rtl" if section.rtl else "ltr")};">{_esc(section.heading)}</h3>'
+            f'<h3 style="margin:18px 0 10px;font-family:{heading_font};'
+            f"font-size:20px;font-weight:700;color:{NAVY};"
+            f"text-align:{heading_align};"
+            f'direction:{heading_dir};">{_esc(section.heading)}</h3>'
         )
     for paragraph in section.paragraphs:
         parts.append(_paragraph(paragraph, section.rtl))
@@ -96,10 +99,7 @@ def _cta_html(label: str, url: str) -> str:
 
 
 def _verse_html() -> str:
-    verse = (
-        "«لاَ يَهْتِنَ أَحَدٌ فِي شَبَّابِكَ، بَلْ كُنْ مِثَالًا لِلْمُؤْمِنِينَ "
-        "فِي الْكَلِمِ وَالسُّلُوكِ وَالْمَحَبَّةِ وَالإِيمَانِ وَالنَّقَاءِ»"
-    )
+    verse = "«لاَ يَهْتِنَ أَحَدٌ فِي شَبَّابِكَ، بَلْ كُنْ مِثَالًا لِلْمُؤْمِنِينَ فِي الْكَلِمِ وَالسُّلُوكِ وَالْمَحَبَّةِ وَالإِيمَانِ وَالنَّقَاءِ»"
     return (
         '<tr><td style="padding:26px 48px;" align="center">'
         f'<p dir="rtl" lang="ar" style="margin:0 0 8px;font-family:{FONT_VERSE};'
@@ -145,7 +145,7 @@ def render_brand_email(
     body_rows: list[str] = []
     for index, section in enumerate(content.sections):
         padding = "26px 40px 0" if index == 0 else "0 40px"
-        row = _section_html(section).replace('padding:0 40px 8px;', f'padding:{padding};', 1)
+        row = _section_html(section).replace("padding:0 40px 8px;", f"padding:{padding};", 1)
         body_rows.append(row)
 
     if content.cta_label and content.cta_url:
@@ -165,6 +165,24 @@ def render_brand_email(
             f"{_esc(contact_line)}</p>"
         )
 
+    page_table = (
+        '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" '
+        f'style="background:{PAGE_BG};padding:32px 12px;">'
+    )
+    card_table = (
+        '<table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" '
+        f'style="width:100%;max-width:640px;background:{WHITE};'
+        'border-radius:16px;overflow:hidden;">'
+    )
+    brand_en_cell = (
+        f'<div style="font-family:{FONT_EN};font-size:11px;font-weight:600;'
+        f'letter-spacing:2px;color:{MINT};margin-top:3px;">{_esc(brand_name_en.upper())}</div>'
+    )
+    copyright_cell = (
+        f'<p style="margin:12px 0 0;font-family:{FONT_EN};font-size:11px;color:#8DA0BE;">'
+        f"&copy; {brand_name_en} &mdash; FAITH. FRIENDS. PURPOSE.</p>"
+    )
+
     return f"""<!DOCTYPE html>
 <html lang="ar">
 <head>
@@ -174,18 +192,18 @@ def render_brand_email(
 </head>
 <body style="margin:0;padding:0;background:{PAGE_BG};">
 {preheader}
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:{PAGE_BG};padding:32px 12px;">
+{page_table}
 <tr><td align="center">
-<table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:640px;background:{WHITE};border-radius:16px;overflow:hidden;">
+{card_table}
   <tr><td style="background:{NAVY};padding:28px 40px;text-align:center;">{brand_cell}</td></tr>
-  {''.join(body_rows)}
+  {"".join(body_rows)}
   {_verse_html()}
   <tr><td style="height:1px;background:#E4EAF3;font-size:0;line-height:0;">&nbsp;</td></tr>
   <tr><td style="background:{NAVY};padding:24px 40px;text-align:center;">
     <div style="font-family:{_FONT_AR_STACK};font-size:14px;color:{WHITE};">{brand_name_ar}</div>
-    <div style="font-family:{FONT_EN};font-size:11px;font-weight:600;letter-spacing:2px;color:{MINT};margin-top:3px;">{_esc(brand_name_en.upper())}</div>
+    {brand_en_cell}
     {contact_row}
-    <p style="margin:12px 0 0;font-family:{FONT_EN};font-size:11px;color:#8DA0BE;">&copy; {brand_name_en} &mdash; FAITH. FRIENDS. PURPOSE.</p>
+    {copyright_cell}
   </td></tr>
 </table>
 </td></tr>

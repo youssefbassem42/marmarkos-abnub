@@ -7,6 +7,7 @@ os.environ.setdefault(
 )
 os.environ.setdefault("JWT_SECRET", "test-jwt-secret")
 os.environ.setdefault("JWT_REFRESH_SECRET", "test-jwt-refresh-secret")
+os.environ.setdefault("MAIL_PROVIDER", "console")
 
 from collections.abc import AsyncIterator, Iterator
 
@@ -19,6 +20,8 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 import app.modules.users.infrastructure.persistence.models  # noqa: F401
 from app.config import settings
 from app.core.database import sanitize_database_url
+from app.modules.notifications.infrastructure.email.service import EmailService
+from app.modules.notifications.infrastructure.email.templates import BrandEmailContent
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.infrastructure.persistence.models import Role
 from app.shared.infrastructure.persistence.registry import Base
@@ -56,6 +59,26 @@ def db_engine() -> Iterator[AsyncEngine]:
 @pytest_asyncio.fixture(autouse=True)
 async def clean_db(db_engine: AsyncEngine) -> None:
     await _truncate_schema(db_engine)
+
+
+@pytest.fixture(autouse=True)
+def console_mail_provider(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No test may open a socket to a real mail provider."""
+    monkeypatch.setattr(settings, "MAIL_PROVIDER", "console")
+
+
+@pytest_asyncio.fixture()
+async def captured_emails(
+    monkeypatch: pytest.MonkeyPatch,
+) -> list[tuple[str, BrandEmailContent]]:
+    sent: list[tuple[str, BrandEmailContent]] = []
+
+    async def _capture(self: EmailService, *, to_email: str, content: BrandEmailContent) -> bool:
+        sent.append((to_email, content))
+        return True
+
+    monkeypatch.setattr(EmailService, "send", _capture)
+    return sent
 
 
 @pytest_asyncio.fixture()

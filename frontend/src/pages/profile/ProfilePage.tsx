@@ -242,7 +242,7 @@ export function ProfilePage() {
         </header>
 
         {/* Avatar */}
-        <section className="mt-10 flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:flex-row">
+        <section className="mt-10 flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-6 card-elevated sm:flex-row">
           <div className="relative">
             {user.avatar ? (
               <img
@@ -286,7 +286,7 @@ export function ProfilePage() {
         </section>
 
         {/* Attendance QR */}
-        <section className="mt-6 flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-6 text-center shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:flex-row sm:text-start">
+        <section className="mt-6 flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-6 text-center card-elevated sm:flex-row sm:text-start">
           <div className="grid h-40 w-40 shrink-0 place-items-center rounded-xl bg-white p-2 shadow-sm">
             {qrUrl ? (
               <img src={qrUrl} alt={t("qr.title")} className="h-full w-full" />
@@ -345,7 +345,7 @@ export function ProfilePage() {
           (() => {
             const my = myAttendance;
             return (
-              <section className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)]">
+              <section className="mt-6 rounded-2xl border border-border bg-card p-6 card-elevated">
                 <h2
                   className={cn(
                     "flex items-center justify-between gap-2 font-extrabold text-ink sm:justify-start",
@@ -383,7 +383,7 @@ export function ProfilePage() {
                     </p>
                   </div>
                   <div className="rounded-xl bg-mint/10 px-3 py-3">
-                    <p className="font-heading text-2xl font-bold text-emerald-700">
+                    <p className="font-heading text-2xl font-bold text-ink">
                       {my.data.attended_count}
                     </p>
                     <p
@@ -449,7 +449,7 @@ export function ProfilePage() {
         <form
           onSubmit={handleProfileSubmit}
           noValidate
-          className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:p-8"
+          className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6 card-elevated sm:p-8"
         >
           <div className="grid gap-5 sm:grid-cols-2">
             <Field
@@ -556,7 +556,7 @@ export function ProfilePage() {
         <form
           onSubmit={handlePasswordSubmit}
           noValidate
-          className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:p-8"
+          className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6 card-elevated sm:p-8"
         >
           <h2
             className={cn(
@@ -685,7 +685,7 @@ function StatusBanner({ status }: { status: Status }) {
       className={cn(
         "flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-medium",
         status.kind === "ok"
-          ? "border border-mint/40 bg-mint/10 text-emerald-700"
+          ? "border border-mint/40 bg-mint/10 text-ink"
           : "border border-brand-red/30 bg-brand-red/5 text-brand-red",
       )}
     >

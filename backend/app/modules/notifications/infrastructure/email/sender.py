@@ -107,25 +107,29 @@ class LoggingEmailSender:
 
 def get_email_sender() -> EmailSender:
     provider = settings.MAIL_PROVIDER.strip().lower()
-    brevo_ready = bool(settings.BREVO_API_KEY and settings.BREVO_SENDER_EMAIL)
-    gmail_ready = bool(settings.GMAIL_EMAIL and settings.GMAIL_APP_PASSWORD)
+    brevo_api_key = settings.BREVO_API_KEY
+    brevo_sender_email = settings.BREVO_SENDER_EMAIL
+    gmail_address = settings.GMAIL_EMAIL
+    gmail_app_password = settings.GMAIL_APP_PASSWORD
+    brevo_ready = bool(brevo_api_key and brevo_sender_email)
+    gmail_ready = bool(gmail_address and gmail_app_password)
 
     if provider == "console":
         return LoggingEmailSender()
     if provider == "brevo" or (provider == "auto" and brevo_ready):
-        if not brevo_ready:
+        if not (brevo_api_key and brevo_sender_email):
             raise RuntimeError("MAIL_PROVIDER=brevo requires BREVO_API_KEY and BREVO_SENDER_EMAIL")
         return BrevoEmailSender(
-            api_key=settings.BREVO_API_KEY,
-            sender_email=settings.BREVO_SENDER_EMAIL,
+            api_key=brevo_api_key,
+            sender_email=brevo_sender_email,
             sender_name=settings.BREVO_SENDER_NAME,
         )
     if provider == "gmail" or (provider == "auto" and gmail_ready):
-        if not gmail_ready:
+        if not (gmail_address and gmail_app_password):
             raise RuntimeError("MAIL_PROVIDER=gmail requires GMAIL_EMAIL and GMAIL_APP_PASSWORD")
         return GmailEmailSender(
-            address=settings.GMAIL_EMAIL,
-            app_password=settings.GMAIL_APP_PASSWORD,
+            address=gmail_address,
+            app_password=gmail_app_password,
             sender_name=settings.BREVO_SENDER_NAME,
         )
     return LoggingEmailSender()

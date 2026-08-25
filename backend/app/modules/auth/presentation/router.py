@@ -153,7 +153,9 @@ async def forgot_password(
 ) -> MessageResponse:
     """Email a reset link; always succeeds to avoid address enumeration."""
     await PasswordResetService(session).request_reset(payload)
-    return MessageResponse(message="If an account exists for this email, a reset link has been sent")
+    return MessageResponse(
+        message="If an account exists for this email, a reset link has been sent"
+    )
 
 
 @router.post("/password/reset", response_model=MessageResponse)

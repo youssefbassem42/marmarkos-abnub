@@ -4,6 +4,7 @@ from app.core.exceptions.errors import (
     EmailNotVerifiedError,
     ForbiddenError,
     NotFoundError,
+    RateLimitedError,
     UnauthorizedError,
     ValidationError,
 )
@@ -15,6 +16,7 @@ __all__ = [
     "EmailNotVerifiedError",
     "ForbiddenError",
     "NotFoundError",
+    "RateLimitedError",
     "UnauthorizedError",
     "ValidationError",
     "register_exception_handlers",

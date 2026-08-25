@@ -33,9 +33,7 @@ def _service(today=None, now=None) -> AbsenceCalculationService:
 
 
 def test_attended_statuses_are_exactly_present_and_late():
-    assert ATTENDED_STATUSES == frozenset(
-        {AttendanceStatus.PRESENT, AttendanceStatus.LATE}
-    )
+    assert ATTENDED_STATUSES == frozenset({AttendanceStatus.PRESENT, AttendanceStatus.LATE})
     # BR-3: late members are never counted as absent.
     assert AttendanceStatus.LATE in ATTENDED_STATUSES
 

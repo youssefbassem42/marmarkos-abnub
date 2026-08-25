@@ -45,3 +45,15 @@ class ValidationError(AppError):
     status_code = 422
     code = "validation_error"
     message = "Request could not be processed"
+
+
+class RateLimitedError(AppError):
+    """BR-15: too many anonymous submissions within the sliding window."""
+
+    status_code = 429
+    code = "rate_limited"
+    message = "Too many messages. Please try again later"
+
+    def __init__(self, message: str | None = None, *, retry_after: int = 60) -> None:
+        super().__init__(message)
+        self.retry_after = retry_after

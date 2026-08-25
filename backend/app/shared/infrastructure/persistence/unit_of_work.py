@@ -48,6 +48,9 @@ from app.modules.comments.infrastructure.persistence.comment_repository import (
     CommentRepository,
 )
 from app.modules.media.infrastructure.persistence.media_repository import MediaRepository
+from app.modules.notifications.infrastructure.persistence.notification_read_repository import (
+    NotificationReadRepository,
+)
 from app.modules.notifications.infrastructure.persistence.notification_repository import (
     NotificationRepository,
 )
@@ -168,6 +171,10 @@ class UnitOfWork:
     @property
     def notifications(self) -> NotificationRepository:
         return NotificationRepository(self._session)
+
+    @property
+    def notification_reads(self) -> NotificationReadRepository:
+        return NotificationReadRepository(self._session)
 
     @property
     def anonymous_messages(self) -> AnonymousMessageRepository:

@@ -43,7 +43,7 @@ export function Pillars() {
                 className={cn(
                   "reveal flex flex-col items-center px-4 text-center lg:px-8",
                   isArabic ? "font-arabic" : "",
-                  i > 0 && "lg:border-l lg:border-border",
+                  i > 0 && "lg:border-s lg:border-border",
                 )}
                 style={{ transitionDelay: `${i * 90}ms` }}
               >

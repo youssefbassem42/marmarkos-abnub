@@ -1,6 +1,6 @@
 import type { ReactElement } from "react";
 import { render, screen } from "@testing-library/react";
-import { MemoryRouter } from "react-router-dom";
+import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -28,7 +28,7 @@ function renderWithProviders(ui: ReactElement, initialEntries: string[]) {
  */
 describe("attendance layouts", () => {
   it("renders the check-in screen with a back link, not a sidebar trigger", () => {
-    renderWithProviders(<AttendanceLayout />, ["/attendance/check-in"]);
+    renderWithProviders(<AttendanceLayout />, ["/admin/attendance/check-in"]);
 
     // The brand panel owns one h1, the topbar another.
     expect(screen.getAllByRole("heading", { level: 1 }).length).toBeGreaterThan(
@@ -43,13 +43,40 @@ describe("attendance layouts", () => {
       <SidebarProvider>
         <AdminTopbar title="لوحة المتابعة" />
       </SidebarProvider>,
-      ["/attendance/dashboard"],
+      ["/admin/dashboard"],
     );
 
     expect(screen.getByLabelText("Toggle sidebar")).toBeInTheDocument();
   });
 
   it("renders the admin shell without throwing", () => {
-    renderWithProviders(<AdminLayout />, ["/attendance/dashboard"]);
+    renderWithProviders(<AdminLayout />, ["/admin/dashboard"]);
+  });
+
+  it("check-in route renders AttendanceLayout without a SidebarProvider", () => {
+    renderWithProviders(<AttendanceLayout />, ["/admin/attendance/check-in"]);
+
+    // AttendanceLayout owns its split shell; it must not wrap itself in
+    // a SidebarProvider (that is AdminLayout's job) — regression guard
+    // for the D-15 move under /admin.
+    expect(screen.queryByLabelText("Toggle sidebar")).not.toBeInTheDocument();
+  });
+
+  it("notifications route renders AdminLayout with exactly one SidebarProvider", () => {
+    const { container } = renderWithProviders(
+      <Routes>
+        <Route path="/admin" element={<AdminLayout />}>
+          <Route path="notifications" element={<div>feed</div>} />
+        </Route>
+      </Routes>,
+      ["/admin/notifications"],
+    );
+
+    // One provider wrapper only: a double provider would silently break
+    // the sidebar's collapsed state.
+    expect(screen.getByText("feed")).toBeInTheDocument();
+    expect(
+      container.querySelectorAll('[class*="group/sidebar-wrapper"]').length,
+    ).toBe(1);
   });
 });

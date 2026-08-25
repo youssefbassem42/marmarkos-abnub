@@ -51,7 +51,7 @@ app/
 | 11 | `blog_post_likes` | blog | Likes (unique per post/user) |
 | 12 | `comments` | comments | Threaded, soft-moderated |
 | 13 | `notifications` | notifications | Per-user + broadcast |
-| 14 | `anonymous_messages` | anonymous_messages | Prayers/feedback, no identity |
+| 14 | `anonymous_messages` | anonymous_messages | Prayers/feedback; no account linkage (D-1) |
 | 15 | `bible_verses` | bible | Weekly verse (one published/week) |
 | 16 | `media_assets` | media | URL-only media registry |
 | 17 | `audit_logs` | admin | Append-only admin actions |
@@ -93,7 +93,7 @@ app/
 - Per-user rows; `user_id IS NULL` = broadcast to all (e.g., announcements). `data` JSONB payload, `read_at` for unread counting (`count_unread`).
 
 ### 5.7 anonymous_messages
-- Message + delivery lifecycle only: `status` (PENDING/SENT/FAILED), `telegram_status`, `telegram_message_id`, `failure_reason`. **No identity columns by design**; enforced structurally and by test `test_table_has_no_identity_columns`.
+- Message + delivery lifecycle only: `status` (PENDING/SENT/FAILED), `telegram_status`, `telegram_message_id`, `attempts`, `last_attempt_at`, `failure_reason`. The guarantee (Phase 4, D-1) is **no account linkage**: nothing derived from an account, IP, session or user agent is stored — even for signed-in submitters. Optional `sender_name`/`sender_phone` are self-declared form input only; enforced structurally and by test `test_table_has_no_identity_columns`.
 
 ### 5.8 bible
 - `bible_verses`: `verse_reference`, `text`, `translation`, `week_start_date`, `is_published`. Partial unique index `uq_bible_verses_published_week (week_start_date) WHERE is_published` → at most one published verse per week; drafts for the same week allowed.
@@ -170,7 +170,7 @@ One file per module plus FK/cascade tests:
 - `test_blog.py` — post creation, unique slug, search/category filter, like toggle + uniqueness.
 - `test_comments.py` — replies, moderation, soft-delete, nested depth.
 - `test_notifications.py` — per-user + broadcast, unread counts, mark-read.
-- `test_anonymous_messages.py` — no-identity columns, Telegram lifecycle, exclusive claim.
+- `test_anonymous_messages.py` — no-account-linkage columns (including the two nullable self-declared fields), Telegram lifecycle with attempt bookkeeping, exclusive claim.
 - `test_bible.py` — weekly publish uniqueness, drafts, current-verse lookup.
 - `test_media.py` — metadata/URL only, section filtering, deactivation.
 - `test_outbox.py` — atomicity, claim/process, failure/backoff, event serialization, idempotent replay.

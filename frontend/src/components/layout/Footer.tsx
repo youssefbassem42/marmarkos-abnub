@@ -21,6 +21,7 @@ export function Footer() {
   const { language } = useLanguage();
   const isArabic = language === "ar";
   const { t } = useTranslation("landing");
+  const { t: tCommon } = useTranslation("common");
   const quickItems = t("footer.quickItems", {
     returnObjects: true,
   }) as readonly string[];
@@ -39,7 +40,7 @@ export function Footer() {
         <div>
           <img
             src={logo}
-            alt="إجتماع الشباب بأبنوب church logo"
+            alt={tCommon("brand.logoAlt")}
             width={160}
             height={112}
             loading="lazy"
@@ -50,7 +51,7 @@ export function Footer() {
             lang="ar"
             className="font-arabic mt-3 w-fit text-lg font-bold"
           >
-            إجتماع الشباب بأبنوب
+            {tCommon("brand.name")}
           </p>
         </div>
 
@@ -148,7 +149,7 @@ export function Footer() {
       <div className="border-t border-white/12">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-5 text-xs text-white/65 sm:flex-row sm:items-center sm:justify-between lg:px-8">
           <p className={cn(isArabic && "font-arabic")}>
-            {t("footer.copyright")}
+            {t("footer.copyright", { year: new Date().getFullYear() })}
           </p>
         </div>
       </div>

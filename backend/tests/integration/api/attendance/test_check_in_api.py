@@ -44,9 +44,10 @@ async def test_scan_happy_path_returns_201_with_typed_dto(
     assert attendance["status"] in {"PRESENT", "LATE"}
     assert attendance["method"] == "QR_SCAN"
     assert attendance["recorded_by_name"]
-    assert attendance["meeting_date"].endswith(
-        current_meeting_date(today_local()).isoformat()[5:]
-    ) or True  # meeting date is the open Thursday
+    assert (
+        attendance["meeting_date"].endswith(current_meeting_date(today_local()).isoformat()[5:])
+        or True
+    )  # meeting date is the open Thursday
     assert "T" in attendance["check_in_at"]  # aware ISO timestamp
 
 
@@ -80,9 +81,7 @@ async def test_duplicate_scan_conflict_envelope(
 
 
 @pytest.mark.asyncio
-async def test_unknown_qr_is_validation_error(
-    client: AsyncClient, db_engine: AsyncEngine
-):
+async def test_unknown_qr_is_validation_error(client: AsyncClient, db_engine: AsyncEngine):
     admin = await _headers_for(client, db_engine, "unk.a@test.com", RoleName.ADMIN)
     response = await client.post(
         ATTENDANCE_CHECK_IN_URL,
@@ -111,9 +110,7 @@ async def test_suspended_member_qr_is_rejected(
     token = f"tok-susp-{uuid.uuid4().hex[:8]}"
     await create_qr_for_user(db_engine, suspended_id, token)
 
-    response = await client.post(
-        ATTENDANCE_CHECK_IN_URL, json={"qr_code": token}, headers=admin
-    )
+    response = await client.post(ATTENDANCE_CHECK_IN_URL, json={"qr_code": token}, headers=admin)
     assert response.status_code == 422
 
 
@@ -129,9 +126,7 @@ async def test_client_supplied_user_uuid_is_never_trusted(
     )
 
     for payload in ({"qr_code": str(victim_id)}, {"qr_code": str(uuid.uuid4())}):
-        response = await client.post(
-            ATTENDANCE_CHECK_IN_URL, json=payload, headers=admin
-        )
+        response = await client.post(ATTENDANCE_CHECK_IN_URL, json=payload, headers=admin)
         assert response.status_code == 422
 
     async with db_engine.connect() as conn:
@@ -224,9 +219,7 @@ async def test_excuse_of_past_record_is_rejected(
             )
         )
 
-    response = await client.post(
-        attendance_excuse_url(str(record_id)), json={}, headers=admin
-    )
+    response = await client.post(attendance_excuse_url(str(record_id)), json={}, headers=admin)
     assert response.status_code == 422
 
 
@@ -235,7 +228,5 @@ async def test_malformed_uuid_path_is_422(client: AsyncClient, db_engine: AsyncE
     from tests.utils import attendance_excuse_url
 
     admin = await _headers_for(client, db_engine, "mal.a@test.com", RoleName.ADMIN)
-    response = await client.post(
-        attendance_excuse_url("not-a-uuid"), json={}, headers=admin
-    )
+    response = await client.post(attendance_excuse_url("not-a-uuid"), json={}, headers=admin)
     assert response.status_code == 422

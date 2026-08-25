@@ -57,12 +57,13 @@ so tests, Alembic autogenerate, and `create_all` always see the same schema.
 ### notifications (`notifications` module)
 | Table | Purpose |
 |---|---|
-| `notifications` | Per-user rows; `user_id IS NULL` = broadcast to everyone. `type` (ATTENDANCE, SYSTEM, ANNOUNCEMENT, BLOG_POST), `data` JSONB, `read_at` |
+| `notifications` | Per-user rows; `user_id IS NULL` = broadcast to everyone. `type` (ATTENDANCE, SYSTEM, ANNOUNCEMENT, BLOG_POST), `data` JSONB. Bilingual copy: `title`/`message` (Arabic) + `title_en`/`message_en` (English), both required. `read_at` is **legacy** — never written or read by application code (Phase 4, D-2) |
+| `notification_reads` | Per-user read state: composite PK `(notification_id, user_id)`, `read_at NOT NULL DEFAULT now()`, both FKs ON DELETE CASCADE. A notification is read for a user iff a row exists here (BR-2); writes are idempotent via `ON CONFLICT DO NOTHING` (BR-3) |
 
 ### anonymous_messages (`anonymous_messages` module)
 | Table | Purpose |
 |---|---|
-| `anonymous_messages` | Message + lifecycle state only: `status` PENDING/SENT/FAILED, `telegram_status` PENDING/SENT/FAILED, `telegram_message_id`, `failure_reason`. **No identity columns exist by design** — verified by test `test_table_has_no_identity_columns` |
+| `anonymous_messages` | Message + lifecycle state only: `status` PENDING/SENT/FAILED, `telegram_status` PENDING/SENT/FAILED, `telegram_message_id`, `attempts`, `last_attempt_at`, `failure_reason`. The guarantee is **no account linkage**: nothing derived from a user account, IP address, session or user agent is ever stored — not even for a signed-in submitter. `sender_name`/`sender_phone` are optional self-declared free text typed on the public form. Verified by test `test_table_has_no_identity_columns` (Phase 4, D-1) |
 
 ### bible (`bible` module)
 | Table | Purpose |
@@ -98,6 +99,8 @@ erDiagram
     users ||--o{ blog_post_likes : "liked"
     users ||--o{ comments : "author"
     users ||--o{ notifications : "recipient (NULL = broadcast)"
+    users ||--o{ notification_reads : "reader"
+    notifications ||--o{ notification_reads : "read state"
     users ||--o{ audit_logs : "actor"
     users ||--o{ bible_verses : "created_by"
     users ||--o{ media_assets : "created_by"
@@ -207,17 +210,28 @@ erDiagram
         uuid id PK
         uuid user_id FK "NULL = broadcast"
         varchar type
-        varchar title
-        text message
+        varchar title "Arabic"
+        text message "Arabic"
+        varchar title_en "English"
+        text message_en "English"
         jsonb data
-        timestamptz read_at
+        timestamptz read_at "legacy, unused"
+    }
+    notification_reads {
+        uuid notification_id PK,FK "CASCADE"
+        uuid user_id PK,FK "CASCADE"
+        timestamptz read_at "DEFAULT now()"
     }
     anonymous_messages {
         uuid id PK
         text message
+        varchar sender_name "nullable, self-declared"
+        varchar sender_phone "nullable, self-declared"
         varchar status "PENDING/SENT/FAILED"
         varchar telegram_status
         varchar telegram_message_id
+        int attempts "DEFAULT 0"
+        timestamptz last_attempt_at
         text failure_reason
     }
     bible_verses {
@@ -272,6 +286,8 @@ erDiagram
 | Unique slugs | `blog_posts.slug` UNIQUE; `blog_categories.slug` UNIQUE |
 | Users always reference a real role | `users.role_id` FK NOT NULL |
 | Content belongs to real authors | FKs on `blog_posts.author_id`, `comments.user_id`, `attendance_records.user_id` (integrity verified by `test_foreign_keys.py`) |
+| Read state is per user and idempotent | `notification_reads` composite PK `(notification_id, user_id)`; inserts use `ON CONFLICT DO NOTHING` |
+| Anonymous messages never link to accounts | No account/IP/session column exists on `anonymous_messages`; asserted structurally by `test_table_has_no_identity_columns` |
 
 ## Domain Events → Outbox
 

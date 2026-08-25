@@ -18,6 +18,7 @@ from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Mapped, mapped_column
 
+from app.core.time.clock import now_utc
 from app.shared.domain.events import DomainEvent
 from app.shared.infrastructure.persistence.base import Base, UUIDPrimaryKeyMixin
 
@@ -109,7 +110,7 @@ class OutboxRepository:
 
     async def mark_processed(self, event: OutboxEvent) -> None:
         event.status = OutboxStatus.PROCESSED
-        event.processed_at = datetime.now()
+        event.processed_at = now_utc()
         await self._session.flush()
 
     async def mark_failed(

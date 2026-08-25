@@ -1,5 +1,8 @@
 export const en = {
   common: {
+    placeholder: {
+      body: "This page is under construction — check back soon!",
+    },
     comingSoon: "Coming soon",
     retry: "Try again",
     loading: "Loading...",
@@ -14,7 +17,8 @@ export const en = {
       cta: "Back to home",
     },
     brand: {
-      name: "Youth Service",
+      name: "Marmarkos Abnub",
+      nameEn: "Marmarkos Abnub",
       message: ["FAITH.", "FRIENDS.", "PURPOSE."],
       supporting:
         "A place where young hearts encounter God, build real friendships, and discover their God-given purpose.",
@@ -241,7 +245,7 @@ export const en = {
       signOut: "Sign Out",
     },
     hero: {
-      eyebrow: "Youth Service",
+      eyebrow: "Marmarkos Abnub",
       ctaPrimary: "JOIN US THIS WEEK",
       ctaSecondary: "LEARN MORE",
     },
@@ -295,11 +299,26 @@ export const en = {
     },
     footer: {
       quickLinks: "Quick Links",
-      quickItems: ["Home", "Anonymous Messages", "Blog", "Gallery", "About Us"],
+      quickItems: [
+        "Home",
+        "Anonymous Messages",
+        "Blog",
+        "Gallery",
+        "About Us",
+        "Contact Us",
+      ],
+      ministries: "Ministries",
+      ministryItems: [
+        "Worship",
+        "Small Groups",
+        "Outreach",
+        "Discipleship",
+        "Events",
+      ],
       contactUs: "Contact Us",
-      addressLine1: "Youth Service",
+      addressLine1: "Marmarkos Abnub",
       addressLine2: "Abnub, Asyut, Egypt",
-      copyright: "© 2026 Youth Service. All rights reserved.",
+      copyright: "© {{year}} Marmarkos Abnub. All rights reserved.",
     },
   },
   profile: {
@@ -520,6 +539,7 @@ export const en = {
       newPasswordPlaceholder: "Enter your new password",
       confirmPasswordLabel: "Confirm New Password",
       confirmPasswordPlaceholder: "Confirm your new password",
+      showPassword: "Show password",
       requirements: [
         "At least 8 characters long",
         "Include uppercase and lowercase letters",
@@ -590,6 +610,215 @@ export const en = {
         "This verification link is no longer valid. We can send you a fresh one right away.",
       resendCta: "RESEND VERIFICATION EMAIL",
       loginLink: "Back to login",
+    },
+  },
+  notifications: {
+    title: "Notifications",
+    subtitle: "Stay updated with what's happening.",
+    tabs: {
+      all: "All",
+      unread: "Unread",
+      announcements: "Announcements",
+      reminders: "Reminders",
+      system: "System",
+    },
+    actions: {
+      markAllRead: "Mark all as read",
+      markRead: "Mark as read",
+      filter: "Filter",
+      retry: "Retry",
+    },
+    filter: {
+      allTime: "All time",
+      today: "Today",
+      last7: "Last 7 days",
+      last30: "Last 30 days",
+    },
+    badges: {
+      new: "New",
+      unread: "{{count}} unread",
+    },
+    time: {
+      minutesAgo: "{{count}} min ago",
+      hoursAgo: "{{count}} h ago",
+      yesterdayAt: "Yesterday {{time}}",
+      on: "On {{date}}",
+    },
+    empty: {
+      title: "No notifications yet",
+      body: "Announcements, reminders and updates will appear here.",
+    },
+    error: {
+      title: "Could not load notifications",
+      body: "Check your connection and try again.",
+    },
+    infoCards: [
+      {
+        title: "Stay Updated",
+        description:
+          "Get real-time updates about events, meetings, and announcements.",
+      },
+      {
+        title: "Never Miss Out",
+        description:
+          "Announcements, reminders and events all land here in one place.",
+      },
+      {
+        title: "Filter your view",
+        description:
+          "Use the tabs to see announcements, reminders or system notices only.",
+      },
+      {
+        title: "Connected",
+        description:
+          "Stay connected with your community and grow together in faith.",
+      },
+    ],
+    admin: {
+      title: "Notifications",
+      subtitle: "Review and send announcements.",
+      composer: {
+        title: "Send an announcement",
+        titleAr: "Title (Arabic)",
+        titleEn: "Title (English)",
+        messageAr: "Message (Arabic)",
+        messageEn: "Message (English)",
+        ctaUrl: "Link (optional)",
+        sendEmail: "Also send by email",
+        submit: "Send to everyone",
+        submitting: "Sending…",
+      },
+      confirm: {
+        title: "Send this by email too?",
+        body: "Every active member with a verified email will receive it. This may take a while.",
+        cancel: "Cancel",
+        confirm: "Send",
+      },
+    },
+    toast: {
+      markedAllRead: "All notifications marked as read",
+      pushed:
+        "Announcement sent · {{sent}} emails delivered, {{failed}} failed",
+      pushFailed: "Could not send the announcement",
+    },
+  },
+  admin: {
+    nav: {
+      section: "Admin",
+      dashboard: "Dashboard",
+      members: "Members",
+      attendance: "Attendance",
+      checkIn: "Check-in",
+      history: "History",
+      events: "Events",
+      messages: "Messages",
+      notifications: "Notifications",
+      reports: "Reports",
+      settings: "Settings",
+    },
+  },
+  anonymousMessages: {
+    title: "Anonymous Message",
+    subtitle: "Share your message with confidence and peace of mind",
+    card: {
+      title: "Send Your Message",
+      subtitle:
+        "We're here to listen and connect with you. Your message is <0>100% secure</0>.",
+    },
+    anonymityNotice: {
+      title: "Your message will remain completely anonymous",
+      body: "We will not display your name or any identifying information with your message.",
+    },
+    form: {
+      name: "Your Name (Optional)",
+      namePlaceholder: "Enter your name if you'd like",
+      nameHint: "Leave blank if you prefer to remain anonymous.",
+      phone: "Phone Number (Optional)",
+      phonePlaceholder: "Enter your phone number if you'd like",
+      phoneHint: "Leave blank if you do not want to share your phone number.",
+      message: "Your Message",
+      messagePlaceholder: "Write your message here…",
+      counter: "{{count}} / {{max}}",
+      submit: "Send Message",
+      submitting: "Sending…",
+      footnote:
+        "All messages are handled with care, confidentiality, and respect.",
+    },
+    validation: {
+      messageRequired: "Please write your message.",
+      messageMin: "Your message must be at least {{min}} characters.",
+      messageMax: "Your message must not exceed {{max}} characters.",
+      nameMax: "The name is too long.",
+      phoneInvalid: "Please enter a valid phone number.",
+      rateLimited:
+        "You have sent several messages already. Please try again later.",
+    },
+    topics: {
+      title: "You can send messages about:",
+      items: [
+        "Prayer request",
+        "Praise report",
+        "Need advice or encouragement",
+        "Participate or provide feedback",
+      ],
+    },
+    importantInfo: {
+      title: "Important Information",
+      items: [
+        {
+          title: "Fully Confidential",
+          description:
+            "We do not share your message with anyone outside our team.",
+        },
+        {
+          title: "100% Anonymous",
+          description:
+            "Your name and information will never be displayed with your message.",
+        },
+        {
+          title: "Every message is read",
+          description: "Our servants read every message and pray over it.",
+        },
+      ],
+    },
+    beforeYouSend: {
+      title: "Before You Send",
+      items: [
+        "Make sure your message is clear and within the guidelines.",
+        "We are here to support you spiritually and emotionally.",
+        "Trust that God hears you and we stand with you.",
+        "For urgent matters, please contact us directly via phone or visit the church.",
+      ],
+    },
+    success: {
+      title: "Your message has been received",
+      body: "Thank you for trusting us. We will read it and pray for you.",
+      sendAnother: "Send another message",
+    },
+    admin: {
+      title: "Anonymous Messages",
+      subtitle: "Review the messages received by the service.",
+      filters: { all: "All" },
+      table: {
+        createdAt: "Received",
+        message: "Message",
+        name: "Name",
+        phone: "Phone",
+        status: "Status",
+        telegram: "Telegram",
+        attempts: "Attempts",
+        notProvided: "Not provided",
+      },
+      status: {
+        PENDING: "Pending",
+        SENT: "Sent",
+        FAILED: "Failed",
+      },
+      retry: { action: "Retry", success: "Message delivered" },
+      empty: {
+        title: "No messages yet",
+        body: "Messages sent from the anonymous page will appear here.",
+      },
     },
   },
 } as const;

@@ -102,7 +102,7 @@ export function HistoryFilters({ values, onChange }: HistoryFiltersProps) {
   const selectedMember = members.find((member) => member.id === draft.user_id);
 
   return (
-    <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 shadow-[0_2px_24px_rgba(37,61,99,0.08)] sm:grid-cols-2 lg:grid-cols-5">
+    <div className="grid gap-3 rounded-2xl border border-border bg-card p-4 card-elevated sm:grid-cols-2 lg:grid-cols-5">
       <div className="space-y-1.5">
         <Label htmlFor="history-from">{t("history.filters.from")}</Label>
         <Input

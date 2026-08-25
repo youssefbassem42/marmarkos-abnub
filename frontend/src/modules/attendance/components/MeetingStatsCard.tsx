@@ -26,7 +26,7 @@ export function MeetingStatsCard() {
     <section
       dir={isArabic ? "rtl" : "ltr"}
       lang={language}
-      className="rounded-2xl border border-border bg-card p-5 shadow-[0_2px_24px_rgba(37,61,99,0.08)]"
+      className="rounded-2xl border border-border bg-card p-5 card-elevated"
     >
       <header className="flex items-baseline justify-between gap-3">
         <div className="min-w-0">
@@ -54,7 +54,7 @@ export function MeetingStatsCard() {
           )}
         </div>
         <Link
-          to="/attendance/dashboard"
+          to="/admin/dashboard"
           className="focus-ring shrink-0 rounded-sm text-sm font-semibold text-brand-blue underline-offset-4 hover:underline"
         >
           {t("checkIn.stats.viewAll")}

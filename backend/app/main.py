@@ -1,4 +1,6 @@
-from fastapi import FastAPI, Request
+from collections.abc import Awaitable, Callable
+
+from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
@@ -16,7 +18,9 @@ def create_app() -> FastAPI:
     )
 
     @application.middleware("http")
-    async def cors_safe_errors(request: Request, call_next):
+    async def cors_safe_errors(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
         try:
             return await call_next(request)
         except Exception:
@@ -28,9 +32,7 @@ def create_app() -> FastAPI:
     application.add_middleware(
         CORSMiddleware,
         allow_origins=[
-            origin.strip()
-            for origin in settings.CORS_ORIGINS.split(",")
-            if origin.strip()
+            origin.strip() for origin in settings.CORS_ORIGINS.split(",") if origin.strip()
         ]
         + [settings.FRONTEND_URL.rstrip("/")],
         allow_credentials=True,

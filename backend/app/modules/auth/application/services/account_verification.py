@@ -24,6 +24,7 @@ from app.modules.auth.infrastructure.security import (
     hash_refresh_token,
 )
 from app.modules.notifications.infrastructure.email import EmailService
+from app.modules.users.infrastructure.persistence.models import User
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 logger = logging.getLogger(__name__)
@@ -55,7 +56,7 @@ class EmailVerificationService:
         self._uow = UnitOfWork(session)
         self._email = EmailService()
 
-    async def send_verification_email(self, user) -> None:
+    async def send_verification_email(self, user: User) -> None:
         await self._uow.auth_tokens.invalidate_all_for_user(
             user.id, AuthTokenPurpose.EMAIL_VERIFICATION, datetime.now(UTC)
         )
@@ -67,9 +68,7 @@ class EmailVerificationService:
         await self._uow.auth_tokens.add(token)
         await self._uow.commit()
 
-        verify_url = (
-            f"{_frontend_origin()}/verify-email/confirm?token={raw}"
-        )
+        verify_url = f"{_frontend_origin()}/verify-email/confirm?token={raw}"
         sent = await self._email.send_verification_email(
             to_email=user.email,
             first_name=user.first_name,

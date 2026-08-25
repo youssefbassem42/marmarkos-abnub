@@ -4,6 +4,7 @@ from datetime import datetime
 from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.time.clock import now_utc
 from app.modules.users.infrastructure.persistence.models import UserQrCode
 
 
@@ -21,7 +22,7 @@ class UserQrCodeRepository:
         await self._session.execute(
             update(UserQrCode)
             .where(UserQrCode.user_id == user_id, UserQrCode.is_active.is_(True))
-            .values(is_active=False, deactivated_at=datetime.now())
+            .values(is_active=False, deactivated_at=now_utc())
         )
         code = UserQrCode(user_id=user_id, token_hash=token_hash, is_active=True)
         self._session.add(code)

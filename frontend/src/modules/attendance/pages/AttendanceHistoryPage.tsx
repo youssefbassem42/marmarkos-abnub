@@ -2,16 +2,12 @@ import { useMemo } from "react";
 import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import {
-  ChevronLeft,
-  ChevronRight,
-  Download,
-  QrCode,
-  SearchX,
-} from "lucide-react";
+import { Download, QrCode, SearchX } from "lucide-react";
 import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
+import { AppPagination } from "@/components/common/AppPagination";
+import { ErrorRetry } from "@/components/common/ErrorRetry";
 import { AttendanceStatusBadge } from "../components/AttendanceStatusBadge";
 import {
   HistoryFilters,
@@ -171,7 +167,7 @@ export function AttendanceHistoryPage() {
             </button>
           </div>
 
-          <section className="rounded-2xl border border-border bg-card shadow-[0_2px_24px_rgba(37,61,99,0.08)]">
+          <section className="rounded-2xl border border-border bg-card card-elevated">
             {query.isPending && (
               <div className="space-y-2 p-5">
                 {[0, 1, 2, 3, 4].map((index) => (
@@ -307,44 +303,11 @@ export function AttendanceHistoryPage() {
                     })}
                   </p>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      disabled={page <= 1}
-                      onClick={() => patchParams({ page: page - 1 })}
-                      className="focus-ring inline-flex h-9 items-center gap-1 rounded-lg border border-border px-3 text-sm font-medium text-ink transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <ChevronLeft
-                        className="h-4 w-4 rtl:hidden"
-                        aria-hidden="true"
-                      />
-                      <ChevronRight
-                        className="hidden h-4 w-4 rtl:block"
-                        aria-hidden="true"
-                      />
-                      <span className={isArabic ? "font-arabic" : undefined}>
-                        {t("history.pagination.previous")}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      disabled={!query.data?.has_next}
-                      onClick={() => patchParams({ page: page + 1 })}
-                      className="focus-ring inline-flex h-9 items-center gap-1 rounded-lg border border-border px-3 text-sm font-medium text-ink transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-40"
-                    >
-                      <span className={isArabic ? "font-arabic" : undefined}>
-                        {t("history.pagination.next")}
-                      </span>
-                      <ChevronRight
-                        className="h-4 w-4 rtl:hidden"
-                        aria-hidden="true"
-                      />
-                      <ChevronLeft
-                        className="hidden h-4 w-4 rtl:block"
-                        aria-hidden="true"
-                      />
-                    </button>
-                  </div>
+                  <AppPagination
+                    page={page}
+                    pages={pages}
+                    onPageChange={(next) => patchParams({ page: String(next) })}
+                  />
                 </div>
               </>
             )}

@@ -30,9 +30,7 @@ READ_ROUTES = [
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("method,url", READ_ROUTES)
-async def test_read_routes_reject_anonymous(
-    client: AsyncClient, method: str, url: str
-):
+async def test_read_routes_reject_anonymous(client: AsyncClient, method: str, url: str):
     response = await getattr(client, method.lower())(url)
     assert response.status_code == 401
 
@@ -58,9 +56,7 @@ async def test_read_routes_allow_servant_and_admin(
     method: str,
     url: str,
 ):
-    servant = await _headers_for(
-        client, db_engine, "s.matrix@test.com", RoleName.SERVANT
-    )
+    servant = await _headers_for(client, db_engine, "s.matrix@test.com", RoleName.SERVANT)
     admin = await _headers_for(client, db_engine, "a.matrix@test.com", RoleName.ADMIN)
     for headers in (servant, admin):
         response = await getattr(client, method.lower())(url, headers=headers)
@@ -98,9 +94,7 @@ async def test_excuse_is_admin_only(
     servant = await _headers_for(client, db_engine, "ex.s@test.com", RoleName.SERVANT)
     member = await _headers_for(client, db_engine, "ex.m@test.com", RoleName.MEMBER)
 
-    created = await client.post(
-        ATTENDANCE_CHECK_IN_URL, json={"qr_code": token}, headers=admin
-    )
+    created = await client.post(ATTENDANCE_CHECK_IN_URL, json={"qr_code": token}, headers=admin)
     assert created.status_code == 201, created.text
     attendance_id = created.json()["attendance"]["id"]
 
@@ -110,9 +104,7 @@ async def test_excuse_is_admin_only(
     assert anonymous.status_code == 401
 
     for headers in (member, servant):
-        response = await client.post(
-            attendance_excuse_url(attendance_id), json={}, headers=headers
-        )
+        response = await client.post(attendance_excuse_url(attendance_id), json={}, headers=headers)
         assert response.status_code == 403
 
     allowed = await client.post(

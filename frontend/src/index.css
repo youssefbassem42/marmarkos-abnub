@@ -4,13 +4,13 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Design system definition.
+ * Design system definition (single source of truth).
  *
- * The @theme inline block maps CSS custom properties to Tailwind utility
- * classes (e.g. --color-primary -> bg-primary, text-primary).
- *
- * The :root and .dark blocks define the actual color values using oklch.
- * All colors MUST use oklch format.
+ * One @theme inline block maps CSS custom properties to Tailwind utility
+ * classes (e.g. --color-primary -> bg-primary, text-primary). The :root
+ * and .dark blocks below define the actual values exactly once each —
+ * where the shadcn baseline and the brand layer overlapped, the value
+ * that won the cascade before this de-duplication (P4-305) is kept.
  *
  * To add a new semantic color:
  * 1. Add the variable to :root (light value) and .dark (dark value)
@@ -58,34 +58,50 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Brand: إجتماع الشباب بأبنوب youth service */
+  --color-navy: var(--brand-navy);
+  --color-brand-blue: var(--brand-blue);
+  --color-brand-orange: var(--brand-orange);
+  --color-mint: var(--brand-mint);
+  --color-brand-red: var(--brand-red);
+  --color-soft: var(--soft);
+  --color-ink: var(--ink);
+  --color-status-late: var(--status-late);
+  --color-status-absent: var(--status-absent);
+
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "El Messiri", "Poppins", sans-serif;
+  --font-arabic: "Markazi Text", "Poppins", sans-serif;
+  --font-verse: "Amiri", serif;
 }
 
 :root {
-  --radius: 0.625rem;
+  /* Radius: the brand value (0.75rem) won over the shadcn baseline. */
+  --radius: 0.75rem;
+
+  /* Light-mode surfaces and text (brand-tuned where noted). */
   --background: oklch(1 0 0);
-  --foreground: oklch(0.129 0.042 264.695);
+  --foreground: #253d63;
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.129 0.042 264.695);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.129 0.042 264.695);
-  --primary: oklch(0.208 0.042 265.755);
-  --primary-foreground: oklch(0.984 0.003 247.858);
+  --primary: #253d63;
+  --primary-foreground: #ffffff;
   --secondary: oklch(0.968 0.007 247.896);
   --secondary-foreground: oklch(0.208 0.042 265.755);
   --muted: oklch(0.968 0.007 247.896);
-  --muted-foreground: oklch(0.554 0.046 257.417);
+  --muted-foreground: oklch(0.52 0.02 250);
   --accent: oklch(0.968 0.007 247.896);
   --accent-foreground: oklch(0.208 0.042 265.755);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(0.929 0.013 255.508);
+  --border: oklch(0.915 0.008 250);
   --input: oklch(0.929 0.013 255.508);
-  --ring: oklch(0.704 0.04 256.788);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
+  --ring: #2672b0;
+
+  /* Sidebar tokens (shadcn light values, kept verbatim). */
   --sidebar: oklch(0.984 0.003 247.858);
   --sidebar-foreground: oklch(0.129 0.042 264.695);
   --sidebar-primary: oklch(0.208 0.042 265.755);
@@ -94,33 +110,66 @@
   --sidebar-accent-foreground: oklch(0.208 0.042 265.755);
   --sidebar-border: oklch(0.929 0.013 255.508);
   --sidebar-ring: oklch(0.704 0.04 256.788);
+
+  /* Brand palette (light mode). */
+  --brand-navy: #253d63;
+  --brand-blue: #2672b0;
+  --brand-orange: #f96702;
+  --brand-mint: #53cb9e;
+  --brand-red: #9e150b;
+
+  /* Soft panel fill behind cards and sections. */
+  --soft: oklch(0.975 0.006 240);
+
+  /* Ink = strong text colour; a real light-mode token so `text-ink`
+     never relies on inheritance. */
+  --ink: #253d63;
+
+  /* Semantic status tokens for the attendance UI (BR-2/§3.8). */
+  --status-late: var(--brand-orange);
+  --status-absent: var(--brand-red);
+
+  /* Charts on-brand: attended / late / absent / error / navy. */
+  --chart-1: var(--brand-mint);
+  --chart-2: var(--brand-blue);
+  --chart-3: var(--brand-orange);
+  --chart-4: var(--brand-red);
+  --chart-5: var(--brand-navy);
+
+  /* Elevation (P4-304): one navy shadow, defined once (DEF-8). */
+  --shadow-card: 0 2px 24px rgba(37, 61, 99, 0.08);
+  --shadow-card-strong: 0 2px 18px rgba(37, 61, 99, 0.12);
+
+  /* Named interaction colours so button utilities carry no raw hex. */
+  --navy-hover: #1c3050;
+  --mint-hover: #46b78c;
+  --surface-dark: #0f1929;
+  --paper: #ffffff;
 }
 
+/* ---- Dark mode (brand-tuned): deep navy surfaces, mint accent ---- */
 .dark {
-  --background: oklch(0.129 0.042 264.695);
-  --foreground: oklch(0.984 0.003 247.858);
-  --card: oklch(0.208 0.042 265.755);
-  --card-foreground: oklch(0.984 0.003 247.858);
-  --popover: oklch(0.208 0.042 265.755);
-  --popover-foreground: oklch(0.984 0.003 247.858);
-  --primary: oklch(0.929 0.013 255.508);
-  --primary-foreground: oklch(0.208 0.042 265.755);
-  --secondary: oklch(0.279 0.041 260.031);
-  --secondary-foreground: oklch(0.984 0.003 247.858);
-  --muted: oklch(0.279 0.041 260.031);
-  --muted-foreground: oklch(0.704 0.04 256.788);
-  --accent: oklch(0.279 0.041 260.031);
-  --accent-foreground: oklch(0.984 0.003 247.858);
-  --destructive: oklch(0.704 0.191 22.216);
-  --destructive-foreground: oklch(0.984 0.003 247.858);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.551 0.027 264.364);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
+  --background: #0f1929;
+  --foreground: #dbe7f5;
+  --card: #182740;
+  --card-foreground: #dbe7f5;
+  --popover: #182740;
+  --popover-foreground: #dbe7f5;
+  --primary: var(--brand-mint);
+  --primary-foreground: #0f1929;
+  --secondary: #152238;
+  --secondary-foreground: #dbe7f5;
+  --muted: #152238;
+  --muted-foreground: #93a7c4;
+  --accent: #1d2f4d;
+  --accent-foreground: #dbe7f5;
+  --destructive: var(--brand-red);
+  --destructive-foreground: #ffffff;
+  --border: rgba(219, 231, 245, 0.14);
+  --input: rgba(219, 231, 245, 0.18);
+  --ring: var(--brand-mint);
+
+  /* Sidebar tokens (shadcn dark values, kept verbatim). */
   --sidebar: oklch(0.208 0.042 265.755);
   --sidebar-foreground: oklch(0.984 0.003 247.858);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -129,6 +178,30 @@
   --sidebar-accent-foreground: oklch(0.984 0.003 247.858);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.551 0.027 264.364);
+
+  /* Brand accents: navy, orange and mint stay identical in both modes;
+     blue and red are intentionally lightened here for contrast on the
+     deep-navy surfaces. focus-ring derives from --brand-blue, so it
+     follows this lighter variant automatically. */
+  --brand-navy: #253d63;
+  --brand-blue: #6ea8dd;
+  --brand-orange: #f96702;
+  --brand-mint: #53cb9e;
+  --brand-red: #e04a3a;
+
+  /* Soft panel fill and strong text colour flip for dark surfaces. */
+  --soft: #131f33;
+  --ink: #dbe7f5;
+
+  --status-late: var(--brand-orange);
+  --status-absent: var(--brand-red);
+
+  /* Dark-mode chart variants keep the same semantic order. */
+  --chart-1: var(--brand-mint);
+  --chart-2: var(--brand-blue);
+  --chart-3: var(--brand-orange);
+  --chart-4: var(--brand-red);
+  --chart-5: var(--brand-navy);
 }
 
 @layer base {
@@ -139,60 +212,6 @@
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
-  }
-}
-
-/* ---- Brand: إجتماع الشباب بأبنوب youth service ---- */
-:root {
-  --brand-navy: #253d63;
-  --brand-blue: #2672b0;
-  --brand-orange: #f96702;
-  --brand-mint: #53cb9e;
-  --brand-red: #9e150b;
-  --soft: oklch(0.975 0.006 240);
-
-  /* Ink = strong text color; a real light-mode token so `text-ink` never
-     relies on inheritance (DEF-11). */
-  --ink: #253d63;
-
-  /* Semantic status tokens for the attendance UI (BR-2/§3.8). */
-  --status-late: var(--brand-orange);
-  --status-absent: var(--brand-red);
-
-  /* Charts on-brand: attended / late / absent / error / navy (TASK-205). */
-  --chart-1: var(--brand-mint);
-  --chart-2: var(--brand-blue);
-  --chart-3: var(--brand-orange);
-  --chart-4: var(--brand-red);
-  --chart-5: var(--brand-navy);
-
-  --background: oklch(1 0 0);
-  --foreground: #253d63;
-  --primary: #253d63;
-  --primary-foreground: #ffffff;
-  --muted-foreground: oklch(0.52 0.02 250);
-  --border: oklch(0.915 0.008 250);
-  --ring: #2672b0;
-  --radius: 0.75rem;
-}
-
-@theme inline {
-  --color-navy: var(--brand-navy);
-  --color-brand-blue: var(--brand-blue);
-  --color-brand-orange: var(--brand-orange);
-  --color-mint: var(--brand-mint);
-  --color-brand-red: var(--brand-red);
-  --color-soft: var(--soft);
-  --color-status-late: var(--status-late);
-  --color-status-absent: var(--status-absent);
-  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
-  --font-heading: "El Messiri", "Poppins", sans-serif;
-  --font-arabic: "Markazi Text", "Poppins", sans-serif;
-  --font-verse: "Amiri", serif;
-}
-
-@layer base {
-  body {
     font-family: var(--font-sans);
     -webkit-font-smoothing: antialiased;
   }
@@ -205,19 +224,24 @@
   }
 }
 
+/* Elevation utility: the single navy card shadow (P4-304). */
+@utility card-elevated {
+  box-shadow: var(--shadow-card);
+}
+
 @utility btn-primary {
   display: inline-flex;
   align-items: center;
   gap: 0.6rem;
   border-radius: 0.75rem;
   background-color: var(--brand-navy);
-  color: #fff;
+  color: var(--paper);
   font-weight: 700;
   letter-spacing: 0.02em;
   transition: transform 0.2s ease, background-color 0.2s ease;
   &:hover {
     transform: translateY(-2px);
-    background-color: #1c3050;
+    background-color: var(--navy-hover);
   }
   &:focus-visible {
     outline: 2px solid var(--brand-blue);
@@ -231,7 +255,7 @@
   gap: 0.6rem;
   border-radius: 0.75rem;
   border: 1.5px solid var(--brand-navy);
-  background-color: #fff;
+  background-color: var(--paper);
   color: var(--brand-navy);
   font-weight: 700;
   letter-spacing: 0.02em;
@@ -243,6 +267,24 @@
   &:focus-visible {
     outline: 2px solid var(--brand-blue);
     outline-offset: 2px;
+  }
+}
+
+/* Dark-mode adjustments for the brand button utilities */
+.dark .btn-outline {
+  border-color: var(--ink);
+  background-color: transparent;
+  color: var(--ink);
+  &:hover {
+    background-color: rgba(219, 231, 245, 0.08);
+  }
+}
+
+.dark .btn-primary {
+  background-color: var(--brand-mint);
+  color: var(--surface-dark);
+  &:hover {
+    background-color: var(--mint-hover);
   }
 }
 
@@ -310,71 +352,5 @@
 @media (prefers-reduced-motion: reduce) {
   .recent-row {
     animation: none;
-  }
-}
-/* ---- Dark mode (brand-tuned): deep navy surfaces, mint accent ---- */
-.dark {
-  --background: #0f1929;
-  --foreground: #dbe7f5;
-  --card: #182740;
-  --card-foreground: #dbe7f5;
-  --popover: #182740;
-  --popover-foreground: #dbe7f5;
-  --primary: var(--brand-mint);
-  --primary-foreground: #0f1929;
-  --secondary: #152238;
-  --secondary-foreground: #dbe7f5;
-  --muted: #152238;
-  --muted-foreground: #93a7c4;
-  --accent: #1d2f4d;
-  --accent-foreground: #dbe7f5;
-  --destructive: var(--brand-red);
-  --destructive-foreground: #ffffff;
-  --border: rgba(219, 231, 245, 0.14);
-  --input: rgba(219, 231, 245, 0.18);
-  --ring: var(--brand-mint);
-  --soft: #131f33;
-
-  /* Ink = strong text color; flips from navy to a light tint on dark so
-     headings stay readable on navy surfaces. */
-  --ink: #dbe7f5;
-
-  --status-late: var(--brand-orange);
-  --status-absent: var(--brand-red);
-
-  /* Brand accents stay identical in both modes (design guide §4). */
-  --brand-navy: #253d63;
-  --brand-blue: #6ea8dd;
-  --brand-orange: #f96702;
-  --brand-mint: #53cb9e;
-  --brand-red: #e04a3a;
-
-  /* Dark-mode chart variants keep the same semantic order. */
-  --chart-1: var(--brand-mint);
-  --chart-2: var(--brand-blue);
-  --chart-3: var(--brand-orange);
-  --chart-4: var(--brand-red);
-  --chart-5: var(--brand-navy);
-}
-
-@theme inline {
-  --color-ink: var(--ink);
-}
-
-/* Dark-mode adjustments for the brand button utilities */
-.dark .btn-outline {
-  border-color: var(--ink);
-  background-color: transparent;
-  color: var(--ink);
-  &:hover {
-    background-color: rgba(219, 231, 245, 0.08);
-  }
-}
-
-.dark .btn-primary {
-  background-color: var(--brand-mint);
-  color: #0f1929;
-  &:hover {
-    background-color: #46b78c;
   }
 }

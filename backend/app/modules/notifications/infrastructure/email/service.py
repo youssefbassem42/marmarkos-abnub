@@ -7,6 +7,7 @@ logged so registration/reset can proceed (the UI offers a resend).
 """
 
 import logging
+from typing import Any
 
 from app.config import settings
 from app.modules.notifications.infrastructure.email.messages import (
@@ -68,7 +69,7 @@ class EmailService:
             ),
         )
 
-    async def send_notification_email(self, *, to_email: str, **kwargs) -> bool:
+    async def send_notification_email(self, *, to_email: str, **kwargs: Any) -> bool:
         return await self.send(to_email=to_email, content=notification_email(**kwargs))
 
     async def send_welcome_email(

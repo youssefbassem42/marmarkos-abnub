@@ -143,7 +143,7 @@ export function MeetingSelector({
         className={cn(
           "ms-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold",
           !selected || selected === openMeetingDate
-            ? "border-mint/40 bg-mint/15 text-emerald-700"
+            ? "border-mint/40 bg-mint/15 text-ink"
             : selected > openMeetingDate
               ? "border-border bg-muted text-muted-foreground"
               : "border-status-late/30 bg-status-late/10 text-status-late",

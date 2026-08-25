@@ -100,7 +100,7 @@ export function AttendancePinCard() {
   };
 
   return (
-    <section className="mt-6 rounded-2xl border border-border bg-card p-6 shadow-[0_2px_24px_rgba(37,61,99,0.08)]">
+    <section className="mt-6 rounded-2xl border border-border bg-card p-6 card-elevated">
       <h2
         className={cn(
           "flex items-center gap-2 font-extrabold text-ink",
@@ -112,7 +112,7 @@ export function AttendancePinCard() {
         {loaded && pinSet ? (
           <span
             className={cn(
-              "ms-auto rounded-full bg-mint/15 px-3 py-1 text-xs font-semibold text-emerald-700",
+              "ms-auto rounded-full bg-mint/15 px-3 py-1 text-xs font-semibold text-ink",
               isArabic && "font-arabic",
             )}
           >
@@ -226,7 +226,7 @@ export function AttendancePinCard() {
           role="status"
           className={cn(
             "mt-3 text-center text-sm font-medium",
-            status.kind === "ok" ? "text-emerald-700" : "text-brand-red",
+            status.kind === "ok" ? "text-ink" : "text-brand-red",
             isArabic && "font-arabic",
           )}
         >

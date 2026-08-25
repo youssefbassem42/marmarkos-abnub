@@ -1,8 +1,10 @@
 """SQLAlchemy ORM model for anonymous messages.
 
-PRIVACY: this table intentionally stores NO user identity (no user_id,
-email, phone or auth reference). Anonymity is enforced at the database
-level: there is no column that could link a message back to a sender.
+PRIVACY: this table stores NO account linkage (no user_id, author_id,
+email, IP, user agent or session reference), ever — not even for a
+signed-in submitter. ``sender_name`` and ``sender_phone`` are optional,
+self-declared free text typed by the sender; nothing else identity-
+adjacent may ever be added to this table.
 """
 
 from datetime import datetime
@@ -22,6 +24,8 @@ class AnonymousMessage(UUIDPrimaryKeyMixin, Base):
     __tablename__ = "anonymous_messages"
 
     message: Mapped[str] = mapped_column(Text, nullable=False)
+    sender_name: Mapped[str | None] = mapped_column(String(120))
+    sender_phone: Mapped[str | None] = mapped_column(String(32))
     status: Mapped[MessageStatus] = mapped_column(
         SAEnum(MessageStatus, name="message_status", native_enum=False, length=20),
         default=MessageStatus.PENDING,
@@ -33,6 +37,8 @@ class AnonymousMessage(UUIDPrimaryKeyMixin, Base):
         nullable=False,
     )
     telegram_message_id: Mapped[str | None] = mapped_column(String(100))
+    attempts: Mapped[int] = mapped_column(default=0, server_default="0", nullable=False)
+    last_attempt_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

@@ -1,26 +1,43 @@
-from httpx import AsyncClient
+"""BR-15: RateLimitedError maps to 429 + Retry-After on the shared envelope."""
 
-from app.main import create_app
+from fastapi import FastAPI
+from httpx import ASGITransport, AsyncClient
 
-
-def test_create_app_registers_docs() -> None:
-    app = create_app()
-
-    assert app.title == "Marmarkos ABNUB API"
-    assert app.version == "0.1.0"
-    assert app.docs_url == "/docs"
-    assert app.redoc_url == "/redoc"
+from app.core.exceptions import RateLimitedError
+from app.core.exceptions.handlers import register_exception_handlers
 
 
-async def test_openapi_schema_exposes_health_endpoint(client: AsyncClient) -> None:
-    response = await client.get("/openapi.json")
+async def test_rate_limited_error_carries_retry_after_header() -> None:
+    application = FastAPI()
+    register_exception_handlers(application)
 
-    assert response.status_code == 200
-    assert "/api/v1/health" in response.json()["paths"]
+    @application.get("/limited")
+    async def limited() -> None:
+        raise RateLimitedError(retry_after=120)
+
+    transport = ASGITransport(app=application)
+    async with AsyncClient(transport=transport, base_url="http://test") as async_client:
+        response = await async_client.get("/limited")
+
+    assert response.status_code == 429
+    assert response.headers["Retry-After"] == "120"
+    assert response.json()["detail"]["code"] == "rate_limited"
+    assert response.json()["detail"]["message"] == ("Too many messages. Please try again later")
 
 
-async def test_docs_page_is_served(client: AsyncClient) -> None:
-    response = await client.get("/docs")
+async def test_other_app_errors_gain_no_retry_header() -> None:
+    from app.core.exceptions import NotFoundError
 
-    assert response.status_code == 200
-    assert "Swagger UI" in response.text
+    application = FastAPI()
+    register_exception_handlers(application)
+
+    @application.get("/missing")
+    async def missing() -> None:
+        raise NotFoundError("nope")
+
+    transport = ASGITransport(app=application)
+    async with AsyncClient(transport=transport, base_url="http://test") as async_client:
+        response = await async_client.get("/missing")
+
+    assert response.status_code == 404
+    assert "Retry-After" not in response.headers

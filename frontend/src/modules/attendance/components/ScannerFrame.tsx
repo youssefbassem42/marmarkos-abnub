@@ -6,11 +6,13 @@
 export function ScannerFrame() {
   return (
     <div className="pointer-events-none absolute inset-0" aria-hidden="true">
-      {/* corner brackets: 28px arms, 3px stroke */}
-      <span className="absolute left-6 top-6 h-7 w-7 rounded-tl-md border-s-[3px] border-t-[3px] border-mint" />
-      <span className="absolute right-6 top-6 h-7 w-7 rounded-tr-md border-e-[3px] border-t-[3px] border-mint" />
-      <span className="absolute bottom-6 left-6 h-7 w-7 rounded-bl-md border-b-[3px] border-s-[3px] border-mint" />
-      <span className="absolute bottom-6 right-6 h-7 w-7 rounded-br-md border-b-[3px] border-e-[3px] border-mint" />
+      {/* Corner brackets are deliberately ALL PHYSICAL: a camera
+          viewport is a square, not a text flow, so its corners must not
+          mirror under RTL (P4-303). */}
+      <span className="absolute left-6 top-6 h-7 w-7 rounded-tl-md border-l-[3px] border-t-[3px] border-mint" />
+      <span className="absolute right-6 top-6 h-7 w-7 rounded-tr-md border-r-[3px] border-t-[3px] border-mint" />
+      <span className="absolute bottom-6 left-6 h-7 w-7 rounded-bl-md border-b-[3px] border-l-[3px] border-mint" />
+      <span className="absolute bottom-6 right-6 h-7 w-7 rounded-br-md border-b-[3px] border-r-[3px] border-mint" />
 
       {/* scan line: 2s ease-in-out sweep, disabled by reduced motion */}
       <div className="scanner-line absolute inset-x-8 top-10 h-0.5 rounded-full bg-brand-red/80" />

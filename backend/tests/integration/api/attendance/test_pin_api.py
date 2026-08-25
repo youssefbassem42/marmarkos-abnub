@@ -26,9 +26,7 @@ from tests.utils import (
 PIN_URL = "/api/v1/users/me/attendance-pin"
 
 
-async def _member_headers(
-    client: AsyncClient, engine: AsyncEngine, email: str
-) -> dict[str, str]:
+async def _member_headers(client: AsyncClient, engine: AsyncEngine, email: str) -> dict[str, str]:
     await create_user_direct(engine, email=email, role_name=RoleName.MEMBER)
     auth = await login(client, email=email)
     from tests.utils import bearer
@@ -74,9 +72,7 @@ async def test_pin_lifecycle(client: AsyncClient, db_engine: AsyncEngine):
 
 @pytest.mark.asyncio
 @pytest.mark.parametrize("bad_pin", ["1234", "123456", "abcde", "12 45"])
-async def test_pin_format_is_enforced(
-    client: AsyncClient, db_engine: AsyncEngine, bad_pin: str
-):
+async def test_pin_format_is_enforced(client: AsyncClient, db_engine: AsyncEngine, bad_pin: str):
     headers = await _member_headers(client, db_engine, "pin.fmt@test.com")
     response = await client.put(PIN_URL, json={"pin": bad_pin}, headers=headers)
     assert response.status_code == 422
@@ -102,9 +98,7 @@ async def test_pin_conflict_between_members(client: AsyncClient, db_engine: Asyn
 
 
 @pytest.mark.asyncio
-async def test_deleting_a_pin_frees_it_for_others(
-    client: AsyncClient, db_engine: AsyncEngine
-):
+async def test_deleting_a_pin_frees_it_for_others(client: AsyncClient, db_engine: AsyncEngine):
     first = await _member_headers(client, db_engine, "pin.free.a@test.com")
     second = await _member_headers(client, db_engine, "pin.free.b@test.com")
 
@@ -129,9 +123,7 @@ async def test_check_in_by_pin_happy_path(
     admin = await _headers_for(client, db_engine, "pin.ci.a@test.com", RoleName.ADMIN)
     member_id, pin = member_with_pin
 
-    response = await client.post(
-        ATTENDANCE_CHECK_IN_URL, json={"pin": pin}, headers=admin
-    )
+    response = await client.post(ATTENDANCE_CHECK_IN_URL, json={"pin": pin}, headers=admin)
     assert response.status_code == 201, response.text
     body = response.json()
     # A PIN entry is always audited as method PIN, whatever the client sent.
@@ -150,12 +142,8 @@ async def test_check_in_by_pin_happy_path(
 async def test_check_in_by_unknown_pin_is_validation_error(
     client: AsyncClient, db_engine: AsyncEngine
 ):
-    servant = await _headers_for(
-        client, db_engine, "pin.ci.s@test.com", RoleName.SERVANT
-    )
-    response = await client.post(
-        ATTENDANCE_CHECK_IN_URL, json={"pin": "00000"}, headers=servant
-    )
+    servant = await _headers_for(client, db_engine, "pin.ci.s@test.com", RoleName.SERVANT)
+    response = await client.post(ATTENDANCE_CHECK_IN_URL, json={"pin": "00000"}, headers=servant)
     assert response.status_code == 422
     assert response.json()["detail"]["code"] == "validation_error"
 
@@ -167,9 +155,7 @@ async def test_check_in_by_pin_requires_manager_role(
     member = await _member_headers(client, db_engine, "pin.ci.m@test.com")
     _, pin = member_with_pin
 
-    response = await client.post(
-        ATTENDANCE_CHECK_IN_URL, json={"pin": pin}, headers=member
-    )
+    response = await client.post(ATTENDANCE_CHECK_IN_URL, json={"pin": pin}, headers=member)
     assert response.status_code == 403
 
 
@@ -180,9 +166,7 @@ async def test_check_in_identifiers_are_mutually_exclusive(
     member_with_pin: tuple,
     member_with_qr: tuple,
 ):
-    servant = await _headers_for(
-        client, db_engine, "pin.ci.x@test.com", RoleName.SERVANT
-    )
+    servant = await _headers_for(client, db_engine, "pin.ci.x@test.com", RoleName.SERVANT)
     _, pin = member_with_pin
     _, qr_token = member_with_qr
 
@@ -194,9 +178,7 @@ async def test_check_in_identifiers_are_mutually_exclusive(
     neither = await client.post(ATTENDANCE_CHECK_IN_URL, json={}, headers=servant)
     assert neither.status_code == 422
 
-    bad_pattern = await client.post(
-        ATTENDANCE_CHECK_IN_URL, json={"pin": "1234"}, headers=servant
-    )
+    bad_pattern = await client.post(ATTENDANCE_CHECK_IN_URL, json={"pin": "1234"}, headers=servant)
     assert bad_pattern.status_code == 422
 
 
@@ -219,9 +201,7 @@ async def test_suspended_member_pin_is_rejected(
         )
 
     admin = await _headers_for(client, db_engine, "pin.susp.a@test.com", RoleName.ADMIN)
-    response = await client.post(
-        ATTENDANCE_CHECK_IN_URL, json={"pin": "55555"}, headers=admin
-    )
+    response = await client.post(ATTENDANCE_CHECK_IN_URL, json={"pin": "55555"}, headers=admin)
     assert response.status_code == 422
 
 
@@ -250,9 +230,7 @@ async def test_pin_record_can_be_excused_like_any_record(
     db_engine: AsyncEngine,
     member_with_pin: tuple,
 ):
-    admin = await _headers_for(
-        client, db_engine, "pin.excuse.a@test.com", RoleName.ADMIN
-    )
+    admin = await _headers_for(client, db_engine, "pin.excuse.a@test.com", RoleName.ADMIN)
     _, pin = member_with_pin
 
     created = await client.post(ATTENDANCE_CHECK_IN_URL, json={"pin": pin}, headers=admin)

@@ -1,9 +1,9 @@
 """Domain enums for the auth module."""
 
-from enum import Enum
+from enum import StrEnum
 
 
-class AuthTokenPurpose(str, Enum):
+class AuthTokenPurpose(StrEnum):
     """What a single-use ``auth_tokens`` row was issued for.
 
     Both purposes share one table because the lifecycle is identical:

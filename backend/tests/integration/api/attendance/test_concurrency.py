@@ -51,9 +51,7 @@ async def test_concurrent_double_scan_writes_one_record(db_engine) -> None:
         await seed.commit()
 
         open_meeting = current_meeting_date(today_local())
-        on_time = local_datetime(open_meeting, settings.MEETING_START_TIME) - timedelta(
-            minutes=30
-        )
+        on_time = local_datetime(open_meeting, settings.MEETING_START_TIME) - timedelta(minutes=30)
 
         command_a = CheckInCommand(UnitOfWork(session_a), now=lambda: on_time)
         command_b = CheckInCommand(UnitOfWork(session_b), now=lambda: on_time)

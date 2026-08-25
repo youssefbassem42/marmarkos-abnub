@@ -10,11 +10,15 @@ import {
   X,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { useQueryClient } from "@tanstack/react-query";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "@/assets/church-logo.png";
 import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
 import { useLanguage } from "@/i18n/context";
+import { NotificationBell } from "@/modules/notifications/components/NotificationBell";
+import { MobileBellBadge } from "@/modules/notifications/components/MobileBellBadge";
+import { notificationKeys } from "@/modules/notifications/api/queryKeys";
 import { logoutUser } from "@/lib/api";
 import {
   clearAuth,
@@ -56,6 +60,7 @@ export function Navbar({
   const { t } = useTranslation("landing");
   const { t: tCommon } = useTranslation("common");
   const { t: tAttendance } = useTranslation("attendance");
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isAuth = variant === "auth";
   // Read per render: remounts on every route change keep this fresh.
@@ -74,6 +79,9 @@ export function Navbar({
   const handleSignOut = async () => {
     await logoutUser();
     clearAuth();
+    // DEF-16 (scoped): a second user on this browser must never see the
+    // first user's unread count.
+    queryClient.removeQueries({ queryKey: notificationKeys.all });
     setOpen(false);
     navigate("/");
   };
@@ -90,7 +98,7 @@ export function Navbar({
       className={cn(
         "inset-x-0 top-0 z-50 border-b border-border/60 bg-background transition-shadow duration-300",
         isAuth ? "relative" : "fixed",
-        scrolled ? "shadow-[0_2px_18px_rgba(37,61,99,0.10)]" : "",
+        scrolled ? "shadow-[var(--shadow-card-strong)]" : "",
       )}
     >
       <nav
@@ -108,7 +116,7 @@ export function Navbar({
         >
           <img
             src={logo}
-            alt="إجتماع الشباب بأبنوب church logo"
+            alt={tCommon("brand.logoAlt")}
             width={112}
             height={78}
             className="h-14 w-auto"
@@ -132,24 +140,21 @@ export function Navbar({
                 ))}
                 {attendanceManager && (
                   <li>
-                    <NavLink to="/attendance/check-in" className={navLinkClass}>
+                    <NavLink
+                      to="/admin/attendance/check-in"
+                      className={navLinkClass}
+                    >
                       {tAttendance("nav.checkIn")}
                     </NavLink>
                   </li>
                 )}
               </ul>
 
-              <Link
-                to="/notifications"
-                aria-label={t("nav.notifications")}
-                className="focus-ring relative inline-flex h-10 w-10 items-center justify-center rounded-xl text-ink transition-colors hover:bg-secondary"
-              >
-                <Bell className="h-5 w-5" aria-hidden="true" />
-              </Link>
+              <NotificationBell to="/notifications" />
 
               <ThemeToggle className="hidden sm:inline-flex" />
 
-              <LanguageToggle className="ml-1 hidden sm:inline-flex" />
+              <LanguageToggle className="ms-1 hidden sm:inline-flex" />
 
               {authenticated ? (
                 <DropdownMenu>
@@ -188,7 +193,7 @@ export function Navbar({
                     {attendanceManager && (
                       <DropdownMenuItem asChild>
                         <Link
-                          to="/attendance/check-in"
+                          to="/admin/attendance/check-in"
                           className={cn(
                             "cursor-pointer",
                             isArabic && "font-arabic",
@@ -205,7 +210,7 @@ export function Navbar({
                     {getUserRole() === "ADMIN" && (
                       <DropdownMenuItem asChild>
                         <Link
-                          to="/attendance/dashboard"
+                          to="/admin/dashboard"
                           className={cn(
                             "cursor-pointer",
                             isArabic && "font-arabic",
@@ -234,7 +239,7 @@ export function Navbar({
               ) : (
                 <Link
                   to="/login"
-                  className="btn-primary ml-1 hidden px-6 py-2.5 text-sm sm:inline-flex"
+                  className="btn-primary ms-1 hidden px-6 py-2.5 text-sm sm:inline-flex"
                 >
                   <span className={isArabic ? "font-arabic" : ""}>
                     {t("nav.login")}
@@ -286,7 +291,7 @@ export function Navbar({
             {attendanceManager && (
               <li>
                 <Link
-                  to="/attendance/check-in"
+                  to="/admin/attendance/check-in"
                   onClick={() => setOpen(false)}
                   className={cn(
                     "focus-ring flex items-center gap-2 rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary",
@@ -307,7 +312,10 @@ export function Navbar({
                   isArabic ? "font-arabic text-lg" : "",
                 )}
               >
-                <Bell className="h-5 w-5" aria-hidden="true" />
+                <span className="relative inline-flex">
+                  <Bell className="h-5 w-5" aria-hidden="true" />
+                  <MobileBellBadge />
+                </span>
                 {t("nav.notifications")}
               </Link>
             </li>

@@ -26,6 +26,12 @@ const AUTH_FREE_PREFIXES = [
   "/auth/verify-email",
   "/auth/resend-verification",
   "/auth/password",
+  // NOTE: /anonymous-messages is deliberately NOT listed here (P4-701).
+  // Submission is public (D-9), but this interceptor cannot distinguish
+  // the public POST from the ADMIN-only listing on the same path; an
+  // ignored bearer token on the POST is harmless (the server treats the
+  // caller as anonymous for rate limiting), while a stripped one on the
+  // admin GET would break it with a spurious 401.
 ];
 
 apiClient.interceptors.request.use((config) => {

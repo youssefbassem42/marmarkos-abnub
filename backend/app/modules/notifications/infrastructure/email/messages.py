@@ -87,7 +87,8 @@ def password_reset_email(
                 paragraphs=(
                     "We received a request to reset the password for your account."
                     " Click the button below to choose a new one.",
-                    f"The link is valid for {expire_minutes} minutes and expires after a single use.",
+                    f"The link is valid for {expire_minutes} minutes"
+                    " and expires after a single use.",
                 ),
             ),
         ),
@@ -120,6 +121,25 @@ def notification_email(
     )
 
 
+def new_post_email(
+    *,
+    title_ar: str,
+    title_en: str,
+    message_ar: str,
+    message_en: str,
+    cta_url: str | None = None,
+) -> BrandEmailContent:
+    """Blog post case: the generic announcement with a bilingual read CTA."""
+    return notification_email(
+        title_ar=title_ar,
+        title_en=title_en,
+        message_ar=message_ar,
+        message_en=message_en,
+        cta_label="اقرأ المزيد — READ MORE",
+        cta_url=cta_url,
+    )
+
+
 def welcome_email(*, first_name: str | None, sign_in_url: str) -> BrandEmailContent:
     name = _esc(_display_name(first_name) or "")
     return BrandEmailContent(
@@ -128,7 +148,9 @@ def welcome_email(*, first_name: str | None, sign_in_url: str) -> BrandEmailCont
         sections=(
             EmailSection(
                 heading=f"تم تفعيل حسابك يا {name}!" if name else "تم تفعيل حسابك!",
-                paragraphs=("أهلًا بك في مجتمع شباب أبنوب. يمكنك الآن تسجيل الدخول والمشاركة معنا.",),
+                paragraphs=(
+                    "أهلًا بك في مجتمع شباب أبنوب. يمكنك الآن تسجيل الدخول والمشاركة معنا.",
+                ),
                 rtl=True,
             ),
             EmailSection(

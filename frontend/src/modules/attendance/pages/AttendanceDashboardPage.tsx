@@ -14,6 +14,7 @@ import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
+import { ErrorRetry } from "@/components/common/ErrorRetry";
 import { AttendanceStatusBadge } from "../components/AttendanceStatusBadge";
 import { StatTile } from "../components/StatTile";
 import { MeetingSelector } from "../components/MeetingSelector";
@@ -55,26 +56,6 @@ import { getAuthUser } from "@/lib/auth";
 function currentLocalYearMonth(): { year: number; month: number } {
   const now = new Date();
   return { year: now.getFullYear(), month: now.getMonth() + 1 };
-}
-
-function ErrorRetry({
-  onRetry,
-  label,
-}: {
-  onRetry: () => void;
-  label: string;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onRetry}
-      className="focus-ring flex w-full items-center justify-center gap-2 rounded-xl border border-border px-4 py-3 text-sm font-medium text-muted-foreground transition-colors hover:bg-secondary"
-    >
-      <AlertCircle className="h-4 w-4 text-status-absent" aria-hidden="true" />
-      <RefreshCw className="h-4 w-4" aria-hidden="true" />
-      {label}
-    </button>
-  );
 }
 
 interface TrendEntry {
@@ -321,7 +302,7 @@ export function AttendanceDashboardPage() {
 
         <div className="mt-6 grid gap-6 lg:grid-cols-5">
           {/* Current-meeting table */}
-          <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_2px_24px_rgba(37,61,99,0.08)] lg:col-span-3">
+          <section className="rounded-2xl border border-border bg-card p-5 card-elevated lg:col-span-3">
             <h2
               className={cn(
                 "font-heading text-lg font-bold text-ink",
@@ -457,7 +438,7 @@ export function AttendanceDashboardPage() {
           </section>
 
           {/* Absent users */}
-          <section className="rounded-2xl border border-border bg-card p-5 shadow-[0_2px_24px_rgba(37,61,99,0.08)] lg:col-span-2">
+          <section className="rounded-2xl border border-border bg-card p-5 card-elevated lg:col-span-2">
             <h2
               className={cn(
                 "font-heading text-lg font-bold text-ink",
@@ -467,7 +448,7 @@ export function AttendanceDashboardPage() {
               {t("dashboard.absent.title")}
             </h2>
             {!absent.isPending && absent.data && !absent.data.is_final && (
-              <p className="mt-2 flex items-start gap-2 rounded-xl bg-mint/10 px-3 py-2 text-xs leading-5 text-emerald-700">
+              <p className="mt-2 flex items-start gap-2 rounded-xl bg-mint/10 px-3 py-2 text-xs leading-5 text-ink">
                 <Info className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 {t("dashboard.absent.provisional")}
               </p>
@@ -488,7 +469,7 @@ export function AttendanceDashboardPage() {
               </div>
             )}
             {absent.data && absent.data.absent_users.length === 0 && (
-              <p className="mt-6 rounded-xl bg-mint/10 p-4 text-center text-sm font-medium text-emerald-700">
+              <p className="mt-6 rounded-xl bg-mint/10 p-4 text-center text-sm font-medium text-ink">
                 {t("dashboard.absent.empty")}
               </p>
             )}
@@ -532,7 +513,7 @@ export function AttendanceDashboardPage() {
         </div>
 
         {/* Monthly trend */}
-        <section className="mt-6 rounded-2xl border border-border bg-card p-5 shadow-[0_2px_24px_rgba(37,61,99,0.08)]">
+        <section className="mt-6 rounded-2xl border border-border bg-card p-5 card-elevated">
           <h2
             className={cn(
               "font-heading text-lg font-bold text-ink",

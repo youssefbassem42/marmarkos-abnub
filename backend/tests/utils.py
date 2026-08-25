@@ -2,9 +2,11 @@ import uuid
 from datetime import datetime
 
 from httpx import AsyncClient
-from sqlalchemy import insert, select
-from sqlalchemy.ext.asyncio import AsyncEngine
+from sqlalchemy import NullPool, insert, select, update
+from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
+from app.config import settings
+from app.core.database import sanitize_database_url
 from app.modules.auth.infrastructure.security import hash_password
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
@@ -68,6 +70,18 @@ async def create_qr_for_user(
         )
 
 
+async def _mark_email_verified(email: str) -> None:
+    """Tests need signed-in users, but registration leaves the address unverified."""
+    engine = create_async_engine(sanitize_database_url(settings.DATABASE_URL), poolclass=NullPool)
+    try:
+        async with engine.begin() as conn:
+            await conn.execute(
+                update(User).where(User.email == email.lower()).values(email_verified=True)
+            )
+    finally:
+        await engine.dispose()
+
+
 async def register_user(
     client: AsyncClient,
     email: str = "user@example.com",
@@ -88,6 +102,7 @@ async def register_user(
     }
     response = await client.post(REGISTER_URL, json=payload)
     assert response.status_code == 201, response.text
+    await _mark_email_verified(email)
     return response.json()
 
 
@@ -117,6 +132,7 @@ async def create_user_direct(
     role_name: RoleName = RoleName.MEMBER,
     status: UserStatus = UserStatus.ACTIVE,
     created_at: datetime | None = None,
+    email_verified: bool = True,
 ) -> uuid.UUID:
     async with engine.begin() as conn:
         role_id = (await conn.execute(select(Role.id).where(Role.name == role_name))).scalar_one()
@@ -129,6 +145,7 @@ async def create_user_direct(
                 public_id=generate_public_id(),
                 status=status,
                 role_id=role_id,
+                email_verified=email_verified,
                 **({"created_at": created_at} if created_at is not None else {}),
             )
         )

@@ -72,7 +72,7 @@ class BlogPostRepository:
     async def set_status(self, post: BlogPost, status: PostStatus) -> None:
         post.status = status
         if status is PostStatus.PUBLISHED and post.published_at is None:
-            from datetime import datetime
+            from app.core.time.clock import now_utc
 
-            post.published_at = datetime.now()
+            post.published_at = now_utc()
         await self._session.flush()

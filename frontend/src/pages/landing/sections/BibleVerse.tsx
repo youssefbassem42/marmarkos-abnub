@@ -21,8 +21,8 @@ export function BibleVerse() {
             <blockquote
               dir={isArabic ? "rtl" : "ltr"}
               className={cn(
-                "text-[15px] font-medium italic leading-7 text-brand-blue",
-                isArabic && "font-arabic not-italic text-lg leading-8",
+                "font-verse text-[15px] font-medium italic leading-7 text-brand-blue",
+                isArabic && "not-italic text-lg leading-8",
               )}
             >
               {tCommon("brand.verse")}
@@ -39,10 +39,7 @@ export function BibleVerse() {
           </span>
         </div>
 
-        <div
-          dir={isArabic ? "rtl" : "ltr"}
-          className={cn("reveal", isArabic && "text-right")}
-        >
+        <div dir={isArabic ? "rtl" : "ltr"} className={cn("reveal")}>
           <h2
             className={cn(
               "text-xl font-extrabold tracking-tight text-ink",
