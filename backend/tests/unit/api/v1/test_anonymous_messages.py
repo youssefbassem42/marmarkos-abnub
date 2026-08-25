@@ -109,6 +109,35 @@ async def test_ninth_character_message_is_422(client: AsyncClient) -> None:
     assert response.status_code == 422
 
 
+async def test_browser_payload_with_explicit_nulls_is_accepted(
+    client: AsyncClient, uow: UnitOfWork
+) -> None:
+    """Regression: the exact body the form sends when both fields are untouched.
+
+    react-hook-form serialises empty optional inputs as ``null``/``""``
+    rather than omitting the keys. That used to reach Pydantic's length
+    validator with ``None`` and raise a TypeError — a 500 in production
+    while every test here passed, because they all omitted the keys.
+    """
+    for payload in (
+        {**_VALID, "sender_name": None, "sender_phone": None},
+        {**_VALID, "sender_name": "", "sender_phone": ""},
+    ):
+        response = await client.post(ANONYMOUS_URL, json=payload)
+
+        assert response.status_code == 201, response.text
+        assert response.json()["status"] == "SENT"
+
+    from sqlalchemy import select
+
+    from app.modules.anonymous_messages.infrastructure.persistence.models import AnonymousMessage
+
+    rows = (await uow.session.execute(select(AnonymousMessage))).scalars().all()
+    assert len(rows) == 2
+    # A blank input is stored as NULL, never as an empty string.
+    assert all(row.sender_name is None and row.sender_phone is None for row in rows)
+
+
 async def test_sixth_submission_within_the_hour_is_429(client: AsyncClient) -> None:
     for _ in range(5):
         ok = await client.post(ANONYMOUS_URL, json=_VALID)

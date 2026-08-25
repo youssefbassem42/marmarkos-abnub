@@ -25,6 +25,10 @@ def _blank_to_none(value: object) -> object | None:
     return value
 
 
+SenderName = Annotated[str, Field(max_length=120)]
+SenderPhone = Annotated[str, Field(max_length=32, pattern=r"^[0-9+()\s-]{7,32}$")]
+
+
 class AnonymousMessageCreateRequest(BaseModel):
     message: Annotated[
         str,
@@ -35,14 +39,10 @@ class AnonymousMessageCreateRequest(BaseModel):
         ),
     ]
     # Optional self-declared contact details; never account-derived (D-1).
-    sender_name: Annotated[
-        str | None, BeforeValidator(_blank_to_none), Field(default=None, max_length=120)
-    ] = None
-    sender_phone: Annotated[
-        str | None,
-        BeforeValidator(_blank_to_none),
-        Field(default=None, max_length=32, pattern=r"^[0-9+()\s-]{7,32}$"),
-    ] = None
+    # A blank string is normalised to None before the union is validated, so
+    # an untouched field is stored as NULL rather than "".
+    sender_name: Annotated[SenderName | None, BeforeValidator(_blank_to_none)] = None
+    sender_phone: Annotated[SenderPhone | None, BeforeValidator(_blank_to_none)] = None
 
 
 class AnonymousMessageCreateResponse(BaseModel):
