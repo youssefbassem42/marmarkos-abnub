@@ -44,10 +44,7 @@ export function NotificationInfoCards({ className }: { className?: string }) {
             </h3>
             <p
               className={cn(
-                "mt-1 text-xs leading-relaxed text-muted-foreground",
-                typeof document !== "undefined" &&
-                  document.documentElement.lang === "ar" &&
-                  "font-arabic",
+                "mt-1 text-xs leading-relaxed text-muted-foreground font-arabic",
               )}
             >
               {card.description}

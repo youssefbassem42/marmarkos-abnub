@@ -1,7 +1,6 @@
 import { useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "@/i18n/context";
 import { Navbar } from "@/components/layout/Navbar";
 import { AuthFooter } from "../components/AuthFooter";
 import { BrandPanel } from "../components/BrandPanel";
@@ -16,9 +15,7 @@ import { resendVerificationEmail } from "@/lib/api";
 export function CheckEmailPage() {
   const [searchParams] = useSearchParams();
   const email = searchParams.get("email") ?? undefined;
-  const { language } = useLanguage();
   const { t } = useTranslation("verification");
-  const isArabic = language === "ar";
 
   useEffect(() => {
     document.title = t("checkEmail.title");
@@ -26,22 +23,22 @@ export function CheckEmailPage() {
 
   return (
     <div
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
       className="min-h-screen bg-background"
     >
       <Navbar variant="auth" />
 
       <main className="flex min-h-[calc(100vh-61px)] flex-col lg:flex-row">
-        <BrandPanel lang={language} />
+        <BrandPanel lang="ar" />
         <section
-          dir={isArabic ? "rtl" : "ltr"}
-          lang={language}
+          dir="rtl"
+          lang="ar"
           className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14"
         >
           <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 card-elevated sm:p-10">
             <CheckEmailCard
-              lang={language}
+              lang="ar"
               email={email}
               title={t("checkEmail.heading")}
               description={
@@ -62,7 +59,7 @@ export function CheckEmailPage() {
         </section>
       </main>
 
-      <AuthFooter lang={language} />
+      <AuthFooter lang="ar" />
     </div>
   );
 }

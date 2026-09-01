@@ -10,7 +10,6 @@ interface ErrorStateProps {
 
 export function ErrorState({ lang }: ErrorStateProps) {
   const { t } = useTranslation("resetPassword");
-  const isArabic = lang === "ar";
 
   return (
     <div className="flex flex-col items-center text-center">
@@ -22,8 +21,7 @@ export function ErrorState({ lang }: ErrorStateProps) {
       </h2>
       <p
         className={cn(
-          "mt-3 max-w-sm leading-relaxed text-muted-foreground",
-          isArabic ? "font-arabic text-xl" : "text-base",
+          "mt-3 max-w-sm leading-relaxed text-muted-foreground font-arabic text-xl",
         )}
       >
         {t("errorState.message")}
@@ -38,8 +36,7 @@ export function ErrorState({ lang }: ErrorStateProps) {
         asChild
         variant="outline"
         className={cn(
-          "mt-3 h-12 w-full max-w-xs rounded-xl border-navy text-ink focus-ring",
-          isArabic ? "font-arabic text-lg" : "text-base font-semibold",
+          "mt-3 h-12 w-full max-w-xs rounded-xl border-navy text-ink focus-ring font-arabic text-lg",
         )}
       >
         <Link to="/login">{t("form.backToLogin")}</Link>

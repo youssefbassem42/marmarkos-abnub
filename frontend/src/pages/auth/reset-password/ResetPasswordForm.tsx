@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ArrowRight, Lock } from "lucide-react";
+import { ArrowRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { ApiError, resetPassword } from "@/lib/api";
@@ -27,7 +27,6 @@ export function ResetPasswordForm({
   onSuccess,
 }: ResetPasswordFormProps) {
   const { t } = useTranslation("resetPassword");
-  const isArabic = lang === "ar";
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
@@ -179,16 +178,11 @@ export function ResetPasswordForm({
         asChild
         variant="outline"
         className={cn(
-          "h-12 w-full rounded-xl border-navy text-ink focus-ring",
-          isArabic ? "font-arabic text-lg" : "text-base font-semibold",
+          "h-12 w-full rounded-xl border-navy text-ink focus-ring font-arabic text-lg",
         )}
       >
         <Link to="/login">
-          {isArabic ? (
-            <ArrowRight className="h-5 w-5" aria-hidden="true" />
-          ) : (
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          )}
+          <ArrowRight className="h-5 w-5" aria-hidden="true" />
           {t("form.backToLogin")}
         </Link>
       </Button>

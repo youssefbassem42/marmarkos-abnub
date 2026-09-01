@@ -1,5 +1,4 @@
 import type { LucideIcon } from "lucide-react";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 
 interface StatTileProps {
@@ -21,10 +20,7 @@ export function StatTile({
   title,
   size = "sm",
 }: StatTileProps) {
-  const { language } = useLanguage();
-  const formatted = new Intl.NumberFormat(
-    language === "ar" ? "ar-EG" : "en-GB",
-  ).format(value);
+  const formatted = new Intl.NumberFormat("ar-EG").format(value);
 
   return (
     <div

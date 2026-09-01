@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
-import { useLanguage } from "@/i18n/context";
 import { ApiError, getMe } from "@/lib/api";
 import { saveAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -17,8 +16,6 @@ type Phase = "working" | "done" | "failed";
  * touches server logs; we then load the profile and continue.
  */
 export function GoogleCallbackPage() {
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const { t } = useTranslation("login");
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,17 +30,11 @@ export function GoogleCallbackPage() {
     if (error || !accessToken) {
       setErrorMessage(
         error === "not_configured"
-          ? isArabic
-            ? "تسجيل الدخول عبر Google غير مُهيأ بعد."
-            : "Google sign-in is not configured yet."
+          ? "تسجيل الدخول عبر Google غير مُهيأ بعد."
           : error === "account_inactive"
-            ? isArabic
-              ? "هذا الحساب غير نشط. تواصل مع الإدارة."
-              : "This account is not active. Contact an administrator."
+            ? "هذا الحساب غير نشط. تواصل مع الإدارة."
             : error === "identity_failed"
-              ? isArabic
-                ? "لم نتمكن من التحقق من حساب Google (تحقق من تأكيد البريد الإلكتروني)."
-                : "We could not verify your Google account (check its email verification)."
+              ? "لم نتمكن من التحقق من حساب Google (تحقق من تأكيد البريد الإلكتروني)."
               : null,
       );
       setPhase("failed");
@@ -66,9 +57,7 @@ export function GoogleCallbackPage() {
         if (cancelled) return;
         setErrorMessage(
           err instanceof ApiError && err.status === 403
-            ? isArabic
-              ? "الحساب غير نشط."
-              : "Account is not active."
+            ? "الحساب غير نشط."
             : null,
         );
         setPhase("failed");
@@ -78,12 +67,12 @@ export function GoogleCallbackPage() {
     return () => {
       cancelled = true;
     };
-  }, [location.hash, navigate, isArabic]);
+  }, [location.hash, navigate]);
 
   return (
     <div
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
       className="min-h-screen bg-background"
     >
       <Navbar variant="auth" />
@@ -97,13 +86,10 @@ export function GoogleCallbackPage() {
             />
             <p
               className={cn(
-                "text-muted-foreground",
-                isArabic && "font-arabic text-lg",
+                "text-muted-foreground font-arabic text-lg",
               )}
             >
-              {isArabic
-                ? "جارٍ إكمال تسجيل الدخول..."
-                : t("form.googleFinishing")}
+              جارٍ إكمال تسجيل الدخول...
             </p>
           </>
         ) : (
@@ -111,14 +97,11 @@ export function GoogleCallbackPage() {
             <XCircle className="h-12 w-12 text-brand-red" aria-hidden="true" />
             <p
               className={cn(
-                "text-ink",
-                isArabic ? "font-arabic text-xl" : "text-base",
+                "text-ink font-arabic text-xl",
               )}
             >
               {errorMessage ??
-                (isArabic
-                  ? "تعذّر إكمال تسجيل الدخول عبر Google."
-                  : "Could not complete Google sign-in.")}
+                "تعذّر إكمال تسجيل الدخول عبر Google."}
             </p>
             <Button
               asChild

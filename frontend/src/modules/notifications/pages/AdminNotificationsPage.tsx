@@ -9,7 +9,6 @@ import { ErrorRetry } from "@/components/common/ErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getUserRole } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/i18n/context";
 import { useMarkRead, useNotifications } from "../hooks";
 import { NotificationList } from "../components/NotificationList";
 import { NotificationTabs } from "../components/NotificationTabs";
@@ -27,8 +26,6 @@ const PAGE_SIZE = 20;
  */
 export function AdminNotificationsPage() {
   const { t } = useTranslation("notifications");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const [searchParams, setSearchParams] = useSearchParams();
   const markRead = useMarkRead();
 
@@ -111,16 +108,14 @@ export function AdminNotificationsPage() {
               >
                 <p
                   className={cn(
-                    "font-semibold text-ink",
-                    isArabic && "font-arabic",
+                    "font-semibold text-ink font-arabic",
                   )}
                 >
                   {t("error.title")}
                 </p>
                 <p
                   className={cn(
-                    "mt-1 text-sm text-muted-foreground",
-                    isArabic && "font-arabic",
+                    "mt-1 text-sm text-muted-foreground font-arabic",
                   )}
                 >
                   {t("error.body")}
@@ -138,8 +133,7 @@ export function AdminNotificationsPage() {
                 action={
                   <p
                     className={cn(
-                      "max-w-md text-xs text-muted-foreground",
-                      isArabic && "font-arabic",
+                      "max-w-md text-xs text-muted-foreground font-arabic",
                     )}
                   >
                     {t("empty.body")}
@@ -152,7 +146,6 @@ export function AdminNotificationsPage() {
               <>
                 <NotificationList
                   items={items}
-                  language={language}
                   onMarkRead={(id) => markRead.mutate(id)}
                 />
                 {pages > 1 && (

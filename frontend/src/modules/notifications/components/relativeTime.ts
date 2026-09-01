@@ -3,7 +3,7 @@ import type { NotificationItem } from "../types";
 
 /**
  * Relative time per P4-501: `Intl.RelativeTimeFormat`-style buckets in
- * the active locale (ar-EG / en-GB); older than a week falls back to an
+ * the active locale (ar-EG); older than a week falls back to an
  * absolute date. Never concatenates translated fragments — every form
  * is one i18n key with interpolation.
  */
@@ -14,7 +14,6 @@ const DAY = 24 * HOUR;
 
 export function relativeTime(
   iso: string,
-  language: string,
   t: TFunction<"notifications">,
 ): string {
   const then = new Date(iso).getTime();
@@ -29,7 +28,7 @@ export function relativeTime(
     return t("time.hoursAgo", { count: Math.floor(diff / HOUR) });
   }
 
-  const locale = language === "ar" ? "ar-EG" : "en-GB";
+  const locale = "ar-EG";
   const thenDay = new Date(then);
   const today = new Date(now);
   const startOfThen = new Date(

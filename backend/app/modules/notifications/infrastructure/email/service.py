@@ -14,6 +14,7 @@ from app.modules.notifications.infrastructure.email.messages import (
     notification_email,
     password_reset_email,
     verification_email,
+    verse_published_email,
     welcome_email,
 )
 from app.modules.notifications.infrastructure.email.sender import (
@@ -78,6 +79,26 @@ class EmailService:
         return await self.send(
             to_email=to_email,
             content=welcome_email(first_name=first_name, sign_in_url=sign_in_url),
+        )
+
+    async def send_verse_published_email(
+        self,
+        *,
+        to_email: str,
+        verse_reference: str,
+        title: str,
+        published_at: str,
+        verse_url: str,
+    ) -> bool:
+        """US-028: creator notice after a scheduled verse publishes."""
+        return await self.send(
+            to_email=to_email,
+            content=verse_published_email(
+                verse_reference=verse_reference,
+                title=title,
+                published_at=published_at,
+                verse_url=verse_url,
+            ),
         )
 
 

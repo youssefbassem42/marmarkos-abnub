@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, ArrowRight, MailCheck } from "lucide-react";
+import { ArrowRight, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +43,6 @@ export function CheckEmailCard({
   resendHidden = false,
 }: CheckEmailCardProps) {
   const { t } = useTranslation("verification");
-  const isArabic = lang === "ar";
   const [cooldown, setCooldown] = useState(DEFAULT_COOLDOWN_SECONDS);
   const [sending, setSending] = useState(false);
   const [resent, setResent] = useState(false);
@@ -91,8 +90,7 @@ export function CheckEmailCard({
       <h2 className="mt-5 font-heading text-3xl font-bold text-ink">{title}</h2>
       <p
         className={cn(
-          "mt-3 max-w-sm leading-relaxed text-muted-foreground",
-          isArabic ? "font-arabic text-xl" : "text-base",
+          "mt-3 max-w-sm leading-relaxed text-muted-foreground font-arabic text-xl",
         )}
       >
         {description}
@@ -110,8 +108,7 @@ export function CheckEmailCard({
       {note ? (
         <p
           className={cn(
-            "mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground/80",
-            isArabic ? "font-arabic text-lg" : "",
+            "mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground/80 font-arabic text-lg",
           )}
         >
           {note}
@@ -122,8 +119,7 @@ export function CheckEmailCard({
         <p
           role="status"
           className={cn(
-            "mt-4 rounded-xl border border-mint/40 bg-mint/10 px-4 py-2.5 font-semibold text-navy",
-            isArabic ? "font-arabic text-lg" : "text-sm",
+            "mt-4 rounded-xl border border-mint/40 bg-mint/10 px-4 py-2.5 font-semibold text-navy font-arabic text-lg",
           )}
         >
           {resentLabel ?? t("resent")}
@@ -133,8 +129,7 @@ export function CheckEmailCard({
         <p
           role="alert"
           className={cn(
-            "mt-4 rounded-xl border border-brand-red/30 bg-brand-red/5 px-4 py-2.5 text-brand-red",
-            isArabic ? "font-arabic text-lg" : "text-sm font-medium",
+            "mt-4 rounded-xl border border-brand-red/30 bg-brand-red/5 px-4 py-2.5 text-brand-red font-arabic text-lg",
           )}
         >
           {resendFailedLabel ?? t("resendFailed")}
@@ -148,8 +143,7 @@ export function CheckEmailCard({
           disabled={cooldown > 0 || sending}
           onClick={handleResend}
           className={cn(
-            "mt-6 h-12 w-full max-w-xs rounded-xl border-navy text-ink focus-ring disabled:cursor-not-allowed disabled:opacity-60",
-            isArabic ? "font-arabic text-lg" : "text-base font-semibold",
+            "mt-6 h-12 w-full max-w-xs rounded-xl border-navy text-ink focus-ring disabled:cursor-not-allowed disabled:opacity-60 font-arabic text-lg",
           )}
         >
           {sending ? (
@@ -173,19 +167,14 @@ export function CheckEmailCard({
         className="h-12 w-full max-w-xs rounded-xl bg-navy text-lg text-white transition-colors hover:bg-navy/90 focus-ring"
       >
         <Link to="/login">
-          {isArabic ? (
-            <ArrowRight className="h-5 w-5" aria-hidden="true" />
-          ) : (
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          )}
+          <ArrowRight className="h-5 w-5" aria-hidden="true" />
           {backToLoginLabel}
         </Link>
       </Button>
 
       <p
         className={cn(
-          "mt-4 flex items-center gap-1.5 text-xs text-muted-foreground/80",
-          isArabic ? "font-arabic text-base" : "",
+          "mt-4 flex items-center gap-1.5 text-xs text-muted-foreground/80 font-arabic text-base",
         )}
       >
         {t("spamHint")}

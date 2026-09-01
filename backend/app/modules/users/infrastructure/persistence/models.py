@@ -37,12 +37,15 @@ if TYPE_CHECKING:
         WeeklyAttendanceRecord,
     )
     from app.modules.auth.infrastructure.persistence.models import RefreshToken
+    from app.modules.bible.infrastructure.persistence.models import VerseRead, VerseView
     from app.modules.blog.infrastructure.persistence.models import (
         BlogPost,
         BlogPostLike,
     )
     from app.modules.comments.infrastructure.persistence.models import Comment
     from app.modules.notifications.infrastructure.persistence.models import Notification
+    from app.modules.points.infrastructure.persistence.models import PointTransaction
+    from app.modules.quiz.infrastructure.persistence.models import QuizAttempt
 
 
 class Role(Base):
@@ -137,6 +140,20 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     blog_likes: Mapped[list["BlogPostLike"]] = relationship(back_populates="user")
     comments: Mapped[list["Comment"]] = relationship(back_populates="author")
     notifications: Mapped[list["Notification"]] = relationship(back_populates="user")
+
+    # Phase 5 engagement (bible / quiz / points); never eager-loaded.
+    verse_views: Mapped[list["VerseView"]] = relationship(
+        back_populates="user", lazy="raise_on_sql"
+    )
+    verse_reads: Mapped[list["VerseRead"]] = relationship(
+        back_populates="user", lazy="raise_on_sql"
+    )
+    quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(
+        back_populates="user", lazy="raise_on_sql"
+    )
+    point_transactions: Mapped[list["PointTransaction"]] = relationship(
+        back_populates="user", lazy="raise_on_sql"
+    )
 
 
 class UserQrCode(UUIDPrimaryKeyMixin, TimestampMixin, Base):

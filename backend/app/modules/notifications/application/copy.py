@@ -49,3 +49,19 @@ def blog_post_published_copy(*, title_ar: str, title_en: str) -> NotificationCop
         message_ar="تم نشر موضوع جديد. اقرأه الآن.",
         message_en="A new post has been published. Read it now.",
     )
+
+
+def verse_published_copy(*, verse_reference: str, published_at: date) -> NotificationCopy:
+    """Phase 5 (US-028): creator-only notice that the scheduled verse went live."""
+    return NotificationCopy(
+        title_ar="تم نشر الآية المجدولة",
+        title_en="Your scheduled Bible Verse is live",
+        message_ar=(
+            f"تم نشر آية الكتاب المقدس ({verse_reference}) تلقائيًا بتاريخ "
+            f"{published_at.isoformat()}."
+        ),
+        message_en=(
+            f"Your scheduled Bible Verse ({verse_reference}) was automatically "
+            f"published on {published_at.isoformat()}."
+        ),
+    )

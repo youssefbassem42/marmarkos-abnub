@@ -15,12 +15,11 @@ interface AuthCardProps {
 
 export function AuthCard({ lang, token, stage, onSuccess }: AuthCardProps) {
   const { t } = useTranslation("resetPassword");
-  const isArabic = lang === "ar";
 
   return (
     <section
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={lang}
+      dir="rtl"
+      lang="ar"
       className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14"
     >
       <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 card-elevated sm:p-10">
@@ -38,8 +37,7 @@ export function AuthCard({ lang, token, stage, onSuccess }: AuthCardProps) {
                 </h2>
                 <p
                   className={cn(
-                    "mt-2 leading-relaxed text-muted-foreground",
-                    isArabic ? "font-arabic text-xl" : "text-base",
+                    "mt-2 leading-relaxed text-muted-foreground font-arabic text-xl",
                   )}
                 >
                   {t("card.subtitlePrefix")}{" "}

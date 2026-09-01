@@ -26,8 +26,6 @@ export function ManualCodeEntry({
   onCancel,
 }: ManualCodeEntryProps) {
   const { t } = useTranslation("attendance");
-  const isArabic =
-    t("checkIn.title") !== undefined && document.documentElement.dir === "rtl";
 
   const schema = z.object({
     code: z
@@ -55,7 +53,7 @@ export function ManualCodeEntry({
     if (expanded) setFocus("code");
   }, [expanded, setFocus]);
 
-  const Chevron = isArabic ? ChevronLeft : ChevronRight;
+  const Chevron = ChevronLeft;
 
   return (
     <div className="rounded-xl border border-border bg-card">

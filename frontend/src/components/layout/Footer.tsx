@@ -7,7 +7,7 @@ import {
   Youtube,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "@/i18n/context";
+
 import { cn } from "@/lib/utils";
 import logo from "@/assets/church-logo.png";
 
@@ -18,8 +18,6 @@ const socials = [
 ];
 
 export function Footer() {
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const { t } = useTranslation("landing");
   const { t: tCommon } = useTranslation("common");
   const quickItems = t("footer.quickItems", {
@@ -32,8 +30,8 @@ export function Footer() {
   return (
     <footer
       id="contact"
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
       className="bg-navy text-white"
     >
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))] lg:px-8">
@@ -101,7 +99,7 @@ export function Footer() {
                 className="mt-0.5 h-4 w-4 shrink-0 text-mint"
                 aria-hidden="true"
               />
-              <span className={isArabic ? "font-arabic" : ""}>
+              <span className="font-arabic">
                 {t("footer.addressLine1")}
                 <br />
                 {t("footer.addressLine2")}
@@ -148,7 +146,7 @@ export function Footer() {
 
       <div className="border-t border-white/12">
         <div className="mx-auto flex max-w-7xl flex-col gap-2 px-5 py-5 text-xs text-white/65 sm:flex-row sm:items-center sm:justify-between lg:px-8">
-          <p className={cn(isArabic && "font-arabic")}>
+          <p className="font-arabic">
             {t("footer.copyright", { year: new Date().getFullYear() })}
           </p>
         </div>

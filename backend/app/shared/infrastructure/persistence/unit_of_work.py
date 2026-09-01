@@ -32,7 +32,13 @@ from app.modules.auth.infrastructure.persistence.auth_token_repository import (
 from app.modules.auth.infrastructure.persistence.refresh_token_repository import (
     RefreshTokenRepository,
 )
-from app.modules.bible.infrastructure.persistence.bible_verse_repository import (
+from app.modules.bible.infrastructure.persistence.engagement_repository import (
+    VerseEngagementRepository,
+)
+from app.modules.bible.infrastructure.persistence.schedule_repository import (
+    VerseScheduleRepository,
+)
+from app.modules.bible.infrastructure.persistence.verse_repository import (
     BibleVerseRepository,
 )
 from app.modules.blog.infrastructure.persistence.blog_post_repository import (
@@ -54,6 +60,20 @@ from app.modules.notifications.infrastructure.persistence.notification_read_repo
 from app.modules.notifications.infrastructure.persistence.notification_repository import (
     NotificationRepository,
 )
+from app.modules.points.infrastructure.persistence.point_transaction_repository import (
+    PointTransactionRepository,
+)
+from app.modules.quiz.infrastructure.persistence.answer_repository import (
+    QuizAnswerRepository,
+)
+from app.modules.quiz.infrastructure.persistence.attempt_repository import (
+    QuizAttemptRepository,
+)
+from app.modules.quiz.infrastructure.persistence.question_repository import (
+    QuizOptionRepository,
+    QuizQuestionRepository,
+)
+from app.modules.quiz.infrastructure.persistence.quiz_repository import QuizRepository
 from app.modules.users.infrastructure.persistence.qr_code_repository import (
     UserQrCodeRepository,
 )
@@ -183,6 +203,42 @@ class UnitOfWork:
     @property
     def bible_verses(self) -> BibleVerseRepository:
         return BibleVerseRepository(self._session)
+
+    @property
+    def verse_schedules(self) -> VerseScheduleRepository:
+        return VerseScheduleRepository(self._session)
+
+    @property
+    def verse_views(self) -> VerseEngagementRepository:
+        return VerseEngagementRepository(self._session)
+
+    @property
+    def verse_reads(self) -> VerseEngagementRepository:
+        return VerseEngagementRepository(self._session)
+
+    @property
+    def quizzes(self) -> QuizRepository:
+        return QuizRepository(self._session)
+
+    @property
+    def quiz_questions(self) -> QuizQuestionRepository:
+        return QuizQuestionRepository(self._session)
+
+    @property
+    def quiz_options(self) -> QuizOptionRepository:
+        return QuizOptionRepository(self._session)
+
+    @property
+    def quiz_attempts(self) -> QuizAttemptRepository:
+        return QuizAttemptRepository(self._session)
+
+    @property
+    def quiz_answers(self) -> QuizAnswerRepository:
+        return QuizAnswerRepository(self._session)
+
+    @property
+    def point_transactions(self) -> PointTransactionRepository:
+        return PointTransactionRepository(self._session)
 
     @property
     def media(self) -> MediaRepository:

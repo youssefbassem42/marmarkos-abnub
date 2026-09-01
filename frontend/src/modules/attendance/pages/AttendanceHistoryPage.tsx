@@ -3,7 +3,6 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
 import { Download, QrCode, SearchX } from "lucide-react";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
@@ -29,9 +28,7 @@ type SortKey = "meeting_date" | "check_in_at";
 
 export function AttendanceHistoryPage() {
   const { t } = useTranslation("attendance");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
-  const locale = language === "ar" ? "ar-EG" : "en-GB";
+  const locale = "ar-EG";
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -139,8 +136,8 @@ export function AttendanceHistoryPage() {
 
       <main className="mx-auto w-full max-w-7xl px-5 py-8 lg:px-8">
         <div
-          dir={isArabic ? "rtl" : "ltr"}
-          lang={language}
+          dir="rtl"
+          lang="ar"
           className="space-y-5"
         >
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -161,7 +158,7 @@ export function AttendanceHistoryPage() {
               className="btn-outline h-11 px-4 text-sm"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
-              <span className={isArabic ? "font-arabic" : undefined}>
+              <span className="font-arabic">
                 {t("history.export.csv")}
               </span>
             </button>
@@ -192,7 +189,7 @@ export function AttendanceHistoryPage() {
                 <p
                   className={cn(
                     "text-sm text-muted-foreground",
-                    isArabic && "font-arabic text-base",
+                    "font-arabic text-base",
                   )}
                 >
                   {t("history.table.empty")}
@@ -203,7 +200,7 @@ export function AttendanceHistoryPage() {
                     onClick={() => setSearchParams({}, { replace: true })}
                     className="btn-outline mt-1 px-5 py-2 text-sm"
                   >
-                    <span className={isArabic ? "font-arabic" : undefined}>
+              <span className="font-arabic">
                       {t("history.filters.reset")}
                     </span>
                   </button>
@@ -293,7 +290,7 @@ export function AttendanceHistoryPage() {
                   <p
                     className={cn(
                       "text-sm text-muted-foreground",
-                      isArabic && "font-arabic",
+                      "font-arabic",
                     )}
                   >
                     {t("history.pagination.showing", {

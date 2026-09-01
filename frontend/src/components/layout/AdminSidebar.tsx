@@ -3,7 +3,9 @@ import { useTranslation } from "react-i18next";
 import {
   BarChart3,
   Bell,
+  BookOpen,
   Calendar,
+  ClipboardList,
   History,
   LayoutDashboard,
   MessageSquare,
@@ -12,7 +14,7 @@ import {
   Users,
 } from "lucide-react";
 import logo from "@/assets/church-logo.png";
-import { useLanguage } from "@/i18n/context";
+
 import { getUserRole } from "@/lib/auth";
 import {
   BrandMessageHeading,
@@ -43,14 +45,21 @@ type NavKey =
   | "checkIn"
   | "history"
   | "events"
+  | "bibleVerses"
+  | "verses"
+  | "weeklyVerses"
+  | "quizzes"
   | "messages"
   | "notifications"
   | "reports"
+  | "verseAnalytics"
+  | "quizAnalytics"
+  | "monthlyAnalytics"
   | "settings";
 
 interface SubItem {
   to: string;
-  labelKey: Extract<NavKey, "checkIn" | "history">;
+  labelKey: Extract<NavKey, "checkIn" | "history" | "verses" | "weeklyVerses" | "verseAnalytics" | "quizAnalytics" | "monthlyAnalytics">;
 }
 
 interface DisabledItem {
@@ -73,7 +82,8 @@ interface LinkItem {
 
 const NAV_ITEMS: readonly (LinkItem | DisabledItem)[] = [
   // Design order (D-8): dashboard, members*, attendance, events*,
-  // messages, notifications, reports*, settings* — * = disabled.
+  // bibleVerses, quizzes, messages, notifications, reports/analytics,
+  // settings* — * = disabled.
   { to: "/admin/dashboard", labelKey: "dashboard", Icon: LayoutDashboard },
   { labelKey: "members", Icon: Users, kind: "disabled" },
   {
@@ -88,13 +98,37 @@ const NAV_ITEMS: readonly (LinkItem | DisabledItem)[] = [
   },
   { labelKey: "events", Icon: Calendar, kind: "disabled" },
   {
+    to: "/admin/bible-verses",
+    labelKey: "bibleVerses",
+    Icon: BookOpen,
+    subItems: [
+      { to: "/admin/bible-verses", labelKey: "verses" },
+      {
+        to: "/admin/bible-verses?status=scheduled",
+        labelKey: "weeklyVerses",
+      },
+    ],
+    subPathPrefix: "/admin/bible-verses",
+  },
+  { to: "/admin/quizzes", labelKey: "quizzes", Icon: ClipboardList },
+  {
     to: "/admin/anonymous-messages",
     labelKey: "messages",
     Icon: MessageSquare,
     adminOnly: true,
   },
   { to: "/admin/notifications", labelKey: "notifications", Icon: Bell },
-  { labelKey: "reports", Icon: BarChart3, kind: "disabled" },
+  {
+    to: "/admin/analytics/verses",
+    labelKey: "reports",
+    Icon: BarChart3,
+    subItems: [
+      { to: "/admin/analytics/verses", labelKey: "verseAnalytics" },
+      { to: "/admin/analytics/quizzes", labelKey: "quizAnalytics" },
+      { to: "/admin/analytics/monthly", labelKey: "monthlyAnalytics" },
+    ],
+    subPathPrefix: "/admin/analytics",
+  },
   { labelKey: "settings", Icon: Settings, kind: "disabled" },
 ] as const;
 
@@ -102,19 +136,14 @@ const NAV_ITEMS: readonly (LinkItem | DisabledItem)[] = [
 export function AdminSidebar() {
   const { t } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const role = getUserRole();
   const { pathname } = useLocation();
 
   return (
-    <Sidebar side={isArabic ? "right" : "left"} collapsible="icon">
+    <Sidebar side="right" collapsible="icon">
       <SidebarHeader>
         <div
-          className={cn(
-            "flex items-center gap-2 px-2 py-3",
-            isArabic && "font-arabic",
-          )}
+          className="flex items-center gap-2 px-2 py-3 font-arabic"
         >
           <img src={logo} alt="" aria-hidden="true" className="h-10 w-auto" />
           <span className="text-sm font-bold text-ink group-data-[collapsible=icon]:hidden">
@@ -124,14 +153,11 @@ export function AdminSidebar() {
         {/* DR-10 brand block: hidden entirely in the icon-rail state. */}
         <div className="px-4 pb-2 group-data-[collapsible=icon]:hidden">
           <BrandMessageHeading
-            lang={language}
-            className={cn(
-              "!mt-1 !text-xl !leading-snug lg:!text-xl",
-              isArabic && "font-arabic",
-            )}
+            lang="ar"
+            className="!mt-1 !text-xl !leading-snug lg:!text-xl font-arabic"
           />
           <BrandSupportingLine
-            lang={language}
+            lang="ar"
             className="!mt-2 !max-w-none !text-xs !leading-relaxed text-muted-foreground"
           />
         </div>
@@ -154,7 +180,7 @@ export function AdminSidebar() {
                         tooltip={`${t(`nav.${item.labelKey}`)} · ${tCommon("comingSoon")}`}
                       >
                         <item.Icon aria-hidden="true" />
-                        <span className={isArabic ? "font-arabic" : undefined}>
+                        <span className="font-arabic">
                           {t(`nav.${item.labelKey}`)}
                         </span>
                       </SidebarMenuButton>
@@ -175,9 +201,7 @@ export function AdminSidebar() {
                           tooltip={t(`nav.${item.labelKey}`)}
                         >
                           <item.Icon aria-hidden="true" />
-                          <span
-                            className={isArabic ? "font-arabic" : undefined}
-                          >
+                          <span className="font-arabic">
                             {t(`nav.${item.labelKey}`)}
                           </span>
                         </SidebarMenuButton>
@@ -190,11 +214,7 @@ export function AdminSidebar() {
                             <NavLink to={sub.to}>
                               {({ isActive }) => (
                                 <SidebarMenuSubButton isActive={isActive}>
-                                  <span
-                                    className={
-                                      isArabic ? "font-arabic" : undefined
-                                    }
-                                  >
+                                  <span className="font-arabic">
                                     {t(`nav.${sub.labelKey}`)}
                                   </span>
                                 </SidebarMenuSubButton>

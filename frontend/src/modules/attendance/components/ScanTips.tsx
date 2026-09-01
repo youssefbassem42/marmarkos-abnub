@@ -5,7 +5,6 @@ import { cn } from "@/lib/utils";
 /** Mint tips panel + composed phone-with-check illustration. Hidden below sm. */
 export function ScanTips() {
   const { t } = useTranslation("attendance");
-  const isArabic = document.documentElement.dir === "rtl";
   const items = t("checkIn.tips.items", {
     returnObjects: true,
   }) as readonly string[];

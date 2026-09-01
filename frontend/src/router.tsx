@@ -59,6 +59,59 @@ const AdminAnonymousMessagesPage = lazy(() =>
   ),
 );
 
+// Bible module
+const BibleVersesPage = lazy(() =>
+  import("@/modules/bible/pages/BibleVersesPage"),
+);
+const VerseDetailPage = lazy(() =>
+  import("@/modules/bible/pages/VerseDetailPage"),
+);
+const BibleManagementPage = lazy(() =>
+  import("@/modules/bible/pages/admin/BibleManagementPage"),
+);
+const VerseFormPage = lazy(() =>
+  import("@/modules/bible/pages/admin/VerseFormPage"),
+);
+const VerseSchedulePage = lazy(() =>
+  import("@/modules/bible/pages/admin/VerseSchedulePage"),
+);
+const VerseAnalyticsPage = lazy(() =>
+  import("@/modules/bible/pages/admin/VerseAnalyticsPage"),
+);
+
+// Quiz module
+const QuizAttemptPage = lazy(() =>
+  import("@/modules/quiz/pages/QuizAttemptPage"),
+);
+const QuizResultPage = lazy(() =>
+  import("@/modules/quiz/pages/QuizResultPage"),
+);
+const QuizListPage = lazy(() =>
+  import("@/modules/quiz/pages/admin/QuizListPage"),
+);
+const QuizManagePage = lazy(() =>
+  import("@/modules/quiz/pages/admin/QuizManagePage"),
+);
+const QuizBuilderPage = lazy(() =>
+  import("@/modules/quiz/pages/admin/QuizBuilderPage"),
+);
+const QuestionFormPage = lazy(() =>
+  import("@/modules/quiz/pages/admin/QuestionFormPage"),
+);
+const QuizAnalyticsPage = lazy(() =>
+  import("@/modules/quiz/pages/admin/QuizAnalyticsPage"),
+);
+
+// Points module
+const PointsPage = lazy(() =>
+  import("@/modules/points/pages/PointsPage"),
+);
+
+// Analytics module
+const MonthlyAnalyticsPage = lazy(() =>
+  import("@/modules/analytics/pages/MonthlyAnalyticsPage"),
+);
+
 export const router = createBrowserRouter([
   {
     path: "/",
@@ -167,6 +220,118 @@ export const router = createBrowserRouter([
               },
             ],
           },
+          {
+            path: "bible-verses",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <BibleManagementPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "bible-verses/new",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <VerseFormPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "bible-verses/:verseId/edit",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <VerseFormPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "bible-verses/:verseId/schedule",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <VerseSchedulePage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "quizzes",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <QuizListPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "quizzes/manage",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <QuizManagePage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "quizzes/:quizId/manage",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <QuizManagePage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "quizzes/new",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <QuizBuilderPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "quizzes/:quizId/builder",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <QuizBuilderPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "quizzes/:quizId/questions/new",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <QuestionFormPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "quizzes/:quizId/questions/:questionId/edit",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <QuestionFormPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "analytics/verses",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <VerseAnalyticsPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "analytics/quizzes",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <QuizAnalyticsPage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "analytics/monthly",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <MonthlyAnalyticsPage />
+              </Suspense>
+            ),
+          },
         ],
       },
     ],
@@ -197,6 +362,56 @@ export const router = createBrowserRouter([
       <Suspense fallback={<PageSkeleton />}>
         <AnonymousMessagePage />
       </Suspense>
+    ),
+  },
+  {
+    path: "/bible-verses",
+    element: (
+      <RequireAuth>
+        <Suspense fallback={<PageSkeleton />}>
+          <BibleVersesPage />
+        </Suspense>
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/bible-verses/:verseId",
+    element: (
+      <RequireAuth>
+        <Suspense fallback={<PageSkeleton />}>
+          <VerseDetailPage />
+        </Suspense>
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/quizzes/:quizId/take",
+    element: (
+      <RequireAuth>
+        <Suspense fallback={<PageSkeleton />}>
+          <QuizAttemptPage />
+        </Suspense>
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/quizzes/:quizId/result",
+    element: (
+      <RequireAuth>
+        <Suspense fallback={<PageSkeleton />}>
+          <QuizResultPage />
+        </Suspense>
+      </RequireAuth>
+    ),
+  },
+  {
+    path: "/points",
+    element: (
+      <RequireAuth>
+        <Suspense fallback={<PageSkeleton />}>
+          <PointsPage />
+        </Suspense>
+      </RequireAuth>
     ),
   },
   {

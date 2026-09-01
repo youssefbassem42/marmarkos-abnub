@@ -20,7 +20,11 @@ from app.modules.notifications.infrastructure.persistence.models import (
     NotificationRead,
 )
 
-_ANNOUNCEMENT_TYPES = (NotificationType.ANNOUNCEMENT, NotificationType.BLOG_POST)
+_ANNOUNCEMENT_TYPES = (
+    NotificationType.ANNOUNCEMENT,
+    NotificationType.BLOG_POST,
+    NotificationType.BIBLE_VERSE,
+)
 
 
 class NotificationRepository:

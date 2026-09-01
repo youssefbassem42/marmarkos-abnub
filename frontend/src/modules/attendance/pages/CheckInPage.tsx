@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { KeyRound, QrCode, ScanLine } from "lucide-react";
 import { ApiError } from "@/lib/api";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { QRScanner, type CameraFailure } from "../components/QRScanner";
 import { ManualCodeEntry } from "../components/ManualCodeEntry";
@@ -56,8 +55,6 @@ const ERROR_KEYS = {
 
 export function CheckInPage() {
   const { t } = useTranslation("attendance");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
 
   const [state, setState] = useState<ScanState>({ kind: "idle" });
   const [torchAvailable, setTorchAvailable] = useState(false);
@@ -248,7 +245,7 @@ export function CheckInPage() {
         : ("error" as const);
 
   return (
-    <div dir={isArabic ? "rtl" : "ltr"} lang={language} className="space-y-6">
+    <div dir="rtl" lang="ar" className="space-y-6">
       {/* Scanner card */}
       <section className="rounded-2xl border border-border bg-card p-5 card-elevated">
         {/* Mode tabs: camera QR vs typed PIN (offline fallback) */}
@@ -274,7 +271,7 @@ export function CheckInPage() {
                 mode === value
                   ? "bg-navy text-white shadow-sm"
                   : "text-muted-foreground hover:text-ink",
-                isArabic && "font-arabic",
+                "font-arabic",
               )}
             >
               <Icon className="h-4 w-4" aria-hidden="true" />
@@ -291,7 +288,7 @@ export function CheckInPage() {
             aria-live="polite"
             className={cn(
               "mt-4 font-heading text-2xl font-bold text-ink",
-              isArabic && "font-arabic",
+              "font-arabic",
             )}
           >
             {heading}
@@ -299,7 +296,7 @@ export function CheckInPage() {
           <p
             className={cn(
               "mt-1 text-sm text-muted-foreground",
-              isArabic && "font-arabic text-base",
+              "font-arabic text-base",
             )}
           >
             {subheading}
@@ -316,7 +313,7 @@ export function CheckInPage() {
             <p
               className={cn(
                 "mt-4 text-center text-xs text-muted-foreground",
-                isArabic && "font-arabic",
+                "font-arabic",
               )}
             >
               {t("checkIn.pin.hint")}
@@ -355,7 +352,7 @@ export function CheckInPage() {
             <div className="my-4 flex items-center gap-3" aria-hidden="true">
               <span className="h-px flex-1 bg-border" />
               <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                {isArabic ? "أو" : "OR"}
+                {"أو"}
               </span>
               <span className="h-px flex-1 bg-border" />
             </div>

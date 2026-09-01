@@ -1,12 +1,9 @@
 import { createContext, useContext } from "react";
 
-export type Language = "ar" | "en";
-
-export const LANGUAGE_STORAGE_KEY = "marmarkos.lang";
+export type Language = "ar";
 
 export interface LanguageContextValue {
   language: Language;
-  setLanguage: (language: Language) => void;
 }
 
 export const LanguageContext = createContext<LanguageContextValue | null>(null);

@@ -1,13 +1,10 @@
 import { Check, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "@/i18n/context";
 import church from "@/assets/church-evening.jpg";
 import { cn } from "@/lib/utils";
 import { YouthFigure } from "./YouthFigure";
 
 export function About() {
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const { t } = useTranslation("landing");
   const items = t("about.items", {
     returnObjects: true,
@@ -22,16 +19,14 @@ export function About() {
           </p>
           <h2
             className={cn(
-              "mt-3 text-[clamp(1.9rem,4vw,2.5rem)] font-extrabold tracking-tight text-ink",
-              isArabic ? "font-arabic text-[clamp(2rem,4vw,2.8rem)]" : "",
+              "mt-3 text-[clamp(1.9rem,4vw,2.5rem)] font-extrabold tracking-tight text-ink font-arabic text-[clamp(2rem,4vw,2.8rem)]",
             )}
           >
             {t("about.heading")}
           </h2>
           <p
             className={cn(
-              "mt-5 max-w-lg text-[15px] leading-7 text-muted-foreground",
-              isArabic ? "font-arabic text-lg leading-8" : "",
+              "mt-5 max-w-lg text-[15px] leading-7 text-muted-foreground font-arabic text-lg leading-8",
             )}
           >
             {t("about.text")}
@@ -48,8 +43,7 @@ export function About() {
                 </span>
                 <span
                   className={cn(
-                    "text-sm text-ink",
-                    isArabic ? "font-arabic text-base" : "",
+                    "text-sm text-ink font-arabic text-base",
                   )}
                 >
                   {item}
@@ -58,11 +52,11 @@ export function About() {
             ))}
           </ul>
           <a href="#contact" className="btn-primary mt-8 px-6 py-3.5 text-sm">
-            <span className={isArabic ? "font-arabic" : ""}>
+            <span className="font-arabic">
               {t("about.cta")}
             </span>
             <ArrowRight
-              className={cn("h-4 w-4", isArabic && "-scale-x-100")}
+              className={cn("h-4 w-4", "-scale-x-100")}
               aria-hidden="true"
             />
           </a>
@@ -73,9 +67,7 @@ export function About() {
             <img
               src={church}
               alt={
-                isArabic
-                  ? "شباب متجمعون أمام كنيسة مضاءة في المساء"
-                  : "Young people gathered outside a warmly lit church in the evening"
+                "شباب متجمعون أمام كنيسة مضاءة في المساء"
               }
               width={1200}
               height={912}

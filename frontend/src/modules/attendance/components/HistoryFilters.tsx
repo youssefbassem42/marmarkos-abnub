@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 import { Check, ChevronsUpDown } from "lucide-react";
 import { apiClient } from "@/lib/api";
 import { getAuthUser } from "@/lib/auth";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -79,11 +78,9 @@ function thursdayOf(value: string): string {
 export function HistoryFilters({ values, onChange }: HistoryFiltersProps) {
   const { t } = useTranslation("attendance");
   const { t: tCommon } = useTranslation("common");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const inputClass = cn(
     "h-11 rounded-xl border-border focus-ring",
-    isArabic && "font-arabic",
+    "font-arabic",
   );
 
   // Draft state: edits apply only on "Apply"; Reset clears everything.
@@ -155,7 +152,7 @@ export function HistoryFilters({ values, onChange }: HistoryFiltersProps) {
                 />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-72 p-0" dir={isArabic ? "rtl" : "ltr"}>
+            <PopoverContent className="w-72 p-0" dir="rtl">
               <Command>
                 <CommandInput placeholder={t("history.filters.member")} />
                 <CommandList>
@@ -264,7 +261,7 @@ export function HistoryFilters({ values, onChange }: HistoryFiltersProps) {
           }}
           className="btn-outline h-11 flex-1 justify-center px-4 text-sm"
         >
-          <span className={isArabic ? "font-arabic" : undefined}>
+          <span className="font-arabic">
             {t("history.filters.reset")}
           </span>
         </button>

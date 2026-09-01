@@ -9,7 +9,6 @@ interface AuthProgressProps {
 
 export function AuthProgress({ lang }: AuthProgressProps) {
   const { t } = useTranslation("resetPassword");
-  const isArabic = lang === "ar";
   const steps = t("progress.steps", {
     returnObjects: true,
   }) as readonly string[];
@@ -17,8 +16,8 @@ export function AuthProgress({ lang }: AuthProgressProps) {
 
   return (
     <ol
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={lang}
+      dir="rtl"
+      lang="ar"
       className="flex w-full items-start gap-1 sm:gap-2"
       aria-label={t("progress.ariaLabel")}
     >
@@ -46,10 +45,7 @@ export function AuthProgress({ lang }: AuthProgressProps) {
               </span>
               <span
                 className={cn(
-                  "leading-tight transition-colors",
-                  isArabic
-                    ? "font-arabic text-sm sm:text-base"
-                    : "text-xs font-medium sm:text-sm",
+                  "leading-tight transition-colors font-arabic text-sm sm:text-base",
                   isActive && "font-bold text-ink",
                   isCompleted && "font-semibold text-mint",
                   !isActive && !isCompleted && "text-gray-400",

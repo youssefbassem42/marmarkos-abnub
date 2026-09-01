@@ -8,7 +8,6 @@ import type { NotificationItem } from "../types";
 
 interface NotificationRowProps {
   item: NotificationItem;
-  language: string;
   /** Marks the row read (idempotent server-side, BR-3). */
   onMarkRead: (id: string) => void;
 }
@@ -21,15 +20,13 @@ interface NotificationRowProps {
  */
 export function NotificationRow({
   item,
-  language,
   onMarkRead,
 }: NotificationRowProps) {
   const { t } = useTranslation("notifications");
   const navigate = useNavigate();
-  const isArabic = language === "ar";
   const accent = NOTIFICATION_ACCENTS[item.type];
-  const title = isArabic ? item.title_ar : item.title_en;
-  const message = isArabic ? item.message_ar : item.message_en;
+  const title = item.title_ar;
+  const message = item.message_ar;
   const isNew = isNewNotification(item);
   const ctaUrl =
     typeof item.data?.cta_url === "string" ? item.data.cta_url : null;
@@ -53,8 +50,7 @@ export function NotificationRow({
       <span className="min-w-0 grow">
         <span
           className={cn(
-            "flex items-center gap-2 font-semibold text-ink",
-            isArabic && "font-arabic",
+            "flex items-center gap-2 font-semibold text-ink font-arabic",
           )}
         >
           <span className="truncate">{title}</span>
@@ -66,8 +62,7 @@ export function NotificationRow({
         </span>
         <span
           className={cn(
-            "mt-1 line-clamp-2 block text-sm text-muted-foreground",
-            isArabic && "font-arabic",
+            "mt-1 line-clamp-2 block text-sm text-muted-foreground font-arabic",
           )}
         >
           {message}
@@ -77,11 +72,10 @@ export function NotificationRow({
         <time
           dateTime={item.created_at}
           className={cn(
-            "text-xs text-muted-foreground",
-            isArabic && "font-arabic",
+            "text-xs text-muted-foreground font-arabic",
           )}
         >
-          {relativeTime(item.created_at, language, t)}
+          {relativeTime(item.created_at, t)}
         </time>
         {!item.is_read && (
           <>

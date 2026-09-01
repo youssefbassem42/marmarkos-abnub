@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { Navbar } from "@/components/layout/Navbar";
 import { BrandFooterStrip } from "@/components/layout/BrandFooterStrip";
 import { BrandPanel } from "@/pages/auth/components/BrandPanel";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { AnonymousMessageForm } from "../components/AnonymousMessageForm";
 import { BeforeYouSendCard } from "../components/BeforeYouSendCard";
@@ -20,23 +19,21 @@ import type { AnonymousMessageCreateResponse } from "../types";
  */
 export function AnonymousMessagePage() {
   const { t } = useTranslation("anonymousMessages");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const [result, setResult] = useState<AnonymousMessageCreateResponse | null>(
     null,
   );
 
   return (
     <div
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
       className="flex min-h-screen flex-col bg-background"
     >
       <Navbar variant="auth" />
 
       <main className="flex w-full flex-1 flex-col lg:flex-row">
         <BrandPanel
-          lang={language}
+          lang="ar"
           variant="light"
           className="hidden w-full md:flex lg:w-[30%]"
         />
@@ -45,18 +42,12 @@ export function AnonymousMessagePage() {
           <div className="mx-auto w-full max-w-3xl px-5 py-10 lg:px-8">
             <header className="text-center">
               <h1
-                className={cn(
-                  "font-heading text-3xl font-extrabold tracking-tight text-ink",
-                  isArabic && "font-arabic",
-                )}
+                className="font-heading text-3xl font-extrabold tracking-tight text-ink font-arabic"
               >
                 {t("title")}
               </h1>
               <p
-                className={cn(
-                  "mt-2 text-sm text-muted-foreground",
-                  isArabic && "font-arabic text-base",
-                )}
+                className="mt-2 text-sm text-muted-foreground font-arabic text-base"
               >
                 {t("subtitle")}
               </p>

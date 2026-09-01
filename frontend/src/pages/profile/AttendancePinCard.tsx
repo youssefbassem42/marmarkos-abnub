@@ -13,7 +13,6 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { useLanguage } from "@/i18n/context";
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { attendancePinApi } from "@/modules/attendance/api";
@@ -27,8 +26,6 @@ type PinStatus = { kind: "ok" | "error"; text: string } | null;
  * server — only whether one exists.
  */
 export function AttendancePinCard() {
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const { t } = useTranslation("profile");
 
   const [loaded, setLoaded] = useState(false);
@@ -102,19 +99,13 @@ export function AttendancePinCard() {
   return (
     <section className="mt-6 rounded-2xl border border-border bg-card p-6 card-elevated">
       <h2
-        className={cn(
-          "flex items-center gap-2 font-extrabold text-ink",
-          isArabic ? "font-arabic text-xl" : "text-lg",
-        )}
+        className="flex items-center gap-2 font-extrabold text-ink font-arabic text-xl"
       >
         <KeyRound className="h-5 w-5 text-mint" aria-hidden="true" />
         {t("pin.title")}
         {loaded && pinSet ? (
           <span
-            className={cn(
-              "ms-auto rounded-full bg-mint/15 px-3 py-1 text-xs font-semibold text-ink",
-              isArabic && "font-arabic",
-            )}
+            className="ms-auto rounded-full bg-mint/15 px-3 py-1 text-xs font-semibold text-ink font-arabic"
           >
             {t("pin.setLabel")}
           </span>
@@ -122,10 +113,7 @@ export function AttendancePinCard() {
       </h2>
 
       <p
-        className={cn(
-          "mt-2 text-sm text-muted-foreground",
-          isArabic && "font-arabic text-base",
-        )}
+        className="mt-2 text-sm text-muted-foreground font-arabic text-base"
       >
         {t("pin.description")}
       </p>
@@ -148,7 +136,7 @@ export function AttendancePinCard() {
                   setStatus(null);
                   setEntryNonce((nonce) => nonce + 1);
                 }}
-                className={cn(isArabic && "font-arabic")}
+                className="font-arabic"
               >
                 {t("pin.cancel")}
               </Button>
@@ -170,7 +158,7 @@ export function AttendancePinCard() {
               setEditing(true);
               setStatus(null);
             }}
-            className={cn("rounded-xl", isArabic && "font-arabic")}
+            className="rounded-xl font-arabic"
           >
             {t("pin.change")}
           </Button>
@@ -181,37 +169,31 @@ export function AttendancePinCard() {
                 type="button"
                 variant="ghost"
                 disabled={deleting}
-                className={cn(
-                  "rounded-xl text-brand-red hover:text-brand-red",
-                  isArabic && "font-arabic",
-                )}
+                className="rounded-xl text-brand-red hover:text-brand-red font-arabic"
               >
                 {t("pin.delete")}
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent dir={isArabic ? "rtl" : "ltr"}>
+            <AlertDialogContent dir="rtl">
               <AlertDialogHeader>
-                <AlertDialogTitle className={cn(isArabic && "font-arabic")}>
+                <AlertDialogTitle className="font-arabic">
                   {t("pin.deleteTitle")}
                 </AlertDialogTitle>
                 <AlertDialogDescription
-                  className={cn(isArabic && "font-arabic")}
+                className="font-arabic"
                 >
                   {t("pin.deleteBody")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel
-                  className={cn("rounded-xl", isArabic && "font-arabic")}
+            className="rounded-xl font-arabic"
                 >
                   {t("pin.cancel")}
                 </AlertDialogCancel>
                 <AlertDialogAction
                   onClick={() => void handleDelete()}
-                  className={cn(
-                    "rounded-xl bg-brand-red text-white hover:bg-brand-red/90",
-                    isArabic && "font-arabic",
-                  )}
+                  className="rounded-xl bg-brand-red text-white hover:bg-brand-red/90 font-arabic"
                 >
                   {t("pin.delete")}
                 </AlertDialogAction>
@@ -225,9 +207,8 @@ export function AttendancePinCard() {
         <p
           role="status"
           className={cn(
-            "mt-3 text-center text-sm font-medium",
+            "mt-3 text-center text-sm font-medium font-arabic",
             status.kind === "ok" ? "text-ink" : "text-brand-red",
-            isArabic && "font-arabic",
           )}
         >
           {status.text}

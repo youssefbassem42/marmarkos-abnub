@@ -67,3 +67,24 @@ pip install -e ".[dev]"
 cp .env.example .env
 
 uvicorn app.main:app --reload
+
+## Scheduled Publication (Phase 5)
+
+Automatic Bible-verse publishing runs from an internal endpoint driven by an
+external cron — no worker container, no in-process loop. Point any
+minute-frequency scheduler (cron, Vercel Cron, Railway Cron, uptime pinger)
+at:
+
+```bash
+curl -fsS -X POST \
+  -H "X-Cron-Secret: $CRON_SECRET" \
+  https://<host>/api/v1/internal/scheduler/tick
+```
+
+The tick publishes due schedules, auto-finishes expired quiz attempts and
+drains the notification outbox. It is idempotent, safe to run every minute
+and safe to run concurrently. `CRON_SECRET` is required: without it the
+endpoint answers `503 scheduler_disabled` (an ADMIN bearer token also works,
+for the manual trigger button). Rotate the secret by setting a new
+`CRON_SECRET` and redeploying; in-flight calls with the old value fail closed
+with 401.

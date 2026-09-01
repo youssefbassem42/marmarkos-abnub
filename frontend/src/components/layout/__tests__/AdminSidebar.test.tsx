@@ -51,13 +51,15 @@ function signInAsAdmin() {
 describe("admin sidebar (D-8)", () => {
   afterEach(() => clearAuth());
 
-  it("renders all eight design nav items in order for an ADMIN", () => {
+  it("renders all ten design nav items in order for an ADMIN", () => {
     signInAsAdmin();
     const labels = [
       "لوحة التحكم",
       "الأعضاء",
       "الحضور",
       "الفعاليات",
+      "أقسام الكتاب المقدس",
+      "الاختبارات",
       "الرسائل",
       "الإشعارات",
       "التقارير",
@@ -75,7 +77,7 @@ describe("admin sidebar (D-8)", () => {
     signInAsAdmin();
     renderWithProviders(<AdminSidebar />, ["/admin/dashboard"]);
 
-    for (const label of ["الأعضاء", "الفعاليات", "التقارير", "الإعدادات"]) {
+    for (const label of ["الأعضاء", "الفعاليات", "الإعدادات"]) {
       const item = screen.getByText(label);
       const button = item.closest("button");
       expect(button).not.toBeNull();

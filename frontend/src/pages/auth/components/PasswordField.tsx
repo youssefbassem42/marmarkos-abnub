@@ -43,8 +43,7 @@ export function PasswordField({
         autoComplete={autoComplete}
         aria-invalid={invalid}
         className={cn(
-          "h-11 w-full rounded-xl border-border bg-background ps-9 pe-10 text-base focus-ring",
-          lang === "ar" && "font-arabic text-lg placeholder:text-base",
+          "h-11 w-full rounded-xl border-border bg-background ps-9 pe-10 text-base focus-ring font-arabic text-lg placeholder:text-base",
           invalid && "border-brand-red focus-visible:ring-brand-red",
         )}
       />

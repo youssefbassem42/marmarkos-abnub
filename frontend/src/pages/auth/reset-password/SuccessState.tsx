@@ -10,7 +10,6 @@ interface SuccessStateProps {
 
 export function SuccessState({ lang }: SuccessStateProps) {
   const { t } = useTranslation("resetPassword");
-  const isArabic = lang === "ar";
 
   return (
     <div className="flex flex-col items-center text-center">
@@ -22,8 +21,7 @@ export function SuccessState({ lang }: SuccessStateProps) {
       </h2>
       <p
         className={cn(
-          "mt-3 max-w-sm leading-relaxed text-muted-foreground",
-          isArabic ? "font-arabic text-xl" : "text-base",
+          "mt-3 max-w-sm leading-relaxed text-muted-foreground font-arabic text-xl",
         )}
       >
         {t("validation.successMessage")}
@@ -37,8 +35,7 @@ export function SuccessState({ lang }: SuccessStateProps) {
       <Link
         to="/"
         className={cn(
-          "mt-4 font-semibold text-brand-blue underline-offset-4 hover:underline",
-          isArabic && "font-arabic text-lg",
+          "mt-4 font-semibold text-brand-blue underline-offset-4 hover:underline font-arabic text-lg",
         )}
       >
         {t("validation.successHome")}

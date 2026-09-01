@@ -2,9 +2,9 @@
  * Notifications module types.
  *
  * Field names mirror the backend DTOs exactly (plan §3.7) — do not
- * rename on the client. `title_ar`/`message_ar` hold the Arabic copy,
- * `title_en`/`message_en` the English copy; both are always present
- * because content is stored bilingually per notification (D-6).
+ * rename on the client. `title_ar`/`message_ar` hold the Arabic copy;
+ * `title_en`/`message_en` are kept for API/DB contract compliance (NOT NULL)
+ * but the platform renders Arabic only.
  */
 
 export type NotificationType =

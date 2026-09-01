@@ -1,57 +1,65 @@
-# Routes
+# Frontend Routes
 
-The Marmarkos Abnub frontend uses **React Router** (`react-router-dom`).
+React Router v6 routes for the Marmarkos Abnub platform.  All routes are
+rendered inside `<Layout>` (authenticated) or `<PublicLayout>` (guest).
 
-The router configuration lives in `src/router.tsx` (`createBrowserRouter`).
+## Route Table
 
-Page components live in `src/pages/<module>/` and
-`src/modules/{attendance,notifications,anonymous-messages}/pages/`.
-Heavy pages (attendance, notifications, anonymous messages) are lazy
-loaded so `html5-qrcode` / `recharts` stay out of the landing bundle.
+| Path | Component | Access | Description |
+|------|-----------|--------|-------------|
+| `/` | `HomePage` | Public | Landing page |
+| `/login` | `LoginPage` | Public | Email/password + Google login |
+| `/register` | `RegisterPage` | Public | New user registration |
+| `/verify-email` | `EmailVerificationPage` | Public | Email verification callback |
+| `/profile` | `ProfilePage` | Authenticated | User profile (edit name, photo) |
+| `/qrcode` | `QrCodePage` | Authenticated | Show personal QR code |
+| `/notifications` | `NotificationsPage` | Authenticated | Bell notifications list |
+| `/bible-verses` | `BibleVersesPage` | Authenticated | Member verse feed |
+| `/bible-verses/:verseId` | `VerseDetailPage` | Authenticated | Verse detail + quiz gate |
+| `/quiz/:quizId` | `QuizAttemptPage` | Authenticated | Take a quiz (timer, auto-save) |
+| `/quiz/:quizId/result` | `QuizResultPage` | Authenticated | Graded result + review |
+| `/points` | `PointsPage` | Authenticated | My points history + chart |
+| `/anonymous-messages` | `AnonymousMessagesPage` | Authenticated | Send anonymous message |
 
-## Public routes
+### Admin / Manager Routes
 
-| Path | Page |
-| --- | --- |
-| `/` | Landing page |
-| `/login`, `/register`, `/forgot-password`, `/reset-password` | Auth pages |
-| `/google/callback` | Google OAuth return |
-| `/anonymous-messages` | Anonymous message form (public by design, D-9) |
+| Path | Component | Access | Description |
+|------|-----------|--------|-------------|
+| `/admin/dashboard` | `AttendanceDashboardPage` | Admin | Dashboard with attendance + engagement tiles |
+| `/admin/attendance/check-in` | `CheckInPage` | Admin/Servant | QR scan + manual check-in |
+| `/admin/attendance/history` | `AttendanceHistoryPage` | Admin/Servant | Attendance records |
+| `/admin/bible-verses` | `BibleManagementPage` | Admin/Servant | Verse list + stats |
+| `/admin/bible-verses/new` | `VerseFormPage` | Admin/Servant | Create verse |
+| `/admin/bible-verses/:verseId/edit` | `VerseFormPage` | Admin/Servant | Edit verse |
+| `/admin/bible-verses/:verseId/schedule` | `VerseSchedulePage` | Admin/Servant | Schedule publication |
+| `/admin/quizzes` | `QuizListPage` | Admin/Servant | Quiz list |
+| `/admin/quizzes/new` | `QuizManagePage` | Admin/Servant | Create quiz |
+| `/admin/quizzes/:quizId` | `QuizBuilderPage` | Admin/Servant | Edit quiz + questions |
+| `/admin/quizzes/:quizId/analytics` | `QuizAnalyticsPage` | Admin/Servant | Quiz analytics |
+| `/admin/bible-verses/:verseId/analytics` | `VerseAnalyticsPage` | Admin/Servant | Verse analytics |
+| `/admin/analytics/verses` | `VerseAnalyticsPage` | Admin/Servant | Verse analytics (overview) |
+| `/admin/analytics/quizzes` | `QuizAnalyticsPage` | Admin/Servant | Quiz analytics (overview) |
+| `/admin/analytics/monthly` | `MonthlyAnalyticsPage` | Admin/Servant | Monthly analytics |
+| `/admin/notifications` | `NotificationsPage` | Admin | Push notification management |
+| `/admin/anonymous-messages` | `AnonymousMessagesPage` | Admin | View received anonymous messages |
 
-## Authenticated routes
+## Auth Guard
 
-| Path | Guard | Page |
-| --- | --- | --- |
-| `/profile` | `RequireAuth` | Profile (+ "My attendance" card) |
-| `/notifications` | `RequireAuth` | Member notification feed |
+- **Public**: No token required (`LoginPage`, `RegisterPage`, `EmailVerificationPage`, `HomePage`)
+- **Authenticated**: Any valid token
+- **Admin/Servant**: Requires `ADMIN` or `SERVANT` role (checked by `RequireRole` component)
+- **Admin only**: Requires `ADMIN` role
 
-## Admin section — `/admin/*`, `RequireRole(["ADMIN", "SERVANT"])`
+## Navigation
 
-| Path | Layout | Page |
-| --- | --- | --- |
-| `/admin` | — | Redirects to `/admin/dashboard` |
-| `/admin/dashboard` | `AdminLayout` (sidebar) | Attendance dashboard |
-| `/admin/attendance/check-in` | `AttendanceLayout` (split, brand panel) | Check-in scanner |
-| `/admin/attendance/history` | `AdminLayout` | Attendance history + CSV export |
-| `/admin/notifications` | `AdminLayout` | Notification feed + admin push composer |
-| `/admin/anonymous-messages` | `AdminLayout`, nested `RequireRole(["ADMIN"])` | Anonymous messages review |
+Admin routes are accessible via the collapsible sidebar (`AdminSidebar`).
+The sidebar groups routes under: Attendance, Bible Verses, Quizzes,
+Notifications, Reports/Analytics.
 
-A signed-in **MEMBER** who opens any `/admin/*` route sees the visible
-403 page (`ForbiddenPage`); anonymous visitors are redirected to
-`/login` with a `from` state. **SERVANT** gets the same 403 page on
-`/admin/anonymous-messages` only.
+## Adding a New Route
 
-Legacy bookmarks keep working via `Navigate … replace` redirects:
-
-| Old path | New path |
-| --- | --- |
-| `/attendance` | `/admin/attendance/check-in` |
-| `/attendance/check-in` | `/admin/attendance/check-in` |
-| `/attendance/dashboard` | `/admin/dashboard` |
-| `/attendance/history` | `/admin/attendance/history` |
-
-## Planned public routes
-
-| Path | Page |
-| --- | --- |
-| `/blog`, `/blog/:slug` | Blog list / post |
+1. Create the page component in `src/modules/<module>/pages/`
+2. Export it from the module's `pages/index.ts`
+3. Add the route to `src/routes/index.tsx` under the appropriate layout
+4. Add the i18n key to `src/i18n/resources/ar.ts`
+5. Add the sidebar link in `AdminSidebar.tsx` if it's an admin route

@@ -13,9 +13,8 @@ import { useTranslation } from "react-i18next";
 import { useQueryClient } from "@tanstack/react-query";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import logo from "@/assets/church-logo.png";
-import { LanguageToggle } from "./LanguageToggle";
 import { ThemeToggle } from "./ThemeToggle";
-import { useLanguage } from "@/i18n/context";
+
 import { NotificationBell } from "@/modules/notifications/components/NotificationBell";
 import { MobileBellBadge } from "@/modules/notifications/components/MobileBellBadge";
 import { notificationKeys } from "@/modules/notifications/api/queryKeys";
@@ -55,11 +54,11 @@ export function Navbar({
 }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const { t } = useTranslation("landing");
   const { t: tCommon } = useTranslation("common");
   const { t: tAttendance } = useTranslation("attendance");
+  const { t: tBible } = useTranslation("bible");
+  const { t: tPoints } = useTranslation("points");
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const isAuth = variant === "auth";
@@ -89,7 +88,7 @@ export function Navbar({
   const navLinkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
       "focus-ring rounded-sm pb-1 text-[15px] font-medium transition-colors hover:text-brand-blue",
-      isArabic ? "font-arabic text-base" : "",
+      "font-arabic text-base",
       isActive ? "border-b-2 border-brand-blue text-brand-blue" : "text-ink",
     );
 
@@ -102,8 +101,8 @@ export function Navbar({
       )}
     >
       <nav
-        dir={isArabic ? "rtl" : "ltr"}
-        lang={language}
+        dir="rtl"
+        lang="ar"
         className={cn(
           "mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 lg:px-8",
           isAuth ? "py-2.5" : "py-3",
@@ -148,13 +147,25 @@ export function Navbar({
                     </NavLink>
                   </li>
                 )}
+                {authenticated && (
+                  <>
+                    <li>
+                      <NavLink to="/bible-verses" className={navLinkClass}>
+                        {tBible("list.title")}
+                      </NavLink>
+                    </li>
+                    <li>
+                      <NavLink to="/points" className={navLinkClass}>
+                        {tPoints("page.title")}
+                      </NavLink>
+                    </li>
+                  </>
+                )}
               </ul>
 
               <NotificationBell to="/notifications" />
 
               <ThemeToggle className="hidden sm:inline-flex" />
-
-              <LanguageToggle className="ms-1 hidden sm:inline-flex" />
 
               {authenticated ? (
                 <DropdownMenu>
@@ -181,10 +192,7 @@ export function Navbar({
                     <DropdownMenuItem asChild>
                       <Link
                         to="/profile"
-                        className={cn(
-                          "cursor-pointer",
-                          isArabic && "font-arabic",
-                        )}
+                        className="cursor-pointer font-arabic"
                       >
                         <UserIcon className="me-2 h-4 w-4" aria-hidden="true" />
                         {t("nav.profile")}
@@ -194,10 +202,7 @@ export function Navbar({
                       <DropdownMenuItem asChild>
                         <Link
                           to="/admin/attendance/check-in"
-                          className={cn(
-                            "cursor-pointer",
-                            isArabic && "font-arabic",
-                          )}
+                          className="cursor-pointer font-arabic"
                         >
                           <ScanLine
                             className="me-2 h-4 w-4"
@@ -211,10 +216,7 @@ export function Navbar({
                       <DropdownMenuItem asChild>
                         <Link
                           to="/admin/dashboard"
-                          className={cn(
-                            "cursor-pointer",
-                            isArabic && "font-arabic",
-                          )}
+                          className="cursor-pointer font-arabic"
                         >
                           <LayoutDashboard
                             className="me-2 h-4 w-4"
@@ -226,10 +228,7 @@ export function Navbar({
                     )}
                     <DropdownMenuItem
                       onClick={() => void handleSignOut()}
-                      className={cn(
-                        "cursor-pointer text-brand-red",
-                        isArabic && "font-arabic",
-                      )}
+                      className="cursor-pointer text-brand-red font-arabic"
                     >
                       <LogOut className="me-2 h-4 w-4" aria-hidden="true" />
                       {t("nav.signOut")}
@@ -241,7 +240,7 @@ export function Navbar({
                   to="/login"
                   className="btn-primary ms-1 hidden px-6 py-2.5 text-sm sm:inline-flex"
                 >
-                  <span className={isArabic ? "font-arabic" : ""}>
+                  <span className="font-arabic">
                     {t("nav.login")}
                   </span>
                 </Link>
@@ -262,7 +261,6 @@ export function Navbar({
           {isAuth && (
             <>
               <ThemeToggle />
-              <LanguageToggle />
             </>
           )}
         </div>
@@ -271,7 +269,7 @@ export function Navbar({
       {open && !isAuth && (
         <div className="border-t border-border bg-background lg:hidden">
           <ul
-            dir={isArabic ? "rtl" : "ltr"}
+            dir="rtl"
             className="mx-auto max-w-7xl px-5 py-3"
           >
             {NAV_ITEMS.map((item) => (
@@ -279,10 +277,7 @@ export function Navbar({
                 <Link
                   to={item.to}
                   onClick={() => setOpen(false)}
-                  className={cn(
-                    "focus-ring block rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary",
-                    isArabic ? "font-arabic text-lg" : "",
-                  )}
+                  className="focus-ring block rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary font-arabic text-lg"
                 >
                   {t(`nav.${item.key}`)}
                 </Link>
@@ -293,24 +288,40 @@ export function Navbar({
                 <Link
                   to="/admin/attendance/check-in"
                   onClick={() => setOpen(false)}
-                  className={cn(
-                    "focus-ring flex items-center gap-2 rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary",
-                    isArabic ? "font-arabic text-lg" : "",
-                  )}
+                  className="focus-ring flex items-center gap-2 rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary font-arabic text-lg"
                 >
                   <CalendarCheck className="h-5 w-5" aria-hidden="true" />
                   {tAttendance("nav.checkIn")}
                 </Link>
               </li>
             )}
+            {authenticated && (
+              <>
+                <li>
+                  <Link
+                    to="/bible-verses"
+                    onClick={() => setOpen(false)}
+                    className="focus-ring block rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary font-arabic text-lg"
+                  >
+                    {tBible("list.title")}
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/points"
+                    onClick={() => setOpen(false)}
+                    className="focus-ring block rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary font-arabic text-lg"
+                  >
+                    {tPoints("page.title")}
+                  </Link>
+                </li>
+              </>
+            )}
             <li>
               <Link
                 to="/notifications"
                 onClick={() => setOpen(false)}
-                className={cn(
-                  "focus-ring flex items-center gap-2 rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary",
-                  isArabic ? "font-arabic text-lg" : "",
-                )}
+                className="focus-ring flex items-center gap-2 rounded-lg px-2 py-3 text-base font-medium text-ink hover:bg-secondary font-arabic text-lg"
               >
                 <span className="relative inline-flex">
                   <Bell className="h-5 w-5" aria-hidden="true" />
@@ -321,17 +332,13 @@ export function Navbar({
             </li>
             <li className="flex items-center justify-between gap-3 pt-3 pb-4">
               <div className="flex items-center gap-2">
-                <LanguageToggle />
                 <ThemeToggle />
               </div>
               {authenticated ? (
                 <button
                   type="button"
                   onClick={() => void handleSignOut()}
-                  className={cn(
-                    "btn-outline flex-1 justify-center py-3 text-brand-red",
-                    isArabic ? "font-arabic" : "",
-                  )}
+                  className="btn-outline flex-1 justify-center py-3 text-brand-red font-arabic"
                 >
                   <LogOut className="h-4 w-4" aria-hidden="true" />
                   {t("nav.signOut")}
@@ -342,7 +349,7 @@ export function Navbar({
                   onClick={() => setOpen(false)}
                   className="btn-primary flex-1 justify-center py-3"
                 >
-                  <span className={isArabic ? "font-arabic" : ""}>
+                  <span className="font-arabic">
                     {t("nav.login")}
                   </span>
                 </Link>

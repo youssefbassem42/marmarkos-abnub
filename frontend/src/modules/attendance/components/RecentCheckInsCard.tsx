@@ -1,7 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CheckCircle2, Clock, QrCode, RefreshCw } from "lucide-react";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { useMeetingAttendance } from "../hooks/useMeetingAttendance";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -10,9 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function RecentCheckInsCard() {
   const { t } = useTranslation("attendance");
   const { t: tCommon } = useTranslation("common");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
-  const locale = language === "ar" ? "ar-EG" : "en-GB";
+  const locale = "ar-EG";
   const { data, isPending, isError, refetch } = useMeetingAttendance();
 
   const recent = [...(data?.attendance_records ?? [])]
@@ -24,15 +21,15 @@ export function RecentCheckInsCard() {
 
   return (
     <section
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
       className="rounded-2xl border border-border bg-card p-5 card-elevated"
     >
       <header className="flex items-baseline justify-between gap-3">
         <h2
           className={cn(
             "font-heading text-lg font-bold text-ink",
-            isArabic && "font-arabic",
+            "font-arabic",
           )}
         >
           {t("checkIn.recent.title")}
@@ -74,7 +71,7 @@ export function RecentCheckInsCard() {
           <p
             className={cn(
               "text-sm text-muted-foreground",
-              isArabic && "font-arabic text-base",
+              "font-arabic text-base",
             )}
           >
             {t("checkIn.recent.empty")}
@@ -96,7 +93,7 @@ export function RecentCheckInsCard() {
                 <p
                   className={cn(
                     "truncate text-sm font-semibold text-ink",
-                    isArabic && "font-arabic",
+                    "font-arabic",
                   )}
                 >
                   {record.user_name}

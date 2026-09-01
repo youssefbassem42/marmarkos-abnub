@@ -3,7 +3,6 @@ import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   AlertTriangle,
-  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Loader2,
@@ -11,7 +10,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { verifyEmail } from "@/lib/api";
-import { useLanguage } from "@/i18n/context";
 import { Navbar } from "@/components/layout/Navbar";
 import { AuthFooter } from "../components/AuthFooter";
 import { BrandPanel } from "../components/BrandPanel";
@@ -27,9 +25,7 @@ type Status = "verifying" | "success" | "error";
 export function VerifyEmailResultPage() {
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token") ?? "";
-  const { language } = useLanguage();
   const { t } = useTranslation("verification");
-  const isArabic = language === "ar";
   const [status, setStatus] = useState<Status>("verifying");
   const attempted = useRef(false);
 
@@ -64,17 +60,17 @@ export function VerifyEmailResultPage() {
 
   return (
     <div
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
       className="min-h-screen bg-background"
     >
       <Navbar variant="auth" />
 
       <main className="flex min-h-[calc(100vh-61px)] flex-col lg:flex-row">
-        <BrandPanel lang={language} />
+        <BrandPanel lang="ar" />
         <section
-          dir={isArabic ? "rtl" : "ltr"}
-          lang={language}
+          dir="rtl"
+          lang="ar"
           className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14"
         >
           <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 card-elevated sm:p-10">
@@ -89,15 +85,13 @@ export function VerifyEmailResultPage() {
         </section>
       </main>
 
-      <AuthFooter lang={language} />
+      <AuthFooter lang="ar" />
     </div>
   );
 }
 
 function Verifying() {
-  const { language } = useLanguage();
   const { t } = useTranslation("verification");
-  const isArabic = language === "ar";
   return (
     <div className="flex flex-col items-center text-center">
       <span className="grid h-16 w-16 place-items-center rounded-full bg-mint/15">
@@ -111,8 +105,7 @@ function Verifying() {
       </h1>
       <p
         className={cn(
-          "mt-3 max-w-sm leading-relaxed text-muted-foreground",
-          isArabic ? "font-arabic text-xl" : "text-base",
+          "mt-3 max-w-sm leading-relaxed text-muted-foreground font-arabic text-xl",
         )}
       >
         {t("confirm.verifyingMessage")}
@@ -122,9 +115,7 @@ function Verifying() {
 }
 
 function Success() {
-  const { language } = useLanguage();
   const { t } = useTranslation("verification");
-  const isArabic = language === "ar";
   return (
     <div className="flex flex-col items-center text-center">
       <span className="grid h-16 w-16 place-items-center rounded-full bg-mint/15">
@@ -135,8 +126,7 @@ function Success() {
       </h1>
       <p
         className={cn(
-          "mt-3 max-w-sm leading-relaxed text-muted-foreground",
-          isArabic ? "font-arabic text-xl" : "text-base",
+          "mt-3 max-w-sm leading-relaxed text-muted-foreground font-arabic text-xl",
         )}
       >
         {t("confirm.successMessage")}
@@ -146,11 +136,7 @@ function Success() {
         className="mt-6 h-12 w-full max-w-xs rounded-xl bg-navy text-lg text-white transition-colors hover:bg-navy/90 focus-ring"
       >
         <Link to="/login">
-          {isArabic ? (
-            <ArrowRight className="h-5 w-5" aria-hidden="true" />
-          ) : (
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          )}
+          <ArrowRight className="h-5 w-5" aria-hidden="true" />
           {t("confirm.successCta")}
         </Link>
       </Button>
@@ -159,9 +145,7 @@ function Success() {
 }
 
 function Error() {
-  const { language } = useLanguage();
   const { t } = useTranslation("verification");
-  const isArabic = language === "ar";
   return (
     <div className="flex flex-col items-center text-center">
       <span className="grid h-16 w-16 place-items-center rounded-full bg-brand-red/10">
@@ -172,8 +156,7 @@ function Error() {
       </h1>
       <p
         className={cn(
-          "mt-3 max-w-sm leading-relaxed text-muted-foreground",
-          isArabic ? "font-arabic text-xl" : "text-base",
+          "mt-3 max-w-sm leading-relaxed text-muted-foreground font-arabic text-xl",
         )}
       >
         {t("confirm.errorMessage")}
@@ -190,8 +173,7 @@ function Error() {
       <Link
         to="/login"
         className={cn(
-          "mt-4 font-semibold text-brand-blue underline-offset-4 hover:underline",
-          isArabic ? "font-arabic text-lg" : "text-sm",
+          "mt-4 font-semibold text-brand-blue underline-offset-4 hover:underline font-arabic text-lg",
         )}
       >
         {t("confirm.loginLink")}

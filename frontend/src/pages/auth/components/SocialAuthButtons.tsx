@@ -1,4 +1,3 @@
-import { useLanguage } from "@/i18n/context";
 import { googleSignInUrl } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
@@ -18,8 +17,6 @@ export function SocialAuthButtons({
   comingSoonLabel,
 }: SocialAuthButtonsProps) {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
 
   if (!clientId) {
     return (
@@ -39,10 +36,9 @@ export function SocialAuthButtons({
     <a
       href={googleSignInUrl()}
       aria-label={googleLabel}
-      className={cn(
-        "focus-ring flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-lg font-medium text-ink transition-colors hover:bg-soft",
-        isArabic ? "font-arabic" : "",
-      )}
+        className={cn(
+          "focus-ring flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-background px-4 py-3 text-lg font-medium text-ink transition-colors hover:bg-soft font-arabic",
+        )}
     >
       <GoogleGlyph />
       {googleLabel}

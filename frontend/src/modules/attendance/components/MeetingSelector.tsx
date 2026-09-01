@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import {
   Select,
@@ -37,20 +36,6 @@ const MONTH_NAMES_AR = [
   "نوفمبر",
   "ديسمبر",
 ];
-const MONTH_NAMES_EN = [
-  "January",
-  "February",
-  "March",
-  "April",
-  "May",
-  "June",
-  "July",
-  "August",
-  "September",
-  "October",
-  "November",
-  "December",
-];
 
 function monthOptions(currentYear: number) {
   const options: { year: number; month: number }[] = [];
@@ -77,11 +62,9 @@ export function MeetingSelector({
   onMonthChange,
 }: MeetingSelectorProps) {
   const { t } = useTranslation("attendance");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   // Arrows mirror with direction, not CSS transforms.
-  const PrevIcon = isArabic ? ChevronRight : ChevronLeft;
-  const NextIcon = isArabic ? ChevronLeft : ChevronRight;
+  const PrevIcon = ChevronRight;
+  const NextIcon = ChevronLeft;
 
   const selectedIndex = selected
     ? meetings.indexOf(selected)
@@ -93,7 +76,7 @@ export function MeetingSelector({
       : false;
 
   const months = monthOptions(year);
-  const monthNames = isArabic ? MONTH_NAMES_AR : MONTH_NAMES_EN;
+  const monthNames = MONTH_NAMES_AR;
 
   return (
     <div className="flex items-center gap-2">

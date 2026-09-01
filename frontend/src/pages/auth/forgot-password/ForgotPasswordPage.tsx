@@ -1,28 +1,25 @@
 import { useState } from "react";
-import { useLanguage } from "@/i18n/context";
 import { Navbar } from "@/components/layout/Navbar";
 import { AuthFooter } from "../components/AuthFooter";
 import { BrandPanel } from "../components/BrandPanel";
 import { AuthCard } from "./AuthCard";
 
 export function ForgotPasswordPage() {
-  const { language } = useLanguage();
   const [stage, setStage] = useState<"form" | "success">("form");
   const [sentEmail, setSentEmail] = useState<string | undefined>(undefined);
-  const isArabic = language === "ar";
 
   return (
     <div
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
       className="min-h-screen bg-background"
     >
       <Navbar variant="auth" />
 
       <main className="flex min-h-[calc(100vh-61px)] flex-col lg:flex-row">
-        <BrandPanel lang={language} />
+        <BrandPanel lang="ar" />
         <AuthCard
-          lang={language}
+          lang="ar"
           stage={stage}
           sentEmail={sentEmail}
           onSuccess={(email) => {
@@ -32,7 +29,7 @@ export function ForgotPasswordPage() {
         />
       </main>
 
-      <AuthFooter lang={language} />
+      <AuthFooter lang="ar" />
     </div>
   );
 }

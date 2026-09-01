@@ -74,16 +74,8 @@ function signInAs(role: "ADMIN" | "SERVANT" | "MEMBER") {
 async function fillValidForm(user: ReturnType<typeof userEvent.setup>) {
   await user.type(screen.getByLabelText("العنوان (بالعربية)"), "عنوان الإعلان");
   await user.type(
-    screen.getByLabelText("العنوان (بالإنجليزية)"),
-    "Announcement title",
-  );
-  await user.type(
     screen.getByLabelText("الرسالة (بالعربية)"),
     "نص الرسالة بالعربية هنا",
-  );
-  await user.type(
-    screen.getByLabelText("الرسالة (بالإنجليزية)"),
-    "The English message body here",
   );
 }
 
@@ -109,15 +101,7 @@ describe("PushNotificationForm", () => {
     renderWithProviders(<PushNotificationForm />);
 
     await user.type(screen.getByLabelText("العنوان (بالعربية)"), "عنوان طويل");
-    await user.type(
-      screen.getByLabelText("العنوان (بالإنجليزية)"),
-      "A long title",
-    );
     await user.type(screen.getByLabelText("الرسالة (بالعربية)"), "ab");
-    await user.type(
-      screen.getByLabelText("الرسالة (بالإنجليزية)"),
-      "The English body",
-    );
     await user.click(screen.getByRole("button", { name: /إرسال إلى الجميع/ }));
 
     expect(mockedPush).not.toHaveBeenCalled();

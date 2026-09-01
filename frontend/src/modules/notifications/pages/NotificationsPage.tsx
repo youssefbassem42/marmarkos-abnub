@@ -9,7 +9,6 @@ import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/i18n/context";
 import { useMarkRead, useNotifications } from "../hooks";
 import { NotificationList } from "../components/NotificationList";
 import { NotificationTabs } from "../components/NotificationTabs";
@@ -30,8 +29,6 @@ function parseTab(value: string | null): string {
  */
 export function NotificationsPage() {
   const { t } = useTranslation("notifications");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const [searchParams, setSearchParams] = useSearchParams();
   const markRead = useMarkRead();
 
@@ -70,24 +67,22 @@ export function NotificationsPage() {
   return (
     <div
       className="min-h-screen bg-background"
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
     >
       <Navbar />
       <main className="mx-auto w-full max-w-4xl px-5 pb-16 pt-28 lg:px-8">
         <header className="text-center">
           <h1
             className={cn(
-              "font-heading text-3xl font-extrabold tracking-tight text-ink",
-              isArabic && "font-arabic",
+              "font-heading text-3xl font-extrabold tracking-tight text-ink font-arabic",
             )}
           >
             {t("title")}
           </h1>
           <p
             className={cn(
-              "mt-2 text-sm text-muted-foreground",
-              isArabic && "font-arabic text-base",
+              "mt-2 text-sm text-muted-foreground font-arabic text-base",
             )}
           >
             {t("subtitle")}
@@ -134,16 +129,14 @@ export function NotificationsPage() {
               >
                 <p
                   className={cn(
-                    "font-semibold text-ink",
-                    isArabic && "font-arabic",
+                    "font-semibold text-ink font-arabic",
                   )}
                 >
                   {t("error.title")}
                 </p>
                 <p
                   className={cn(
-                    "mt-1 text-sm text-muted-foreground",
-                    isArabic && "font-arabic",
+                    "mt-1 text-sm text-muted-foreground font-arabic",
                   )}
                 >
                   {t("error.body")}
@@ -161,8 +154,7 @@ export function NotificationsPage() {
                 action={
                   <p
                     className={cn(
-                      "max-w-md text-xs text-muted-foreground",
-                      isArabic && "font-arabic",
+                      "max-w-md text-xs text-muted-foreground font-arabic",
                     )}
                   >
                     {t("empty.body")}
@@ -175,7 +167,6 @@ export function NotificationsPage() {
               <>
                 <NotificationList
                   items={items}
-                  language={language}
                   onMarkRead={(id) => markRead.mutate(id)}
                 />
                 {pages > 1 && (

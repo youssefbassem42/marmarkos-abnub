@@ -7,7 +7,6 @@ import {
   UserRoundX,
   Users,
 } from "lucide-react";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { StatTile } from "./StatTile";
 import { useMeetingStatistics } from "../hooks/useMeetingStatistics";
@@ -17,15 +16,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 export function MeetingStatsCard() {
   const { t } = useTranslation("attendance");
   const { t: tCommon } = useTranslation("common");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
-  const locale = language === "ar" ? "ar-EG" : "en-GB";
+  const locale = "ar-EG";
   const { data, isPending, isError, refetch } = useMeetingStatistics();
 
   return (
     <section
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
       className="rounded-2xl border border-border bg-card p-5 card-elevated"
     >
       <header className="flex items-baseline justify-between gap-3">
@@ -33,7 +30,7 @@ export function MeetingStatsCard() {
           <h2
             className={cn(
               "block font-heading text-lg font-bold text-ink",
-              isArabic && "font-arabic",
+              "font-arabic",
             )}
           >
             {t("checkIn.stats.title")}
@@ -42,7 +39,7 @@ export function MeetingStatsCard() {
             <p
               className={cn(
                 "mt-0.5 block text-xs text-muted-foreground",
-                isArabic && "font-arabic",
+                "font-arabic",
               )}
             >
               {new Intl.DateTimeFormat(locale, {

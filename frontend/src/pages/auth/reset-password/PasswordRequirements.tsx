@@ -12,7 +12,6 @@ export function PasswordRequirements({
   lang,
 }: PasswordRequirementsProps) {
   const { t } = useTranslation("resetPassword");
-  const isArabic = lang === "ar";
   const requirements = t("form.requirements", {
     returnObjects: true,
   }) as readonly string[];
@@ -56,8 +55,7 @@ export function PasswordRequirements({
             )}
             <span
               className={cn(
-                "text-sm leading-snug",
-                isArabic && "font-arabic text-base",
+                "text-sm leading-snug font-arabic text-base",
               )}
             >
               {label}

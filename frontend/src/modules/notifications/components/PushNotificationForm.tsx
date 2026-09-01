@@ -46,16 +46,12 @@ export function PushNotificationForm() {
     resolver: zodResolver(
       pushSchema({
         titleArRequired: t("admin.composer.titleAr"),
-        titleEnRequired: t("admin.composer.titleEn"),
         messageArRequired: t("admin.composer.messageAr"),
-        messageEnRequired: t("admin.composer.messageEn"),
       }),
     ),
     defaultValues: {
       title_ar: "",
-      title_en: "",
       message_ar: "",
-      message_en: "",
       cta_url: "",
     },
   });
@@ -67,9 +63,10 @@ export function PushNotificationForm() {
     push.mutate(
       {
         title_ar: values.title_ar,
-        title_en: values.title_en,
+        // The API/DB keep title_en/message_en NOT NULL (frozen contract); the platform is Arabic-only.
+        title_en: values.title_ar,
         message_ar: values.message_ar,
-        message_en: values.message_en,
+        message_en: values.message_ar,
         cta_url: values.cta_url ? values.cta_url : null,
         send_email: sendEmail,
       },
@@ -130,19 +127,6 @@ export function PushNotificationForm() {
         </div>
 
         <div className="grid gap-1.5">
-          <Label htmlFor="push-title-en">{t("admin.composer.titleEn")}</Label>
-          <Input
-            id="push-title-en"
-            dir="ltr"
-            className={fieldError(Boolean(errors.title_en))}
-            {...register("title_en")}
-          />
-          {errors.title_en && (
-            <p className="text-xs text-brand-red">{errors.title_en.message}</p>
-          )}
-        </div>
-
-        <div className="grid gap-1.5">
           <Label htmlFor="push-message-ar">
             {t("admin.composer.messageAr")}
           </Label>
@@ -159,24 +143,6 @@ export function PushNotificationForm() {
           {errors.message_ar && (
             <p className="text-xs text-brand-red">
               {errors.message_ar.message}
-            </p>
-          )}
-        </div>
-
-        <div className="grid gap-1.5">
-          <Label htmlFor="push-message-en">
-            {t("admin.composer.messageEn")}
-          </Label>
-          <Textarea
-            id="push-message-en"
-            dir="ltr"
-            rows={4}
-            className={fieldError(Boolean(errors.message_en))}
-            {...register("message_en")}
-          />
-          {errors.message_en && (
-            <p className="text-xs text-brand-red">
-              {errors.message_en.message}
             </p>
           )}
         </div>

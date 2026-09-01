@@ -17,13 +17,12 @@ export function BrandPanel({
   className,
 }: BrandPanelProps) {
   const { t } = useTranslation("common");
-  const isArabic = lang === "ar";
   const isLight = variant === "light";
 
   return (
     <aside
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={lang}
+      dir="rtl"
+      lang="ar"
       className={cn(
         "relative flex w-full flex-col justify-center overflow-hidden px-6 py-12 lg:px-12 lg:py-16",
         isLight ? "bg-background" : "bg-navy text-white",
@@ -108,7 +107,6 @@ interface BrandPieceProps {
 /** FAITH. / FRIENDS. / PURPOSE. — shared by the auth panel and sidebar. */
 export function BrandMessageHeading({ lang, className }: BrandPieceProps) {
   const { t } = useTranslation("common");
-  const isArabic = lang === "ar";
   const message = t("brand.message", {
     returnObjects: true,
   }) as readonly string[];
@@ -120,24 +118,11 @@ export function BrandMessageHeading({ lang, className }: BrandPieceProps) {
         className,
       )}
     >
-      {isArabic ? (
-        <>
-          {message[0]}
-          <br />
-          {message[1]}
-          <br />
-          <span className="text-mint">{message[2]}</span>
-        </>
-      ) : (
-        message.map((word, index) => (
-          <span
-            key={word}
-            className={index === message.length - 1 ? "text-mint" : undefined}
-          >
-            {word}{" "}
-          </span>
-        ))
-      )}
+      {message[0]}
+      <br />
+      {message[1]}
+      <br />
+      <span className="text-mint">{message[2]}</span>
     </h1>
   );
 }
@@ -145,13 +130,11 @@ export function BrandMessageHeading({ lang, className }: BrandPieceProps) {
 /** The one-line mission statement under the message heading. */
 export function BrandSupportingLine({ lang, className }: BrandPieceProps) {
   const { t } = useTranslation("common");
-  const isArabic = lang === "ar";
 
   return (
     <p
       className={cn(
-        "mt-6 max-w-md leading-relaxed",
-        isArabic ? "font-arabic text-xl" : "text-lg",
+        "mt-6 max-w-md leading-relaxed font-arabic text-xl",
         className,
       )}
     >
@@ -163,7 +146,6 @@ export function BrandSupportingLine({ lang, className }: BrandPieceProps) {
 /** Scripture quotation in Amiri with the mint reference. */
 export function BrandVerseBlock({ lang, className }: BrandPieceProps) {
   const { t } = useTranslation("common");
-  const isArabic = lang === "ar";
 
   return (
     <figure
@@ -172,8 +154,7 @@ export function BrandVerseBlock({ lang, className }: BrandPieceProps) {
       <Quote className="h-6 w-6 fill-mint text-mint" aria-hidden="true" />
       <blockquote
         className={cn(
-          "mt-3 font-verse leading-relaxed text-white",
-          isArabic ? "text-2xl" : "text-xl",
+          "mt-3 font-verse leading-relaxed text-white text-2xl",
         )}
       >
         {t("brand.verse")}

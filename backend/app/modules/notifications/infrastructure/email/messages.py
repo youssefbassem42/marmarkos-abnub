@@ -3,7 +3,8 @@
 Every outgoing email is one function call away: each builder returns a
 ``BrandEmailContent`` whose data drives the shared layout — so adding a
 new case (event announcement, welcome note...) never touches markup.
-All copy is bilingual: Arabic first (RTL), English second.
+The platform renders Arabic only; function signatures retain ``_en``
+parameters for API/DB contract compliance.
 """
 
 import html
@@ -33,8 +34,8 @@ def verification_email(
 ) -> BrandEmailContent:
     name = _esc(_display_name(first_name) or "")
     return BrandEmailContent(
-        subject=f"Confirm your email — {_BRAND_EN} | تأكيد بريدك الإلكتروني",
-        preheader="One click and your account is active / نقرة واحدة ويصبح حسابك مفعّلًا",
+        subject=f"تأكيد بريدك الإلكتروني — {_BRAND_EN}",
+        preheader="نقرة واحدة ويصبح حسابك مفعّلًا",
         sections=(
             EmailSection(
                 heading=f"أهلاً {name} 👋" if name else "أهلاً بك 👋",
@@ -45,19 +46,10 @@ def verification_email(
                 ),
                 rtl=True,
             ),
-            EmailSection(
-                heading="Confirm your email",
-                paragraphs=(
-                    "Welcome to the Marmarkos Abnub youth community!"
-                    " Please confirm this address to activate your account.",
-                    f"This link is valid for {expire_hours} hours and can be used only once.",
-                ),
-            ),
         ),
-        cta_label="تأكيد البريد الإلكتروني — VERIFY EMAIL",
+        cta_label="تأكيد البريد الإلكتروني",
         cta_url=verify_url,
-        note="لم تطلب هذا البريد؟ تجاهله بأمان — لن يتم تفعيل أي حساب. "
-        "Didn't request this? You can safely ignore it; no account will be activated.",
+        note="لم تطلب هذا البريد؟ تجاهله بأمان — لن يتم تفعيل أي حساب.",
     )
 
 
@@ -69,8 +61,8 @@ def password_reset_email(
 ) -> BrandEmailContent:
     name = _esc(_display_name(first_name) or "")
     return BrandEmailContent(
-        subject="Reset your password — Marmarkos Abnub | إعادة تعيين كلمة المرور",
-        preheader="A link to choose a new password / رابط لاختيار كلمة مرور جديدة",
+        subject=f"إعادة تعيين كلمة المرور — {_BRAND_EN}",
+        preheader="رابط لاختيار كلمة مرور جديدة",
         sections=(
             EmailSection(
                 heading=f"مرحبًا {name}" if name else "مرحبًا",
@@ -82,20 +74,10 @@ def password_reset_email(
                 ),
                 rtl=True,
             ),
-            EmailSection(
-                heading="Reset your password",
-                paragraphs=(
-                    "We received a request to reset the password for your account."
-                    " Click the button below to choose a new one.",
-                    f"The link is valid for {expire_minutes} minutes"
-                    " and expires after a single use.",
-                ),
-            ),
         ),
-        cta_label="إعادة تعيين كلمة المرور — RESET PASSWORD",
+        cta_label="إعادة تعيين كلمة المرور",
         cta_url=reset_url,
-        note="إذا لم تطلب تغيير كلمة المرور فتجاهل هذه الرسالة؛ حسابك آمن. "
-        "If you didn't request a reset, ignore this email — your account is safe.",
+        note="إذا لم تطلب تغيير كلمة المرور فتجاهل هذه الرسالة؛ حسابك آمن.",
     )
 
 
@@ -110,11 +92,10 @@ def notification_email(
 ) -> BrandEmailContent:
     """Generic announcement case (new event, blog post, ...) reusing the same layout."""
     return BrandEmailContent(
-        subject=f"{title_en} — {_BRAND_EN}",
-        preheader=message_en,
+        subject=f"{title_ar} — {_BRAND_EN}",
+        preheader=message_ar,
         sections=(
             EmailSection(heading=_esc(title_ar), paragraphs=(_esc(message_ar),), rtl=True),
-            EmailSection(heading=_esc(title_en), paragraphs=(_esc(message_en),)),
         ),
         cta_label=cta_label,
         cta_url=cta_url,
@@ -129,13 +110,13 @@ def new_post_email(
     message_en: str,
     cta_url: str | None = None,
 ) -> BrandEmailContent:
-    """Blog post case: the generic announcement with a bilingual read CTA."""
+    """Blog post case: the generic announcement with a read CTA."""
     return notification_email(
         title_ar=title_ar,
         title_en=title_en,
         message_ar=message_ar,
         message_en=message_en,
-        cta_label="اقرأ المزيد — READ MORE",
+        cta_label="اقرأ المزيد",
         cta_url=cta_url,
     )
 
@@ -143,8 +124,8 @@ def new_post_email(
 def welcome_email(*, first_name: str | None, sign_in_url: str) -> BrandEmailContent:
     name = _esc(_display_name(first_name) or "")
     return BrandEmailContent(
-        subject="Your account is active — Marmarkos Abnub | تم تفعيل حسابك",
-        preheader="Welcome to the community / أهلًا بك في المجتمع",
+        subject=f"تم تفعيل حسابك — {_BRAND_EN}",
+        preheader="أهلًا بك في المجتمع",
         sections=(
             EmailSection(
                 heading=f"تم تفعيل حسابك يا {name}!" if name else "تم تفعيل حسابك!",
@@ -153,13 +134,43 @@ def welcome_email(*, first_name: str | None, sign_in_url: str) -> BrandEmailCont
                 ),
                 rtl=True,
             ),
+        ),
+        cta_label="تسجيل الدخول",
+        cta_url=sign_in_url,
+    )
+
+
+def verse_published_email(
+    *,
+    verse_reference: str,
+    title: str,
+    published_at: str,
+    verse_url: str,
+) -> BrandEmailContent:
+    """Phase 5 (US-028): creator notification after automatic publication.
+
+    Follows ``phase-5.md`` §46: tells the creator their scheduled verse
+    went live.
+    """
+    reference = _esc(verse_reference)
+    heading_title = _esc(title)
+    return BrandEmailContent(
+        subject=f"تم نشر آية الكتاب المقدس المجدولة — {_BRAND_EN}",
+        preheader="تم النشر التلقائي",
+        sections=(
             EmailSection(
-                heading="Your account is now active",
+                heading="تم نشر آيتك المجدولة",
                 paragraphs=(
-                    "Welcome aboard! You can sign in now and be part of what God is doing.",
+                    "مرحبًا،",
+                    f"تم نشر آية الكتاب المقدس المجدولة تلقائيًا اليوم: {heading_title}"
+                    f" ({reference}).",
+                    f"تاريخ النشر: {published_at}",
+                    "يمكنك فتح المنصة لمشاهدة المنشور.",
                 ),
+                rtl=True,
             ),
         ),
-        cta_label="تسجيل الدخول — SIGN IN",
-        cta_url=sign_in_url,
+        cta_label="افتح الآية",
+        cta_url=verse_url,
+        note="— خدمة الشباب بأبنوب",
     )

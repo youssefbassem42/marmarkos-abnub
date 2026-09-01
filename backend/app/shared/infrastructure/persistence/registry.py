@@ -14,6 +14,8 @@ import app.modules.blog.infrastructure.persistence.models  # noqa: F401
 import app.modules.comments.infrastructure.persistence.models  # noqa: F401
 import app.modules.media.infrastructure.persistence.models  # noqa: F401
 import app.modules.notifications.infrastructure.persistence.models  # noqa: F401
+import app.modules.points.infrastructure.persistence.models  # noqa: F401
+import app.modules.quiz.infrastructure.persistence.models  # noqa: F401
 import app.modules.users.infrastructure.persistence.models  # noqa: F401
 from app.shared.infrastructure.persistence.base import Base
 from app.shared.infrastructure.persistence.outbox import OutboxEvent  # noqa: F401

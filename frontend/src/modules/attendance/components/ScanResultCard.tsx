@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 import { AttendanceStatusBadge } from "./AttendanceStatusBadge";
-import { useLanguage } from "@/i18n/context";
 import type { AttendanceRecord } from "../types";
 import { cn } from "@/lib/utils";
 
@@ -44,16 +43,14 @@ export function ScanResultCard({
   onScanNext,
 }: ScanResultCardProps) {
   const { t } = useTranslation("attendance");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
-  const locale = language === "ar" ? "ar-EG" : "en-GB";
+  const locale = "ar-EG";
   const { Icon, iconClass, boxClass, titleClass } = VARIANT_STYLES[variant];
 
   return (
     <div
       role={variant === "success" ? "status" : "alert"}
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
       className={cn("rounded-2xl border p-5", boxClass)}
     >
       <div className="flex items-start gap-4">
@@ -76,7 +73,7 @@ export function ScanResultCard({
                 <dd
                   className={cn(
                     "font-heading text-xl font-bold text-ink",
-                    isArabic && "font-arabic",
+                    "font-arabic",
                   )}
                 >
                   {record.user_name}
@@ -122,7 +119,7 @@ export function ScanResultCard({
               onClick={onScanNext}
               className="btn-primary mt-4 px-5 py-2 text-sm"
             >
-              <span className={isArabic ? "font-arabic" : undefined}>
+              <span className="font-arabic">
                 {t("checkIn.result.scanNext")}
               </span>
             </button>

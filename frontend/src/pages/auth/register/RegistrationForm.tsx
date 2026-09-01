@@ -21,10 +21,8 @@ type RegisterFormProps = {
 
 export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
   const { t } = useTranslation("register");
-  const isArabic = lang === "ar";
   const inputClass = cn(
-    "h-11 rounded-xl border-border bg-background px-3 focus-ring",
-    isArabic ? "font-arabic text-lg placeholder:text-base" : "text-base",
+    "h-11 rounded-xl border-border bg-background px-3 focus-ring font-arabic text-lg placeholder:text-base",
   );
 
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -149,8 +147,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
             aria-invalid={Boolean(errors.email)}
             className={cn(
               inputClass,
-              "w-full ps-9 pe-3",
-              isArabic ? "font-arabic" : "",
+              "w-full ps-9 pe-3 font-arabic",
             )}
             {...register("email")}
           />
@@ -218,8 +215,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
               aria-invalid={Boolean(errors.dateOfBirth)}
               className={cn(
                 inputClass,
-                "ps-9 pe-3",
-                isArabic ? "font-arabic" : "",
+                "ps-9 pe-3 font-arabic",
               )}
               {...register("dateOfBirth")}
             />
@@ -247,8 +243,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
               aria-invalid={Boolean(errors.phone)}
               className={cn(
                 inputClass,
-                "ps-9 pe-3 text-start",
-                isArabic ? "font-arabic" : "",
+                "ps-9 pe-3 text-start font-arabic",
               )}
               {...register("phone")}
             />
@@ -275,8 +270,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
             aria-invalid={Boolean(errors.address)}
             className={cn(
               inputClass,
-              "ps-9 pe-3",
-              isArabic ? "font-arabic" : "",
+              "ps-9 pe-3 font-arabic",
             )}
             {...register("address")}
           />
@@ -296,8 +290,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
         <label
           htmlFor="terms"
           className={cn(
-            "leading-relaxed text-muted-foreground",
-            isArabic ? "font-arabic text-lg" : "text-sm",
+            "leading-relaxed text-muted-foreground font-arabic text-lg",
           )}
         >
           {t("terms.prefix")}{" "}
@@ -356,8 +349,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
         <span className="h-px flex-1 bg-border" />
         <span
           className={cn(
-            "text-sm text-muted-foreground",
-            isArabic && "font-arabic text-lg",
+            "text-sm text-muted-foreground font-arabic text-lg",
           )}
         >
           {t("form.or")}
@@ -372,8 +364,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
 
       <p
         className={cn(
-          "text-center text-muted-foreground",
-          isArabic ? "font-arabic text-lg" : "text-base",
+          "text-center text-muted-foreground font-arabic text-lg",
         )}
       >
         {t("loginPrompt")}{" "}

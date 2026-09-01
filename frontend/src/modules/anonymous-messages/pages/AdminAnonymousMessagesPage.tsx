@@ -16,7 +16,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { getApiErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { useLanguage } from "@/i18n/context";
 import { useAnonymousMessages, useRetryDelivery } from "../hooks";
 import { AnonymousMessagesTable } from "../components/AnonymousMessagesTable";
 import type { MessageStatusValue } from "../types";
@@ -45,8 +44,6 @@ const FILTERS: { value: StatusFilter; label: FilterLabel }[] = [
  */
 export function AdminAnonymousMessagesPage() {
   const { t } = useTranslation("anonymousMessages");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const [searchParams, setSearchParams] = useSearchParams();
 
   const filter = (searchParams.get("status") ?? "all") as StatusFilter;
@@ -156,7 +153,6 @@ export function AdminAnonymousMessagesPage() {
             <>
               <AnonymousMessagesTable
                 items={items}
-                language={language}
                 retryPending={retry.isPending}
                 onRetry={(id) =>
                   retry.mutate(id, {

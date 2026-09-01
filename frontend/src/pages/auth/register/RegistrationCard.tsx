@@ -10,7 +10,6 @@ interface RegistrationCardProps {
 
 export function RegistrationCard({ lang }: RegistrationCardProps) {
   const { t } = useTranslation("register");
-  const isArabic = lang === "ar";
   const navigate = useNavigate();
 
   // The account exists but stays inactive until the emailed link is
@@ -24,8 +23,8 @@ export function RegistrationCard({ lang }: RegistrationCardProps) {
 
   return (
     <section
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={lang}
+      dir="rtl"
+      lang="ar"
       className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14"
     >
       <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 card-elevated sm:p-10">
@@ -38,8 +37,7 @@ export function RegistrationCard({ lang }: RegistrationCardProps) {
           </h2>
           <p
             className={cn(
-              "mt-2 text-muted-foreground",
-              isArabic ? "font-arabic text-xl" : "text-base",
+              "mt-2 text-muted-foreground font-arabic text-xl",
             )}
           >
             {t("card.subtitle")}

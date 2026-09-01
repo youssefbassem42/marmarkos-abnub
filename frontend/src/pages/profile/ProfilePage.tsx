@@ -17,7 +17,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/layout/Navbar";
-import { useLanguage } from "@/i18n/context";
 import { AttendanceStatusBadge } from "@/modules/attendance/components/AttendanceStatusBadge";
 import { useMyAttendance } from "@/modules/attendance/hooks/useMyAttendance";
 import { AttendancePinCard } from "./AttendancePinCard";
@@ -40,8 +39,6 @@ function currentYearMonth(): { year: number; month: number } {
 }
 
 export function ProfilePage() {
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const { t } = useTranslation("profile");
   const navigate = useNavigate();
 
@@ -111,8 +108,7 @@ export function ProfilePage() {
 
   if (!user) return null;
   const inputClass = cn(
-    "h-11 rounded-xl border-border bg-background focus-ring",
-    isArabic ? "font-arabic text-lg placeholder:text-base" : "",
+    "h-11 rounded-xl border-border bg-background focus-ring font-arabic text-lg placeholder:text-base"
   );
 
   const handleAvatarChange = async (file: File | undefined) => {
@@ -215,8 +211,8 @@ export function ProfilePage() {
 
   return (
     <div
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
       className="min-h-screen bg-background"
     >
       <Navbar />
@@ -224,18 +220,12 @@ export function ProfilePage() {
       <main className="mx-auto max-w-3xl px-5 pb-16 pt-28 lg:px-8">
         <header className="text-center">
           <h1
-            className={cn(
-              "text-3xl font-extrabold tracking-tight text-ink",
-              isArabic && "font-arabic",
-            )}
+            className="text-3xl font-extrabold tracking-tight text-ink font-arabic"
           >
             {t("heading")}
           </h1>
           <p
-            className={cn(
-              "mt-2 text-muted-foreground",
-              isArabic ? "font-arabic text-lg" : "text-sm",
-            )}
+            className="mt-2 text-muted-foreground font-arabic text-lg"
           >
             {t("subtitle")}
           </p>
@@ -274,10 +264,7 @@ export function ProfilePage() {
           </div>
           <div className="text-center sm:text-start">
             <p
-              className={cn(
-                "font-bold text-ink",
-                isArabic ? "font-arabic text-xl" : "text-lg",
-              )}
+              className="font-bold text-ink font-arabic text-xl"
             >
               {user.first_name} {user.last_name}
             </p>
@@ -302,19 +289,13 @@ export function ProfilePage() {
           </div>
           <div className="flex-1">
             <h2
-              className={cn(
-                "flex items-center justify-center gap-2 font-extrabold text-ink sm:justify-start",
-                isArabic ? "font-arabic text-xl" : "text-lg",
-              )}
+              className="flex items-center justify-center gap-2 font-extrabold text-ink sm:justify-start font-arabic text-xl"
             >
               <QrCode className="h-5 w-5 text-mint" aria-hidden="true" />
               {t("qr.title")}
             </h2>
             <p
-              className={cn(
-                "mt-1 text-sm leading-6 text-muted-foreground",
-                isArabic && "font-arabic",
-              )}
+              className="mt-1 text-sm leading-6 text-muted-foreground font-arabic"
             >
               {t("qr.hint")}
             </p>
@@ -323,10 +304,7 @@ export function ProfilePage() {
               variant="outline"
               onClick={() => void loadQr()}
               disabled={qrLoading}
-              className={cn(
-                "mt-3 h-10 rounded-xl border-navy px-4 text-sm font-semibold text-ink focus-ring",
-                isArabic && "font-arabic",
-              )}
+              className="mt-3 h-10 rounded-xl border-navy px-4 text-sm font-semibold text-ink focus-ring font-arabic"
             >
               <RefreshCw
                 className={cn("me-2 h-4 w-4", qrLoading && "animate-spin")}
@@ -347,10 +325,7 @@ export function ProfilePage() {
             return (
               <section className="mt-6 rounded-2xl border border-border bg-card p-6 card-elevated">
                 <h2
-                  className={cn(
-                    "flex items-center justify-between gap-2 font-extrabold text-ink sm:justify-start",
-                    isArabic ? "font-arabic text-xl" : "text-lg",
-                  )}
+                  className="flex items-center justify-between gap-2 font-extrabold text-ink sm:justify-start font-arabic text-xl"
                 >
                   <CalendarCheck
                     className="h-5 w-5 text-mint"
@@ -358,10 +333,7 @@ export function ProfilePage() {
                   />
                   {t("attendance.title")}
                   <span
-                    className={cn(
-                      "ms-auto text-sm font-semibold text-muted-foreground",
-                      isArabic && "font-arabic",
-                    )}
+                    className="ms-auto text-sm font-semibold text-muted-foreground font-arabic"
                     dir="ltr"
                   >
                     {my.data.year}/{String(my.data.month).padStart(2, "0")}
@@ -374,10 +346,7 @@ export function ProfilePage() {
                       {my.data.meetings_held}
                     </p>
                     <p
-                      className={cn(
-                        "text-xs text-muted-foreground",
-                        isArabic && "font-arabic",
-                      )}
+                      className="text-xs text-muted-foreground font-arabic"
                     >
                       {t("attendance.held")}
                     </p>
@@ -387,10 +356,7 @@ export function ProfilePage() {
                       {my.data.attended_count}
                     </p>
                     <p
-                      className={cn(
-                        "text-xs text-muted-foreground",
-                        isArabic && "font-arabic",
-                      )}
+                      className="text-xs text-muted-foreground font-arabic"
                     >
                       {t("attendance.attended")}
                     </p>
@@ -403,10 +369,7 @@ export function ProfilePage() {
                       {my.data.attendance_rate}%
                     </p>
                     <p
-                      className={cn(
-                        "text-xs text-muted-foreground",
-                        isArabic && "font-arabic",
-                      )}
+                      className="text-xs text-muted-foreground font-arabic"
                     >
                       {t("attendance.rate")}
                     </p>
@@ -421,14 +384,11 @@ export function ProfilePage() {
                         className="flex items-center justify-between gap-3 py-2.5"
                       >
                         <span
-                          className={cn(
-                            "text-sm text-ink",
-                            isArabic ? "font-arabic" : "",
-                          )}
+                          className="text-sm text-ink font-arabic"
                           dir="auto"
                         >
                           {new Intl.DateTimeFormat(
-                            language === "ar" ? "ar-EG" : "en-GB",
+                            "ar-EG",
                             {
                               weekday: "long",
                               day: "numeric",
@@ -543,10 +503,7 @@ export function ProfilePage() {
           <Button
             type="submit"
             disabled={savingProfile}
-            className={cn(
-              "h-12 w-full rounded-xl bg-navy text-lg text-white transition-colors hover:bg-navy/90 focus-ring disabled:cursor-not-allowed disabled:opacity-60",
-              isArabic && "font-arabic",
-            )}
+            className="h-12 w-full rounded-xl bg-navy text-lg text-white transition-colors hover:bg-navy/90 focus-ring disabled:cursor-not-allowed disabled:opacity-60 font-arabic"
           >
             {savingProfile ? t("form.saving") : t("form.save")}
           </Button>
@@ -559,10 +516,7 @@ export function ProfilePage() {
           className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6 card-elevated sm:p-8"
         >
           <h2
-            className={cn(
-              "flex items-center gap-2 font-extrabold text-ink",
-              isArabic ? "font-arabic text-xl" : "text-lg",
-            )}
+            className="flex items-center gap-2 font-extrabold text-ink font-arabic text-xl"
           >
             <KeyRound className="h-5 w-5 text-mint" aria-hidden="true" />
             {t("password.heading")}
@@ -570,10 +524,7 @@ export function ProfilePage() {
 
           {!user.has_password && (
             <p
-              className={cn(
-                "rounded-xl bg-blue-50 px-4 py-3 text-sm text-brand-blue",
-                isArabic && "font-arabic",
-              )}
+              className="rounded-xl bg-blue-50 px-4 py-3 text-sm text-brand-blue font-arabic"
             >
               {t("password.noCurrentHint")}
             </p>
@@ -623,10 +574,7 @@ export function ProfilePage() {
           <Button
             type="submit"
             disabled={savingPassword}
-            className={cn(
-              "h-12 w-full rounded-xl border border-navy bg-transparent text-base font-semibold text-ink transition-colors hover:bg-soft focus-ring disabled:cursor-not-allowed disabled:opacity-60",
-              isArabic && "font-arabic",
-            )}
+            className="h-12 w-full rounded-xl border border-navy bg-transparent text-base font-semibold text-ink transition-colors hover:bg-soft focus-ring disabled:cursor-not-allowed disabled:opacity-60 font-arabic"
           >
             {savingPassword ? t("password.updating") : t("password.cta")}
           </Button>
@@ -635,10 +583,7 @@ export function ProfilePage() {
         <p className="mt-8 text-center text-sm text-muted-foreground">
           <Link
             to="/"
-            className={cn(
-              "font-semibold text-brand-blue underline-offset-4 hover:underline",
-              isArabic && "font-arabic",
-            )}
+            className="font-semibold text-brand-blue underline-offset-4 hover:underline font-arabic"
           >
             ← /
           </Link>

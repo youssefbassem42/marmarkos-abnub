@@ -1,6 +1,5 @@
 import { BookOpen, Users, Heart, Flame } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 
 const pillars = [
@@ -11,8 +10,6 @@ const pillars = [
 ];
 
 export function Pillars() {
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const { t } = useTranslation("landing");
   const items = t("pillars.items", {
     returnObjects: true,
@@ -25,8 +22,7 @@ export function Pillars() {
           <span className="h-px flex-1 bg-border" />
           <h2
             className={cn(
-              "text-center text-2xl font-extrabold tracking-tight text-ink lg:text-[28px]",
-              isArabic ? "font-arabic text-3xl" : "",
+              "text-center text-2xl font-extrabold tracking-tight text-ink lg:text-[28px] font-arabic text-3xl",
             )}
           >
             {t("pillars.heading")}
@@ -41,8 +37,7 @@ export function Pillars() {
               <li
                 key={title}
                 className={cn(
-                  "reveal flex flex-col items-center px-4 text-center lg:px-8",
-                  isArabic ? "font-arabic" : "",
+                  "reveal flex flex-col items-center px-4 text-center lg:px-8 font-arabic",
                   i > 0 && "lg:border-s lg:border-border",
                 )}
                 style={{ transitionDelay: `${i * 90}ms` }}
@@ -55,16 +50,14 @@ export function Pillars() {
                 </span>
                 <h3
                   className={cn(
-                    "mt-6 text-[15px] font-extrabold tracking-tight text-ink",
-                    isArabic ? "text-xl" : "",
+                    "mt-6 text-[15px] font-extrabold tracking-tight text-ink text-xl",
                   )}
                 >
                   {title}
                 </h3>
                 <p
                   className={cn(
-                    "mt-3 max-w-[15rem] text-sm leading-6 text-muted-foreground",
-                    isArabic ? "text-base leading-7" : "",
+                    "mt-3 max-w-[15rem] text-sm leading-6 text-muted-foreground text-base leading-7",
                   )}
                 >
                   {text}

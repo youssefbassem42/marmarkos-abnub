@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Construction } from "lucide-react";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import { useLanguage } from "@/i18n/context";
+
 import { cn } from "@/lib/utils";
 
 interface PlaceholderPageProps {
@@ -13,16 +13,14 @@ interface PlaceholderPageProps {
 
 /** Temporary stand-in page for sections under construction. */
 export function PlaceholderPage({ titleKey }: PlaceholderPageProps) {
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const { t } = useTranslation("landing");
   const { t: tCommon } = useTranslation("common");
   const title = t(`nav.${titleKey}`);
 
   return (
     <div
-      dir={isArabic ? "rtl" : "ltr"}
-      lang={language}
+      dir="rtl"
+      lang="ar"
       className="min-h-screen bg-background"
     >
       <Navbar />
@@ -31,27 +29,18 @@ export function PlaceholderPage({ titleKey }: PlaceholderPageProps) {
           <Construction className="h-10 w-10 text-mint" aria-hidden="true" />
         </span>
         <h1
-          className={cn(
-            "text-3xl font-extrabold tracking-tight text-ink",
-            isArabic && "font-arabic",
-          )}
+          className="text-3xl font-extrabold tracking-tight text-ink font-arabic"
         >
           {title}
         </h1>
         <p
-          className={cn(
-            "max-w-md leading-relaxed text-muted-foreground",
-            isArabic && "font-arabic text-lg",
-          )}
+          className="max-w-md leading-relaxed text-muted-foreground font-arabic text-lg"
         >
           {tCommon("placeholder.body")}
         </p>
         <Link
           to="/"
-          className={cn(
-            "btn-primary mt-2 px-6 py-3 text-sm",
-            isArabic ? "font-arabic" : "",
-          )}
+          className="btn-primary mt-2 px-6 py-3 text-sm font-arabic"
         >
           {t("nav.home")}
         </Link>

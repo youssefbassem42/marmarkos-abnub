@@ -1,12 +1,9 @@
 import { CalendarDays } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "@/i18n/context";
 import hero from "@/assets/hero-worship.jpg";
 import { YouthFigure } from "./YouthFigure";
 
 export function Hero() {
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const { t } = useTranslation("landing");
   const { t: tCommon } = useTranslation("common");
   const titleLines = tCommon("brand.message", {
@@ -21,10 +18,8 @@ export function Hero() {
             {t("hero.eyebrow")}
           </p>
           <h1
-            dir={isArabic ? "rtl" : "ltr"}
-            className={`mt-3 text-[clamp(2.6rem,9vw,4.6rem)] font-extrabold leading-[0.98] tracking-tight text-ink ${
-              isArabic ? "font-arabic" : ""
-            }`}
+            dir="rtl"
+            className={`mt-3 text-[clamp(2.6rem,9vw,4.6rem)] font-extrabold leading-[0.98] tracking-tight text-ink font-arabic`}
           >
             {titleLines.map((line, i) =>
               i === titleLines.length - 1 ? (
@@ -47,21 +42,19 @@ export function Hero() {
             إجتماع الشباب بأبنوب
           </p>
           <p
-            className={`mt-5 max-w-md text-[15px] leading-7 text-muted-foreground ${
-              isArabic ? "font-arabic text-lg leading-8" : ""
-            }`}
+            className={`mt-5 max-w-md text-[15px] leading-7 text-muted-foreground font-arabic text-lg leading-8`}
           >
             {tCommon("brand.supporting")}
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <a href="#events" className="btn-primary px-6 py-3.5 text-sm">
               <CalendarDays className="h-4 w-4" aria-hidden="true" />
-              <span className={isArabic ? "font-arabic" : ""}>
+              <span className="font-arabic">
                 {t("hero.ctaPrimary")}
               </span>
             </a>
             <a href="#about" className="btn-outline px-6 py-3.5 text-sm">
-              <span className={isArabic ? "font-arabic" : ""}>
+              <span className="font-arabic">
                 {t("hero.ctaSecondary")}
               </span>
             </a>
@@ -72,9 +65,7 @@ export function Hero() {
           <img
             src={hero}
             alt={
-              isArabic
-                ? "شباب يعبدون بأيدي مرفوعة بجانب صليب مضيء عند الغروب"
-                : "Young people worshipping with raised hands beside a glowing cross at sunset"
+              "شباب يعبدون بأيدي مرفوعة بجانب صليب مضيء عند الغروب"
             }
             width={1200}
             height={912}

@@ -2,7 +2,6 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { Bell } from "lucide-react";
 import { useNotificationSummary } from "@/modules/notifications/hooks";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 
 interface NotificationBellProps {
@@ -20,14 +19,13 @@ interface NotificationBellProps {
 export function NotificationBell({ to, className }: NotificationBellProps) {
   const { t } = useTranslation("landing");
   const { t: tNotifications } = useTranslation("notifications");
-  const { language } = useLanguage();
   const { data } = useNotificationSummary();
   const unread = data?.unread_count ?? 0;
 
   // Locale-aware digits: Arabic renders Arabic-Indic numerals (٣), LTR
   // layouts keep Latin digits — never hand-format counts.
   const numberFormat = new Intl.NumberFormat(
-    language === "ar" ? "ar-EG" : "en-GB",
+    "ar-EG",
   );
   const badge = unread > 99 ? "99+" : numberFormat.format(unread);
 

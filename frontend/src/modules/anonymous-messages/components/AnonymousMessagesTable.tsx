@@ -15,7 +15,6 @@ import type { AnonymousMessageAdminItem } from "../types";
 
 interface AnonymousMessagesTableProps {
   items: AnonymousMessageAdminItem[];
-  language: string;
   onRetry: (id: string) => void;
   retryPending: boolean;
 }
@@ -46,13 +45,11 @@ function MessageCell({ text }: { text: string }) {
  */
 export function AnonymousMessagesTable({
   items,
-  language,
   onRetry,
   retryPending,
 }: AnonymousMessagesTableProps) {
   const { t } = useTranslation("anonymousMessages");
-  const isArabic = language === "ar";
-  const locale = isArabic ? "ar-EG" : "en-GB";
+  const locale = "ar-EG";
   const notProvided = t("admin.table.notProvided");
 
   return (
@@ -84,7 +81,7 @@ export function AnonymousMessagesTable({
               <TableCell>
                 <MessageCell text={item.message} />
               </TableCell>
-              <TableCell className={cn("text-sm", isArabic && "font-arabic")}>
+              <TableCell className="text-sm font-arabic">
                 {item.sender_name ?? (
                   <span className="text-muted-foreground">{notProvided}</span>
                 )}

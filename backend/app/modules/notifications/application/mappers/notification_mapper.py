@@ -6,7 +6,9 @@ from typing import Any
 from app.modules.notifications.application.dto.notification_dto import NotificationResponse
 from app.modules.notifications.infrastructure.persistence.models import Notification
 
-_ALLOWED_DATA_KEYS = frozenset({"icon", "cta_url", "post_id", "slug", "meeting_date"})
+_ALLOWED_DATA_KEYS = frozenset(
+    {"icon", "cta_url", "post_id", "slug", "meeting_date", "verse_id", "quiz_id", "attempt_id"}
+)
 
 # data.icon may override the glyph only within the type's accent, and only
 # from this allowlist (plan §3.5); anything else is dropped before the

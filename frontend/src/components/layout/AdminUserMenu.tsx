@@ -8,7 +8,7 @@ import {
   ScanLine,
   User as UserIcon,
 } from "lucide-react";
-import { useLanguage } from "@/i18n/context";
+
 import { logoutUser } from "@/lib/api";
 import { notificationKeys } from "@/modules/notifications/api/queryKeys";
 import {
@@ -34,8 +34,6 @@ export function AdminUserMenu() {
   const { t } = useTranslation("common");
   const { t: tLanding } = useTranslation("landing");
   const { t: tAttendance } = useTranslation("attendance");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const user = getAuthUser();
@@ -68,12 +66,7 @@ export function AdminUserMenu() {
             )}
           </span>
           <span className="hidden min-w-0 text-start md:block">
-            <span
-              className={cn(
-                "block truncate text-sm font-semibold leading-tight text-ink",
-                isArabic && "font-arabic",
-              )}
-            >
+            <span className="block truncate text-sm font-semibold leading-tight text-ink font-arabic">
               {user?.first_name} {user?.last_name}
             </span>
             <span className="block truncate text-xs text-muted-foreground">
@@ -90,7 +83,7 @@ export function AdminUserMenu() {
         <DropdownMenuItem asChild>
           <Link
             to="/profile"
-            className={cn("cursor-pointer", isArabic && "font-arabic")}
+            className="cursor-pointer font-arabic"
           >
             <UserIcon className="me-2 h-4 w-4" aria-hidden="true" />
             {tLanding("nav.profile")}
@@ -100,7 +93,7 @@ export function AdminUserMenu() {
           <DropdownMenuItem asChild>
             <Link
               to="/admin/attendance/check-in"
-              className={cn("cursor-pointer", isArabic && "font-arabic")}
+              className="cursor-pointer font-arabic"
             >
               <ScanLine className="me-2 h-4 w-4" aria-hidden="true" />
               {tAttendance("nav.checkIn")}
@@ -111,7 +104,7 @@ export function AdminUserMenu() {
           <DropdownMenuItem asChild>
             <Link
               to="/admin/dashboard"
-              className={cn("cursor-pointer", isArabic && "font-arabic")}
+              className="cursor-pointer font-arabic"
             >
               <LayoutDashboard className="me-2 h-4 w-4" aria-hidden="true" />
               {t("adminPanel")}
@@ -120,10 +113,7 @@ export function AdminUserMenu() {
         )}
         <DropdownMenuItem
           onClick={() => void handleSignOut()}
-          className={cn(
-            "cursor-pointer text-brand-red",
-            isArabic && "font-arabic",
-          )}
+          className="cursor-pointer text-brand-red font-arabic"
         >
           <LogOut className="me-2 h-4 w-4" aria-hidden="true" />
           {tLanding("nav.signOut")}

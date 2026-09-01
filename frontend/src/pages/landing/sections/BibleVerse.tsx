@@ -1,11 +1,8 @@
 import { Quote, Church } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 
 export function BibleVerse() {
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
   const { t } = useTranslation("landing");
   const { t: tCommon } = useTranslation("common");
 
@@ -19,10 +16,9 @@ export function BibleVerse() {
           />
           <div>
             <blockquote
-              dir={isArabic ? "rtl" : "ltr"}
+              dir="rtl"
               className={cn(
-                "font-verse text-[15px] font-medium italic leading-7 text-brand-blue",
-                isArabic && "not-italic text-lg leading-8",
+                "font-verse text-[15px] font-medium italic leading-7 text-brand-blue not-italic text-lg leading-8",
               )}
             >
               {tCommon("brand.verse")}
@@ -39,19 +35,17 @@ export function BibleVerse() {
           </span>
         </div>
 
-        <div dir={isArabic ? "rtl" : "ltr"} className={cn("reveal")}>
+        <div dir="rtl" className={cn("reveal")}>
           <h2
             className={cn(
-              "text-xl font-extrabold tracking-tight text-ink",
-              isArabic ? "font-arabic text-2xl" : "",
+              "text-xl font-extrabold tracking-tight text-ink font-arabic text-2xl",
             )}
           >
             {t("bibleVerse.heading")}
           </h2>
           <p
             className={cn(
-              "mt-3 text-[15px] leading-7 text-muted-foreground",
-              isArabic ? "font-arabic text-base leading-8" : "",
+              "mt-3 text-[15px] leading-7 text-muted-foreground font-arabic text-base leading-8",
             )}
           >
             {t("bibleVerse.line1")}
@@ -60,8 +54,7 @@ export function BibleVerse() {
           </p>
           <p
             className={cn(
-              "mt-3 font-extrabold text-brand-blue",
-              isArabic ? "font-arabic text-lg" : "text-[15px]",
+              "mt-3 font-extrabold text-brand-blue font-arabic text-lg",
             )}
           >
             {t("bibleVerse.accent")}

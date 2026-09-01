@@ -21,7 +21,6 @@ interface LoginFormProps {
 
 export function LoginForm({ lang }: LoginFormProps) {
   const { t } = useTranslation("login");
-  const isArabic = lang === "ar";
   const navigate = useNavigate();
   const location = useLocation();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -104,8 +103,7 @@ export function LoginForm({ lang }: LoginFormProps) {
             inputMode="email"
             aria-invalid={Boolean(errors.email)}
             className={cn(
-              "h-11 w-full rounded-xl border-border bg-background ps-9 pe-3 focus-ring",
-              isArabic && "font-arabic text-lg placeholder:text-base",
+              "h-11 w-full rounded-xl border-border bg-background ps-9 pe-3 focus-ring font-arabic text-lg placeholder:text-base",
               errors.email && "border-brand-red focus-visible:ring-brand-red",
             )}
             {...register("email")}
@@ -164,8 +162,7 @@ export function LoginForm({ lang }: LoginFormProps) {
           <label
             htmlFor="rememberMe"
             className={cn(
-              "cursor-pointer text-muted-foreground",
-              isArabic ? "font-arabic text-lg" : "text-sm font-medium",
+              "cursor-pointer text-muted-foreground font-arabic text-lg",
             )}
           >
             {t("form.rememberMe")}
@@ -174,8 +171,7 @@ export function LoginForm({ lang }: LoginFormProps) {
         <Link
           to="/forgot-password"
           className={cn(
-            "font-semibold text-mint underline-offset-4 hover:underline focus-ring",
-            isArabic ? "font-arabic text-lg" : "text-sm",
+            "font-semibold text-mint underline-offset-4 hover:underline focus-ring font-arabic text-lg",
           )}
         >
           {t("form.forgotPassword")}
@@ -225,8 +221,7 @@ export function LoginForm({ lang }: LoginFormProps) {
 
       <p
         className={cn(
-          "text-center text-muted-foreground",
-          isArabic ? "font-arabic text-lg" : "text-sm",
+          "text-center text-muted-foreground font-arabic text-lg",
         )}
       >
         {t("noAccount")}{" "}

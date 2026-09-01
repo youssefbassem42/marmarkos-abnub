@@ -11,10 +11,10 @@ import {
   Users,
 } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-import { useLanguage } from "@/i18n/context";
 import { cn } from "@/lib/utils";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
+import { AdminDashboardTiles } from "@/components/common/AdminDashboardTiles";
 import { AttendanceStatusBadge } from "../components/AttendanceStatusBadge";
 import { StatTile } from "../components/StatTile";
 import { MeetingSelector } from "../components/MeetingSelector";
@@ -81,8 +81,7 @@ interface TrendTooltipProps {
 /** Tooltip: per-meeting rate, or the notHeld note for future meetings. */
 function TrendTooltip({ active, payload }: TrendTooltipProps) {
   const { t } = useTranslation("attendance");
-  const { language } = useLanguage();
-  const locale = language === "ar" ? "ar-EG" : "en-GB";
+  const locale = "ar-EG";
   const entry = payload?.[0]?.payload as TrendEntry | undefined;
   if (!active || !entry) return null;
 
@@ -110,9 +109,7 @@ function TrendTooltip({ active, payload }: TrendTooltipProps) {
 export function AttendanceDashboardPage() {
   const { t } = useTranslation("attendance");
   const { t: tCommon } = useTranslation("common");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
-  const locale = language === "ar" ? "ar-EG" : "en-GB";
+  const locale = "ar-EG";
   // Dynamic keys (totals.*) are typed loosely at this one call site.
   const tk = (key: string) => t(key as never);
 
@@ -300,13 +297,17 @@ export function AttendanceDashboardPage() {
           )}
         </section>
 
+        <div className="mt-6">
+          <AdminDashboardTiles />
+        </div>
+
         <div className="mt-6 grid gap-6 lg:grid-cols-5">
           {/* Current-meeting table */}
           <section className="rounded-2xl border border-border bg-card p-5 card-elevated lg:col-span-3">
             <h2
               className={cn(
                 "font-heading text-lg font-bold text-ink",
-                isArabic && "font-arabic",
+                "font-arabic",
               )}
             >
               {t("dashboard.table.title")}
@@ -391,14 +392,14 @@ export function AttendanceDashboardPage() {
               open={excuseTarget !== null}
               onOpenChange={(open) => !open && setExcuseTarget(null)}
             >
-              <AlertDialogContent dir={isArabic ? "rtl" : "ltr"}>
+              <AlertDialogContent dir="rtl">
                 <AlertDialogHeader>
-                  <AlertDialogTitle className={cn(isArabic && "font-arabic")}>
+                  <AlertDialogTitle className={cn("font-arabic")}>
                     {t("status.EXCUSED")}
                     {excuseTarget?.name ? ` — ${excuseTarget.name}` : ""}
                   </AlertDialogTitle>
                   <AlertDialogDescription
-                    className={cn(isArabic && "font-arabic")}
+                    className={cn("font-arabic")}
                   >
                     {t("dashboard.absent.provisional")}
                   </AlertDialogDescription>
@@ -410,11 +411,11 @@ export function AttendanceDashboardPage() {
                   aria-label={t("history.filters.member")}
                   className={cn(
                     "rounded-xl focus-ring",
-                    isArabic && "font-arabic",
+                    "font-arabic",
                   )}
                 />
                 <AlertDialogFooter>
-                  <AlertDialogCancel className={cn(isArabic && "font-arabic")}>
+                  <AlertDialogCancel className={cn("font-arabic")}>
                     {t("checkIn.manual.cancel")}
                   </AlertDialogCancel>
                   <AlertDialogAction
@@ -428,7 +429,7 @@ export function AttendanceDashboardPage() {
                       });
                       setExcuseTarget(null);
                     }}
-                    className={cn(isArabic && "font-arabic")}
+                    className={cn("font-arabic")}
                   >
                     {t("status.EXCUSED")}
                   </AlertDialogAction>
@@ -442,7 +443,7 @@ export function AttendanceDashboardPage() {
             <h2
               className={cn(
                 "font-heading text-lg font-bold text-ink",
-                isArabic && "font-arabic",
+                "font-arabic",
               )}
             >
               {t("dashboard.absent.title")}
@@ -487,7 +488,7 @@ export function AttendanceDashboardPage() {
                       <p
                         className={cn(
                           "truncate text-sm font-semibold text-ink",
-                          isArabic && "font-arabic",
+                          "font-arabic",
                         )}
                       >
                         {user.name}
@@ -517,7 +518,7 @@ export function AttendanceDashboardPage() {
           <h2
             className={cn(
               "font-heading text-lg font-bold text-ink",
-              isArabic && "font-arabic",
+              "font-arabic",
             )}
           >
             {t("dashboard.trend.title")}
@@ -549,13 +550,13 @@ export function AttendanceDashboardPage() {
                     dataKey="label"
                     tickLine={false}
                     axisLine={false}
-                    reversed={isArabic}
+                    reversed={true}
                   />
                   <YAxis
                     domain={[0, 100]}
                     tickLine={false}
                     axisLine={false}
-                    orientation={isArabic ? "right" : "left"}
+                    orientation="right"
                   />
                   <ChartTooltip
                     content={<TrendTooltip />}

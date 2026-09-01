@@ -5,7 +5,6 @@ import { MemoryRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
-import { LANGUAGE_STORAGE_KEY } from "@/i18n/context";
 import { clearAuth, saveAuth } from "@/lib/auth";
 import type { NotificationItem, Paginated } from "../../types";
 
@@ -84,7 +83,6 @@ function signIn() {
 describe("NotificationsPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    localStorage.removeItem(LANGUAGE_STORAGE_KEY);
     localStorage.clear();
     clearAuth();
     signIn();
@@ -100,8 +98,7 @@ describe("NotificationsPage", () => {
     });
   });
 
-  function renderPage(language?: "ar" | "en") {
-    if (language) localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
+  function renderPage() {
     const queryClient = new QueryClient({
       defaultOptions: { queries: { retry: false } },
     });
@@ -184,7 +181,7 @@ describe("NotificationsPage", () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: /حاول مرة أخرى/ }),
+      screen.getByRole("button", { name: /حاول مرة تاني/ }),
     ).toBeInTheDocument();
   });
 
@@ -203,18 +200,5 @@ describe("NotificationsPage", () => {
     expect(
       within(second.getByRole("main")).getByRole("navigation"),
     ).toBeInTheDocument();
-  });
-
-  it("keeps the same roles when rendered in English (LTR)", async () => {
-    mockedList.mockResolvedValueOnce(makePage([makeItem({})], 1));
-    renderPage("en");
-
-    expect(
-      await screen.findByRole("heading", { name: "Notifications" }),
-    ).toBeInTheDocument();
-    expect(screen.getByRole("tablist")).toBeInTheDocument();
-    expect(document.documentElement.dir).toBe("ltr");
-    expect(await screen.findByText("New post")).toBeInTheDocument();
-    expect(screen.getByText("Read it now")).toBeInTheDocument();
   });
 });

@@ -1,6 +1,5 @@
 import { useTranslation } from "react-i18next";
 import { useNotificationSummary } from "@/modules/notifications/hooks";
-import { useLanguage } from "@/i18n/context";
 
 /**
  * Badge for the mobile menu's notifications row: same count rules as
@@ -9,13 +8,12 @@ import { useLanguage } from "@/i18n/context";
  */
 export function MobileBellBadge() {
   const { t } = useTranslation("notifications");
-  const { language } = useLanguage();
   const { data } = useNotificationSummary();
   const unread = data?.unread_count ?? 0;
   if (unread <= 0) return null;
 
   const numberFormat = new Intl.NumberFormat(
-    language === "ar" ? "ar-EG" : "en-GB",
+    "ar-EG",
   );
   const badge = unread > 99 ? "99+" : numberFormat.format(unread);
 

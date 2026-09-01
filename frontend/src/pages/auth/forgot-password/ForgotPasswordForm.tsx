@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, ArrowRight, Mail, Send } from "lucide-react";
+import { ArrowRight, Mail, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,7 +24,6 @@ export function ForgotPasswordForm({
   onSuccess,
 }: ForgotPasswordFormProps) {
   const { t } = useTranslation("forgotPassword");
-  const isArabic = lang === "ar";
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
@@ -80,8 +79,7 @@ export function ForgotPasswordForm({
             inputMode="email"
             aria-invalid={Boolean(errors.email)}
             className={cn(
-              "h-11 w-full rounded-xl border-border bg-background ps-9 pe-3 focus-ring",
-              isArabic && "font-arabic text-lg placeholder:text-base",
+              "h-11 w-full rounded-xl border-border bg-background ps-9 pe-3 focus-ring font-arabic text-lg placeholder:text-base",
               errors.email && "border-brand-red focus-visible:ring-brand-red",
             )}
             {...register("email")}
@@ -138,16 +136,11 @@ export function ForgotPasswordForm({
         asChild
         variant="outline"
         className={cn(
-          "h-12 w-full rounded-xl border-navy text-ink focus-ring",
-          isArabic ? "font-arabic text-lg" : "text-base font-semibold",
+          "h-12 w-full rounded-xl border-navy text-ink focus-ring font-arabic text-lg",
         )}
       >
         <Link to="/login">
-          {isArabic ? (
-            <ArrowRight className="h-5 w-5" aria-hidden="true" />
-          ) : (
-            <ArrowLeft className="h-5 w-5" aria-hidden="true" />
-          )}
+          <ArrowRight className="h-5 w-5" aria-hidden="true" />
           {t("form.backToLogin")}
         </Link>
       </Button>

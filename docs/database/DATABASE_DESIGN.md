@@ -323,3 +323,128 @@ verified on the local `marmarkos_dev` DB (never on Neon).
 
 All tests run against the disposable Postgres on port 55432; tables are truncated
 and roles reseeded between every test.
+
+---
+
+## Phase 5 Tables — Bible Engagement, Quizzes & Points
+
+9 new tables added via migrations `p5_a` and `p5_b` (chained from `e3b7d1c95f42`).
+
+### verse_publication_schedules
+
+Tracks scheduled (future) publication of a verse.  Only one active schedule per verse at a time.
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK |
+| verse_id | uuid | FK → bible_verses(id), NOT NULL, UNIQUE |
+| scheduled_for | timestamptz | NOT NULL |
+| status | varchar(20) | NOT NULL, default PENDING (PENDING/PUBLISHED/CANCELLED) |
+| created_at | timestamptz | NOT NULL, default now() |
+| updated_at | timestamptz | NOT NULL, default now() |
+
+### verse_views
+
+One row per user open event (deduped per `VERSE_OPEN_DEDUPE_SECONDS`).
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK |
+| verse_id | uuid | FK → bible_verses(id), NOT NULL |
+| user_id | uuid | FK → users(id), NOT NULL |
+| opened_at | timestamptz | NOT NULL, default now() |
+| created_at | timestamptz | NOT NULL, default now() |
+
+### verse_reads
+
+One row per user when they mark a verse as read (unique per verse+user).
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK |
+| verse_id | uuid | FK → bible_verses(id), NOT NULL, UNIQUE with user_id |
+| user_id | uuid | FK → users(id), NOT NULL, UNIQUE with verse_id |
+| read_at | timestamptz | NOT NULL, default now() |
+
+### quizzes
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK |
+| title | varchar(255) | NOT NULL |
+| subtitle | varchar(255) | nullable |
+| verse_id | uuid | FK → bible_verses(id), UNIQUE |
+| status | varchar(20) | NOT NULL, default DRAFT (DRAFT/PUBLISHED/ARCHIVED) |
+| time_limit_seconds | int | NOT NULL, default 0 (0 = no limit) |
+| points_per_question | numeric(6,2) | NOT NULL, default 1.00 |
+| pass_percentage | numeric(5,2) | NOT NULL, default 50.00 |
+| created_by | uuid | FK → users(id), NOT NULL |
+| created_at | timestamptz | NOT NULL, default now() |
+| updated_at | timestamptz | NOT NULL, default now() |
+
+### quiz_questions
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK |
+| quiz_id | uuid | FK → quizzes(id), NOT NULL |
+| body | text | NOT NULL |
+| position | int | NOT NULL, default 0 |
+| points | numeric(6,2) | NOT NULL, default 1.00 |
+| explanation | text | nullable |
+| created_at | timestamptz | NOT NULL, default now() |
+| updated_at | timestamptz | NOT NULL, default now() |
+
+### quiz_options
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK |
+| question_id | uuid | FK → quiz_questions(id), NOT NULL |
+| body | varchar(500) | NOT NULL |
+| is_correct | boolean | NOT NULL, default false |
+| position | int | NOT NULL, default 0 |
+
+### quiz_attempts
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK |
+| user_id | uuid | FK → users(id), NOT NULL |
+| quiz_id | uuid | FK → quizzes(id), NOT NULL |
+| status | varchar(20) | NOT NULL, default IN_PROGRESS (IN_PROGRESS/COMPLETED/AUTO_FINISHED) |
+| score | numeric(6,2) | nullable (set on submit) |
+| total_points | numeric(6,2) | nullable |
+| points_awarded | numeric(6,2) | nullable |
+| started_at | timestamptz | NOT NULL, default now() |
+| submitted_at | timestamptz | nullable |
+| expires_at | timestamptz | nullable |
+
+### quiz_answers
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK |
+| attempt_id | uuid | FK → quiz_attempts(id), NOT NULL |
+| question_id | uuid | FK → quiz_questions(id), NOT NULL |
+| selected_option_id | uuid | FK → quiz_options(id), NOT NULL |
+| is_correct | boolean | nullable (set on submit) |
+| answered_at | timestamptz | NOT NULL, default now() |
+
+### point_transactions
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| id | uuid | PK |
+| user_id | uuid | FK → users(id), NOT NULL |
+| source_type | varchar(50) | NOT NULL (QUIZ_COMPLETE/STREAK/BONUS) |
+| points | numeric(10,2) | NOT NULL |
+| created_at | timestamptz | NOT NULL, default now() |
+
+#### Key indexes
+
+- `ix_point_transactions_user_created` on (user_id, created_at DESC)
+- `ix_quiz_attempts_user_quiz` on (user_id, quiz_id)
+- `ix_quiz_attempts_status` on (status)
+- `ix_verse_views_verse_user` on (verse_id, user_id)
+- `ix_quiz_answers_attempt` on (attempt_id)

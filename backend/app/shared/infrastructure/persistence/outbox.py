@@ -94,11 +94,16 @@ class OutboxRepository:
         self._session.add(event)
 
     async def claim_pending(self, limit: int = 50) -> list[OutboxEvent]:
-        """Claim due events atomically; the worker owns them until processed."""
+        """Claim due events atomically; the worker owns them until processed.
+
+        Failed events whose ``available_at`` backoff has elapsed are
+        claimed again — a transient outage must never drop an event
+        (P5-015); handlers own their own terminal conditions.
+        """
         stmt = (
             select(OutboxEvent)
             .where(
-                OutboxEvent.status == OutboxStatus.PENDING,
+                OutboxEvent.status.in_([OutboxStatus.PENDING, OutboxStatus.FAILED]),
                 OutboxEvent.available_at <= func.now(),
             )
             .order_by(OutboxEvent.created_at)

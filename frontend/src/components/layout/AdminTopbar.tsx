@@ -2,8 +2,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft } from "lucide-react";
 import { NotificationBell } from "@/modules/notifications/components/NotificationBell";
-import { useLanguage } from "@/i18n/context";
-import { LanguageToggle } from "./LanguageToggle";
+
 import { ThemeToggle } from "./ThemeToggle";
 import { AdminUserMenu } from "./AdminUserMenu";
 import { SidebarTrigger } from "@/components/ui/sidebar";
@@ -29,14 +28,12 @@ export function AdminTopbar({ title, subtitle, backHref }: AdminTopbarProps) {
   const { t } = useTranslation("common");
   const { t: tLanding } = useTranslation("landing");
   const { t: tAttendance } = useTranslation("attendance");
-  const { language } = useLanguage();
-  const isArabic = language === "ar";
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/60 bg-background">
       <div
-        dir={isArabic ? "rtl" : "ltr"}
-        lang={language}
+        dir="rtl"
+        lang="ar"
         className="flex items-center gap-3 px-5 py-3 lg:px-8"
       >
         {backHref ? (
@@ -58,20 +55,14 @@ export function AdminTopbar({ title, subtitle, backHref }: AdminTopbarProps) {
         <div className="min-w-0">
           {title ? (
             <h1
-              className={cn(
-                "truncate font-heading text-2xl font-bold text-ink",
-                isArabic && "font-arabic",
-              )}
+              className="truncate font-heading text-2xl font-bold text-ink font-arabic"
             >
               {title}
             </h1>
           ) : null}
           {subtitle ? (
             <p
-              className={cn(
-                "truncate text-sm text-muted-foreground",
-                isArabic && "font-arabic",
-              )}
+              className="truncate text-sm text-muted-foreground font-arabic"
             >
               {subtitle}
             </p>
@@ -82,7 +73,6 @@ export function AdminTopbar({ title, subtitle, backHref }: AdminTopbarProps) {
           <NotificationBell to="/admin/notifications" />
 
           <ThemeToggle className="hidden sm:inline-flex" />
-          <LanguageToggle className="hidden sm:inline-flex" />
 
           <AdminUserMenu />
         </div>
