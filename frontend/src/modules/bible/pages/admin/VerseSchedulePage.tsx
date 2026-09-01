@@ -8,6 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -119,7 +120,12 @@ export default function VerseSchedulePage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div>
+      <AdminTopbar
+        title={t("admin.schedule.title")}
+        subtitle={t("admin.schedule.subtitle")}
+      />
+      <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
       {/* Breadcrumb */}
       <Breadcrumb>
         <BreadcrumbList>
@@ -245,6 +251,7 @@ export default function VerseSchedulePage() {
       {!isAlreadyScheduled && !isPublished && (
         <ScheduleForm onSubmit={handleSchedule} isLoading={isLoading} />
       )}
+      </main>
     </div>
   );
 }

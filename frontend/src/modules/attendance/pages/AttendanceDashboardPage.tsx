@@ -1,11 +1,15 @@
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   AlertCircle,
+  BookOpen,
   CalendarDays,
   Clock,
+  FileText,
   Info,
+  Plus,
   RefreshCw,
   UserRoundX,
   Users,
@@ -109,6 +113,8 @@ function TrendTooltip({ active, payload }: TrendTooltipProps) {
 export function AttendanceDashboardPage() {
   const { t } = useTranslation("attendance");
   const { t: tCommon } = useTranslation("common");
+  const { t: tBible } = useTranslation("bible");
+  const { t: tQuiz } = useTranslation("quiz");
   const locale = "ar-EG";
   // Dynamic keys (totals.*) are typed loosely at this one call site.
   const tk = (key: string) => t(key as never);
@@ -300,6 +306,39 @@ export function AttendanceDashboardPage() {
         <div className="mt-6">
           <AdminDashboardTiles />
         </div>
+
+        {/* Quick Actions — CRUD shortcuts for manager */}
+        <section className="mt-6">
+          <h2 className="mb-3 text-sm font-semibold text-muted-foreground">
+            {tCommon("adminPanel")}
+          </h2>
+          <div className="flex flex-wrap gap-3">
+            <Button asChild size="sm" variant="outline">
+              <Link to="/admin/bible-verses/new">
+                <Plus className="me-1 h-4 w-4" />
+                {tBible("admin.create")}
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/admin/bible-verses">
+                <BookOpen className="me-1 h-4 w-4" />
+                {tBible("admin.title")}
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/admin/quizzes/new">
+                <Plus className="me-1 h-4 w-4" />
+                {tQuiz("admin.list.create")}
+              </Link>
+            </Button>
+            <Button asChild size="sm" variant="outline">
+              <Link to="/admin/quizzes">
+                <FileText className="me-1 h-4 w-4" />
+                {tQuiz("admin.list.title")}
+              </Link>
+            </Button>
+          </div>
+        </section>
 
         <div className="mt-6 grid gap-6 lg:grid-cols-5">
           {/* Current-meeting table */}

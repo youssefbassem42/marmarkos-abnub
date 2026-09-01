@@ -22,6 +22,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
+import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import {
   Card,
   CardContent,
@@ -167,7 +168,12 @@ export default function QuizBuilderPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div>
+      <AdminTopbar
+        title={isEdit ? t("admin.builder.editTitle") : t("admin.builder.newTitle")}
+        subtitle={t("admin.manage.subtitle")}
+      />
+      <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -294,6 +300,7 @@ export default function QuizBuilderPage() {
           </div>
         </div>
       </Form>
+      </main>
     </div>
   );
 }

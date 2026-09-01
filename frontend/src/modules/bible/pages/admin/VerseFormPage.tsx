@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -174,7 +175,12 @@ export default function VerseFormPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div>
+      <AdminTopbar
+        title={isEdit ? t("admin.form.edit") : t("admin.form.create")}
+        subtitle={t("admin.form.title")}
+      />
+      <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
       {/* Breadcrumb */}
       <Breadcrumb>
         <BreadcrumbList>
@@ -299,6 +305,7 @@ export default function VerseFormPage() {
           </Button>
         </div>
       </div>
+      </main>
     </div>
   );
 }

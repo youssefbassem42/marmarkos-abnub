@@ -20,6 +20,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
+import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import {
   Tooltip,
   TooltipContent,
@@ -98,7 +99,12 @@ export default function QuizManagePage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div>
+      <AdminTopbar
+        title={t("admin.manage.title")}
+        subtitle={t("admin.manage.subtitle")}
+      />
+      <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -194,6 +200,7 @@ export default function QuizManagePage() {
           <QuizAnalyticsTeaser quizId={resolvedQuizId ?? quiz.id} />
         </div>
       </div>
+      </main>
     </div>
   );
 }
