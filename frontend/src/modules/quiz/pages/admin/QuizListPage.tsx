@@ -1,10 +1,11 @@
 import { useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { Search } from "lucide-react";
+import { Plus, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -78,46 +79,55 @@ export default function QuizListPage() {
           className="space-y-5"
         >
           {/* Filter bar */}
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="relative w-full sm:w-auto sm:min-w-[220px]">
-              <Search
-                className="absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground end-3"
-                aria-hidden="true"
-              />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="relative w-full sm:w-auto sm:min-w-[220px]">
+                <Search
+                  className="absolute top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground end-3"
+                  aria-hidden="true"
+                />
+                <Input
+                  value={searchQuery}
+                  onChange={(e) => patchParams({ q: e.target.value || undefined })}
+                  placeholder={t("admin.list.search")}
+                  className="h-9 pe-9 ps-3"
+                />
+              </div>
+
+              <Select
+                value={statusFilter || "all"}
+                onValueChange={(val) =>
+                  patchParams({ status: val === "all" ? undefined : val })
+                }
+              >
+                <SelectTrigger className="h-9 w-full sm:w-[160px]">
+                  <SelectValue placeholder={t("admin.list.statusFilter")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {STATUS_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {statusLabels[opt.value] ?? opt.value}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
               <Input
-                value={searchQuery}
-                onChange={(e) => patchParams({ q: e.target.value || undefined })}
-                placeholder={t("admin.list.search")}
-                className="h-9 pe-9 ps-3"
+                value={verseFilter}
+                onChange={(e) =>
+                  patchParams({ verse: e.target.value || undefined })
+                }
+                placeholder={t("admin.list.verseFilter")}
+                className="h-9 w-full sm:w-[180px]"
               />
             </div>
 
-            <Select
-              value={statusFilter || "all"}
-              onValueChange={(val) =>
-                patchParams({ status: val === "all" ? undefined : val })
-              }
-            >
-              <SelectTrigger className="h-9 w-full sm:w-[160px]">
-                <SelectValue placeholder={t("admin.list.statusFilter")} />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value}>
-                    {statusLabels[opt.value] ?? opt.value}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Input
-              value={verseFilter}
-              onChange={(e) =>
-                patchParams({ verse: e.target.value || undefined })
-              }
-              placeholder={t("admin.list.verseFilter")}
-              className="h-9 w-full sm:w-[180px]"
-            />
+            <Button asChild size="sm" className="shrink-0">
+              <Link to="/admin/quizzes/new">
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {t("admin.list.create")}
+              </Link>
+            </Button>
           </div>
 
           {/* Table */}

@@ -106,25 +106,12 @@ export function Footer() {
               </span>
             </li>
             <li className="flex items-center gap-3">
-              <Phone
-                className="h-4 w-4 shrink-0 text-mint"
-                aria-hidden="true"
-              />
-              <a
-                href="tel:+201234567890"
-                dir="ltr"
-                className="focus-ring rounded-sm hover:text-mint"
-              >
-                +20 123 456 7890
-              </a>
-            </li>
-            <li className="flex items-center gap-3">
               <Mail className="h-4 w-4 shrink-0 text-mint" aria-hidden="true" />
               <a
-                href="mailto:youth@churchname.org"
+                href="mailto:marmarkosabnub@gmail.com"
                 className="focus-ring rounded-sm hover:text-mint"
               >
-                youth@churchname.org
+                marmarkosabnub@gmail.com
               </a>
             </li>
           </ul>

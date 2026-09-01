@@ -1,7 +1,10 @@
 import { useCallback, useMemo } from "react";
 import { useTranslation } from "react-i18next";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Navbar } from "@/components/layout/Navbar";
+import { Button } from "@/components/ui/button";
 import { AppPagination } from "@/components/common/AppPagination";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
@@ -14,6 +17,7 @@ import { VerseFilters } from "../components/VerseFilters";
 
 export default function BibleVersesPage() {
   const { t } = useTranslation("bible");
+  const { t: tCommon } = useTranslation("common");
 
   const [searchParams, setSearchParams] = useSearchParams();
 
@@ -89,19 +93,40 @@ export default function BibleVersesPage() {
     !searchQuery && readFilter === "all" && hasQuizFilter === "all" && page === 1;
 
   return (
-    <div dir="rtl" lang="ar" className="space-y-6">
-      <header>
-        <h1
-          className="text-2xl font-bold text-ink md:text-3xl font-arabic"
+    <div dir="rtl" lang="ar" className="min-h-screen bg-background">
+      <Navbar />
+      <main className="mx-auto w-full max-w-7xl px-5 pt-28 pb-16 lg:px-8">
+        <Button
+          asChild
+          variant="ghost"
+          size="sm"
+          className="mb-4 gap-1 font-arabic"
         >
-          {t("list.title")}
-        </h1>
-        <p
-          className="mt-1 text-sm text-muted-foreground font-arabic text-base"
-        >
-          {t("list.subtitle")}
-        </p>
-      </header>
+          <Link to="/">
+            <ArrowLeft
+              className="h-4 w-4 rtl:hidden"
+              aria-hidden="true"
+            />
+            <ArrowLeft
+              className="hidden h-4 w-4 rotate-180 rtl:block"
+              aria-hidden="true"
+            />
+            {tCommon("back")}
+          </Link>
+        </Button>
+
+        <header>
+          <h1
+            className="text-2xl font-bold text-ink md:text-3xl font-arabic"
+          >
+            {t("list.title")}
+          </h1>
+          <p
+            className="mt-1 text-sm text-muted-foreground font-arabic text-base"
+          >
+            {t("list.subtitle")}
+          </p>
+        </header>
 
       <VerseFilters
         search={searchQuery}
@@ -158,6 +183,7 @@ export default function BibleVersesPage() {
           onPageChange={handlePageChange}
         />
       )}
+      </main>
     </div>
   );
 }

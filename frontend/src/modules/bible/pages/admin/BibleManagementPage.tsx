@@ -113,26 +113,35 @@ export default function BibleManagementPage() {
         />
 
         {/* Filter bar */}
-        {isMobile ? (
-          <div className="flex items-center justify-between">
-            <VerseFilterSheet
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {isMobile ? (
+            <div className="flex items-center gap-3">
+              <VerseFilterSheet
+                q={q}
+                dateFrom={dateFrom}
+                dateTo={dateTo}
+                onPatch={patchParams}
+              />
+              <p className="text-sm text-muted-foreground">
+                {total} {t("admin.kpi.total")}
+              </p>
+            </div>
+          ) : (
+            <VerseFilterBar
               q={q}
               dateFrom={dateFrom}
               dateTo={dateTo}
               onPatch={patchParams}
             />
-            <p className="text-sm text-muted-foreground">
-              {total} {t("admin.kpi.total")}
-            </p>
-          </div>
-        ) : (
-          <VerseFilterBar
-            q={q}
-            dateFrom={dateFrom}
-            dateTo={dateTo}
-            onPatch={patchParams}
-          />
-        )}
+          )}
+
+          <Button asChild size="sm" className="shrink-0">
+            <Link to="/admin/bible-verses/new">
+              <Plus className="h-4 w-4" aria-hidden="true" />
+              {t("admin.create")}
+            </Link>
+          </Button>
+        </div>
 
         {/* Content card */}
         <section className="rounded-2xl border border-border bg-card">
