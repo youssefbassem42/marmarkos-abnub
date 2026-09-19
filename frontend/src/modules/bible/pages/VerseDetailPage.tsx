@@ -78,9 +78,9 @@ export default function VerseDetailPage() {
         isPending={markAsRead.isPending}
       />
 
-      {data.quiz && (
+      {data.quiz_summary?.status === "PUBLISHED" && (
         <QuizTeaserCard
-          quiz={data.quiz}
+          quiz={data.quiz_summary}
           isRead={data.read}
           attemptStatus={null}
         />

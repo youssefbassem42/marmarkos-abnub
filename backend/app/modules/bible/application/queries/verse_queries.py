@@ -275,6 +275,8 @@ async def verse_detail_query(
                 notification_status=schedule_row.notification_status.value,
             )
         quiz_summary = await _quiz_info(uow, verse.id)
+    else:
+        quiz_summary = await _quiz_info(uow, verse.id, require_published=True)
 
     response = to_detail(
         verse,
@@ -288,10 +290,15 @@ async def verse_detail_query(
     return verse, response
 
 
-async def _quiz_info(uow: UnitOfWork, verse_id: uuid.UUID) -> QuizSummary | None:
-    """Manager quiz summary from the quiz row + its questions."""
+async def _quiz_info(
+    uow: UnitOfWork, verse_id: uuid.UUID, *, require_published: bool = False
+) -> QuizSummary | None:
+    """Quiz summary for the verse; ``require_published`` hides DRAFT/ARCHIVED
+    quizzes from the member projection (feed-style BR-18 rule)."""
     quiz = await uow.quizzes.get_by_verse(verse_id)
     if quiz is None:
+        return None
+    if require_published and quiz.status is not QuizStatus.PUBLISHED:
         return None
     question_count = await uow.quiz_questions.count_for_quiz(quiz.id)
     return QuizSummary(

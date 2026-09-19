@@ -78,7 +78,7 @@ export function QuizTeaserCard({
           </div>
         ) : inProgress ? (
           <Button asChild className="w-full">
-            <Link to={`/quizzes/${quiz.id}/take`}>
+            <Link to={`/quizzes/${quiz.quiz_id}/take`}>
               {t("quizCard.start")}
               <ArrowRight
                 className="h-4 w-4 rtl:hidden"
@@ -92,7 +92,7 @@ export function QuizTeaserCard({
           </Button>
         ) : completed ? (
           <Button asChild variant="outline" className="w-full">
-            <Link to={`/quizzes/${quiz.id}/result`}>
+            <Link to={`/quizzes/${quiz.quiz_id}/result`}>
               {t("quizCard.viewResult")}
               <ArrowRight
                 className="h-4 w-4 rtl:hidden"
@@ -106,7 +106,7 @@ export function QuizTeaserCard({
           </Button>
         ) : (
           <Button asChild className="w-full">
-            <Link to={`/quizzes/${quiz.id}/take`}>
+            <Link to={`/quizzes/${quiz.quiz_id}/take`}>
               {t("quizCard.start")}
               <ArrowRight
                 className="h-4 w-4 rtl:hidden"

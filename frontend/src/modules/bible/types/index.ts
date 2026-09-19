@@ -23,13 +23,11 @@ export interface VerseScheduleBrief {
 }
 
 export interface QuizSummary {
-  id: string;
-  title: string;
-  total_points: number;
-  duration_seconds: number;
+  quiz_id: string;
   status: string;
   question_count: number;
-  published_at: string | null;
+  total_points: number;
+  duration_seconds: number;
 }
 
 export interface VerseAdminItem {
@@ -73,7 +71,7 @@ export interface VerseDetailResponse extends VerseAdminItem {
   opens: number;
   read: boolean;
   has_quiz: boolean;
-  quiz: QuizSummary | null;
+  quiz_summary: QuizSummary | null;
   schedule: VerseScheduleBrief | null;
 }
 

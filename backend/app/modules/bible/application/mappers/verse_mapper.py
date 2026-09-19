@@ -60,7 +60,7 @@ def to_detail(
         reads=reads if manager_view else None,
         created_by_user=creator,
         schedule=schedule if manager_view else None,
-        quiz_summary=quiz_summary if manager_view else None,
+        quiz_summary=quiz_summary,
     )
 
 
