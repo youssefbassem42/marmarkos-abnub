@@ -12,6 +12,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { OptionRow } from "./OptionRow";
 import type { UseFormReturn } from "react-hook-form";
@@ -147,7 +148,9 @@ export function QuestionForm({ form }: QuestionFormProps) {
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
-          <FormLabel>{t("admin.question.optionsField")}</FormLabel>
+          <Label className="text-sm font-medium text-ink">
+            {t("admin.question.optionsField")}
+          </Label>
           <Button
             type="button"
             variant="outline"
