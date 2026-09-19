@@ -42,9 +42,15 @@ export interface QuizDetailResponse extends QuizAdminItem {
   questions: QuizQuestionResponse[];
 }
 
+export interface QuizValidationRule {
+  code: string;
+  passed: boolean;
+  detail: string;
+}
+
 export interface QuizValidationResponse {
-  ready: boolean;
-  issues: string[];
+  is_publishable: boolean;
+  rules: QuizValidationRule[];
 }
 
 // --- Member-facing quiz take types (no is_correct) ---

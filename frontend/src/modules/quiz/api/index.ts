@@ -64,7 +64,7 @@ export const quizApi = {
 
   /** Quiz readiness checklist */
   validateQuiz: async (quizId: string): Promise<QuizValidationResponse> => {
-    const response = await apiClient.get(`/quizzes/${quizId}/validate`);
+    const response = await apiClient.get(`/quizzes/${quizId}/validation`);
     return response.data;
   },
 

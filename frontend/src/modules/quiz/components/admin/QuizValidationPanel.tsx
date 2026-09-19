@@ -9,9 +9,27 @@ import {
 } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuizValidation } from "../../hooks/useQuizValidation";
+import type { QuizValidationRule } from "../../types";
 
 interface QuizValidationPanelProps {
   quizId: string;
+}
+
+function RuleText({ code, detail }: { code: string; detail: string }) {
+  const { t } = useTranslation("quiz");
+
+  switch (code) {
+    case "has_questions":
+      return t("admin.validation.ruleHasQuestions");
+    case "has_options":
+      return t("admin.validation.ruleHasOptions");
+    case "single_correct":
+      return t("admin.validation.ruleSingleCorrect");
+    case "verse_published":
+      return t("admin.validation.ruleVersePublished");
+    default:
+      return detail;
+  }
 }
 
 export function QuizValidationPanel({ quizId }: QuizValidationPanelProps) {
@@ -39,27 +57,36 @@ export function QuizValidationPanel({ quizId }: QuizValidationPanelProps) {
     <Card>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
-          {validation.ready ? (
+          {validation.is_publishable ? (
             <CheckCircle2 className="h-4 w-4 text-green-600" />
           ) : (
             <XCircle className="h-4 w-4 text-destructive" />
           )}
-          {validation.ready
+          {validation.is_publishable
             ? t("admin.validation.readyToPublish")
             : t("admin.validation.notReady")}
         </CardTitle>
       </CardHeader>
       <CardContent>
-        {validation.ready ? (
-          <p className="text-sm text-green-600">
+        {validation.is_publishable ? (
+          <p className="text-sm text-green-600 font-arabic">
             {t("admin.validation.allPassed")}
           </p>
         ) : (
           <ul className="space-y-1.5">
-            {validation.issues.map((issue, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm">
-                <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
-                <span>{issue}</span>
+            {validation.rules.map((rule: QuizValidationRule) => (
+              <li
+                key={rule.code}
+                className="flex items-start gap-2 text-sm"
+              >
+                {rule.passed ? (
+                  <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" />
+                ) : (
+                  <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
+                )}
+                <span className="font-arabic">
+                  <RuleText code={rule.code} detail={rule.detail} />
+                </span>
               </li>
             ))}
           </ul>

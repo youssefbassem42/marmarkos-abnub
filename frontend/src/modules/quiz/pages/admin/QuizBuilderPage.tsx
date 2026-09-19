@@ -326,7 +326,7 @@ export default function QuizBuilderPage() {
                   <Button
                     size="sm"
                     onClick={handlePublish}
-                    disabled={!validation?.ready || publishQuiz.isPending}
+                    disabled={!validation?.is_publishable || publishQuiz.isPending}
                   >
                     <Send className="me-1 h-4 w-4" />
                     {publishQuiz.isPending
@@ -335,7 +335,7 @@ export default function QuizBuilderPage() {
                   </Button>
                 </span>
               </TooltipTrigger>
-              {validation && !validation.ready && (
+              {validation && !validation.is_publishable && (
                 <TooltipContent>
                   <div className="flex items-center gap-1.5">
                     <AlertTriangle className="h-3.5 w-3.5" />

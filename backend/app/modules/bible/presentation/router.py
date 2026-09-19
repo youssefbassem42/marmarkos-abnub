@@ -1,7 +1,7 @@
 """API router for bible verses (Part 1 §5.1–§5.3).
 
-Content management (P5-011), scheduling (P5-013) and the member feed.
-Engagement endpoints arrive with wave 5B; analytics with 5C.
+Content management (P5-011), scheduling (P5-013), the member feed,
+engagement tracking (opens/reads, wave 5B) and analytics (5C).
 """
 
 from datetime import date
@@ -26,23 +26,16 @@ from app.modules.bible.application.commands.verse_commands import (
     restore_verse,
     update_verse,
 )
-from app.modules.bible.application.dto.query_dto import PublishedFeedParams, VerseListParams
-from app.modules.bible.application.dto.schedule_dto import (
-    VerseScheduleRequest,
-    VerseScheduleResponse,
-)
 from app.modules.bible.application.dto.analytics_dto import (
     VerseAnalyticsOverview,
     VerseAnalyticsResponse,
     VerseQuickStats,
     VerseUserEngagementItem,
 )
-from app.modules.bible.application.queries.verse_analytics_query import (
-    verse_analytics_overview_query,
-    verse_analytics_query,
-    verse_analytics_users_export,
-    verse_analytics_users_query,
-    verse_quick_stats_query,
+from app.modules.bible.application.dto.query_dto import PublishedFeedParams, VerseListParams
+from app.modules.bible.application.dto.schedule_dto import (
+    VerseScheduleRequest,
+    VerseScheduleResponse,
 )
 from app.modules.bible.application.dto.verse_dto import (
     VerseAdminItem,
@@ -51,6 +44,13 @@ from app.modules.bible.application.dto.verse_dto import (
     VerseDetailResponse,
     VerseStatsResponse,
     VerseUpdateRequest,
+)
+from app.modules.bible.application.queries.verse_analytics_query import (
+    verse_analytics_overview_query,
+    verse_analytics_query,
+    verse_analytics_users_export,
+    verse_analytics_users_query,
+    verse_quick_stats_query,
 )
 from app.modules.bible.application.queries.verse_queries import (
     current_verse_query,
@@ -177,6 +177,34 @@ async def get_verse(verse_id: UUID, viewer: CurrentUser, uow: _UoW) -> VerseDeta
     """Manager → full detail; MEMBER → public projection, 404 unless PUBLISHED (BR-3)."""
     _, response = await verse_detail_query(uow, verse_id, viewer)
     return response
+
+
+@router.post(
+    "/{verse_id}/open",
+    status_code=204,
+    responses={404: {"description": "Verse not found"}},
+)
+async def record_verse_open(verse_id: UUID, viewer: CurrentUser, uow: _UoW) -> Response:
+    """Wave 5B: record that the caller opened a published verse (D-16 dedupe)."""
+    await verse_detail_query(uow, verse_id, viewer)
+    await uow.verse_views.record_open(
+        verse_id, viewer.id, dedupe_seconds=settings.VERSE_OPEN_DEDUPE_SECONDS
+    )
+    await uow.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
+@router.post(
+    "/{verse_id}/read",
+    status_code=204,
+    responses={404: {"description": "Verse not found"}},
+)
+async def mark_verse_read(verse_id: UUID, viewer: CurrentUser, uow: _UoW) -> Response:
+    """Wave 5B: idempotently mark a published verse as read by the caller."""
+    await verse_detail_query(uow, verse_id, viewer)
+    await uow.verse_reads.mark_read(verse_id, viewer.id)
+    await uow.commit()
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
 
 
 @router.patch("/{verse_id}", responses=_MANAGER_FAILURES)

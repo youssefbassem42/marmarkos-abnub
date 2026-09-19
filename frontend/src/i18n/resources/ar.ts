@@ -1201,6 +1201,13 @@ export const ar = {
         readyToPublish: "جاهز للنشر",
         notReady: "غير جاهز",
         allPassed: "نجحت جميع الفحوصات",
+        readyTitle: "جاهزية الاختبار",
+        readyHint: "يمكنك نشر هذا الاختبار الآن.",
+        fixIssuesHint: "أكمل المتطلبات أعلاه ليتمكن النشر.",
+        ruleHasQuestions: "يوجد سؤال واحد على الأقل",
+        ruleHasOptions: "لكل سؤال من 2 إلى 6 خيارات",
+        ruleSingleCorrect: "لكل سؤال إجابة صحيحة واحدة",
+        ruleVersePublished: "الاختبار مرتبط بآية",
       },
       list: {
         title: "قائمة الاختبارات",
