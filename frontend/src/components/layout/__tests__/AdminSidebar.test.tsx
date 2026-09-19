@@ -77,7 +77,7 @@ describe("admin sidebar (D-8)", () => {
     signInAsAdmin();
     renderWithProviders(<AdminSidebar />, ["/admin/dashboard"]);
 
-    for (const label of ["الأعضاء", "الفعاليات", "الإعدادات"]) {
+    for (const label of ["الفعاليات", "الإعدادات"]) {
       const item = screen.getByText(label);
       const button = item.closest("button");
       expect(button).not.toBeNull();
@@ -85,6 +85,42 @@ describe("admin sidebar (D-8)", () => {
       // Not wrapped in a router link.
       expect(item.closest("a")).toBeNull();
     }
+  });
+
+  it("links the members entry to the ADMIN-only users page", () => {
+    signInAsAdmin();
+    renderWithProviders(<AdminSidebar />, ["/admin/dashboard"]);
+
+    const link = screen.getByRole("link", { name: /الأعضاء/ });
+    expect(link.getAttribute("href")).toBe("/admin/users");
+  });
+
+  it("hides the ADMIN-only members entry from a SERVANT", () => {
+    saveAuth(
+      {
+        accessToken: "test-token",
+        user: {
+          id: "u3",
+          email: "s2@t.com",
+          phone: null,
+          first_name: "Servant",
+          last_name: "Two",
+          date_of_birth: null,
+          address: null,
+          avatar: null,
+          role: "SERVANT",
+          status: "ACTIVE",
+          public_id: "p3",
+          created_at: "2026-01-01T00:00:00Z",
+          has_password: true,
+          email_verified: true,
+        },
+      },
+      true,
+    );
+    renderWithProviders(<AdminSidebar />, ["/admin/notifications"]);
+
+    expect(screen.queryByText("الأعضاء")).not.toBeInTheDocument();
   });
 
   it("lights the active state on /admin/anonymous-messages for an ADMIN", () => {

@@ -7,6 +7,7 @@ import {
   ArrowUp,
   ArrowDown,
   Pencil,
+  Plus,
   Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -185,12 +186,32 @@ export function QuestionTable({
         <p className="mt-1 text-xs text-muted-foreground">
           {t("admin.manage.addFirstQuestion")}
         </p>
+        <Button asChild size="sm" className="mt-4">
+          <Link to={`/admin/quizzes/${quizId}/questions/new`}>
+            <Plus className="me-1 h-4 w-4" />
+            {t("admin.manage.addQuestion")}
+          </Link>
+        </Button>
       </div>
     );
   }
 
   return (
     <>
+      <div className="mb-3 flex items-center justify-between gap-3">
+        <h3 className="text-base font-semibold font-arabic">
+          {t("admin.manage.questionsTitle")}
+          <span className="ms-2 text-sm font-normal text-muted-foreground">
+            ({sorted.length})
+          </span>
+        </h3>
+        <Button asChild size="sm" variant="outline">
+          <Link to={`/admin/quizzes/${quizId}/questions/new`}>
+            <Plus className="me-1 h-4 w-4" />
+            {t("admin.manage.addQuestion")}
+          </Link>
+        </Button>
+      </div>
       <div aria-live="polite" className="sr-only">
         {announcement}
       </div>

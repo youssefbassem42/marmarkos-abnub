@@ -11,9 +11,13 @@ import type {
   SchedulePayload,
   UpdateVersePayload,
   VerseAdminItem,
+  VerseAnalyticsDetail,
+  VerseAnalyticsOverview,
   VerseCard,
   VerseDetailResponse,
+  VerseQuickStats,
   VerseStatsResponse,
+  VerseUserEngagementItem,
 } from "../types";
 
 export const bibleApi = {
@@ -147,6 +151,35 @@ export const bibleApi = {
     read_rate: number;
   }> => {
     const response = await apiClient.get("/bible-verses/analytics/overview");
+    return response.data;
+  },
+
+  /** Admin Quick-Stat card: weekly/monthly opens, averages, top verse */
+  getQuickStats: async (): Promise<VerseQuickStats> => {
+    const response = await apiClient.get("/bible-verses/analytics/quick-stats");
+    return response.data;
+  },
+
+  /** Per-verse analytics: opens/reads KPIs, engagement series, quiz */
+  getVerseAnalytics: async (
+    verseId: string,
+    params?: { granularity?: "daily" | "weekly"; date_from?: string; date_to?: string },
+  ): Promise<VerseAnalyticsDetail> => {
+    const response = await apiClient.get(`/bible-verses/${verseId}/analytics`, {
+      params,
+    });
+    return response.data;
+  },
+
+  /** Per-user engagement table for one verse */
+  getVerseAnalyticsUsers: async (
+    verseId: string,
+    params?: { q?: string; read?: "all" | "read" | "unread"; page?: number; size?: number },
+  ): Promise<Paginated<VerseUserEngagementItem>> => {
+    const response = await apiClient.get(
+      `/bible-verses/${verseId}/analytics/users`,
+      { params },
+    );
     return response.data;
   },
 };

@@ -15,6 +15,7 @@ from app.modules.bible.application.dto.analytics_dto import (
     RelatedQuizSummary,
     VerseAnalyticsOverview,
     VerseAnalyticsResponse,
+    VerseQuickStats,
     VerseUserEngagementItem,
 )
 from app.modules.bible.infrastructure.persistence.models import BibleVerse, VerseView
@@ -72,6 +73,59 @@ async def verse_analytics_overview_query(uow: UnitOfWork) -> VerseAnalyticsOverv
         total_opens=opens,
         total_reads=reads,
         read_rate=read_rate,
+    )
+
+
+async def _count_opens_since(uow: UnitOfWork, member_role_id: int, since: datetime) -> int:
+    result = await uow.session.execute(
+        select(func.count()).where(
+            VerseView.user_id.in_(_member_subquery(uow, member_role_id)),
+            VerseView.opened_at >= since,
+        )
+    )
+    return int(result.scalar_one())
+
+
+async def verse_quick_stats_query(uow: UnitOfWork) -> VerseQuickStats:
+    """Real admin Quick-Stat card numbers (member opens, BR-13 filtered).
+
+    Replaces the former static/seed values: opens during the current ISO
+    week and month, the average member opens per opened verse, and the
+    most-opened verse overall. All counts are zero-safe, so a deployment
+    without engagement data renders "nothing to show yet".
+    """
+    member_role_id = await _member_role_id(uow)
+
+    today = today_local()
+    week_start = iso_week_start(today)
+    month_start = today.replace(day=1)
+
+    rows = (
+        await uow.session.execute(
+            select(VerseView.verse_id, func.count())
+            .where(VerseView.user_id.in_(_member_subquery(uow, member_role_id)))
+            .group_by(VerseView.verse_id)
+        )
+    ).all()
+    totals = {verse_id: count for verse_id, count in rows}
+    total_opens = sum(totals.values())
+    distinct_verses = len(totals)
+    avg_reads = round(total_opens / distinct_verses, 1) if distinct_verses else 0.0
+
+    top_verse_id = max(totals, key=totals.get) if totals else None
+    top_verse_opens = totals.get(top_verse_id, 0) if top_verse_id else 0
+    top_verse_reference: str | None = None
+    if top_verse_id is not None:
+        top_verse = await uow.session.get(BibleVerse, top_verse_id)
+        if top_verse is not None:
+            top_verse_reference = top_verse.verse_reference
+
+    return VerseQuickStats(
+        this_week=await _count_opens_since(uow, member_role_id, _local_utc(week_start)),
+        this_month=await _count_opens_since(uow, member_role_id, _local_utc(month_start)),
+        avg_reads=avg_reads,
+        top_verse_reference=top_verse_reference,
+        top_verse_opens=top_verse_opens,
     )
 
 

@@ -1,12 +1,13 @@
 import { useMemo } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { Download, QrCode, SearchX } from "lucide-react";
+import { ArrowLeft, Download, QrCode, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
+import { Button } from "@/components/ui/button";
 import { AttendanceStatusBadge } from "../components/AttendanceStatusBadge";
 import {
   HistoryFilters,
@@ -135,6 +136,14 @@ export function AttendanceHistoryPage() {
       />
 
       <main className="mx-auto w-full max-w-7xl px-5 py-8 lg:px-8">
+        <div className="mb-5">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/admin/dashboard">
+              <ArrowLeft className="me-1 h-4 w-4" />
+              {t("history.backToDashboard")}
+            </Link>
+          </Button>
+        </div>
         <div
           dir="rtl"
           lang="ar"

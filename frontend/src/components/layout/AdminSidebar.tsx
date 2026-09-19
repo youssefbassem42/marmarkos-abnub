@@ -81,11 +81,11 @@ interface LinkItem {
 }
 
 const NAV_ITEMS: readonly (LinkItem | DisabledItem)[] = [
-  // Design order (D-8): dashboard, members*, attendance, events*,
+  // Design order (D-8): dashboard, members, attendance, events*,
   // bibleVerses, quizzes, messages, notifications, reports/analytics,
   // settings* — * = disabled.
   { to: "/admin/dashboard", labelKey: "dashboard", Icon: LayoutDashboard },
-  { labelKey: "members", Icon: Users, kind: "disabled" },
+  { to: "/admin/users", labelKey: "members", Icon: Users, adminOnly: true },
   {
     to: "/admin/attendance/check-in",
     labelKey: "attendance",

@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
+import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { formatClock } from "@/lib/datetime";
 import { Badge } from "@/components/ui/badge";
@@ -26,14 +27,14 @@ const STATUS_STYLES: Record<QuizStatus, string> = {
   ARCHIVED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
-const STATUS_LABELS: Record<QuizStatus, string> = {
-  DRAFT: "Draft",
-  PUBLISHED: "Published",
-  ARCHIVED: "Archived",
-};
-
 export function QuizTable({ items, isPending }: QuizTableProps) {
   const { t } = useTranslation("quiz");
+
+  const STATUS_LABELS: Record<QuizStatus, string> = {
+    DRAFT: t("admin.list.statuses.DRAFT"),
+    PUBLISHED: t("admin.list.statuses.PUBLISHED"),
+    ARCHIVED: t("admin.list.statuses.ARCHIVED"),
+  };
 
   if (isPending) {
     return (
@@ -134,6 +135,18 @@ export function QuizTable({ items, isPending }: QuizTableProps) {
                   >
                     <Link to="/admin/analytics/quizzes">
                       {t("admin.list.analytics")}
+                    </Link>
+                  </Button>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 px-2 text-xs"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <Link to={`/admin/quizzes/${quiz.id}/questions/new`}>
+                      <Plus className="me-1 h-3.5 w-3.5" />
+                      {t("admin.list.addQuestion")}
                     </Link>
                   </Button>
                 </div>

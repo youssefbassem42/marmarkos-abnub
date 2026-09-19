@@ -35,6 +35,16 @@ const AttendanceHistoryPage = lazy(() =>
     default: m.AttendanceHistoryPage,
   })),
 );
+const AbsentUsersPage = lazy(() =>
+  import("@/modules/attendance/pages/AbsentUsersPage").then((m) => ({
+    default: m.AbsentUsersPage,
+  })),
+);
+const UsersAdminPage = lazy(() =>
+  import("@/modules/users/pages/UsersAdminPage").then((m) => ({
+    default: m.UsersAdminPage,
+  })),
+);
 
 const NotificationsPage = lazy(() =>
   import("@/modules/notifications/pages/NotificationsPage").then((m) => ({
@@ -77,6 +87,9 @@ const VerseSchedulePage = lazy(() =>
 );
 const VerseAnalyticsPage = lazy(() =>
   import("@/modules/bible/pages/admin/VerseAnalyticsPage"),
+);
+const VerseQuizRedirectPage = lazy(() =>
+  import("@/modules/bible/pages/admin/VerseQuizRedirectPage"),
 );
 
 // Quiz module
@@ -198,12 +211,35 @@ export const router = createBrowserRouter([
             ),
           },
           {
+            path: "attendance/absent",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <AbsentUsersPage />
+              </Suspense>
+            ),
+          },
+          {
             path: "notifications",
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <AdminNotificationsPage />
               </Suspense>
             ),
+          },
+          {
+            // ADMIN-only: SERVANT gets the visible 403 page, not a blank.
+            path: "users",
+            element: <RequireRole roles={["ADMIN"]} />,
+            children: [
+              {
+                index: true,
+                element: (
+                  <Suspense fallback={<PageSkeleton />}>
+                    <UsersAdminPage />
+                  </Suspense>
+                ),
+              },
+            ],
           },
           {
             // ADMIN-only: SERVANT gets the visible 403 page, not a blank.
@@ -249,6 +285,14 @@ export const router = createBrowserRouter([
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <VerseSchedulePage />
+              </Suspense>
+            ),
+          },
+          {
+            path: "bible-verses/:verseId/quiz",
+            element: (
+              <Suspense fallback={<PageSkeleton />}>
+                <VerseQuizRedirectPage />
               </Suspense>
             ),
           },

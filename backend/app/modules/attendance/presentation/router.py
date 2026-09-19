@@ -214,6 +214,15 @@ async def get_absent_users(
     current_user: AttendanceManager,
     session: DbSession,
     meeting_date: MeetingDateParam = None,
+    page: Annotated[int, Query(ge=1, description="1-based page number")] = 1,
+    size: Annotated[
+        int | None,
+        Query(
+            ge=1,
+            le=500,
+            description="Items per page; omit to return the full list",
+        ),
+    ] = None,
 ) -> AbsentUsersResponse:
     """Get users who were expected at a meeting but did not attend.
 
@@ -226,20 +235,28 @@ async def get_absent_users(
         meeting_date: Optional date resolved to its meeting
         current_user: The authenticated admin or servant
         session: Database session
+        page: 1-based page number (used with ``size``)
+        size: Page size; when omitted the full list is returned
 
     Returns:
-        Absent users list with count and finality flag
+        Absent users list with total count, page metadata and finality
     """
     meeting = current_meeting_date(meeting_date or today_local())
 
     service = AbsenceCalculationService(session)
-    absent_count, absent_users = await service.calculate_absent_users(meeting)
+    absent_count, absent_users = await service.calculate_absent_users(
+        meeting,
+        limit=size,
+        offset=(page - 1) * size if size is not None else 0,
+    )
 
     return AbsentUsersResponse(
         meeting_date=meeting,
         absent_count=absent_count,
         absent_users=absent_users,
         is_final=service.is_absence_final(meeting),
+        page=page,
+        size=size,
     )
 
 

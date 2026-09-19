@@ -34,6 +34,7 @@ from app.modules.bible.application.dto.schedule_dto import (
 from app.modules.bible.application.dto.analytics_dto import (
     VerseAnalyticsOverview,
     VerseAnalyticsResponse,
+    VerseQuickStats,
     VerseUserEngagementItem,
 )
 from app.modules.bible.application.queries.verse_analytics_query import (
@@ -41,6 +42,7 @@ from app.modules.bible.application.queries.verse_analytics_query import (
     verse_analytics_query,
     verse_analytics_users_export,
     verse_analytics_users_query,
+    verse_quick_stats_query,
 )
 from app.modules.bible.application.dto.verse_dto import (
     VerseAdminItem,
@@ -274,6 +276,15 @@ async def cancel_publication(verse_id: UUID, actor: BibleManager, uow: _UoW) -> 
 async def verse_analytics_overview(actor: BibleManager, uow: _UoW) -> VerseAnalyticsOverview:
     """Dashboard Bible Engagement totals (BR-13/BR-16)."""
     return await verse_analytics_overview_query(uow)
+
+
+@router.get(
+    "/analytics/quick-stats",
+    responses={403: {"description": "Insufficient permissions"}},
+)
+async def verse_quick_stats(actor: BibleManager, uow: _UoW) -> VerseQuickStats:
+    """Admin Quick-Stat card: weekly/monthly opens, averages, top verse."""
+    return await verse_quick_stats_query(uow)
 
 
 @router.get(

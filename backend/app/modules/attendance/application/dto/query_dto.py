@@ -115,7 +115,7 @@ class AbsentUsersResponse(BaseModel):
     """Response for absent users at a meeting."""
 
     meeting_date: date
-    absent_count: int
+    absent_count: int = Field(..., description="Total absent users (not the page slice)")
     absent_users: list[AbsentUserDTO]
     is_final: bool = Field(
         ...,
@@ -123,6 +123,10 @@ class AbsentUsersResponse(BaseModel):
             "True once the absence cutoff has passed (BR-5); before it the "
             "absent list is provisional"
         ),
+    )
+    page: int = Field(1, ge=1, description="1-based page number")
+    size: int | None = Field(
+        default=None, ge=1, description="Page size; None returns the full list"
     )
 
 

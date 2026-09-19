@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
-import { Plus, BookOpen, Lightbulb, BarChart3, CalendarClock, Trophy, BookMarked } from "lucide-react";
+import { Plus, BookOpen, Lightbulb, BarChart3, CalendarClock, BookMarked } from "lucide-react";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -23,6 +23,7 @@ import { VerseFilterBar } from "../../components/admin/VerseFilterBar";
 import { VerseFilterSheet } from "../../components/admin/VerseFilterSheet";
 import { VerseTable } from "../../components/admin/VerseTable";
 import { VerseMobileList } from "../../components/admin/VerseMobileList";
+import { VerseQuickStatsCard } from "../../components/admin/VerseQuickStatsCard";
 import type { VerseStatus } from "../../types";
 
 const PAGE_SIZES = [10, 20, 50];
@@ -263,33 +264,7 @@ export default function BibleManagementPage() {
           </div>
 
           {/* Quick Stats */}
-          <div className="rounded-2xl border border-border bg-card p-5">
-            <div className="mb-3 flex items-center gap-2">
-              <BarChart3 className="h-5 w-5 text-brand-blue" />
-              <h3 className="font-bold">{t("admin.quickStats.title")}</h3>
-            </div>
-            <ul className="space-y-3 text-sm">
-              <li className="flex items-center justify-between">
-                <span className="text-muted-foreground">{t("admin.quickStats.thisWeek")}</span>
-                <span className="font-bold">2</span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span className="text-muted-foreground">{t("admin.quickStats.thisMonth")}</span>
-                <span className="font-bold">6</span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span className="text-muted-foreground">{t("admin.quickStats.avgReads")}</span>
-                <span className="font-bold">58</span>
-              </li>
-              <li className="flex items-center justify-between">
-                <span className="text-muted-foreground">{t("admin.quickStats.topVerse")}</span>
-                <span className="font-bold flex items-center gap-1">
-                  <Trophy className="h-3.5 w-3.5 text-brand-blue" />
-                  {t("admin.quickStats.topVerseValue", { defaultValue: "مزامير 23 (142 مرة)" })}
-                </span>
-              </li>
-            </ul>
-          </div>
+          <VerseQuickStatsCard />
         </div>
 
         {/* FAB on mobile */}

@@ -354,3 +354,44 @@
     animation: none;
   }
 }
+
+/* ---- Themed scrollbars (P4-501 polish) ----
+ * Consistent across light/dark; the picker/list scrollers opt in
+ * with .themed-scrollbar. Firefox uses the thin scrollbar-width. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--muted-foreground) 45%, transparent)
+    transparent;
+}
+
+*::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: color-mix(
+    in oklab,
+    var(--muted-foreground) 45%,
+    transparent
+  );
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--brand-blue);
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.themed-scrollbar {
+  scrollbar-width: thin;
+}

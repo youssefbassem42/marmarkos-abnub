@@ -85,6 +85,56 @@ export interface VerseStatsResponse {
   archived: number;
 }
 
+export interface VerseQuickStats {
+  this_week: number;
+  this_month: number;
+  avg_reads: number;
+  top_verse_reference: string | null;
+  top_verse_opens: number | null;
+}
+
+export interface VerseAnalyticsOverview {
+  total_posts: number;
+  published: number;
+  total_opens: number;
+  total_reads: number;
+  read_rate: number;
+}
+
+export interface EngagementSeriesPoint {
+  bucket: string;
+  opens: number;
+  reads: number;
+}
+
+export interface RelatedQuizSummary {
+  quiz_id: string;
+  participants: number;
+  average_score_out_of_10: number;
+}
+
+export interface VerseAnalyticsDetail {
+  verse_id: string;
+  title: string;
+  verse_reference: string;
+  total_opens: number;
+  unique_opens: number;
+  total_reads: number;
+  unique_readers: number;
+  read_rate: number;
+  series: EngagementSeriesPoint[];
+  quiz: RelatedQuizSummary | null;
+}
+
+export interface VerseUserEngagementItem {
+  user_id: string;
+  full_name: string;
+  avatar: string | null;
+  opened_count: number;
+  has_read: boolean;
+  last_opened_at: string | null;
+}
+
 export interface BibleVersesListParams {
   status?: VerseStatus;
   q?: string;

@@ -55,7 +55,11 @@ class AbsenceCalculationService:
         self._attendance_repo = WeeklyAttendanceRepository(session)
 
     async def calculate_absent_users(
-        self, meeting_date: date | None = None
+        self,
+        meeting_date: date | None = None,
+        *,
+        limit: int | None = None,
+        offset: int = 0,
     ) -> tuple[int, list[AbsentUserDTO]]:
         """Calculate absent users for one meeting.
 
@@ -67,6 +71,9 @@ class AbsenceCalculationService:
             meeting_date: Any date inside the wanted meeting week; it is
                 resolved to that week's meeting. Defaults to the current
                 meeting.
+            limit: Optional maximum number of rows to return
+                (server-side pagination). ``None`` returns everyone.
+            offset: Number of rows to skip (used with ``limit``).
 
         Returns:
             Tuple of (absent_count, absent_user_list)
@@ -94,8 +101,13 @@ class AbsenceCalculationService:
             for user in expected_users
             if user.id in absent_ids
         ]
+        absent_users.sort(key=lambda row: row.name.casefold())
 
-        return len(absent_users), absent_users
+        absent_count = len(absent_users)
+        if limit is not None:
+            absent_users = absent_users[offset : offset + limit]
+
+        return absent_count, absent_users
 
     @staticmethod
     def _display(user: User) -> dict[str, str]:

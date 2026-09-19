@@ -71,6 +71,8 @@ export interface AbsentUsersResponse {
   absent_users: AbsentUser[];
   /** False before the absence cutoff: the list is provisional (BR-5) */
   is_final: boolean;
+  page?: number;
+  size?: number;
 }
 
 export interface AttendanceSummary {

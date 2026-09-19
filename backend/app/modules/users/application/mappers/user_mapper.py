@@ -16,5 +16,6 @@ def map_user_to_response(user: User) -> UserResponse:
         status=user.status,
         public_id=user.public_id,
         created_at=user.created_at,
+        last_login_at=user.last_login_at,
         has_password=user.has_password,
     )

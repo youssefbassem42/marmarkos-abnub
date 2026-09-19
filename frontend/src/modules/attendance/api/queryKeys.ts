@@ -18,8 +18,8 @@ export const attendanceKeys = {
     [...attendanceKeys.all, "meeting", d ?? "open"] as const,
   schedule: (y: number, m: number) =>
     [...attendanceKeys.all, "schedule", y, m] as const,
-  absent: (d?: string) =>
-    [...attendanceKeys.all, "absent", d ?? "open"] as const,
+  absent: (d?: string, page?: number, size?: number) =>
+    [...attendanceKeys.all, "absent", d ?? "open", page ?? 1, size ?? 10] as const,
   meetingStats: (d?: string) =>
     [...attendanceKeys.all, "stats", "meeting", d ?? "open"] as const,
   monthlyStats: (y: number, m: number) =>

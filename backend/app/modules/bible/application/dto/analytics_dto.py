@@ -16,6 +16,18 @@ class VerseAnalyticsOverview(BaseModel):
     read_rate: float = Field(description="unique_reads / unique_opens × 100 (0 when no opens)")
 
 
+class VerseQuickStats(BaseModel):
+    """GET /bible-verses/analytics/quick-stats — admin Quick-Stat card."""
+
+    this_week: int = Field(ge=0, description="Member opens since the start of this ISO week")
+    this_month: int = Field(ge=0, description="Member opens since the start of this month")
+    avg_reads: float = Field(ge=0, description="Average member opens per opened verse")
+    top_verse_reference: str | None = Field(
+        default=None, description="Reference of the most-opened verse"
+    )
+    top_verse_opens: int = Field(ge=0, description="Member opens of the top verse")
+
+
 class EngagementSeriesPoint(BaseModel):
     bucket: date = Field(description="Day or ISO week start (granularity dependent)")
     opens: int = Field(ge=0, description="Opens in the bucket")

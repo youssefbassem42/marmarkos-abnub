@@ -132,7 +132,7 @@ export function AttendanceDashboardPage() {
 
   const stats = useMeetingStatistics(selected);
   const roster = useMeetingAttendance(selected);
-  const absent = useAbsentUsers(selected);
+  const absent = useAbsentUsers(selected, { page: 1, size: 10 });
   const monthly = useMonthlyStatistics(year, month);
 
   const excuse = useExcuseAttendance();
@@ -514,40 +514,54 @@ export function AttendanceDashboardPage() {
               </p>
             )}
             {absent.data && absent.data.absent_users.length > 0 && (
-              <ul className="mt-4 divide-y divide-border">
-                {absent.data.absent_users.map((user) => (
-                  <li
-                    key={user.user_id}
-                    className="flex items-center gap-3 py-3"
-                  >
-                    <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-navy text-sm font-bold text-white">
-                      {user.name.charAt(0)}
-                    </span>
-                    <div className="min-w-0 flex-1">
-                      <p
-                        className={cn(
-                          "truncate text-sm font-semibold text-ink",
-                          "font-arabic",
-                        )}
-                      >
-                        {user.name}
-                      </p>
-                      <p
-                        className="truncate text-xs text-muted-foreground"
-                        dir="ltr"
-                      >
-                        {user.email}
-                      </p>
-                    </div>
-                    <Badge
-                      variant="outline"
-                      className="shrink-0 rounded-full text-xs"
+              <>
+                <ul className="mt-4 divide-y divide-border">
+                  {absent.data.absent_users.map((user) => (
+                    <li
+                      key={user.user_id}
+                      className="flex items-center gap-3 py-3"
                     >
-                      {user.role}
-                    </Badge>
-                  </li>
-                ))}
-              </ul>
+                      <span className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-navy text-sm font-bold text-white">
+                        {user.name.charAt(0)}
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p
+                          className={cn(
+                            "truncate text-sm font-semibold text-ink",
+                            "font-arabic",
+                          )}
+                        >
+                          {user.name}
+                        </p>
+                        <p
+                          className="truncate text-xs text-muted-foreground"
+                          dir="ltr"
+                        >
+                          {user.email}
+                        </p>
+                      </div>
+                      <Badge
+                        variant="outline"
+                        className="shrink-0 rounded-full text-xs"
+                      >
+                        {user.role}
+                      </Badge>
+                    </li>
+                  ))}
+                </ul>
+                {absent.data.absent_count > (absent.data.absent_users.length ?? 0) && (
+                  <Link
+                    to={`/admin/attendance/absent${
+                      selected ? `?meeting_date=${selected}` : ""
+                    }`}
+                    className="mt-4 flex w-full items-center justify-center gap-1 rounded-xl border border-border py-2 text-sm font-semibold text-brand-blue hover:bg-muted/50"
+                  >
+                    {t("dashboard.absent.viewAll", {
+                      count: absent.data.absent_count,
+                    })}
+                  </Link>
+                )}
+              </>
             )}
           </section>
         </div>

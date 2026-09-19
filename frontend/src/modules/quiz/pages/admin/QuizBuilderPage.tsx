@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -47,10 +47,12 @@ import { useCreateQuiz } from "../../hooks/useCreateQuiz";
 import { useUpdateQuiz } from "../../hooks/useUpdateQuiz";
 import { usePublishQuiz } from "../../hooks/usePublishQuiz";
 import { useQuizValidation } from "../../hooks/useQuizValidation";
+import { useQuizByVerse } from "../../hooks/useQuizByVerse";
 import { useVerse } from "@/modules/bible/hooks/useVerse";
 import { quizSchema, type QuizFormValues } from "../../components/admin/quizSchema";
 import { QuizInfoForm } from "../../components/admin/QuizInfoForm";
 import { QuizSettingsForm } from "../../components/admin/QuizSettingsForm";
+import { VersePickerField } from "../../components/admin/VersePickerField";
 import { QuestionOverviewList } from "../../components/admin/QuestionOverviewList";
 import { QuizReadinessPanel } from "../../components/admin/QuizReadinessPanel";
 
@@ -63,6 +65,7 @@ export default function QuizBuilderPage() {
   const { t: tCommon } = useTranslation("common");
   const { t: tBible } = useTranslation("bible");
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [quizStatus, setQuizStatus] = useState<QuizStatus>("DRAFT");
 
   const { data: quiz, isLoading: quizLoading } = useQuiz(quizId ?? "");
@@ -110,6 +113,19 @@ export default function QuizBuilderPage() {
       setQuizStatus(quiz.status as QuizStatus);
     }
   }, [quiz, form]);
+
+  const selectedVerseId = form.watch("verseId");
+  const { data: pickedVerse } = useVerse(selectedVerseId ?? "", {
+    enabled: !isEdit && !!selectedVerseId,
+  });
+  const existingQuiz = useQuizByVerse(isEdit ? "" : (selectedVerseId ?? ""));
+
+  useEffect(() => {
+    const preset = searchParams.get("verseId");
+    if (!isEdit && preset && !form.getValues("verseId")) {
+      form.setValue("verseId", preset);
+    }
+  }, [searchParams, isEdit, form]);
 
   const { data: validation } = useQuizValidation(quizId ?? "");
 
@@ -314,36 +330,67 @@ export default function QuizBuilderPage() {
             </Card>
 
             {/* 3. الآية المرتبطة */}
-            {verse && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="font-arabic">
-                    3. {t("admin.builder.relatedVerse")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-arabic">
+                  3. {t("admin.builder.relatedVerse")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {!isEdit && (
+                  <>
+                    <VersePickerField
+                      value={selectedVerseId}
+                      onValueChange={(verseId) =>
+                        form.setValue("verseId", verseId)
+                      }
+                    />
+                    {existingQuiz.data && (
+                      <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                        <div className="min-w-0 text-sm font-arabic">
+                          <p className="text-amber-800 dark:text-amber-300">
+                            {t("admin.builder.verseHasQuiz", {
+                              title: existingQuiz.data.title,
+                            })}
+                          </p>
+                          <Link
+                            to={`/admin/quizzes/${existingQuiz.data.id}/builder`}
+                            className="mt-1 inline-flex items-center gap-1 text-brand-blue hover:underline"
+                          >
+                            {t("admin.builder.viewExistingQuiz")}
+                            <ArrowLeft className="h-3.5 w-3.5 rotate-180" />
+                          </Link>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+                {(isEdit ? verse : pickedVerse) && (
                   <div className="flex items-start gap-4">
-                    {verse.image && (
+                    {(isEdit ? verse : pickedVerse)?.image && (
                       <img
-                        src={verse.image}
-                        alt={verse.title}
+                        src={(isEdit ? verse : pickedVerse)?.image ?? ""}
+                        alt={(isEdit ? verse : pickedVerse)?.title ?? ""}
                         className="h-24 w-24 shrink-0 rounded-lg object-cover"
                       />
                     )}
                     <div className="min-w-0 flex-1">
                       <p className="text-lg font-bold font-arabic">
-                        {verse.verse_reference}
+                        {(isEdit ? verse : pickedVerse)?.verse_reference}
                       </p>
                       <p className="text-sm text-muted-foreground font-arabic">
-                        {verse.title}
+                        {(isEdit ? verse : pickedVerse)?.title}
                       </p>
-                      {verse.text && (
+                      {(isEdit ? verse : pickedVerse)?.text && (
                         <p className="mt-1 text-xs text-muted-foreground line-clamp-2 font-arabic">
-                          {verse.text}
+                          {(isEdit ? verse : pickedVerse)?.text}
                         </p>
                       )}
                       <Link
-                        to={`/admin/bible-verses/${verse.id}/edit`}
+                        to={`/admin/bible-verses/${
+                          (isEdit ? verse : pickedVerse)?.id
+                        }/edit`}
                         className="mt-2 inline-flex items-center gap-1 text-sm text-brand-blue hover:underline"
                       >
                         <ExternalLink className="h-3.5 w-3.5" />
@@ -351,9 +398,9 @@ export default function QuizBuilderPage() {
                       </Link>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-            )}
+                )}
+              </CardContent>
+            </Card>
 
             {/* 4. حالة الاختبار */}
             <Card>

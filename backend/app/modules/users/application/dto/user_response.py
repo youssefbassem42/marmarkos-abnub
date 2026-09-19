@@ -22,4 +22,5 @@ class UserResponse(BaseModel):
     status: UserStatus
     public_id: str
     created_at: datetime
+    last_login_at: datetime | None = None
     has_password: bool = True
