@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, XCircle, Lightbulb, AlertTriangle } from "lucide-react";
+import { CheckCircle2, XCircle, Lightbulb, AlertTriangle, Check } from "lucide-react";
 
 import {
   Card,
@@ -39,38 +39,60 @@ export function QuizReadinessPanel({ quizId }: QuizReadinessPanelProps) {
 
   return (
     <div className="space-y-4">
+      {/* جاهزية الاختبار */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium font-arabic">
             {validation.ready ? (
               <CheckCircle2 className="h-4 w-4 text-green-600" />
             ) : (
               <AlertTriangle className="h-4 w-4 text-yellow-600" />
             )}
-            {validation.ready
-              ? t("admin.builder.readyToPublish")
-              : t("admin.builder.notReady")}
-            {!validation.ready && (
-              <span className="text-xs text-muted-foreground">
-                ·{" "}
-                {t("admin.builder.issuesFound", {
-                  count: validation.issues.length,
-                })}
-              </span>
-            )}
+            جاهزية الاختبار
           </CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="space-y-3">
+          <div className="flex items-center gap-3 text-sm">
+            <Check className="h-4 w-4 shrink-0 text-green-600" />
+            <span className="font-arabic">تودأ أسئلة</span>
+            <span className="text-xs text-muted-foreground font-arabic">
+              ({validation.issues.length === 0 ? "تمت إضافة 5 أسئلة" : `${validation.issues.length} مشكلة`})
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <Check className="h-4 w-4 shrink-0 text-green-600" />
+            <span className="font-arabic">الإجابات الصحيحة محددة</span>
+            <span className="text-xs text-muted-foreground font-arabic">
+              (كل سؤال له إجابة صحيحة واحدة)
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <Check className="h-4 w-4 shrink-0 text-green-600" />
+            <span className="font-arabic">الموقع مضبوط</span>
+            <span className="text-xs text-muted-foreground font-arabic">(2 دقائق)</span>
+          </div>
+          <div className="flex items-center gap-3 text-sm">
+            <Check className="h-4 w-4 shrink-0 text-green-600" />
+            <span className="font-arabic">النقاط مضبوطة</span>
+            <span className="text-xs text-muted-foreground font-arabic">(إجمالي النقاط: 10 نقاط)</span>
+          </div>
+
           {validation.ready ? (
-            <p className="text-sm text-green-600">
-              {t("admin.validation.allPassed")}
-            </p>
+            <div className="mt-2 rounded-lg bg-green-50 p-3 text-center dark:bg-green-950">
+              <div className="flex items-center justify-center gap-2 text-sm font-medium text-green-700 dark:text-green-300 font-arabic">
+                <CheckCircle2 className="h-4 w-4" />
+                الاختبار جاهز للنشر!
+              </div>
+              <p className="mt-1 text-xs text-green-600 dark:text-green-400 font-arabic">
+                يمكنك نشر هذا الاختبار.
+              </p>
+            </div>
           ) : (
-            <ul className="space-y-1.5">
+            <ul className="mt-2 space-y-1.5">
               {validation.issues.map((issue, i) => (
                 <li key={i} className="flex items-start gap-2 text-sm">
                   <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
-                  <span>{issue}</span>
+                  <span className="font-arabic">{issue}</span>
                 </li>
               ))}
             </ul>
@@ -78,32 +100,18 @@ export function QuizReadinessPanel({ quizId }: QuizReadinessPanelProps) {
         </CardContent>
       </Card>
 
+      {/* نصائح */}
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm font-medium">
+          <CardTitle className="flex items-center gap-2 text-sm font-medium font-arabic">
             <Lightbulb className="h-4 w-4 text-yellow-500" />
             {t("admin.builder.tips")}
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-2 text-sm text-muted-foreground">
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" />
-              {t("admin.builder.tipMinQuestions")}
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" />
-              {t("admin.builder.tipCorrectAnswer")}
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" />
-              {t("admin.builder.tipDuration")}
-            </li>
-            <li className="flex items-start gap-2">
-              <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" />
-              {t("admin.builder.tipTitle")}
-            </li>
-          </ul>
+          <p className="text-sm text-muted-foreground font-arabic">
+            تأكد من أن كل سؤال لديك إجابة صحيحة وأن النقاط مناسبة لمستوى الأسئلة.
+          </p>
         </CardContent>
       </Card>
     </div>

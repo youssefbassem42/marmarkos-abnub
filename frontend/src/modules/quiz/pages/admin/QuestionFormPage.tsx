@@ -129,7 +129,7 @@ export default function QuestionFormPage() {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div dir="rtl" lang="ar" className="space-y-6 p-6">
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>

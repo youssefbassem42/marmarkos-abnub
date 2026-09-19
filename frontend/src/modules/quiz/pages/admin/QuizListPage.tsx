@@ -66,7 +66,7 @@ export default function QuizListPage() {
   };
 
   return (
-    <>
+    <div dir="rtl" lang="ar">
       <AdminTopbar
         title={t("admin.list.title")}
         subtitle={t("admin.manage.subtitle")}
@@ -158,6 +158,6 @@ export default function QuizListPage() {
           </section>
         </div>
       </main>
-    </>
+    </div>
   );
 }

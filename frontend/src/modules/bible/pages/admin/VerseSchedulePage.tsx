@@ -120,10 +120,8 @@ export default function VerseSchedulePage() {
   }
 
   return (
-    <div>
+    <div dir="rtl" lang="ar">
       <AdminTopbar
-        title={t("admin.schedule.title")}
-        subtitle={t("admin.schedule.subtitle")}
       />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
       {/* Breadcrumb */}

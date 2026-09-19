@@ -99,7 +99,7 @@ export default function BibleManagementPage() {
   const total = query.data?.total ?? 0;
 
   return (
-    <div>
+    <div dir="rtl" lang="ar">
       <AdminTopbar title={t("admin.title")} subtitle={t("admin.subtitle")} />
 
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">

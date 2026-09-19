@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
@@ -12,6 +12,8 @@ import {
   Send,
   AlertTriangle,
   Info,
+  ExternalLink,
+  GripVertical,
 } from "lucide-react";
 
 import {
@@ -38,25 +40,35 @@ import {
 } from "@/components/ui/tooltip";
 import { Form } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import { useQuiz } from "../../hooks/useQuiz";
 import { useCreateQuiz } from "../../hooks/useCreateQuiz";
 import { useUpdateQuiz } from "../../hooks/useUpdateQuiz";
 import { usePublishQuiz } from "../../hooks/usePublishQuiz";
 import { useQuizValidation } from "../../hooks/useQuizValidation";
+import { useVerse } from "@/modules/bible/hooks/useVerse";
 import { quizSchema, type QuizFormValues } from "../../components/admin/quizSchema";
 import { QuizInfoForm } from "../../components/admin/QuizInfoForm";
 import { QuizSettingsForm } from "../../components/admin/QuizSettingsForm";
 import { QuestionOverviewList } from "../../components/admin/QuestionOverviewList";
 import { QuizReadinessPanel } from "../../components/admin/QuizReadinessPanel";
 
+type QuizStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+
 export default function QuizBuilderPage() {
   const { quizId } = useParams<{ quizId: string }>();
   const isEdit = !!quizId;
   const { t } = useTranslation("quiz");
-  const { t: tAdmin } = useTranslation("admin");
+  const { t: tCommon } = useTranslation("common");
+  const { t: tBible } = useTranslation("bible");
   const navigate = useNavigate();
+  const [quizStatus, setQuizStatus] = useState<QuizStatus>("DRAFT");
 
   const { data: quiz, isLoading: quizLoading } = useQuiz(quizId ?? "");
+  const { data: verse } = useVerse(quiz?.verse_id ?? "", {
+    enabled: !!quiz?.verse_id,
+  });
 
   const createQuiz = useCreateQuiz();
   const updateQuiz = useUpdateQuiz();
@@ -95,6 +107,7 @@ export default function QuizBuilderPage() {
         verseId: quiz.verse_id,
         durationSeconds: quiz.duration_seconds,
       });
+      setQuizStatus(quiz.status as QuizStatus);
     }
   }, [quiz, form]);
 
@@ -168,104 +181,111 @@ export default function QuizBuilderPage() {
     );
   }
 
+  const ActionBar = ({ className = "" }: { className?: string }) => (
+    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
+      <Button
+        size="sm"
+        onClick={handleSaveDraft}
+        disabled={createQuiz.isPending || updateQuiz.isPending}
+        variant="outline"
+      >
+        <Save className="me-1 h-4 w-4" />
+        {createQuiz.isPending || updateQuiz.isPending
+          ? t("admin.builder.saving")
+          : t("admin.builder.saveDraft")}
+      </Button>
+      {isEdit && (
+        <>
+          <Button variant="outline" size="sm">
+            <Eye className="me-1 h-4 w-4" />
+            {t("admin.builder.previewButton")}
+          </Button>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <span>
+                  <Button
+                    size="sm"
+                    onClick={handlePublish}
+                    disabled={!validation?.ready || publishQuiz.isPending}
+                  >
+                    <Send className="me-1 h-4 w-4" />
+                    {publishQuiz.isPending
+                      ? "..."
+                      : t("admin.builder.publishButton")}
+                  </Button>
+                </span>
+              </TooltipTrigger>
+              {validation && !validation.ready && (
+                <TooltipContent>
+                  <div className="flex items-center gap-1.5">
+                    <AlertTriangle className="h-3.5 w-3.5" />
+                    {t("admin.builder.publishDisabledTooltip")}
+                  </div>
+                </TooltipContent>
+              )}
+            </Tooltip>
+          </TooltipProvider>
+        </>
+      )}
+    </div>
+  );
+
   return (
-    <div>
+    <div dir="rtl" lang="ar">
       <AdminTopbar
         title={isEdit ? t("admin.builder.editTitle") : t("admin.builder.newTitle")}
         subtitle={t("admin.manage.subtitle")}
       />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
+        {/* Top bar: title + actions */}
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" asChild>
               <Link to="/admin/quizzes">
-                {tAdmin("nav.quizzes")}
+                <ArrowLeft className="h-4 w-4" />
               </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator>
-            <ChevronRight />
-          </BreadcrumbSeparator>
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              {isEdit
-                ? t("admin.builder.editTitle")
-                : t("admin.builder.newTitle")}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
-
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">
-          {isEdit
-            ? t("admin.builder.editTitle")
-            : t("admin.builder.newTitle")}
-        </h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to="/admin/quizzes">
-              <ArrowLeft className="me-1 h-4 w-4" />
-              {t("admin.builder.backToList")}
-            </Link>
-          </Button>
-          {isEdit && (
-            <>
-              <Button variant="outline" size="sm">
-                <Eye className="me-1 h-4 w-4" />
-                {t("admin.builder.previewButton")}
-              </Button>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <span>
-                      <Button
-                        size="sm"
-                        onClick={handlePublish}
-                        disabled={
-                          !validation?.ready || publishQuiz.isPending
-                        }
-                      >
-                        <Send className="me-1 h-4 w-4" />
-                        {publishQuiz.isPending
-                          ? "..."
-                          : t("admin.builder.publishButton")}
-                      </Button>
-                    </span>
-                  </TooltipTrigger>
-                  {validation && !validation.ready && (
-                    <TooltipContent>
-                      <div className="flex items-center gap-1.5">
-                        <AlertTriangle className="h-3.5 w-3.5" />
-                        {t("admin.builder.publishDisabledTooltip")}
-                      </div>
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
-            </>
-          )}
-          <Button
-            size="sm"
-            onClick={handleSaveDraft}
-            disabled={createQuiz.isPending || updateQuiz.isPending}
-          >
-            <Save className="me-1 h-4 w-4" />
-            {createQuiz.isPending || updateQuiz.isPending
-              ? t("admin.builder.saving")
-              : t("admin.builder.saveDraft")}
-          </Button>
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight font-arabic">
+                {isEdit
+                  ? t("admin.builder.editTitle")
+                  : t("admin.builder.newTitle")}
+              </h1>
+              <Breadcrumb>
+                <BreadcrumbList>
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to="/admin/bible-verses">
+                        {tBible("admin.title")}
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                  <BreadcrumbSeparator>
+                    <ChevronRight />
+                  </BreadcrumbSeparator>
+                  <BreadcrumbItem>
+                    <BreadcrumbPage className="font-arabic">
+                      {isEdit
+                        ? t("admin.builder.editTitle")
+                        : t("admin.builder.newTitle")}
+                    </BreadcrumbPage>
+                  </BreadcrumbItem>
+                </BreadcrumbList>
+              </Breadcrumb>
+            </div>
+          </div>
+          <ActionBar />
         </div>
-      </div>
 
-      <Form {...form}>
         <div className="grid gap-6 lg:grid-cols-3">
+          {/* Main content — 2/3 */}
           <div className="space-y-6 lg:col-span-2">
+            {/* 1. معلومات الاختبار */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">
-                  {t("admin.builder.titleField")}
+                <CardTitle className="font-arabic">
+                  1. {t("admin.builder.titleField")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -277,10 +297,11 @@ export default function QuizBuilderPage() {
               </CardContent>
             </Card>
 
+            {/* 2. إعدادات الاختبار */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm font-medium">
-                  {t("admin.builder.durationField")}
+                <CardTitle className="font-arabic">
+                  2. {t("admin.builder.durationField")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -288,6 +309,87 @@ export default function QuizBuilderPage() {
               </CardContent>
             </Card>
 
+            {/* 3. الآية المرتبطة */}
+            {verse && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-arabic">
+                    3. {t("admin.builder.relatedVerse")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-start gap-4">
+                    {verse.image && (
+                      <img
+                        src={verse.image}
+                        alt={verse.title}
+                        className="h-24 w-24 shrink-0 rounded-lg object-cover"
+                      />
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="text-lg font-bold font-arabic">
+                        {verse.verse_reference}
+                      </p>
+                      <p className="text-sm text-muted-foreground font-arabic">
+                        {verse.title}
+                      </p>
+                      {verse.text && (
+                        <p className="mt-1 text-xs text-muted-foreground line-clamp-2 font-arabic">
+                          {verse.text}
+                        </p>
+                      )}
+                      <Link
+                        to={`/admin/bible-verses/${verse.id}/edit`}
+                        className="mt-2 inline-flex items-center gap-1 text-sm text-brand-blue hover:underline"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                        {t("admin.manage.viewVerse")}
+                      </Link>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* 4. حالة الاختبار */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="font-arabic">
+                  4. {t("admin.manage.status")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <RadioGroup
+                  value={quizStatus}
+                  onValueChange={(v) => setQuizStatus(v as QuizStatus)}
+                  className="space-y-3"
+                >
+                  <div className="flex items-center gap-3 rounded-lg border p-3">
+                    <RadioGroupItem value="DRAFT" id="status-draft" />
+                    <Label htmlFor="status-draft" className="cursor-pointer flex-1">
+                      <span className="font-medium font-arabic">{t("admin.manage.draftBadge")}</span>
+                      <p className="text-xs text-muted-foreground font-arabic">مرجع للمسؤولين فقط.</p>
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-lg border p-3">
+                    <RadioGroupItem value="PUBLISHED" id="status-published" />
+                    <Label htmlFor="status-published" className="cursor-pointer flex-1">
+                      <span className="font-medium font-arabic">{t("admin.manage.publishedBadge")}</span>
+                      <p className="text-xs text-muted-foreground font-arabic">متاح لجميع المستخدمين.</p>
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-3 rounded-lg border p-3">
+                    <RadioGroupItem value="ARCHIVED" id="status-archived" />
+                    <Label htmlFor="status-archived" className="cursor-pointer flex-1">
+                      <span className="font-medium font-arabic">{t("admin.manage.archivedBadge")}</span>
+                      <p className="text-xs text-muted-foreground font-arabic">مخفى عن المستخدمين.</p>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </CardContent>
+            </Card>
+
+            {/* 5. نظرة عامة على الأسئلة */}
             {isEdit && quizId && (
               <QuestionOverviewList
                 quizId={quizId}
@@ -296,18 +398,23 @@ export default function QuizBuilderPage() {
             )}
           </div>
 
-          <div>
+          {/* Sidebar — 1/3 */}
+          <div className="space-y-6">
             {isEdit && quizId && <QuizReadinessPanel quizId={quizId} />}
           </div>
         </div>
-      </Form>
 
-      {/* Auto-save note */}
-      <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
-        <Info className="h-4 w-4 shrink-0 text-brand-blue" />
-        <span>{t("admin.builder.autoSaveNote")}</span>
-      </div>
+        {/* Auto-save note */}
+        <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
+          <Info className="h-4 w-4 shrink-0 text-brand-blue" />
+          <span className="font-arabic">{t("admin.builder.autoSaveNote")}</span>
+        </div>
       </main>
+
+      {/* Mobile sticky footer */}
+      <div className="fixed bottom-0 inset-x-0 border-t bg-background p-4 md:hidden z-40">
+        <ActionBar className="justify-center" />
+      </div>
     </div>
   );
 }
