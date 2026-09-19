@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Activity } from "lucide-react";
+import { Activity, ChevronLeft } from "lucide-react";
 import { formatTimeAgo } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
 import { AppPagination } from "@/components/common/AppPagination";
@@ -15,17 +15,16 @@ import {
 } from "@/components/ui/table";
 import { usePointsHistory } from "../hooks";
 
-const PAGE_SIZE = 10;
+const INITIAL_COUNT = 5;
 
 export function RecentActivityList() {
   const { t } = useTranslation("points");
   const locale = "ar-EG";
+  const [expanded, setExpanded] = useState(false);
 
-  const [page, setPage] = useState(1);
-  const query = usePointsHistory({ page, size: PAGE_SIZE });
+  const query = usePointsHistory({ page: 1, size: expanded ? 50 : INITIAL_COUNT });
 
   const items = query.data?.items ?? [];
-  const pages = query.data?.pages ?? 0;
 
   if (query.isPending) {
     return (
@@ -42,9 +41,7 @@ export function RecentActivityList() {
 
   return (
     <div className="rounded-2xl border border-border bg-card p-5 card-elevated">
-      <h2
-        className="font-heading text-lg font-bold text-ink font-arabic"
-      >
+      <h2 className="font-heading text-lg font-bold text-ink font-arabic">
         {t("page.activity")}
       </h2>
 
@@ -71,17 +68,13 @@ export function RecentActivityList() {
               <TableBody>
                 {items.map((item) => (
                   <TableRow key={item.id}>
-                    <TableCell
-                      className="font-medium text-ink font-arabic"
-                    >
+                    <TableCell className="font-medium text-ink font-arabic">
                       {item.quiz_title ?? item.source}
                     </TableCell>
                     <TableCell className="text-end" dir="ltr" tabular-nums>
                       +{new Intl.NumberFormat(locale).format(item.points)}
                     </TableCell>
-                    <TableCell
-                      className="whitespace-nowrap text-muted-foreground font-arabic"
-                    >
+                    <TableCell className="whitespace-nowrap text-muted-foreground font-arabic">
                       {formatTimeAgo(item.awarded_at, locale)}
                     </TableCell>
                   </TableRow>
@@ -90,12 +83,14 @@ export function RecentActivityList() {
             </Table>
           </div>
 
-          <AppPagination
-            page={page}
-            pages={pages}
-            onPageChange={setPage}
-            className="mt-4"
-          />
+          <button
+            type="button"
+            onClick={() => setExpanded((v) => !v)}
+            className="mt-4 flex items-center gap-1 text-sm font-medium text-brand-blue hover:underline"
+          >
+            <ChevronLeft className={cn("h-4 w-4 transition-transform", expanded && "rotate-90")} />
+            {expanded ? t("page.activity") : t("page.viewAllActivity")}
+          </button>
         </>
       )}
     </div>

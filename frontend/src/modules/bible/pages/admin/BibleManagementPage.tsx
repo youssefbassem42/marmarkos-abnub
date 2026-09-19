@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
-import { Plus, BookOpen } from "lucide-react";
+import { Plus, BookOpen, Lightbulb, BarChart3, CalendarClock, Trophy, BookMarked } from "lucide-react";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -216,6 +216,81 @@ export default function BibleManagementPage() {
             </>
           )}
         </section>
+
+        {/* Bottom panels: Quick States + Tips + Quick Stats */}
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          {/* Quick States */}
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <CalendarClock className="h-5 w-5 text-brand-blue" />
+              <h3 className="font-bold">{t("admin.quickStates.title")}</h3>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {t("admin.quickStates.empty")}
+            </p>
+            <Button asChild size="sm" className="mt-4">
+              <Link to="/admin/bible-verses/new">
+                <Plus className="h-4 w-4" aria-hidden="true" />
+                {t("admin.quickStates.cta")}
+              </Link>
+            </Button>
+          </div>
+
+          {/* Tips */}
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <Lightbulb className="h-5 w-5 text-brand-blue" />
+              <h3 className="font-bold">{t("admin.tips.title")}</h3>
+            </div>
+            <ul className="space-y-3 text-sm text-muted-foreground">
+              <li className="flex items-start gap-2">
+                <BookMarked className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" />
+                {t("admin.tips.quizzes")}
+              </li>
+              <li className="flex items-start gap-2">
+                <CalendarClock className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" />
+                {t("admin.tips.schedule")}
+              </li>
+              <li className="flex items-start gap-2">
+                <BarChart3 className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" />
+                {t("admin.tips.analytics")}
+              </li>
+              <li className="flex items-start gap-2">
+                <BookOpen className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" />
+                {t("admin.tips.archive")}
+              </li>
+            </ul>
+          </div>
+
+          {/* Quick Stats */}
+          <div className="rounded-2xl border border-border bg-card p-5">
+            <div className="mb-3 flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-brand-blue" />
+              <h3 className="font-bold">{t("admin.quickStats.title")}</h3>
+            </div>
+            <ul className="space-y-3 text-sm">
+              <li className="flex items-center justify-between">
+                <span className="text-muted-foreground">{t("admin.quickStats.thisWeek")}</span>
+                <span className="font-bold">2</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="text-muted-foreground">{t("admin.quickStats.thisMonth")}</span>
+                <span className="font-bold">6</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="text-muted-foreground">{t("admin.quickStats.avgReads")}</span>
+                <span className="font-bold">58</span>
+              </li>
+              <li className="flex items-center justify-between">
+                <span className="text-muted-foreground">{t("admin.quickStats.topVerse")}</span>
+                <span className="font-bold flex items-center gap-1">
+                  <Trophy className="h-3.5 w-3.5 text-brand-blue" />
+                  {t("admin.quickStats.topVerseValue", { defaultValue: "مزامير 23 (142 مرة)" })}
+                </span>
+              </li>
+            </ul>
+          </div>
+        </div>
 
         {/* FAB on mobile */}
         {isMobile && (

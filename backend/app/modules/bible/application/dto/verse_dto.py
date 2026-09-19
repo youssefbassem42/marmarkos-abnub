@@ -19,8 +19,8 @@ def _validate_cover_image_url(value: str | None) -> str | None:
     The client uploads through the existing signed flow; the verse
     endpoints never accept a raw file — just the returned URL.
     """
-    if value is None:
-        return value
+    if value is None or value.strip() == "":
+        return None
     from app.config import settings
 
     stripped = value.strip()

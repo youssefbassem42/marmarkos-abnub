@@ -1,6 +1,5 @@
 import {
   MapPin,
-  Phone,
   Mail,
   Facebook,
   Instagram,
@@ -39,10 +38,10 @@ export function Footer() {
           <img
             src={logo}
             alt={tCommon("brand.logoAlt")}
-            width={160}
-            height={112}
+            width={150}
+            height={100}
             loading="lazy"
-            className="h-24 w-auto brightness-0 invert"
+            className="h-[100px] w-[150px] object-contain brightness-0 invert"
           />
           <p
             dir="rtl"

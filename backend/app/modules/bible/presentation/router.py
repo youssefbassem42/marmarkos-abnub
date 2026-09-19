@@ -8,7 +8,7 @@ from datetime import date
 from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, Response, status
+from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, status
 
 from app.config import settings
 from app.core.database import get_unit_of_work
@@ -121,6 +121,26 @@ async def list_verses(
 async def verse_stats(actor: BibleManager, uow: _UoW) -> VerseStatsResponse:
     """KPI counts for the management dashboard cards."""
     return await verse_stats_query(uow)
+
+
+CoverFile = Annotated[UploadFile, File(...)]
+
+
+@router.post("/cover", status_code=status.HTTP_201_CREATED)
+async def upload_verse_cover(
+    actor: BibleManager,
+    file: CoverFile,
+) -> dict[str, str]:
+    """Upload a cover image for a bible verse (stored on Cloudinary)."""
+    from app.shared.infrastructure.services.image_upload import upload_image
+
+    content_type = file.content_type or ""
+    data = await file.read()
+    if len(data) > 2 * 1024 * 1024:
+        from app.core.exceptions import ValidationError
+        raise ValidationError("Image must be 2 MB or smaller")
+    url = await upload_image(data, content_type, folder="bible-covers")
+    return {"url": url}
 
 
 @router.get(

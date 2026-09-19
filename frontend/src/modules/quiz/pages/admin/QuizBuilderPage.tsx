@@ -11,6 +11,7 @@ import {
   Eye,
   Send,
   AlertTriangle,
+  Info,
 } from "lucide-react";
 
 import {
@@ -300,6 +301,12 @@ export default function QuizBuilderPage() {
           </div>
         </div>
       </Form>
+
+      {/* Auto-save note */}
+      <div className="flex items-center gap-3 rounded-2xl border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
+        <Info className="h-4 w-4 shrink-0 text-brand-blue" />
+        <span>{t("admin.builder.autoSaveNote")}</span>
+      </div>
       </main>
     </div>
   );

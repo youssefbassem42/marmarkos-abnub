@@ -1,6 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useFormContext, useWatch } from "react-hook-form";
-import { Check } from "lucide-react";
+import { CheckCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   FormField,
@@ -22,7 +22,13 @@ import {
 } from "@/components/ui/select";
 import { CoverImageField } from "./CoverImageField";
 import { VersePreview } from "./VersePreview";
-import { BIBLE_BOOKS, type VerseFormValues } from "./verseSchema";
+import {
+  BIBLE_BOOKS,
+  BIBLE_BOOKS_AR,
+  type BibleBookEnglish,
+  type VerseFormValues,
+  generateVerseRef,
+} from "./verseSchema";
 
 function CharCounter({ count, max }: { count: number; max: number }) {
   return (
@@ -39,11 +45,10 @@ function CharCounter({ count, max }: { count: number; max: number }) {
 
 export function VerseForm() {
   const { t } = useTranslation("bible");
-  const { control, watch } = useFormContext<VerseFormValues>();
+  const { control } = useFormContext<VerseFormValues>();
 
   const watchedTitle = useWatch({ control, name: "title" }) ?? "";
   const watchedSubtitle = useWatch({ control, name: "subtitle" }) ?? "";
-  const watchedVerseRef = useWatch({ control, name: "verseReference" }) ?? "";
   const watchedBook = useWatch({ control, name: "book" }) ?? "";
   const watchedChapter = useWatch({ control, name: "chapter" });
   const watchedVerseStart = useWatch({ control, name: "verseStart" });
@@ -51,8 +56,15 @@ export function VerseForm() {
   const watchedText = useWatch({ control, name: "text" }) ?? "";
   const watchedReflection = useWatch({ control, name: "reflection" }) ?? "";
   const watchedImage = useWatch({ control, name: "image" }) ?? "";
-  const watchedTranslation = useWatch({ control, name: "translation" }) ?? "";
-  const watchedStatus = useWatch({ control, name: "status" });
+
+  const verseRef = [
+    watchedBook,
+    watchedChapter,
+    watchedVerseStart,
+    watchedVerseEnd,
+  ]
+    .filter(Boolean)
+    .join(":");
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
@@ -101,33 +113,7 @@ export function VerseForm() {
           )}
         />
 
-        {/* Verse Reference */}
-        <FormField
-          control={control}
-          name="verseReference"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>
-                {t("admin.form.fields.verseRef")}
-              </FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    {...field}
-                    placeholder="John 3:16"
-                    maxLength={120}
-                  />
-                  {field.value && field.value.length > 0 && field.value.length <= 120 && (
-                    <Check className="absolute end-3 top-1/2 -translate-y-1/2 h-4 w-4 text-green-500" />
-                  )}
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Book */}
+        {/* Book (Arabic dropdown) */}
         <FormField
           control={control}
           name="book"
@@ -148,7 +134,7 @@ export function VerseForm() {
                 <SelectContent>
                   {BIBLE_BOOKS.map((book) => (
                     <SelectItem key={book} value={book}>
-                      {book}
+                      {BIBLE_BOOKS_AR[book as BibleBookEnglish]}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -220,6 +206,24 @@ export function VerseForm() {
           />
         </div>
 
+        {/* Auto-generated Verse Reference */}
+        {watchedBook && watchedChapter && watchedVerseStart && (
+          <div className="space-y-2">
+            <Label>{t("admin.form.fields.verseRef")}</Label>
+            <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2">
+              <CheckCircle className="h-4 w-4 shrink-0 text-green-600" />
+              <span className="text-sm font-medium text-foreground" dir="rtl">
+                {generateVerseRef(
+                  watchedBook as BibleBookEnglish,
+                  Number(watchedChapter),
+                  Number(watchedVerseStart),
+                  watchedVerseEnd ? Number(watchedVerseEnd) : undefined,
+                )}
+              </span>
+            </div>
+          </div>
+        )}
+
         {/* Text */}
         <FormField
           control={control}
@@ -257,24 +261,6 @@ export function VerseForm() {
                   {...field}
                   className="min-h-[100px]"
                   maxLength={5000}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        {/* Translation */}
-        <FormField
-          control={control}
-          name="translation"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>{t("admin.form.fields.translation")}</FormLabel>
-              <FormControl>
-                <Input
-                  {...field}
-                  placeholder="NIV"
                 />
               </FormControl>
               <FormMessage />
@@ -339,7 +325,7 @@ export function VerseForm() {
           <VersePreview
             title={watchedTitle}
             subtitle={watchedSubtitle}
-            verseReference={watchedVerseRef}
+            verseReference={verseRef}
             text={watchedText}
             reflection={watchedReflection}
             image={watchedImage || null}

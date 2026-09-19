@@ -116,9 +116,9 @@ export function Navbar({
           <img
             src={logo}
             alt={tCommon("brand.logoAlt")}
-            width={112}
-            height={78}
-            className="h-14 w-auto"
+            width={100}
+            height={70}
+            className="h-[60px] w-[80px] object-contain lg:h-[70px] lg:w-[100px]"
           />
         </Link>
 

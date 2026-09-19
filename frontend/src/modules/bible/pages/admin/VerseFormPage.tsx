@@ -26,7 +26,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Form } from "@/components/ui/form";
 import { useVerse, useCreateVerse, useUpdateVerse, usePublishVerse } from "../../hooks";
 import { VerseForm } from "../../components/admin/VerseForm";
-import { createVerseSchema, type VerseFormValues } from "../../components/admin/verseSchema";
+import { createVerseSchema, generateVerseRef, type VerseFormValues } from "../../components/admin/verseSchema";
 
 export default function VerseFormPage() {
   const { verseId } = useParams<{ verseId: string }>();
@@ -50,7 +50,6 @@ export default function VerseFormPage() {
     defaultValues: {
       title: "",
       subtitle: "",
-      verseReference: "",
       book: "",
       chapter: 1,
       verseStart: 1,
@@ -58,7 +57,6 @@ export default function VerseFormPage() {
       text: "",
       reflection: "",
       image: "",
-      translation: "NIV",
       status: "DRAFT",
     },
   });
@@ -69,7 +67,6 @@ export default function VerseFormPage() {
       form.reset({
         title: verse.title,
         subtitle: verse.subtitle ?? "",
-        verseReference: verse.verse_reference,
         book: verse.book,
         chapter: verse.chapter,
         verseStart: verse.verse_start,
@@ -77,7 +74,6 @@ export default function VerseFormPage() {
         text: verse.text,
         reflection: verse.reflection,
         image: verse.image ?? "",
-        translation: verse.translation,
         status: verse.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT",
       });
     }
@@ -99,10 +95,16 @@ export default function VerseFormPage() {
 
   const saveVerse = useCallback(
     async (data: VerseFormValues) => {
+      const verse_reference = generateVerseRef(
+        data.book,
+        data.chapter,
+        data.verseStart,
+        data.verseEnd,
+      );
       const payload = {
         title: data.title,
         subtitle: data.subtitle || undefined,
-        verse_reference: data.verseReference,
+        verse_reference,
         book: data.book,
         chapter: data.chapter,
         verse_start: data.verseStart,
@@ -110,7 +112,7 @@ export default function VerseFormPage() {
         text: data.text,
         reflection: data.reflection || "",
         image: data.image || undefined,
-        translation: data.translation || "NIV",
+        translation: "NIV",
       };
 
       if (isEdit && verseId) {

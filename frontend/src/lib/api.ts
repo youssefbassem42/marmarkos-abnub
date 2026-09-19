@@ -383,6 +383,26 @@ export async function uploadAvatar(
   return data;
 }
 
+/** Upload a bible verse cover image (JPEG/PNG/WebP, max 2 MB). Returns { url }. */
+export async function uploadVerseCover(
+  file: File,
+  accessToken: string,
+): Promise<{ url: string }> {
+  const form = new FormData();
+  form.append("file", file);
+  const { data } = await apiClient.post<{ url: string }>(
+    "/bible-verses/cover",
+    form,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "multipart/form-data",
+      },
+    },
+  );
+  return data;
+}
+
 /** Sign out: revokes the refresh session server-side (best effort) and is
  * always paired with clearing the local session in the UI. */
 export async function logoutUser(): Promise<void> {

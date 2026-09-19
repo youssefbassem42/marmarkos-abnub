@@ -9,6 +9,7 @@ import {
   Send,
   ArrowLeft,
   AlertTriangle,
+  Info,
 } from "lucide-react";
 
 import {
@@ -199,6 +200,12 @@ export default function QuizManagePage() {
           <QuizValidationPanel quizId={resolvedQuizId ?? quiz.id} />
           <QuizAnalyticsTeaser quizId={resolvedQuizId ?? quiz.id} />
         </div>
+      </div>
+
+      {/* Info note */}
+      <div className="flex items-start gap-3 rounded-2xl border border-border bg-muted/50 p-4 text-sm text-muted-foreground">
+        <Info className="mt-0.5 h-4 w-4 shrink-0 text-brand-blue" />
+        <span>{t("admin.manage.linkedInfo")}</span>
       </div>
       </main>
     </div>
