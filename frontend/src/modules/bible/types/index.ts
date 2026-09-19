@@ -49,18 +49,14 @@ export interface VerseAdminItem {
 export interface VerseCard {
   id: string;
   title: string;
-  subtitle: string | null;
   verse_reference: string;
-  book: string;
-  chapter: number;
-  verse_start: number;
-  reflection: string;
+  excerpt: string;
   image: string | null;
   published_at: string;
   week_start_date: string | null;
-  opens: number;
-  read: boolean;
+  is_read: boolean;
   has_quiz: boolean;
+  quiz_state: string | null;
 }
 
 export interface VerseDetailResponse extends VerseAdminItem {
@@ -69,8 +65,7 @@ export interface VerseDetailResponse extends VerseAdminItem {
   image: string | null;
   translation: string;
   opens: number;
-  read: boolean;
-  has_quiz: boolean;
+  is_read: boolean;
   quiz_summary: QuizSummary | null;
   schedule: VerseScheduleBrief | null;
 }

@@ -11,7 +11,7 @@ export function useMarkAsRead() {
       await queryClient.cancelQueries({ queryKey: bibleKeys.detail(verseId) });
       const previous = queryClient.getQueryData(bibleKeys.detail(verseId));
       queryClient.setQueryData(bibleKeys.detail(verseId), (old: Awaited<ReturnType<typeof bibleApi.getVerse>> | undefined) =>
-        old ? { ...old, read: true } : old,
+        old ? { ...old, is_read: true } : old,
       );
       return { previous };
     },

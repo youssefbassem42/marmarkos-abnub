@@ -73,7 +73,7 @@ export default function VerseDetailPage() {
       />
 
       <MarkAsReadButton
-        isRead={data.read}
+        isRead={data.is_read}
         onMarkAsRead={() => markAsRead.mutate(data.id)}
         isPending={markAsRead.isPending}
       />
@@ -81,7 +81,7 @@ export default function VerseDetailPage() {
       {data.quiz_summary?.status === "PUBLISHED" && (
         <QuizTeaserCard
           quiz={data.quiz_summary}
-          isRead={data.read}
+          isRead={data.is_read}
           attemptStatus={null}
         />
       )}

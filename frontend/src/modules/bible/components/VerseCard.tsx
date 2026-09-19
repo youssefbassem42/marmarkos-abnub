@@ -40,7 +40,7 @@ export function VerseCard({ verse }: VerseCardProps) {
           dir="rtl"
           className="mt-2 line-clamp-2 font-verse text-sm leading-6 text-ink/80 not-italic font-arabic text-base leading-7"
         >
-          {verse.reflection}
+          {verse.excerpt}
         </p>
         <div className="mt-3 flex items-center justify-between">
           <time
@@ -50,7 +50,7 @@ export function VerseCard({ verse }: VerseCardProps) {
             {formatRelativeDate(verse.published_at, "ar")}
           </time>
           <div className="flex gap-1.5">
-            {verse.read && (
+            {verse.is_read && (
               <Badge variant="secondary" className="text-[10px]">
                 {t("list.readBadge")}
               </Badge>

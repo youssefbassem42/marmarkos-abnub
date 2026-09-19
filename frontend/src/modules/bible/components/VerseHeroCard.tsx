@@ -52,11 +52,11 @@ export function VerseHeroCard({ verse }: VerseHeroCardProps) {
           dir="rtl"
           className="mt-3 line-clamp-3 font-verse text-[15px] leading-7 text-ink not-italic font-arabic text-base leading-8"
         >
-          {verse.reflection}
+          {verse.excerpt}
         </p>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          {verse.read && (
+          {verse.is_read && (
             <Badge variant="secondary">{t("list.readBadge")}</Badge>
           )}
           {verse.has_quiz && (
