@@ -77,6 +77,7 @@ from app.modules.quiz.application.dto.analytics_dto import (
     ManagerAttemptReviewResponse,
 )
 from app.modules.quiz.presentation.dependencies import CurrentUser
+from app.modules.quiz.presentation.mappers import question_to_response
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 quiz_router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
