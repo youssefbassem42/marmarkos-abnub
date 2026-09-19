@@ -14,6 +14,8 @@ import {
   Info,
   ExternalLink,
   GripVertical,
+  FileQuestion,
+  Plus,
 } from "lucide-react";
 
 import {
@@ -441,11 +443,41 @@ export default function QuizBuilderPage() {
             </Card>
 
             {/* 5. نظرة عامة على الأسئلة */}
-            {isEdit && quizId && (
+            {isEdit && quizId ? (
               <QuestionOverviewList
                 quizId={quizId}
                 questions={quiz?.questions ?? []}
               />
+            ) : (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="font-arabic">
+                    5. {t("admin.question.options")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-col items-center gap-2 py-8 text-center">
+                    <FileQuestion className="h-8 w-8 text-muted-foreground" />
+                    <p className="text-sm font-medium text-ink font-arabic">
+                      {t("admin.builder.noQuestionsYet")}
+                    </p>
+                    <p className="text-xs text-muted-foreground font-arabic">
+                      {t("admin.builder.saveThenAddQuestions")}
+                    </p>
+                    <Button
+                      size="sm"
+                      className="mt-3"
+                      onClick={() => void handleSaveDraft()}
+                      disabled={createQuiz.isPending || updateQuiz.isPending}
+                    >
+                      <Plus className="me-1 h-4 w-4" />
+                      {createQuiz.isPending || updateQuiz.isPending
+                        ? t("admin.builder.saving")
+                        : t("admin.builder.saveAndAddQuestions")}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
 
