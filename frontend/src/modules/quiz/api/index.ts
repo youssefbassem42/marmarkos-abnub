@@ -105,13 +105,13 @@ export const quizApi = {
     await apiClient.post(`/quizzes/${quizId}/questions`, data);
   },
 
-  /** Update a question */
+  /** Update a question (full options array, stable option ids) */
   updateQuestion: async (
     quizId: string,
     questionId: string,
     data: UpdateQuestionPayload,
   ): Promise<void> => {
-    await apiClient.patch(`/quizzes/${quizId}/questions/${questionId}`, data);
+    await apiClient.patch(`/quiz-questions/${questionId}`, data);
   },
 
   /** Delete a question */
@@ -119,7 +119,7 @@ export const quizApi = {
     quizId: string,
     questionId: string,
   ): Promise<void> => {
-    await apiClient.delete(`/quizzes/${quizId}/questions/${questionId}`);
+    await apiClient.delete(`/quiz-questions/${questionId}`);
   },
 
   /** Reorder questions within a quiz */
@@ -135,7 +135,7 @@ export const quizApi = {
     quizId: string,
     questionId: string,
   ): Promise<void> => {
-    await apiClient.post(`/quizzes/${quizId}/questions/${questionId}/duplicate`);
+    await apiClient.post(`/quiz-questions/${questionId}/duplicate`);
   },
 
   // --- Member-facing take ---

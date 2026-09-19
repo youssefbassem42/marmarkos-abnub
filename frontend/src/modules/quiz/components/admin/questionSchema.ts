@@ -3,6 +3,7 @@ import { z } from "zod";
 const optionSchema = z.object({
   optionText: z.string().min(1, "Option text is required"),
   isCorrect: z.boolean(),
+  id: z.string().optional(),
 });
 
 export const questionSchema = (messages: {

@@ -1,6 +1,12 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
@@ -13,7 +19,6 @@ import {
   AlertTriangle,
   Info,
   ExternalLink,
-  GripVertical,
   FileQuestion,
   Plus,
 } from "lucide-react";
@@ -57,6 +62,9 @@ import { QuizSettingsForm } from "../../components/admin/QuizSettingsForm";
 import { VersePickerField } from "../../components/admin/VersePickerField";
 import { QuestionOverviewList } from "../../components/admin/QuestionOverviewList";
 import { QuizReadinessPanel } from "../../components/admin/QuizReadinessPanel";
+import { BuilderQuestionEditor } from "../../components/admin/BuilderQuestionEditor";
+import { useReorderQuestions } from "../../hooks/useReorderQuestions";
+import type { QuizQuestionResponse } from "../../types";
 
 type QuizStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
 
@@ -67,8 +75,13 @@ export default function QuizBuilderPage() {
   const { t: tCommon } = useTranslation("common");
   const { t: tBible } = useTranslation("bible");
   const navigate = useNavigate();
+  const location = useLocation();
   const [searchParams] = useSearchParams();
   const [quizStatus, setQuizStatus] = useState<QuizStatus>("DRAFT");
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [editingQuestion, setEditingQuestion] =
+    useState<QuizQuestionResponse | null>(null);
+  const autoOpenHandled = useRef(false);
 
   const { data: quiz, isLoading: quizLoading } = useQuiz(quizId ?? "");
   const { data: verse } = useVerse(quiz?.verse_id ?? "", {
@@ -78,6 +91,7 @@ export default function QuizBuilderPage() {
   const createQuiz = useCreateQuiz();
   const updateQuiz = useUpdateQuiz();
   const publishQuiz = usePublishQuiz();
+  const reorderQuestions = useReorderQuestions();
 
   const totalPoints = useMemo(() => {
     if (!quiz?.questions) return 0;
@@ -128,6 +142,16 @@ export default function QuizBuilderPage() {
       form.setValue("verseId", preset);
     }
   }, [searchParams, isEdit, form]);
+
+  useEffect(() => {
+    if (autoOpenHandled.current) return;
+    const state = location.state as { openQuestionEditor?: boolean } | null;
+    if (isEdit && quizId && state?.openQuestionEditor) {
+      autoOpenHandled.current = true;
+      setEditingQuestion(null);
+      setEditorOpen(true);
+    }
+  }, [location.state, isEdit, quizId]);
 
   const { data: validation } = useQuizValidation(quizId ?? "");
 
@@ -183,6 +207,83 @@ export default function QuizBuilderPage() {
         toast.error(t("admin.builder.publishError"));
       },
     });
+  };
+
+  const handleCreateAndAddQuestion = form.handleSubmit((values) => {
+    createQuiz.mutate(
+      {
+        title: values.title,
+        description: values.description,
+        verse_id: values.verseId,
+        duration_seconds: values.durationSeconds,
+      },
+      {
+        onSuccess: (created) => {
+          toast.success(t("admin.builder.savedToast"));
+          navigate(`/admin/quizzes/${created.id}/builder`, {
+            replace: true,
+            state: { openQuestionEditor: true },
+          });
+        },
+        onError: () => {
+          toast.error(t("admin.builder.saveError"));
+        },
+      },
+    );
+  });
+
+  const openCreateEditor = () => {
+    setEditingQuestion(null);
+    setEditorOpen(true);
+  };
+
+  const openEditEditor = (question: QuizQuestionResponse) => {
+    setEditingQuestion(question);
+    setEditorOpen(true);
+  };
+
+  const closeEditor = () => {
+    setEditingQuestion(null);
+    setEditorOpen(false);
+  };
+
+  const persistReorder = (ids: string[]) => {
+    if (!quizId) return;
+    reorderQuestions.mutate(
+      { quizId, data: { question_ids: ids } },
+      {
+        onSuccess: () => {
+          toast.success(t("admin.manage.reorderSuccess"));
+        },
+        onError: () => {
+          toast.error(t("admin.manage.reorderError"));
+        },
+      },
+    );
+  };
+
+  const handleMoveUp = (questionId: string) => {
+    if (!quizId) return;
+    const sortedIds = [...(quiz?.questions ?? [])]
+      .sort((a, b) => a.position - b.position)
+      .map((q) => q.id);
+    const index = sortedIds.indexOf(questionId);
+    if (index <= 0) return;
+    const next = [...sortedIds];
+    [next[index - 1], next[index]] = [next[index], next[index - 1]];
+    persistReorder(next);
+  };
+
+  const handleMoveDown = (questionId: string) => {
+    if (!quizId) return;
+    const sortedIds = [...(quiz?.questions ?? [])]
+      .sort((a, b) => a.position - b.position)
+      .map((q) => q.id);
+    const index = sortedIds.indexOf(questionId);
+    if (index === -1 || index === sortedIds.length - 1) return;
+    const next = [...sortedIds];
+    [next[index], next[index + 1]] = [next[index + 1], next[index]];
+    persistReorder(next);
   };
 
   if (quizLoading) {
@@ -444,10 +545,25 @@ export default function QuizBuilderPage() {
 
             {/* 5. نظرة عامة على الأسئلة */}
             {isEdit && quizId ? (
-              <QuestionOverviewList
-                quizId={quizId}
-                questions={quiz?.questions ?? []}
-              />
+              <>
+                {editorOpen && (
+                  <BuilderQuestionEditor
+                    quizId={quizId}
+                    editing={editingQuestion}
+                    onClose={closeEditor}
+                    onSaved={closeEditor}
+                  />
+                )}
+                <QuestionOverviewList
+                  quizId={quizId}
+                  questions={quiz?.questions ?? []}
+                  onAdd={openCreateEditor}
+                  onEdit={openEditEditor}
+                  onMoveUp={handleMoveUp}
+                  onMoveDown={handleMoveDown}
+                  movePending={reorderQuestions.isPending}
+                />
+              </>
             ) : (
               <Card>
                 <CardHeader>
@@ -462,18 +578,18 @@ export default function QuizBuilderPage() {
                       {t("admin.builder.noQuestionsYet")}
                     </p>
                     <p className="text-xs text-muted-foreground font-arabic">
-                      {t("admin.builder.saveThenAddQuestions")}
+                      {t("admin.builder.addFirstQuestionHint")}
                     </p>
                     <Button
                       size="sm"
                       className="mt-3"
-                      onClick={() => void handleSaveDraft()}
-                      disabled={createQuiz.isPending || updateQuiz.isPending}
+                      onClick={() => void handleCreateAndAddQuestion()}
+                      disabled={createQuiz.isPending}
                     >
                       <Plus className="me-1 h-4 w-4" />
-                      {createQuiz.isPending || updateQuiz.isPending
-                        ? t("admin.builder.saving")
-                        : t("admin.builder.saveAndAddQuestions")}
+                      {createQuiz.isPending
+                        ? t("admin.builder.creatingDraft")
+                        : t("admin.builder.addFirstQuestion")}
                     </Button>
                   </div>
                 </CardContent>

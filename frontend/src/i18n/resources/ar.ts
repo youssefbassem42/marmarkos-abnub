@@ -1089,10 +1089,12 @@ export const ar = {
         newTitle: "اختبار جديد",
         editTitle: "تعديل الاختبار",
         addQuestion: "إضافة سؤال",
-        noQuestionsYet: "لا توجد أسئلة بعد.",
-        saveThenAddQuestions:
-          "احفظ الاختبار أولًا لإنشائه ثم أضف الأسئلة.",
-        saveAndAddQuestions: "حفظ الاختبار والانتقال لإضافة الأسئلة",
+        noQuestionsYet: "لم تُضف أسئلة بعد.",
+        addFirstQuestion: "أضف أول سؤال",
+        addFirstQuestionHint:
+          "سيتم حفظ الاختبار كمسودة تلقائيًا، ثم تفتح إضافة الأسئلة في نفس الصفحة.",
+        creatingDraft: "جارٍ إنشاء الاختبار...",
+        cancelEditing: "إلغاء",
         dragHint: "اسحب لإعادة ترتيب الأسئلة",
         titleField: "العنوان",
         titlePlaceholder: "أدخل عنوان الاختبار",

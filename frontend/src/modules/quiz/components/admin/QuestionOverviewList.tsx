@@ -1,7 +1,13 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
-import { Copy, Pencil, Plus, Trash2, GripVertical } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  Copy,
+  Pencil,
+  Plus,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -39,12 +45,22 @@ interface QuestionOverviewListProps {
   quizId: string;
   questions: QuizQuestionResponse[];
   isLoading?: boolean;
+  onAdd: () => void;
+  onEdit: (question: QuizQuestionResponse) => void;
+  onMoveUp: (questionId: string) => void;
+  onMoveDown: (questionId: string) => void;
+  movePending?: boolean;
 }
 
 export function QuestionOverviewList({
   quizId,
   questions,
   isLoading,
+  onAdd,
+  onEdit,
+  onMoveUp,
+  onMoveDown,
+  movePending,
 }: QuestionOverviewListProps) {
   const { t } = useTranslation("quiz");
   const { t: tCommon } = useTranslation("common");
@@ -105,17 +121,40 @@ export function QuestionOverviewList({
     );
   }
 
+  const moveButtons = (q: QuizQuestionResponse, index: number) => (
+    <div className="flex flex-col">
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6"
+        onClick={() => onMoveUp(q.id)}
+        disabled={index === 0 || movePending}
+        aria-label={t("admin.manage.moveUp")}
+      >
+        <ArrowUp className="h-3.5 w-3.5" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="icon"
+        className="h-6 w-6"
+        onClick={() => onMoveDown(q.id)}
+        disabled={index === sorted.length - 1 || movePending}
+        aria-label={t("admin.manage.moveDown")}
+      >
+        <ArrowDown className="h-3.5 w-3.5" />
+      </Button>
+    </div>
+  );
+
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="font-arabic">
           5. {t("admin.question.options")}
         </CardTitle>
-        <Button size="sm" asChild>
-          <Link to={`/admin/quizzes/${quizId}/questions/new`}>
-            <Plus className="me-1 h-4 w-4" />
-            {t("admin.builder.addQuestion")}
-          </Link>
+        <Button size="sm" onClick={onAdd}>
+          <Plus className="me-1 h-4 w-4" />
+          {t("admin.builder.addQuestion")}
         </Button>
       </CardHeader>
       <CardContent>
@@ -124,11 +163,9 @@ export function QuestionOverviewList({
             <p className="text-sm text-muted-foreground font-arabic">
               {t("admin.manage.noQuestions")}
             </p>
-            <Button size="sm" asChild className="mt-3">
-              <Link to={`/admin/quizzes/${quizId}/questions/new`}>
-                <Plus className="me-1 h-4 w-4" />
-                {t("admin.builder.addQuestion")}
-              </Link>
+            <Button size="sm" className="mt-3" onClick={onAdd}>
+              <Plus className="me-1 h-4 w-4" />
+              {t("admin.builder.addQuestion")}
             </Button>
           </div>
         ) : (
@@ -138,7 +175,7 @@ export function QuestionOverviewList({
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-12 font-arabic">الترتيب</TableHead>
+                    <TableHead className="w-16 font-arabic">الترتيب</TableHead>
                     <TableHead className="font-arabic">{t("admin.question.text")}</TableHead>
                     <TableHead className="font-arabic">{t("admin.question.options")}</TableHead>
                     <TableHead className="font-arabic">{t("admin.question.points")}</TableHead>
@@ -151,7 +188,7 @@ export function QuestionOverviewList({
                     <TableRow key={q.id}>
                       <TableCell>
                         <div className="flex items-center gap-1">
-                          <GripVertical className="h-4 w-4 text-muted-foreground/50 cursor-grab" />
+                          {moveButtons(q, index)}
                           <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium">
                             {index + 1}
                           </span>
@@ -194,10 +231,13 @@ export function QuestionOverviewList({
                           >
                             <Copy className="h-3.5 w-3.5" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-                            <Link to={`/admin/quizzes/${quizId}/questions/${q.id}/edit`}>
-                              <Pencil className="h-3.5 w-3.5" />
-                            </Link>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7"
+                            onClick={() => onEdit(q)}
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
                           </Button>
                         </div>
                       </TableCell>
@@ -214,9 +254,31 @@ export function QuestionOverviewList({
                   key={q.id}
                   className="flex items-start gap-3 rounded-lg border p-3"
                 >
-                  <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-medium">
-                    {index + 1}
-                  </span>
+                  <div className="flex flex-col items-center">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => onMoveUp(q.id)}
+                      disabled={index === 0 || movePending}
+                      aria-label={t("admin.manage.moveUp")}
+                    >
+                      <ArrowUp className="h-3.5 w-3.5" />
+                    </Button>
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-muted text-xs font-medium">
+                      {index + 1}
+                    </span>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6"
+                      onClick={() => onMoveDown(q.id)}
+                      disabled={index === sorted.length - 1 || movePending}
+                      aria-label={t("admin.manage.moveDown")}
+                    >
+                      <ArrowDown className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium font-arabic">{q.question}</p>
                     <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
@@ -228,10 +290,13 @@ export function QuestionOverviewList({
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    <Button variant="ghost" size="icon" className="h-7 w-7" asChild>
-                      <Link to={`/admin/quizzes/${quizId}/questions/${q.id}/edit`}>
-                        <Pencil className="h-3.5 w-3.5" />
-                      </Link>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-7 w-7"
+                      onClick={() => onEdit(q)}
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
                     </Button>
                     <Button
                       variant="ghost"
@@ -276,7 +341,7 @@ export function QuestionOverviewList({
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-arabic"
               disabled={deleteQuestion.isPending}
             >
-              {deleteQuestion.isPending ? "..." : tCommon("back")}
+              {deleteQuestion.isPending ? "..." : t("admin.builder.deleteQuestion")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

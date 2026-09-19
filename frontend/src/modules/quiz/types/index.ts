@@ -164,6 +164,13 @@ export interface CreateQuestionPayload {
 export interface UpdateQuestionPayload {
   question?: string;
   points?: number;
+  /** Full options array for edits; keeps stable ids (D-13). */
+  options?: {
+    id?: string;
+    option_text: string;
+    is_correct: boolean;
+    position?: number;
+  }[];
 }
 
 export interface ReorderQuestionsPayload {
