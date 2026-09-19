@@ -1,4 +1,4 @@
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, type ComponentType } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LandingPage } from "@/pages/landing/LandingPage";
 import { RegisterPage } from "@/pages/auth/register/RegisterPage";
@@ -18,110 +18,144 @@ import { AttendanceLayout } from "@/layouts/AttendanceLayout";
 import { AdminLayout } from "@/layouts/AdminLayout";
 import { PageSkeleton } from "@/components/common/PageSkeleton";
 
+// Code-split chunk loader that survives redeploys.
+//
+// A browser tab that was opened before a deploy keeps the OLD index.js
+// manifest, which references chunk file names that the new deploy has
+// purged. Requesting them returns the SPA fallback (text/html) instead of
+// JS, so `import()` rejects and the whole route crashes with
+// "Failed to fetch dynamically imported module". This used to surface as
+// a broken blank page on every redeploy for anyone with a stale tab.
+//
+// The fix: on the first import failure, force one full page reload so the
+// browser revalidates index.html (Cache-Control: must-revalidate) and
+// picks up the CURRENT manifest, whose chunks are guaranteed to exist.
+// `reloadedChunkOnce` only lives for the page's lifetime, so a genuine
+// second failure (broken server, truly missing chunk) falls through to
+// the router's error boundary instead of reload-looping.
+let revalidatedChunkManifest = false;
+
+function lazyWithRetry<T extends ComponentType>(
+  factory: () => Promise<{ default: T }>,
+) {
+  const loadModule = () =>
+    factory().catch(() => {
+      if (!revalidatedChunkManifest) {
+        revalidatedChunkManifest = true;
+        window.location.assign(
+          window.location.pathname + window.location.search + window.location.hash,
+        );
+      }
+      return new Promise<{ default: T }>(() => {});
+    });
+
+  return lazy(loadModule);
+}
+
 // The attendance pages pull in html5-qrcode and recharts; they must
 // never enter the landing-page bundle.
-const CheckInPage = lazy(() =>
+const CheckInPage = lazyWithRetry(() =>
   import("@/modules/attendance/pages/CheckInPage").then((m) => ({
     default: m.CheckInPage,
   })),
 );
-const AttendanceDashboardPage = lazy(() =>
+const AttendanceDashboardPage = lazyWithRetry(() =>
   import("@/modules/attendance/pages/AttendanceDashboardPage").then((m) => ({
     default: m.AttendanceDashboardPage,
   })),
 );
-const AttendanceHistoryPage = lazy(() =>
+const AttendanceHistoryPage = lazyWithRetry(() =>
   import("@/modules/attendance/pages/AttendanceHistoryPage").then((m) => ({
     default: m.AttendanceHistoryPage,
   })),
 );
-const AbsentUsersPage = lazy(() =>
+const AbsentUsersPage = lazyWithRetry(() =>
   import("@/modules/attendance/pages/AbsentUsersPage").then((m) => ({
     default: m.AbsentUsersPage,
   })),
 );
-const UsersAdminPage = lazy(() =>
+const UsersAdminPage = lazyWithRetry(() =>
   import("@/modules/users/pages/UsersAdminPage").then((m) => ({
     default: m.UsersAdminPage,
   })),
 );
 
-const NotificationsPage = lazy(() =>
+const NotificationsPage = lazyWithRetry(() =>
   import("@/modules/notifications/pages/NotificationsPage").then((m) => ({
     default: m.NotificationsPage,
   })),
 );
-const AdminNotificationsPage = lazy(() =>
+const AdminNotificationsPage = lazyWithRetry(() =>
   import("@/modules/notifications/pages/AdminNotificationsPage").then((m) => ({
     default: m.AdminNotificationsPage,
   })),
 );
-const AnonymousMessagePage = lazy(() =>
+const AnonymousMessagePage = lazyWithRetry(() =>
   import("@/modules/anonymous-messages/pages/AnonymousMessagePage").then(
     (m) => ({
       default: m.AnonymousMessagePage,
     }),
   ),
 );
-const AdminAnonymousMessagesPage = lazy(() =>
+const AdminAnonymousMessagesPage = lazyWithRetry(() =>
   import("@/modules/anonymous-messages/pages/AdminAnonymousMessagesPage").then(
     (m) => ({ default: m.AdminAnonymousMessagesPage }),
   ),
 );
 
 // Bible module
-const BibleVersesPage = lazy(() =>
+const BibleVersesPage = lazyWithRetry(() =>
   import("@/modules/bible/pages/BibleVersesPage"),
 );
-const VerseDetailPage = lazy(() =>
+const VerseDetailPage = lazyWithRetry(() =>
   import("@/modules/bible/pages/VerseDetailPage"),
 );
-const BibleManagementPage = lazy(() =>
+const BibleManagementPage = lazyWithRetry(() =>
   import("@/modules/bible/pages/admin/BibleManagementPage"),
 );
-const VerseFormPage = lazy(() =>
+const VerseFormPage = lazyWithRetry(() =>
   import("@/modules/bible/pages/admin/VerseFormPage"),
 );
-const VerseSchedulePage = lazy(() =>
+const VerseSchedulePage = lazyWithRetry(() =>
   import("@/modules/bible/pages/admin/VerseSchedulePage"),
 );
-const VerseAnalyticsPage = lazy(() =>
+const VerseAnalyticsPage = lazyWithRetry(() =>
   import("@/modules/bible/pages/admin/VerseAnalyticsPage"),
 );
-const VerseQuizRedirectPage = lazy(() =>
+const VerseQuizRedirectPage = lazyWithRetry(() =>
   import("@/modules/bible/pages/admin/VerseQuizRedirectPage"),
 );
 
 // Quiz module
-const QuizAttemptPage = lazy(() =>
+const QuizAttemptPage = lazyWithRetry(() =>
   import("@/modules/quiz/pages/QuizAttemptPage"),
 );
-const QuizResultPage = lazy(() =>
+const QuizResultPage = lazyWithRetry(() =>
   import("@/modules/quiz/pages/QuizResultPage"),
 );
-const QuizListPage = lazy(() =>
+const QuizListPage = lazyWithRetry(() =>
   import("@/modules/quiz/pages/admin/QuizListPage"),
 );
-const QuizManagePage = lazy(() =>
+const QuizManagePage = lazyWithRetry(() =>
   import("@/modules/quiz/pages/admin/QuizManagePage"),
 );
-const QuizBuilderPage = lazy(() =>
+const QuizBuilderPage = lazyWithRetry(() =>
   import("@/modules/quiz/pages/admin/QuizBuilderPage"),
 );
-const QuestionFormPage = lazy(() =>
+const QuestionFormPage = lazyWithRetry(() =>
   import("@/modules/quiz/pages/admin/QuestionFormPage"),
 );
-const QuizAnalyticsPage = lazy(() =>
+const QuizAnalyticsPage = lazyWithRetry(() =>
   import("@/modules/quiz/pages/admin/QuizAnalyticsPage"),
 );
 
 // Points module
-const PointsPage = lazy(() =>
+const PointsPage = lazyWithRetry(() =>
   import("@/modules/points/pages/PointsPage"),
 );
 
 // Analytics module
-const MonthlyAnalyticsPage = lazy(() =>
+const MonthlyAnalyticsPage = lazyWithRetry(() =>
   import("@/modules/analytics/pages/MonthlyAnalyticsPage"),
 );
 
