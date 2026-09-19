@@ -4,7 +4,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import { ChevronRight, ArrowLeft, Save, Eye } from "lucide-react";
+import { ChevronRight, ArrowLeft, Save } from "lucide-react";
 
 import {
   Breadcrumb,
@@ -128,90 +128,103 @@ export default function QuestionFormPage() {
     );
   }
 
+  const ActionBar = ({ className = "" }: { className?: string }) => (
+    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
+      <Button variant="outline" size="sm" asChild>
+        <Link to={`/admin/quizzes/${quizId}/manage`}>
+          <ArrowLeft className="me-1 h-4 w-4" />
+          {t("admin.question.backToQuiz")}
+        </Link>
+      </Button>
+      <Button
+        size="sm"
+        onClick={handleSave}
+        disabled={saveQuestion.isPending}
+      >
+        <Save className="me-1 h-4 w-4" />
+        {saveQuestion.isPending
+          ? t("admin.question.savingButton")
+          : t("admin.question.saveButton")}
+      </Button>
+    </div>
+  );
+
   return (
-    <div dir="rtl" lang="ar" className="space-y-6 p-6">
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/admin/quizzes">{tAdmin("nav.quizzes")}</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator>
-            <ChevronRight />
-          </BreadcrumbSeparator>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to={`/admin/quizzes/${quizId}/manage`}>
-                {quiz?.title ?? quizId}
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator>
-            <ChevronRight />
-          </BreadcrumbSeparator>
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              {isEdit
-                ? t("admin.question.editTitle")
-                : t("admin.question.newTitle")}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+    <div dir="rtl" lang="ar">
+      <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/admin/quizzes">{tAdmin("nav.quizzes")}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator>
+              <ChevronRight />
+            </BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to={`/admin/quizzes/${quizId}/manage`}>
+                  {quiz?.title ?? quizId}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator>
+              <ChevronRight />
+            </BreadcrumbSeparator>
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                {isEdit
+                  ? t("admin.question.editTitle")
+                  : t("admin.question.newTitle")}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <h1 className="text-2xl font-bold tracking-tight">
-          {isEdit
-            ? t("admin.question.editTitle")
-            : t("admin.question.newTitle")}
-        </h1>
-        <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" asChild>
-            <Link to={`/admin/quizzes/${quizId}/manage`}>
-              <ArrowLeft className="me-1 h-4 w-4" />
-              {t("admin.question.backToQuiz")}
-            </Link>
-          </Button>
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={saveQuestion.isPending}
-          >
-            <Save className="me-1 h-4 w-4" />
-            {saveQuestion.isPending
-              ? t("admin.question.savingButton")
-              : t("admin.question.saveButton")}
-          </Button>
-        </div>
-      </div>
-
-      <div className="grid gap-6 lg:grid-cols-3">
-        <div className="space-y-6 lg:col-span-2">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm font-medium">
-                {t("admin.question.questionField")}
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Form {...form}>
-                <QuestionForm form={form} />
-              </Form>
-            </CardContent>
-          </Card>
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <h1 className="text-2xl font-bold tracking-tight">
+            {isEdit
+              ? t("admin.question.editTitle")
+              : t("admin.question.newTitle")}
+          </h1>
+          <div className="hidden md:flex">
+            <ActionBar />
+          </div>
         </div>
 
-        <div className="space-y-6">
-          <QuestionPreview
-            question={watchedQuestion}
-            options={watchedOptions}
-          />
-          <QuestionValidationPanel
-            question={watchedQuestion}
-            options={watchedOptions}
-          />
+        <div className="grid gap-6 lg:grid-cols-3">
+          <div className="space-y-6 lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-sm font-medium">
+                  {t("admin.question.questionField")}
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Form {...form}>
+                  <QuestionForm form={form} />
+                </Form>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="space-y-6">
+            <QuestionPreview
+              question={watchedQuestion}
+              options={watchedOptions}
+            />
+            <QuestionValidationPanel
+              question={watchedQuestion}
+              options={watchedOptions}
+            />
+          </div>
         </div>
+      </main>
+
+      {/* Mobile sticky footer */}
+      <div className="fixed bottom-0 inset-x-0 border-t bg-background p-4 md:hidden z-40">
+        <ActionBar className="justify-center" />
       </div>
     </div>
   );

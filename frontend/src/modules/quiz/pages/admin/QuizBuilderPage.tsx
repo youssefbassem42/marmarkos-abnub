@@ -289,11 +289,13 @@ export default function QuizBuilderPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <QuizInfoForm
-                  form={form}
-                  verseId={quiz?.verse_id ?? form.watch("verseId")}
-                  isEdit={isEdit}
-                />
+                <Form {...form}>
+                  <QuizInfoForm
+                    form={form}
+                    verseId={quiz?.verse_id ?? form.watch("verseId")}
+                    isEdit={isEdit}
+                  />
+                </Form>
               </CardContent>
             </Card>
 
@@ -305,7 +307,9 @@ export default function QuizBuilderPage() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <QuizSettingsForm form={form} totalPoints={totalPoints} />
+                <Form {...form}>
+                  <QuizSettingsForm form={form} totalPoints={totalPoints} />
+                </Form>
               </CardContent>
             </Card>
 
