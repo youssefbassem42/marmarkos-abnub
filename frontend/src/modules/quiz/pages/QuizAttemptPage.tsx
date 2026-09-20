@@ -79,9 +79,6 @@ export default function QuizAttemptPage() {
         });
         setSelectedMap(initial);
       },
-      onError: () => {
-        startAttemptTriggeredRef.current = false;
-      },
     });
   }, [quizId, attemptId, startAttempt]);
 

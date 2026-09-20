@@ -6,6 +6,7 @@ Grading writes immutable snapshots (BR-22/BR-27) and awarding is
 idempotent via the ledger's unique ``quiz_attempt_id`` (BR-29/BR-31).
 """
 
+import asyncio
 import logging
 import uuid
 from datetime import timedelta
@@ -119,7 +120,7 @@ async def start_attempt(
     )
     await uow.quiz_attempts.add(attempt)
 
-    items = [_take_question(q, selected=None, answered=False) for q in questions]
+    items = await asyncio.gather(*[_take_question(q, selected=None, answered=False) for q in questions])
     return AttemptStartResponse(
         id=attempt.id,
         quiz_id=quiz.id,
@@ -176,14 +177,18 @@ async def resume_attempt_use_case(
         total_points=attempt.total_points,
         question_count=attempt.question_count,
         status=attempt.status,
-        questions=[
-            _take_question(
-                q,
-                selected=(stored[q.id].selected_option_id if q.id in stored else None),
-                answered=(q.id in stored),
+        questions=list(
+            await asyncio.gather(
+                *[
+                    _take_question(
+                        q,
+                        selected=(stored[q.id].selected_option_id if q.id in stored else None),
+                        answered=(q.id in stored),
+                    )
+                    for q in questions
+                ]
             )
-            for q in questions
-        ],
+        ),
     )
 
 
