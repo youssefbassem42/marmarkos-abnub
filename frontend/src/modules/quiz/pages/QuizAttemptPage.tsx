@@ -54,6 +54,7 @@ export default function QuizAttemptPage() {
       onSuccess: () => {
         navigate(`/quizzes/${quizId}/result?attemptId=${attemptId}`);
       },
+      onError: () => setHasSubmitted(false),
     });
   }, [attemptId, quizId, hasSubmitted, navigate, submitAttempt]);
 
@@ -142,6 +143,7 @@ export default function QuizAttemptPage() {
       onSuccess: () => {
         navigate(`/quizzes/${quizId}/result?attemptId=${attemptId}`);
       },
+      onError: () => setHasSubmitted(false),
     });
   }, [attemptId, hasSubmitted, quizId, navigate, submitAttempt]);
 
