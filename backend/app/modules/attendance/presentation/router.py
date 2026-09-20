@@ -176,9 +176,9 @@ async def get_meeting_attendance(
     responses={403: _RESPONSE_FORBIDDEN},
 )
 async def get_meeting_schedule(
+    current_user: AttendanceManager,
     year: YearParam = None,
     month: MonthParam = None,
-    current_user: AttendanceManager = Depends(require_role(RoleName.ADMIN, RoleName.SERVANT)),
 ) -> MeetingScheduleResponse:
     """Get the meeting calendar of a month (4 meetings, 5 in long months).
 
@@ -293,10 +293,10 @@ async def get_meeting_statistics(
     responses={403: _RESPONSE_FORBIDDEN},
 )
 async def get_monthly_statistics(
+    current_user: AttendanceManager,
+    session: DbSession,
     year: YearParam = None,
     month: MonthParam = None,
-    current_user: AttendanceManager = Depends(require_role(RoleName.ADMIN, RoleName.SERVANT)),
-    session: DbSession = Depends(get_db_session),
 ) -> MonthlyStatisticsResponse:
     """Get monthly attendance analysis across the month's meetings.
 
