@@ -83,7 +83,7 @@ async def _build_result(
             position=q.position,
             question=q.question,
             points=q.points,
-            selected_option_id=a.selected_option_id if q.id in answers else None,
+            selected_option_id=answers[q.id].selected_option_id if q.id in answers else None,
             correct_option_id=correct_map.get(q.id),
             is_correct=(answers[q.id].is_correct if q.id in answers else False),
             points_awarded=(answers[q.id].points_awarded if q.id in answers else 0),
