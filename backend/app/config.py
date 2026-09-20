@@ -4,7 +4,9 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     APP_NAME: str = "Marmarkos ABNUB API"
     APP_ENV: str = "development"
-    DEBUG: bool = True
+    # Default False: debug mode must be explicitly opted in to.
+    # Never rely on the default in a production or staging deployment.
+    DEBUG: bool = False
     EXPOSE_ERROR_DETAILS: bool = False
 
     DATABASE_URL: str
@@ -37,6 +39,19 @@ class Settings(BaseSettings):
     GMAIL_EMAIL: str | None = None
     GMAIL_APP_PASSWORD: str | None = None
 
+    # Display name used in the From: header for all mail transports.
+    # When not set explicitly, falls back to BREVO_SENDER_NAME so existing
+    # deployments that only set BREVO_SENDER_NAME continue to work unchanged.
+    # Set MAIL_SENDER_NAME directly to control the From: name independently
+    # of the Brevo sender identity.
+    MAIL_SENDER_NAME: str = ""
+
+    @property
+    def effective_sender_name(self) -> str:
+        """Resolved From: display name — MAIL_SENDER_NAME if non-empty,
+        otherwise BREVO_SENDER_NAME (backwards-compatible fallback)."""
+        return self.MAIL_SENDER_NAME or self.BREVO_SENDER_NAME
+
     # -- Account verification & password recovery -----------------------------
     # Lifespan of single-use links sent by the mail service component.
     EMAIL_VERIFICATION_TOKEN_EXPIRE_HOURS: int = 24
@@ -61,6 +76,14 @@ class Settings(BaseSettings):
     # History pagination defaults (route GET /attendance).
     ATTENDANCE_HISTORY_PAGE_SIZE: int = 20
     ATTENDANCE_HISTORY_MAX_PAGE_SIZE: int = 100
+    # Dedicated pepper for attendance PIN hashing.  Must be treated like a
+    # password — if compromised, all stored PIN hashes must be regenerated.
+    # Kept separate from JWT_SECRET so the two can rotate independently:
+    # rotating JWT_SECRET (token compromise) must NOT invalidate every
+    # member's attendance PIN.
+    # When empty the system falls back to a derivative of JWT_SECRET for
+    # backwards compatibility, but a dedicated value is strongly preferred.
+    ATTENDANCE_PIN_PEPPER: str = ""
 
     # -- Notifications & anonymous messages (Phase 4) ------------------------
     # Feed pagination (route GET /notifications).

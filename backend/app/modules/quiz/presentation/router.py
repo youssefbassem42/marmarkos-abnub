@@ -216,7 +216,9 @@ async def start_attempt_endpoint(
     payload: StartAttemptRequest, viewer: CurrentUser, uow: _UoW
 ) -> AttemptStartResponse:
     """P5-028: begin the single attempt per user+quiz (D-4, BR-24)."""
-    return await start_attempt(uow, viewer, payload.quiz_id)
+    result = await start_attempt(uow, viewer, payload.quiz_id)
+    await uow.commit()
+    return result
 
 
 @attempt_router.get("/{attempt_id}")

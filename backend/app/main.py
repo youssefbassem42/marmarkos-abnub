@@ -16,8 +16,11 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title=settings.APP_NAME,
         version="0.1.0",
-        docs_url="/docs",
-        redoc_url="/redoc",
+        # Swagger / ReDoc are only exposed when DEBUG=true.
+        # In production (DEBUG=false) these URLs return 404 so the full
+        # API schema is never served to anonymous callers.
+        docs_url="/docs" if settings.DEBUG else None,
+        redoc_url="/redoc" if settings.DEBUG else None,
     )
 
     @application.middleware("http")

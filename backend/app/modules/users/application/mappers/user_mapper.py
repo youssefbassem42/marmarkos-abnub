@@ -18,4 +18,5 @@ def map_user_to_response(user: User) -> UserResponse:
         created_at=user.created_at,
         last_login_at=user.last_login_at,
         has_password=user.has_password,
+        email_verified=user.email_verified,
     )

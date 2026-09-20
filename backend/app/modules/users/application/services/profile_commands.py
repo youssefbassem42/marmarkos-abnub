@@ -26,7 +26,13 @@ from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 
 class ProfileCommandService:
-    """Updates the authenticated user's own profile, password and photo."""
+    """Updates the authenticated user's own profile, password and photo.
+
+    Uses the constructor-path ``UnitOfWork(session)`` where ``session`` is
+    owned by the FastAPI ``get_db_session`` dependency (auto-rollback on
+    unhandled exceptions). Every write path calls ``await self._uow.commit()``
+    or ``await self._uow.rollback()`` explicitly before returning.
+    """
 
     def __init__(self, session: AsyncSession) -> None:
         self._uow = UnitOfWork(session)

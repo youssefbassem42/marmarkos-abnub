@@ -14,6 +14,13 @@ from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 
 class ProfileQueryService:
+    """Read-only profile and QR queries.
+
+    Uses the constructor-path ``UnitOfWork(session)`` where ``session`` is
+    owned by the FastAPI ``get_db_session`` dependency. The single write path
+    (``get_qr``) calls ``await self._uow.commit()`` explicitly.
+    """
+
     def __init__(self, session: AsyncSession) -> None:
         self._uow = UnitOfWork(session)
         self._users = UserRepository(session)

@@ -98,6 +98,7 @@ class UnitOfWork:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
         self._events: list[DomainEvent] = []
+        self._committed = False
 
     @classmethod
     @asynccontextmanager
@@ -113,11 +114,12 @@ class UnitOfWork:
                 await session.rollback()
                 raise
             else:
-                if uow._events:
-                    for event in uow._events:
-                        session.add(OutboxEvent.from_domain_event(event))
-                    uow._events.clear()
-                await session.commit()
+                if not uow._committed:
+                    if uow._events:
+                        for event in uow._events:
+                            session.add(OutboxEvent.from_domain_event(event))
+                        uow._events.clear()
+                    await session.commit()
 
     @property
     def session(self) -> AsyncSession:
@@ -133,6 +135,7 @@ class UnitOfWork:
                 self._session.add(OutboxEvent.from_domain_event(event))
             self._events.clear()
         await self._session.commit()
+        self._committed = True
 
     async def rollback(self) -> None:
         self._events.clear()
@@ -210,10 +213,23 @@ class UnitOfWork:
 
     @property
     def verse_views(self) -> VerseEngagementRepository:
+        """Verse open-tracking (VerseView rows).
+
+        Both ``verse_views`` and ``verse_reads`` return the same
+        ``VerseEngagementRepository`` because that single repo manages both
+        the ``verse_views`` and ``verse_reads`` tables.  Use the semantic
+        property name that matches what you are doing:
+        * ``uow.verse_views``  → call ``record_open`` / ``open_counts_*``
+        * ``uow.verse_reads``  → call ``mark_read`` / ``read_counts_*``
+        """
         return VerseEngagementRepository(self._session)
 
     @property
     def verse_reads(self) -> VerseEngagementRepository:
+        """Verse read-tracking (VerseRead rows).
+
+        See ``verse_views`` for the shared-repository rationale.
+        """
         return VerseEngagementRepository(self._session)
 
     @property

@@ -39,14 +39,14 @@ function lazyWithRetry<T extends ComponentType>(
   factory: () => Promise<{ default: T }>,
 ) {
   const loadModule = () =>
-    factory().catch(() => {
+    factory().catch((error) => {
       if (!revalidatedChunkManifest) {
         revalidatedChunkManifest = true;
         window.location.assign(
           window.location.pathname + window.location.search + window.location.hash,
         );
       }
-      return new Promise<{ default: T }>(() => {});
+      return Promise.reject(error) as never;
     });
 
   return lazy(loadModule);

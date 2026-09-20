@@ -22,13 +22,9 @@ from sqlalchemy.orm import selectinload
 from app.config import settings
 from app.core.time import local_datetime, now_local, today_local
 from app.modules.attendance.application.dto.query_dto import AbsentUserDTO
-from app.modules.attendance.domain.enums import ATTENDED_STATUSES
 from app.modules.attendance.domain.meeting_schedule import (
     current_meeting_date,
     meeting_week_end,
-)
-from app.modules.attendance.infrastructure.persistence.weekly_attendance_repository import (
-    WeeklyAttendanceRepository,
 )
 from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.infrastructure.persistence.models import User
@@ -52,7 +48,6 @@ class AbsenceCalculationService:
         self._session = session
         self._today = today
         self._now = now
-        self._attendance_repo = WeeklyAttendanceRepository(session)
 
     async def calculate_absent_users(
         self,
@@ -61,51 +56,74 @@ class AbsenceCalculationService:
         limit: int | None = None,
         offset: int = 0,
     ) -> tuple[int, list[AbsentUserDTO]]:
-        """Calculate absent users for one meeting.
+        """Calculate absent users for one meeting entirely in SQL.
 
         A user is absent when they are in the expected population and
         hold neither an attended record (PRESENT / LATE) nor an EXCUSED
         record for the meeting.
 
+        The subquery approach (NOT IN) pushes all set-subtraction work to
+        the database, avoiding full-table Python-side filtering. Pagination
+        is applied at the SQL level so the result set is bounded even when
+        the membership is large.
+
         Args:
             meeting_date: Any date inside the wanted meeting week; it is
                 resolved to that week's meeting. Defaults to the current
                 meeting.
-            limit: Optional maximum number of rows to return
-                (server-side pagination). ``None`` returns everyone.
+            limit: Optional maximum number of rows to return (server-side
+                pagination). ``None`` returns everyone.
             offset: Number of rows to skip (used with ``limit``).
 
         Returns:
             Tuple of (absent_count, absent_user_list)
         """
+        from app.modules.attendance.infrastructure.persistence.weekly_models import (
+            WeeklyAttendanceRecord,
+        )
+
         meeting = current_meeting_date(meeting_date or self._today())
+        week_closed = self._week_closed_at(meeting)
 
-        expected_users = await self.get_expected_users(meeting)
-        expected_user_ids = {user.id for user in expected_users}
+        # Sub-select: user IDs that already have any attendance record for
+        # this meeting (PRESENT, LATE, or EXCUSED all exclude from absent).
+        accounted_subq = (
+            select(WeeklyAttendanceRecord.user_id)
+            .where(WeeklyAttendanceRecord.meeting_date == meeting)
+            .distinct()
+            .scalar_subquery()
+        )
 
-        attendance_records = await self._attendance_repo.find_by_meeting(meeting)
-        statuses_by_user: dict[object, set[str]] = {}
-        for record in attendance_records:
-            statuses_by_user.setdefault(record.user_id, set()).add(str(record.status))
+        # Base filter: active members whose accounts existed by end of week.
+        base_where = (
+            User.status == UserStatus.ACTIVE,
+            User.created_at <= week_closed,
+            User.id.not_in(accounted_subq),
+        )
 
-        attended_values = {status.value for status in ATTENDED_STATUSES}
-        attended_ids = {
-            uid for uid, statuses in statuses_by_user.items() if statuses & attended_values
-        }
-        excused_ids = {uid for uid, s in statuses_by_user.items() if "EXCUSED" in s}
+        # Count query (no ORDER BY / LIMIT for correctness).
+        count_stmt = (
+            select(func.count())
+            .select_from(User)
+            .where(*base_where)
+        )
+        absent_count = int((await self._session.execute(count_stmt)).scalar_one())
 
-        absent_ids = expected_user_ids - attended_ids - excused_ids
+        # Paginated data query.
+        data_stmt = (
+            select(User)
+            .options(selectinload(User.role))
+            .where(*base_where)
+            .order_by(User.first_name.asc(), User.last_name.asc())
+        )
+        if limit is not None:
+            data_stmt = data_stmt.limit(limit).offset(offset)
 
+        result = await self._session.execute(data_stmt)
         absent_users = [
             AbsentUserDTO(user_id=user.id, **self._display(user))
-            for user in expected_users
-            if user.id in absent_ids
+            for user in result.scalars().all()
         ]
-        absent_users.sort(key=lambda row: row.name.casefold())
-
-        absent_count = len(absent_users)
-        if limit is not None:
-            absent_users = absent_users[offset : offset + limit]
 
         return absent_count, absent_users
 
@@ -116,8 +134,17 @@ class AbsenceCalculationService:
         return {"name": name, "email": user.email, "role": str(user.role.name.value)}
 
     def _week_closed_at(self, meeting: date) -> "datetime":
-        """Aware UTC instant of 23:59 local on the meeting week's end."""
-        return local_datetime(meeting_week_end(meeting), "23:59").astimezone(UTC)
+        """Aware UTC instant of midnight at the start of the day *after*
+        the meeting week's last day (i.e. the week closes at 00:00 of the
+        following day, not at 23:59 on the last day).
+
+        Using the exclusive upper-bound avoids a one-minute gap at the end
+        of each week where newly registered members would be missed.
+        """
+        from datetime import timedelta
+
+        next_day = meeting_week_end(meeting) + timedelta(days=1)
+        return local_datetime(next_day, "00:00").astimezone(UTC)
 
     async def get_expected_users(self, meeting_date: date | None = None) -> list[User]:
         """Get all active users who are expected to attend a meeting.

@@ -56,7 +56,9 @@ def grade(
     rows: list[GradedAnswerRow] = []
     score = 0
     correct_count = 0
-    total = int(total_points_override or 0)
+    # Explicit None check: total_points_override=0 is a valid value and
+    # must not be treated as falsy.
+    total = int(total_points_override) if total_points_override is not None else 0
 
     for question in sorted(questions, key=lambda q: str(q.get("position", ""))):
         question_id = UUID(str(question["id"]))

@@ -24,3 +24,4 @@ class UserResponse(BaseModel):
     created_at: datetime
     last_login_at: datetime | None = None
     has_password: bool = True
+    email_verified: bool = False

@@ -122,7 +122,7 @@ def get_email_sender() -> EmailSender:
         return BrevoEmailSender(
             api_key=brevo_api_key,
             sender_email=brevo_sender_email,
-            sender_name=settings.BREVO_SENDER_NAME,
+            sender_name=settings.effective_sender_name,
         )
     if provider == "gmail" or (provider == "auto" and gmail_ready):
         if not (gmail_address and gmail_app_password):
@@ -130,6 +130,6 @@ def get_email_sender() -> EmailSender:
         return GmailEmailSender(
             address=gmail_address,
             app_password=gmail_app_password,
-            sender_name=settings.BREVO_SENDER_NAME,
+            sender_name=settings.effective_sender_name,
         )
     return LoggingEmailSender()

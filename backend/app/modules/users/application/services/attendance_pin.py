@@ -35,7 +35,25 @@ def validate_pin_format(pin: str) -> None:
 
 
 def hash_attendance_pin(pin: str) -> str:
-    """Deterministic peppered hash used for storage and lookup."""
+    """Deterministic peppered hash used for storage and lookup.
+
+    The pepper is taken from ``settings.ATTENDANCE_PIN_PEPPER`` when set,
+    giving it an independent rotation lifecycle from JWT tokens.  When
+    the dedicated pepper is empty (legacy / unset deployments) the system
+    falls back to a derivative of ``settings.JWT_SECRET`` to preserve
+    backwards compatibility — but the fallback emits a warning, and
+    deployments should set ``ATTENDANCE_PIN_PEPPER`` explicitly.
+    """
     validate_pin_format(pin)
-    pepper = hashlib.sha256(f"attendance-pin:{settings.JWT_SECRET}".encode()).hexdigest()
+    raw_pepper = settings.ATTENDANCE_PIN_PEPPER
+    if not raw_pepper:
+        import logging
+        logging.getLogger(__name__).warning(
+            "ATTENDANCE_PIN_PEPPER is not set; falling back to a JWT_SECRET derivative. "
+            "Set a dedicated ATTENDANCE_PIN_PEPPER so PIN hashes survive JWT rotation."
+        )
+        raw_pepper = hashlib.sha256(
+            f"attendance-pin:{settings.JWT_SECRET}".encode()
+        ).hexdigest()
+    pepper = hashlib.sha256(f"attendance-pin:{raw_pepper}".encode()).hexdigest()
     return hashlib.sha256(f"{pepper}:{pin}".encode()).hexdigest()

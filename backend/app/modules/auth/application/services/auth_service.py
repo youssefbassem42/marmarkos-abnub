@@ -50,6 +50,12 @@ class RegistrationService:
     The account starts with ``email_verified=False`` and a verification
     link goes out right after commit — until the address is confirmed
     the account exists but can never sign in.
+
+    The ``session`` is owned by the FastAPI dependency (``get_db_session``)
+    which rolls it back automatically on unhandled exceptions.  Every
+    explicit write path in this service either calls ``await uow.commit()``
+    or ``await uow.rollback()`` before re-raising, so the session is always
+    left in a clean state.
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -135,6 +141,16 @@ class RegistrationService:
 
 
 class AuthenticationService:
+    """Login, Google sign-in, token refresh and logout.
+
+    Uses the constructor-path ``UnitOfWork(session)`` where ``session`` is
+    provided by the FastAPI ``get_db_session`` dependency.  That dependency
+    owns the session lifecycle and rolls back on unhandled exceptions.
+    Every write path in this service calls ``await self._uow.commit()`` or
+    ``await self._uow.rollback()`` explicitly, so the session is always
+    left in a known state before returning.
+    """
+
     def __init__(self, session: AsyncSession) -> None:
         self._uow = UnitOfWork(session)
 

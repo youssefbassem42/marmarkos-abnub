@@ -31,6 +31,7 @@ export default function QuizAttemptPage() {
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [hasSubmitted, setHasSubmitted] = useState(false);
   const announcedRef = useRef(new Set<number>());
+  const startAttemptTriggeredRef = useRef(false);
 
   const startAttempt = useStartAttempt();
   const { data: attempt, isLoading: attemptLoading } = useAttempt(
@@ -47,9 +48,9 @@ export default function QuizAttemptPage() {
   const questions = takeData?.questions ?? [];
 
   const handleExpire = useCallback(() => {
-    if (hasSubmitted) return;
+    if (hasSubmitted || !attemptId) return;
     setHasSubmitted(true);
-    submitAttempt.mutate(attemptId!, {
+    submitAttempt.mutate(attemptId, {
       onSuccess: () => {
         navigate(`/quizzes/${quizId}/result?attemptId=${attemptId}`);
       },
@@ -66,8 +67,9 @@ export default function QuizAttemptPage() {
   useEffect(() => {
     if (!quizId) return;
     if (attemptId) return;
-    if (attemptLoading) return;
+    if (startAttemptTriggeredRef.current) return;
 
+    startAttemptTriggeredRef.current = true;
     startAttempt.mutate(quizId, {
       onSuccess: (data) => {
         setAttemptId(data.id);
@@ -77,8 +79,11 @@ export default function QuizAttemptPage() {
         });
         setSelectedMap(initial);
       },
+      onError: () => {
+        startAttemptTriggeredRef.current = false;
+      },
     });
-  }, [quizId, attemptId, attemptLoading, startAttempt]);
+  }, [quizId, attemptId, startAttempt]);
 
   // Redirect if attempt already completed
   useEffect(() => {
