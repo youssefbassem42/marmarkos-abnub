@@ -112,6 +112,9 @@ export interface AttemptStatusResponse {
   score: number | null;
   question_count: number;
   answered_count: number;
+  duration_seconds?: number;
+  total_points?: number;
+  questions?: AttemptQuestionBrief[];
 }
 
 export interface GradedOption {

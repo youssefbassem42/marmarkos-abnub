@@ -92,17 +92,31 @@ export function toApiError(error: unknown): ApiError {
   } else if (Array.isArray(detail)) {
     const first = detail[0] as { msg?: unknown } | undefined;
     if (first && typeof first.msg === "string") message = first.msg;
+  let dataPayload: Record<string, unknown> | undefined;
+
+  if (typeof detail === "string") {
+    message = detail;
+  } else if (Array.isArray(detail)) {
+    const first = detail[0] as { msg?: unknown } | undefined;
+    if (first && typeof first.msg === "string") message = first.msg;
   } else if (detail && typeof detail === "object") {
-    const record = detail as { code?: unknown; message?: unknown };
+    const record = detail as {
+      code?: unknown;
+      message?: unknown;
+      data?: unknown;
+    };
     if (typeof record.code === "string") code = record.code;
     if (typeof record.message === "string") message = record.message;
+    if (record.data && typeof record.data === "object") {
+      dataPayload = record.data as Record<string, unknown>;
+    }
   }
 
   if (!message && typeof error.message === "string" && error.message) {
     message = error.message;
   }
 
-  return new ApiError(status, message ?? "Request failed", code);
+  return new ApiError(status, message ?? "Request failed", code, dataPayload);
 }
 
 /**
@@ -186,6 +200,7 @@ export class ApiError extends Error {
     public readonly status: number,
     message: string,
     public readonly code?: string,
+    public readonly data?: Record<string, unknown>,
   ) {
     super(message);
     this.name = "ApiError";

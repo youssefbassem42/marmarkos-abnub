@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { ApiError, toApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useStartAttempt } from "../hooks/useStartAttempt";
@@ -88,8 +89,34 @@ export default function QuizAttemptPage() {
     if (!attempt) return;
     if (attempt.status === "COMPLETED" || attempt.status === "AUTO_FINISHED") {
       navigate(`/quizzes/${quizId}/result?attemptId=${attempt.id}`);
+      return;
+    }
+    // Resume (in-progress): restore the user's saved selections.
+    if (attempt.questions?.length) {
+      setSelectedMap((prev) => {
+        const merged = { ...prev };
+        for (const q of attempt.questions) {
+          if (q.selected_option_id) merged[q.id] = q.selected_option_id;
+        }
+        return merged;
+      });
     }
   }, [attempt, quizId, navigate]);
+
+  // A user who has already started/done this quiz gets the existing attempt
+  // back via 409 attempt_exists. Load its id so the page resumes (in-progress)
+  // or bounces to the result page (completed, via the effect above).
+  useEffect(() => {
+    if (!startAttempt.isError || attemptId) return;
+    const err = toApiError(startAttempt.error);
+    if (
+      err instanceof ApiError &&
+      err.code === "attempt_exists" &&
+      typeof err.data?.attempt_id === "string"
+    ) {
+      setAttemptId(err.data.attempt_id);
+    }
+  }, [startAttempt.isError, startAttempt.error, attemptId]);
 
   // Announce milestones
   useEffect(() => {
