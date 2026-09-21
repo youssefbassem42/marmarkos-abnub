@@ -82,7 +82,7 @@ export default function QuizResultPage() {
       />
 
       <QuestionReviewList
-        questions={result.questions}
+        questions={result.questions ?? []}
         status={result.status}
       />
 
