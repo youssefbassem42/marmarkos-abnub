@@ -106,11 +106,16 @@ async def start_attempt(
                 data={"attempt_id": str(existing.id)},
             )
 
-        # A finished attempt with any real selection is a genuine take:
-        # one-shot, the result is shown, never overwritten (D-4/BR-27).
+        # A genuinely completed attempt (the user actually pressed submit,
+        # COMPLETED with submitted_at set) is one-shot: the result is shown,
+        # never overwritten (D-4/BR-27). AUTO_FINISHED attempts have
+        # submitted_at NULL — they were never submitted (timed out, abandoned,
+        # or left by the broken take flow) and stay retake-able even when a
+        # partial answer was auto-saved, because a quiz is only "completed"
+        # once it is submitted.
         if (
             existing.status is not AttemptStatus.IN_PROGRESS
-            and await uow.quiz_answers.has_selected_answers(existing.id)
+            and existing.submitted_at is not None
         ):
             raise AttemptExistsError(
                 "An attempt already exists for this quiz",
@@ -120,9 +125,10 @@ async def start_attempt(
         # --- Ghost attempt recovery ---
         # The broken take flow (submit 500s, abandoned pages) left attempts
         # that were never genuinely taken; lazy expiry then auto-finished them
-        # empty at score 0. Those ghosts are the finished attempts with no
-        # real selection, plus IN_PROGRESS rows past their deadline (abandoned,
-        # never submitted). They must not permanently block a real take.
+        # (AUTO_FINISHED, submitted_at NULL) at whatever partial answers had
+        # been auto-saved. Those ghosts — finished rows the user never
+        # submitted, plus IN_PROGRESS rows past their deadline — must not
+        # permanently block a real take.
         #
         # Reset the same row in place: the schema allows exactly one row per
         # user+quiz, and clearing the ghost's ledger row keeps awarding on the

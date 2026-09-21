@@ -48,21 +48,6 @@ class QuizAnswerRepository:
             delete(QuizAnswer).where(QuizAnswer.attempt_id == attempt_id)
         )
 
-    async def has_selected_answers(self, attempt_id: uuid.UUID) -> bool:
-        """Any real (non-null) selection recorded for the attempt.
-
-        Distinguishes a genuine take from an empty ghost: lazy auto-finish
-        writes one row per question (selected_option_id NULL), so counting
-        rows would misclassify empty attempts as real ones.
-        """
-        result = await self._session.execute(
-            select(func.count()).where(
-                QuizAnswer.attempt_id == attempt_id,
-                QuizAnswer.selected_option_id.is_not(None),
-            )
-        )
-        return int(result.scalar_one() or 0) > 0
-
     async def grade_bulk(
         self,
         *,

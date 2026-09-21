@@ -198,6 +198,8 @@ async def _attempt(
     if status is not AttemptStatus.IN_PROGRESS:
         attempt.finished_at = started_at
         attempt.score = 0
+        if status is AttemptStatus.COMPLETED:
+            attempt.submitted_at = started_at
     await uow.quiz_attempts.add(attempt)
     await uow.commit()
     return attempt
@@ -259,7 +261,7 @@ async def test_ghost_auto_finished_empty_attempt_is_restarted(uow: UnitOfWork) -
 
 
 async def test_real_finished_attempt_is_one_shot(uow: UnitOfWork) -> None:
-    """An attempt with a real selection keeps the D-4 block; result shown."""
+    """A COMPLETED attempt (user pressed submit) keeps the D-4 block."""
     user = await make_user(uow, "one-shot@example.com")
     quiz, option_id = await _takeable_quiz(uow, user)
     done = await _attempt(
@@ -281,6 +283,40 @@ async def test_real_finished_attempt_is_one_shot(uow: UnitOfWork) -> None:
 
     with pytest.raises(AttemptExistsError):
         await start_attempt(uow, user, quiz.id)
+
+
+async def test_partial_selection_auto_finished_ghost_is_restarted(uow: UnitOfWork) -> None:
+    """Broken-era ghosts carried partial auto-saved answers; a quiz is only
+    completed once submitted, so an AUTO_FINISHED row (submitted_at NULL)
+    resets even when it has real selections."""
+    user = await make_user(uow, "partial-ghost@example.com")
+    quiz, option_id = await _takeable_quiz(uow, user)
+    ghost = await _attempt(
+        uow,
+        quiz_id=quiz.id,
+        user_id=user.id,
+        status=AttemptStatus.AUTO_FINISHED,
+    )
+    # Auto-save persisted a selection before the broken submit 500'd.
+    uow.session.add(
+        QuizAnswer(
+            attempt_id=ghost.id,
+            question_id=(await uow.quiz_questions.list_for_quiz(quiz.id))[0].id,
+            selected_option_id=option_id,
+            is_correct=True,
+            points_awarded=2,
+        )
+    )
+    await uow.commit()
+
+    result = await start_attempt(uow, user, quiz.id)
+
+    assert result.id == ghost.id
+    refreshed = await uow.quiz_attempts.get_for_user_and_quiz(quiz.id, user.id)
+    assert refreshed is not None
+    assert refreshed.status is AttemptStatus.IN_PROGRESS
+    assert refreshed.score == 0
+    assert not (await uow.quiz_answers.list_for_attempt(ghost.id))
 
 
 async def test_live_in_progress_attempt_resumes_not_restarts(uow: UnitOfWork) -> None:
