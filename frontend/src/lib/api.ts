@@ -86,12 +86,6 @@ export function toApiError(error: unknown): ApiError {
 
   let message: string | undefined;
   let code: string | undefined;
-
-  if (typeof detail === "string") {
-    message = detail;
-  } else if (Array.isArray(detail)) {
-    const first = detail[0] as { msg?: unknown } | undefined;
-    if (first && typeof first.msg === "string") message = first.msg;
   let dataPayload: Record<string, unknown> | undefined;
 
   if (typeof detail === "string") {

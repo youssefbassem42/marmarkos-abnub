@@ -92,10 +92,11 @@ export default function QuizAttemptPage() {
       return;
     }
     // Resume (in-progress): restore the user's saved selections.
-    if (attempt.questions?.length) {
+    const resumeQuestions = attempt.questions;
+    if (resumeQuestions?.length) {
       setSelectedMap((prev) => {
         const merged = { ...prev };
-        for (const q of attempt.questions) {
+        for (const q of resumeQuestions) {
           if (q.selected_option_id) merged[q.id] = q.selected_option_id;
         }
         return merged;
