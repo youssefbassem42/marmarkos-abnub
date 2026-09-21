@@ -133,7 +133,13 @@ class QuizOption(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
 
 
 class QuizAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
-    """One member attempt with server-authoritative timing (BR-24..BR-30)."""
+    """One member attempt with a pause-safe active-time budget.
+
+    BR-24..BR-30 revised (V2): there is no wall-clock deadline. The quiz
+    only ever finishes when the member submits. ``budget_remaining_seconds``
+    holds the remaining active time; it is charged only while the member is
+    in the quiz (client heartbeats), so it freezes whenever they leave.
+    """
 
     __tablename__ = "quiz_attempts"
     __table_args__ = (
@@ -141,8 +147,6 @@ class QuizAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         Index("uq_quiz_attempts_quiz_user", "quiz_id", "user_id", unique=True),
         Index("ix_quiz_attempts_quiz_status", "quiz_id", "status"),
         Index("ix_quiz_attempts_user_finished", "user_id", "finished_at"),
-        # BR-30 batch auto-finish of expired IN_PROGRESS attempts.
-        Index("ix_quiz_attempts_expiry", "status", "expires_at"),
     )
 
     quiz_id: Mapped[uuid.UUID] = mapped_column(
@@ -152,7 +156,8 @@ class QuizAttempt(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     started_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    budget_remaining_seconds: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    last_heartbeat_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     submitted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     finished_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     status: Mapped[AttemptStatus] = mapped_column(

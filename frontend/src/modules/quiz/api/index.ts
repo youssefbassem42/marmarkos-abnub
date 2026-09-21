@@ -4,6 +4,7 @@
 
 import { apiClient } from "@/lib/api";
 import type {
+  AttemptHeartbeatResponse,
   AttemptResultResponse,
   AttemptReviewResponse,
   AttemptStartResponse,
@@ -115,10 +116,7 @@ export const quizApi = {
   },
 
   /** Delete a question */
-  deleteQuestion: async (
-    quizId: string,
-    questionId: string,
-  ): Promise<void> => {
+  deleteQuestion: async (quizId: string, questionId: string): Promise<void> => {
     await apiClient.delete(`/quiz-questions/${questionId}`);
   },
 
@@ -149,10 +147,10 @@ export const quizApi = {
   // --- Attempts ---
 
   /** Start a quiz attempt */
-  startAttempt: async (
-    quizId: string,
-  ): Promise<AttemptStartResponse> => {
-    const response = await apiClient.post("/quiz-attempts", { quiz_id: quizId });
+  startAttempt: async (quizId: string): Promise<AttemptStartResponse> => {
+    const response = await apiClient.post("/quiz-attempts", {
+      quiz_id: quizId,
+    });
     return response.data;
   },
 
@@ -164,44 +162,44 @@ export const quizApi = {
     return response.data;
   },
 
-  /** Save an answer for a question */
+  /** Save an answer; returns the fresh active-time anchor (V2) */
   saveAnswer: async (
     attemptId: string,
     questionId: string,
     selectedOptionId: string,
-  ): Promise<void> => {
-    await apiClient.put(
+  ): Promise<AttemptHeartbeatResponse> => {
+    const response = await apiClient.put(
       `/quiz-attempts/${attemptId}/answers/${questionId}`,
       { selected_option_id: selectedOptionId },
     );
+    return response.data;
+  },
+
+  /** Charge active time while the member is in the quiz (V2) */
+  heartbeatAttempt: async (
+    attemptId: string,
+  ): Promise<AttemptHeartbeatResponse> => {
+    const response = await apiClient.post(
+      `/quiz-attempts/${attemptId}/heartbeat`,
+    );
+    return response.data;
   },
 
   /** Submit the attempt for grading */
-  submitAttempt: async (
-    attemptId: string,
-  ): Promise<AttemptResultResponse> => {
+  submitAttempt: async (attemptId: string): Promise<AttemptResultResponse> => {
     const response = await apiClient.post(`/quiz-attempts/${attemptId}/submit`);
     return response.data;
   },
 
   /** Get graded result */
-  getResult: async (
-    attemptId: string,
-  ): Promise<AttemptResultResponse> => {
+  getResult: async (attemptId: string): Promise<AttemptResultResponse> => {
     const response = await apiClient.get(`/quiz-attempts/${attemptId}/result`);
     return response.data;
   },
 
   /** Get review with correct answers */
-  getReview: async (
-    attemptId: string,
-  ): Promise<AttemptReviewResponse> => {
+  getReview: async (attemptId: string): Promise<AttemptReviewResponse> => {
     const response = await apiClient.get(`/quiz-attempts/${attemptId}/review`);
     return response.data;
-  },
-
-  /** Force-expire an attempt (admin) */
-  expireAttempt: async (attemptId: string): Promise<void> => {
-    await apiClient.post(`/quiz-attempts/${attemptId}/expire`);
   },
 };

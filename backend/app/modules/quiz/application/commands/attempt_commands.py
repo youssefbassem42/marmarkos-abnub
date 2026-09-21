@@ -1,22 +1,23 @@
-"""Quiz attempt command use cases (P5-028..P5-031).
+"""Quiz attempt command use cases (P5-028..P5-031, V2 timing).
 
-Server-authoritative timing (BR-24..BR-30): the deadline is computed on
-the server; saves and submits are rejected when expired/finished.
-Grading writes immutable snapshots (BR-22/BR-27) and awarding is
-idempotent via the ledger's unique ``quiz_attempt_id`` (BR-29/BR-31).
+V2: there is no wall-clock deadline and nothing auto-finishes an attempt.
+An attempt only ends when the member presses submit. ``budget_remaining_seconds``
+is charged only for wall time the member spends actively in the quiz (bounded
+heartbeat gaps), so the clock is paused whenever they are away. Grading writes
+immutable snapshots (BR-22/BR-27) and awarding is idempotent via the ledger's
+unique ``quiz_attempt_id`` (BR-29/BR-31).
 """
 
 import asyncio
 import logging
 import uuid
-from datetime import timedelta
+from datetime import datetime
 
 from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.exceptions import (
+    AttemptBudgetExhaustedError,
     AttemptExistsError,
-    AttemptExpiredError,
     AttemptFinishedError,
     InvalidOptionError,
     NotFoundError,
@@ -26,12 +27,10 @@ from app.core.exceptions import (
 from app.core.time.clock import now_utc, to_local
 from app.core.time.periods import iso_week_start, month_start
 from app.modules.quiz.application.dto.attempt_dto import (
+    AttemptHeartbeatResponse,
     AttemptResumeResponse,
     AttemptResultResponse,
     AttemptStartResponse,
-    GradedOptionItem,
-    PointsSnapshot,
-    ReviewQuestionItem,
     TakeQuestionItem,
     TakeOptionItem,
 )
@@ -41,13 +40,38 @@ from app.modules.quiz.infrastructure.persistence.models import (
     Quiz,
     QuizAnswer,
     QuizAttempt,
-    QuizOption,
     QuizQuestion,
 )
 from app.modules.users.infrastructure.persistence.models import User
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 logger = logging.getLogger(__name__)
+
+# Largest gap between heartbeats still counted as "actively taking the quiz".
+# Anything larger means the tab was hidden/closed (or the client crashed) —
+# the clock is paused, so that wall time is never charged.
+HEARTBEAT_WINDOW_SECONDS = 30
+
+
+def _charge_active_time(attempt: QuizAttempt, now: datetime | None = None) -> None:
+    """Burn active-time budget for wall time spent in the quiz (V2).
+
+    Only consecutive heartbeats inside ``HEARTBEAT_WINDOW_SECONDS`` charge
+    budget. A longer gap means the member was away/crashed — the clock was
+    paused — so the missed wall time is dropped and the heartbeat simply
+    re-anchors the timer.
+    """
+    if attempt.status is not AttemptStatus.IN_PROGRESS:
+        return
+    now = now or now_utc()
+    last = attempt.last_heartbeat_at
+    if last is None:
+        attempt.last_heartbeat_at = now
+        return
+    gap = (now - last).total_seconds()
+    if 0 < gap <= HEARTBEAT_WINDOW_SECONDS:
+        attempt.budget_remaining_seconds = max(0, attempt.budget_remaining_seconds - int(gap))
+    attempt.last_heartbeat_at = now
 
 
 async def _own_attempt(
@@ -89,7 +113,7 @@ async def _take_question(
 async def start_attempt(
     uow: UnitOfWork, actor: User, quiz_id: uuid.UUID
 ) -> AttemptStartResponse:
-    """P5-028: create the single attempt per user+quiz (D-4)."""
+    """P5-028: begin the single attempt per user+quiz (D-4, V2)."""
     quiz = await uow.quizzes.get_by_id(quiz_id)
     if quiz is None:
         raise NotFoundError("Quiz not found")
@@ -97,69 +121,13 @@ async def start_attempt(
 
     existing = await uow.quiz_attempts.get_for_user_and_quiz(quiz_id, actor.id)
     if existing is not None:
-        now = now_utc()
-
-        # A live in-progress session is resumed, never duplicated (D-4/BR-27).
-        if existing.status is AttemptStatus.IN_PROGRESS and existing.expires_at > now:
-            raise AttemptExistsError(
-                "An attempt already exists for this quiz",
-                data={"attempt_id": str(existing.id)},
-            )
-
-        # A genuinely completed attempt (the user actually pressed submit,
-        # COMPLETED with submitted_at set) is one-shot: the result is shown,
-        # never overwritten (D-4/BR-27). AUTO_FINISHED attempts have
-        # submitted_at NULL — they were never submitted (timed out, abandoned,
-        # or left by the broken take flow) and stay retake-able even when a
-        # partial answer was auto-saved, because a quiz is only "completed"
-        # once it is submitted.
-        if (
-            existing.status is not AttemptStatus.IN_PROGRESS
-            and existing.submitted_at is not None
-        ):
-            raise AttemptExistsError(
-                "An attempt already exists for this quiz",
-                data={"attempt_id": str(existing.id)},
-            )
-
-        # --- Ghost attempt recovery ---
-        # The broken take flow (submit 500s, abandoned pages) left attempts
-        # that were never genuinely taken; lazy expiry then auto-finished them
-        # (AUTO_FINISHED, submitted_at NULL) at whatever partial answers had
-        # been auto-saved. Those ghosts — finished rows the user never
-        # submitted, plus IN_PROGRESS rows past their deadline — must not
-        # permanently block a real take.
-        #
-        # Reset the same row in place: the schema allows exactly one row per
-        # user+quiz, and clearing the ghost's ledger row keeps awarding on the
-        # retake from being swallowed by on_conflict_do_nothing.
-        questions = await _load_questions_with_options(uow, quiz.id)
-        if not questions:
-            raise QuizNotAvailableError("Quiz has no questions")
-        await uow.quiz_answers.delete_for_attempt(existing.id)
-        await uow.point_transactions.delete_for_attempt(existing.id)
-        existing.started_at = now
-        existing.expires_at = now + timedelta(seconds=quiz.duration_seconds)
-        existing.submitted_at = None
-        existing.finished_at = None
-        existing.status = AttemptStatus.IN_PROGRESS
-        existing.score = 0
-        existing.correct_count = 0
-        existing.incorrect_count = 0
-        items = await asyncio.gather(
-            *[_take_question(q, selected=None, answered=False) for q in questions]
-        )
-        return AttemptStartResponse(
-            id=existing.id,
-            quiz_id=quiz.id,
-            started_at=now,
-            expires_at=existing.expires_at,
-            remaining_seconds=quiz.duration_seconds,
-            server_time=now,
-            duration_seconds=quiz.duration_seconds,
-            total_points=quiz.total_points,
-            question_count=len(items),
-            questions=items,
+        # One attempt per user+quiz forever (D-4). An in-progress attempt is
+        # resumed (its clock is paused whenever the member is away), and a
+        # submitted attempt is a one-shot result — never overwritten. Nothing
+        # is auto-finished anymore (V2).
+        raise AttemptExistsError(
+            "An attempt already exists for this quiz",
+            data={"attempt_id": str(existing.id)},
         )
 
     questions = await _load_questions_with_options(uow, quiz.id)
@@ -167,13 +135,13 @@ async def start_attempt(
         raise QuizNotAvailableError("Quiz has no questions")
 
     now = now_utc()
-    expires_at = now + timedelta(seconds=quiz.duration_seconds)
     attempt = QuizAttempt(
         quiz_id=quiz.id,
         user_id=actor.id,
         started_at=now,
-        expires_at=expires_at,
         status=AttemptStatus.IN_PROGRESS,
+        budget_remaining_seconds=quiz.duration_seconds,
+        last_heartbeat_at=now,
         duration_seconds=quiz.duration_seconds,
         total_points=quiz.total_points,
         question_count=len(questions),
@@ -185,8 +153,7 @@ async def start_attempt(
         id=attempt.id,
         quiz_id=quiz.id,
         started_at=now,
-        expires_at=expires_at,
-        remaining_seconds=quiz.duration_seconds,
+        remaining_seconds=attempt.budget_remaining_seconds,
         server_time=now,
         duration_seconds=quiz.duration_seconds,
         total_points=quiz.total_points,
@@ -215,7 +182,7 @@ async def resume_attempt_use_case(
 ) -> AttemptResumeResponse:
     """P5-029: reload own in-progress attempt with stored selections."""
     attempt = await _own_attempt(uow, attempt_id, actor.id)
-    await _lazy_expire(uow, attempt)
+    _charge_active_time(attempt)
     quiz = await uow.quizzes.get_by_id(attempt.quiz_id)
     if quiz is None:
         raise NotFoundError("Quiz not found")
@@ -225,13 +192,11 @@ async def resume_attempt_use_case(
         for a in await uow.quiz_answers.list_for_attempt(attempt.id)
     }
     now = now_utc()
-    remaining = max(0, int((attempt.expires_at - now).total_seconds()))
     return AttemptResumeResponse(
         id=attempt.id,
         quiz_id=attempt.quiz_id,
         started_at=attempt.started_at,
-        expires_at=attempt.expires_at,
-        remaining_seconds=remaining,
+        remaining_seconds=attempt.budget_remaining_seconds,
         server_time=now,
         duration_seconds=attempt.duration_seconds,
         total_points=attempt.total_points,
@@ -252,44 +217,57 @@ async def resume_attempt_use_case(
     )
 
 
+async def heartbeat_attempt_use_case(
+    uow: UnitOfWork, actor: User, attempt_id: uuid.UUID
+) -> AttemptHeartbeatResponse:
+    """V2: anchor the active-time budget while the member is in the quiz."""
+    attempt = await _own_attempt(uow, attempt_id, actor.id)
+    _charge_active_time(attempt)
+    return AttemptHeartbeatResponse(
+        attempt_id=attempt.id,
+        status=attempt.status,
+        remaining_seconds=attempt.budget_remaining_seconds,
+        server_time=now_utc(),
+    )
+
+
 async def save_answer_use_case(
     uow: UnitOfWork,
     actor: User,
     attempt_id: uuid.UUID,
     question_id: uuid.UUID,
     selected_option_id: uuid.UUID,
-) -> None:
+) -> AttemptHeartbeatResponse:
     """BR-26: upsert the current selection; grading untouched until submit."""
     attempt = await _own_attempt(uow, attempt_id, actor.id)
-    await _enforce_mutable(attempt)
+    await _enforce_answerable(attempt)
+    _charge_active_time(attempt)
+    if attempt.budget_remaining_seconds <= 0:
+        raise AttemptBudgetExhaustedError("The active time budget is exhausted")
     if not await uow.quiz_options.option_belongs_to_question(question_id, selected_option_id):
         raise InvalidOptionError("Option does not belong to the question")
     await uow.quiz_answers.upsert(attempt.id, question_id, selected_option_id)
-    await _lazy_expire(uow, attempt)
+    return AttemptHeartbeatResponse(
+        attempt_id=attempt.id,
+        status=attempt.status,
+        remaining_seconds=attempt.budget_remaining_seconds,
+        server_time=now_utc(),
+    )
 
 
-async def _enforce_mutable(attempt: QuizAttempt) -> None:
-    """Reject writes to finished attempts (BR-27)."""
+async def _enforce_answerable(attempt: QuizAttempt) -> None:
+    """Reject writes to finished attempts (BR-27). Saves are otherwise always
+    allowed while the budget lasts; only a manual submit ends the quiz (V2)."""
     if attempt.status is not AttemptStatus.IN_PROGRESS:
         raise AttemptFinishedError("Attempt is already finished")
-    if attempt.expires_at <= now_utc():
-        raise AttemptExpiredError("Attempt has expired")
 
 
-async def _lazy_expire(uow: UnitOfWork, attempt: QuizAttempt) -> None:
-    """Lazily auto-finish expired attempts on touch (BR-30); refresh state."""
-    if attempt.status is AttemptStatus.IN_PROGRESS and attempt.expires_at <= now_utc():
-        await _finalise_attempt(uow, attempt, submitted=False)
-
-
-async def _finalise_attempt(
-    uow: UnitOfWork, attempt: QuizAttempt, *, submitted: bool
-) -> None:
+async def _finalise_attempt(uow: UnitOfWork, attempt: QuizAttempt) -> None:
     """Grade stored selections and write the immutable snapshot + award.
 
-    Shared by member submit and the lazy/auto expiry path. Idempotent at
-    the ledger level (BR-29/BR-31), so a concurrent second submit cannot
-    double-award.
+    Only a manual submit reaches here (V2 — nothing auto-finishes an attempt).
+    Idempotent at the ledger level (BR-29/BR-31), so a concurrent second
+    submit cannot double-award.
     """
     questions = await _load_questions_with_options(uow, attempt.quiz_id)
     question_ids = [q.id for q in questions]
@@ -305,7 +283,6 @@ async def _finalise_attempt(
     )
 
     finished_at = now_utc()
-    status = AttemptStatus.COMPLETED if submitted else AttemptStatus.AUTO_FINISHED
 
     for row in graded.rows:
         answer = stored.get(row.question_id)
@@ -327,9 +304,9 @@ async def _finalise_attempt(
 
     await uow.quiz_attempts.finalise(
         attempt,
-        status=status,
+        status=AttemptStatus.COMPLETED,
         finished_at=finished_at,
-        submitted_at=finished_at if submitted else None,
+        submitted_at=finished_at,
         score=graded.score,
         correct_count=graded.correct_count,
         incorrect_count=graded.incorrect_count,
@@ -349,10 +326,13 @@ async def _finalise_attempt(
 async def submit_attempt_use_case(
     uow: UnitOfWork, actor: User, attempt_id: uuid.UUID
 ) -> AttemptResultResponse:
-    """P5-031: grade + award, idempotent (BR-29)."""
+    """P5-031: grade + award; idempotent (BR-29). Submit is the ONLY way an
+    attempt ends (V2); it is always allowed while in progress, even after the
+    active-time budget runs out."""
     attempt = await _own_attempt(uow, attempt_id, actor.id)
+    _charge_active_time(attempt)
     if attempt.status is AttemptStatus.IN_PROGRESS:
-        await _finalise_attempt(uow, attempt, submitted=True)
+        await _finalise_attempt(uow, attempt)
     from app.modules.quiz.application.queries.attempt_queries import _build_result
 
     return await _build_result(uow, attempt)

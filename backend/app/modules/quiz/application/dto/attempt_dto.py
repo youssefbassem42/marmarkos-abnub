@@ -34,13 +34,12 @@ class TakeOptionItem(BaseModel):
 
 
 class AttemptStartResponse(BaseModel):
-    """POST /quizzes/{id}/attempts (P5-028)."""
+    """POST /quiz-attempts (P5-028)."""
 
     id: uuid.UUID = Field(description="Attempt id")
     quiz_id: uuid.UUID = Field(description="Quiz id")
     started_at: datetime = Field(description="Start moment (UTC)")
-    expires_at: datetime = Field(description="Deadline (UTC)")
-    remaining_seconds: int = Field(ge=0, description="Seconds left")
+    remaining_seconds: int = Field(ge=0, description="Active-time budget left")
     server_time: datetime = Field(description="Server clock")
     duration_seconds: int = Field(description="Time limit")
     total_points: int = Field(description="Snapshot of quiz total points")
@@ -52,6 +51,15 @@ class AttemptResumeResponse(AttemptStartResponse):
     """GET /quiz-attempts/{id} — adds attempt state."""
 
     status: AttemptStatus = Field(description="Current lifecycle status")
+
+
+class AttemptHeartbeatResponse(BaseModel):
+    """Re-anchor payload after charging active time (save/heartbeat)."""
+
+    attempt_id: uuid.UUID = Field(description="Attempt id")
+    status: AttemptStatus = Field(description="Current lifecycle status")
+    remaining_seconds: int = Field(ge=0, description="Active-time budget left")
+    server_time: datetime = Field(description="Server clock")
 
 
 class SaveAnswerRequest(BaseModel):

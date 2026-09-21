@@ -1,7 +1,7 @@
 """Points ledger persistence tests (P5-007, BR-31..BR-35)."""
 
 import uuid
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 
 from app.core.time.periods import iso_week_start, month_start
 from app.modules.bible.domain.enums import VerseStatus
@@ -41,7 +41,7 @@ async def _attempt(
         quiz_id=quiz.id,
         user_id=user_id,
         started_at=started,
-        expires_at=started + timedelta(seconds=60),
+        budget_remaining_seconds=60,
         status="COMPLETED" if finished else "IN_PROGRESS",
         submitted_at=started if finished else None,
         finished_at=started if finished else None,

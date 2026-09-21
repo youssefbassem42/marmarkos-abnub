@@ -17,3 +17,4 @@ export * from "./useReorderQuestions";
 export * from "./useStartAttempt";
 export * from "./useSaveAnswer";
 export * from "./useSubmitAttempt";
+export * from "./useHeartbeat";

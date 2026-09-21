@@ -1,7 +1,7 @@
 from app.core.exceptions.errors import (
     AppError,
+    AttemptBudgetExhaustedError,
     AttemptExistsError,
-    AttemptExpiredError,
     AttemptFinishedError,
     ConflictError,
     EmailNotVerifiedError,
@@ -16,8 +16,8 @@ from app.core.exceptions.errors import (
     QuizNotAvailableError,
     QuizNotPublishableError,
     RateLimitedError,
-    ScheduleExistsError,
     SchedulerDisabledError,
+    ScheduleExistsError,
     UnauthorizedError,
     ValidationError,
     VerseNotReadError,
@@ -26,8 +26,8 @@ from app.core.exceptions.handlers import register_exception_handlers
 
 __all__ = [
     "AppError",
+    "AttemptBudgetExhaustedError",
     "AttemptExistsError",
-    "AttemptExpiredError",
     "AttemptFinishedError",
     "ConflictError",
     "EmailNotVerifiedError",

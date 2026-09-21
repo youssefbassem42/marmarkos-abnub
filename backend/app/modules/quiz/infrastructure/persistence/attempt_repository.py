@@ -1,10 +1,10 @@
-"""Quiz attempt persistence (P5-006, BR-24..BR-30)."""
+"""Quiz attempt persistence (P5-006, D-4, BR-24..BR-30 V2)."""
 
 import uuid
 from collections.abc import Sequence
 from datetime import datetime
 
-from sqlalchemy import case, func, select, update
+from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.quiz.domain.enums import AttemptStatus
@@ -67,21 +67,6 @@ class QuizAttemptRepository:
         attempt.correct_count = correct_count
         attempt.incorrect_count = incorrect_count
         await self._session.flush()
-
-    async def claim_expired(self, limit: int, now: datetime) -> list[QuizAttempt]:
-        """Claim expired IN_PROGRESS attempts for batch auto-finish (BR-30)."""
-        stmt = (
-            select(QuizAttempt)
-            .where(
-                QuizAttempt.status == AttemptStatus.IN_PROGRESS,
-                QuizAttempt.expires_at <= now,
-            )
-            .order_by(QuizAttempt.expires_at)
-            .limit(limit)
-            .with_for_update(skip_locked=True)
-        )
-        result = await self._session.execute(stmt)
-        return list(result.scalars().all())
 
     # -- analytics aggregates (wave 5C; kept beside the table) -------------
 
@@ -171,15 +156,6 @@ class QuizAttemptRepository:
             "quizzes_completed": count,
             "average_score_out_of_10": avg_score_out_of_10,
         }
-
-    async def bulk_auto_finish_mark(self, attempt_ids: Sequence[uuid.UUID]) -> None:
-        if not attempt_ids:
-            return
-        await self._session.execute(
-            update(QuizAttempt)
-            .where(QuizAttempt.id.in_(attempt_ids))
-            .values(status=AttemptStatus.AUTO_FINISHED)
-        )
 
     async def results_page(
         self,

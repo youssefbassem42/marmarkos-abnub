@@ -94,11 +94,18 @@ export interface AttemptStartResponse {
   id: string;
   quiz_id: string;
   started_at: string;
-  expires_at: string;
   remaining_seconds: number;
   server_time: string;
   question_count: number;
   questions: AttemptQuestionBrief[];
+}
+
+/** Fresh active-time anchor returned by save/heartbeat/resume (V2). */
+export interface AttemptHeartbeatResponse {
+  attempt_id: string;
+  status: AttemptStatus;
+  remaining_seconds: number;
+  server_time: string;
 }
 
 export interface AttemptStatusResponse {
@@ -106,7 +113,6 @@ export interface AttemptStatusResponse {
   quiz_id: string;
   status: AttemptStatus;
   started_at: string;
-  expires_at: string;
   remaining_seconds: number;
   server_time: string;
   score: number | null;

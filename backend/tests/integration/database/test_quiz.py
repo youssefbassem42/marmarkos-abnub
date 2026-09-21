@@ -13,10 +13,20 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.core.database import async_session_factory
-from app.core.exceptions import AttemptExistsError
+from app.core.exceptions import (
+    AttemptBudgetExhaustedError,
+    AttemptExistsError,
+    AttemptFinishedError,
+)
 from app.modules.bible.domain.enums import VerseStatus
 from app.modules.bible.infrastructure.persistence.models import BibleVerse
-from app.modules.quiz.application.commands.attempt_commands import start_attempt
+from app.modules.quiz.application.commands.attempt_commands import (
+    heartbeat_attempt_use_case,
+    resume_attempt_use_case,
+    save_answer_use_case,
+    start_attempt,
+    submit_attempt_use_case,
+)
 from app.modules.quiz.domain.enums import AttemptStatus, QuizStatus
 from app.modules.quiz.infrastructure.persistence.models import (
     Quiz,
@@ -138,7 +148,7 @@ async def test_unique_attempt_per_user_per_quiz(uow: UnitOfWork) -> None:
             quiz_id=quiz.id,
             user_id=user.id,
             started_at=started,
-            expires_at=started + timedelta(seconds=120),
+            budget_remaining_seconds=120,
             duration_seconds=120,
             total_points=0,
             question_count=0,
@@ -153,7 +163,7 @@ async def test_unique_attempt_per_user_per_quiz(uow: UnitOfWork) -> None:
                     quiz_id=quiz.id,
                     user_id=user.id,
                     started_at=started,
-                    expires_at=started + timedelta(seconds=120),
+                    budget_remaining_seconds=120,
                     duration_seconds=120,
                     total_points=0,
                     question_count=0,
@@ -182,18 +192,19 @@ async def _attempt(
     quiz_id: uuid.UUID,
     user_id: uuid.UUID,
     status: AttemptStatus,
-    expires_at: datetime | None = None,
+    budget_remaining_seconds: int = 120,
 ) -> QuizAttempt:
     started_at = datetime.now(UTC) - timedelta(seconds=60)
     attempt = QuizAttempt(
         quiz_id=quiz_id,
         user_id=user_id,
         started_at=started_at,
-        expires_at=expires_at or (started_at + timedelta(seconds=120)),
+        budget_remaining_seconds=budget_remaining_seconds,
         duration_seconds=120,
         total_points=2,
         question_count=1,
         status=status,
+        last_heartbeat_at=started_at,
     )
     if status is not AttemptStatus.IN_PROGRESS:
         attempt.finished_at = started_at
@@ -205,62 +216,24 @@ async def _attempt(
     return attempt
 
 
-async def test_ghost_expired_attempt_is_restarted_in_place(uow: UnitOfWork) -> None:
-    """An abandoned (expired, never submitted) attempt must not block a take."""
-    user = await make_user(uow, "ghost-expired@example.com")
+async def test_live_in_progress_attempt_resumes_not_restarts(uow: UnitOfWork) -> None:
+    """An in-flight attempt always resumes via 409; it is never re-seeded
+    and its answers are preserved (V2: nothing auto-finishes)."""
+    user = await make_user(uow, "live-session@example.com")
     quiz, _ = await _takeable_quiz(uow, user)
-    ghost = await _attempt(
+    await _attempt(
         uow,
         quiz_id=quiz.id,
         user_id=user.id,
         status=AttemptStatus.IN_PROGRESS,
-        expires_at=datetime.now(UTC) - timedelta(seconds=5),
+        budget_remaining_seconds=90,
     )
 
-    result = await start_attempt(uow, user, quiz.id)
-
-    assert result.id == ghost.id  # same row reused, no unique-index violation
-    assert result.remaining_seconds == 120
-    refreshed = await uow.quiz_attempts.get_for_user_and_quiz(quiz.id, user.id)
-    assert refreshed is not None
-    assert refreshed.status is AttemptStatus.IN_PROGRESS
-    assert refreshed.expires_at > datetime.now(UTC)
+    with pytest.raises(AttemptExistsError):
+        await start_attempt(uow, user, quiz.id)
 
 
-async def test_ghost_auto_finished_empty_attempt_is_restarted(uow: UnitOfWork) -> None:
-    """A lazy-expired ghost (finished, zero real selections) restarts too."""
-    user = await make_user(uow, "ghost-empty@example.com")
-    quiz, _ = await _takeable_quiz(uow, user)
-    ghost = await _attempt(
-        uow,
-        quiz_id=quiz.id,
-        user_id=user.id,
-        status=AttemptStatus.AUTO_FINISHED,
-    )
-    # Lazy auto-finish writes one row per question with no selection (BR-30).
-    uow.session.add(
-        QuizAnswer(
-            attempt_id=ghost.id,
-            question_id=(await uow.quiz_questions.list_for_quiz(quiz.id))[0].id,
-            selected_option_id=None,
-            is_correct=False,
-            points_awarded=0,
-        )
-    )
-    await uow.commit()
-
-    result = await start_attempt(uow, user, quiz.id)
-
-    assert result.id == ghost.id
-    refreshed = await uow.quiz_attempts.get_for_user_and_quiz(quiz.id, user.id)
-    assert refreshed is not None
-    assert refreshed.status is AttemptStatus.IN_PROGRESS
-    assert refreshed.finished_at is None
-    # Ghost's empty answers were wiped.
-    assert not (await uow.quiz_answers.list_for_attempt(ghost.id))
-
-
-async def test_real_finished_attempt_is_one_shot(uow: UnitOfWork) -> None:
+async def test_finished_attempt_is_one_shot(uow: UnitOfWork) -> None:
     """A COMPLETED attempt (user pressed submit) keeps the D-4 block."""
     user = await make_user(uow, "one-shot@example.com")
     quiz, option_id = await _takeable_quiz(uow, user)
@@ -285,54 +258,148 @@ async def test_real_finished_attempt_is_one_shot(uow: UnitOfWork) -> None:
         await start_attempt(uow, user, quiz.id)
 
 
-async def test_partial_selection_auto_finished_ghost_is_restarted(uow: UnitOfWork) -> None:
-    """Broken-era ghosts carried partial auto-saved answers; a quiz is only
-    completed once submitted, so an AUTO_FINISHED row (submitted_at NULL)
-    resets even when it has real selections."""
-    user = await make_user(uow, "partial-ghost@example.com")
-    quiz, option_id = await _takeable_quiz(uow, user)
-    ghost = await _attempt(
-        uow,
-        quiz_id=quiz.id,
-        user_id=user.id,
-        status=AttemptStatus.AUTO_FINISHED,
-    )
-    # Auto-save persisted a selection before the broken submit 500'd.
-    uow.session.add(
-        QuizAnswer(
-            attempt_id=ghost.id,
-            question_id=(await uow.quiz_questions.list_for_quiz(quiz.id))[0].id,
-            selected_option_id=option_id,
-            is_correct=True,
-            points_awarded=2,
-        )
-    )
-    await uow.commit()
-
-    result = await start_attempt(uow, user, quiz.id)
-
-    assert result.id == ghost.id
-    refreshed = await uow.quiz_attempts.get_for_user_and_quiz(quiz.id, user.id)
-    assert refreshed is not None
-    assert refreshed.status is AttemptStatus.IN_PROGRESS
-    assert refreshed.score == 0
-    assert not (await uow.quiz_answers.list_for_attempt(ghost.id))
-
-
-async def test_live_in_progress_attempt_resumes_not_restarts(uow: UnitOfWork) -> None:
-    """An in-flight attempt with the clock running resumes (BR-27)."""
-    user = await make_user(uow, "live-session@example.com")
+async def test_legacy_auto_finished_attempt_is_one_shot(uow: UnitOfWork) -> None:
+    """Legacy AUTO_FINISHED rows keep the D-4 block too. No new rows of this
+    kind are ever written in V2; the owner deletes the bad ones."""
+    user = await make_user(uow, "legacy-auto@example.com")
     quiz, _ = await _takeable_quiz(uow, user)
     await _attempt(
         uow,
         quiz_id=quiz.id,
         user_id=user.id,
-        status=AttemptStatus.IN_PROGRESS,
-        expires_at=datetime.now(UTC) + timedelta(seconds=120),
+        status=AttemptStatus.AUTO_FINISHED,
     )
 
     with pytest.raises(AttemptExistsError):
         await start_attempt(uow, user, quiz.id)
+
+
+async def test_start_seeds_budget_from_duration(uow: UnitOfWork) -> None:
+    """A fresh attempt carries the full duration as its active-time budget."""
+    user = await make_user(uow, "fresh-budget@example.com")
+    quiz, _ = await _takeable_quiz(uow, user)
+
+    result = await start_attempt(uow, user, quiz.id)
+
+    assert result.remaining_seconds == quiz.duration_seconds
+    refreshed = await uow.quiz_attempts.get_for_user_and_quiz(quiz.id, user.id)
+    assert refreshed is not None
+    assert refreshed.budget_remaining_seconds == quiz.duration_seconds
+    assert refreshed.last_heartbeat_at is not None
+
+
+async def test_heartbeat_charges_active_time_within_window(uow: UnitOfWork) -> None:
+    """Gaps of 10s (≤ 30s) burn real budget; a 60s gap (away/crashed) is
+    paused and charges nothing."""
+    user = await make_user(uow, "charge@example.com")
+    quiz, _ = await _takeable_quiz(uow, user)
+    attempt = await _attempt(
+        uow,
+        quiz_id=quiz.id,
+        user_id=user.id,
+        status=AttemptStatus.IN_PROGRESS,
+        budget_remaining_seconds=120,
+    )
+
+    attempt.last_heartbeat_at = datetime.now(UTC) - timedelta(seconds=10)
+    await uow.commit()
+    result = await heartbeat_attempt_use_case(uow, user, attempt.id)
+    assert result.remaining_seconds == 110
+
+    attempt.last_heartbeat_at = datetime.now(UTC) - timedelta(seconds=60)
+    await uow.commit()
+    result = await heartbeat_attempt_use_case(uow, user, attempt.id)
+    assert result.remaining_seconds == 110
+    assert result.status is AttemptStatus.IN_PROGRESS
+
+
+async def test_resume_charges_active_time(uow: UnitOfWork) -> None:
+    """Resuming an open tab re-anchors the clock (charges the short gap)."""
+    user = await make_user(uow, "resume-charge@example.com")
+    quiz, _ = await _takeable_quiz(uow, user)
+    attempt = await _attempt(
+        uow,
+        quiz_id=quiz.id,
+        user_id=user.id,
+        status=AttemptStatus.IN_PROGRESS,
+        budget_remaining_seconds=120,
+    )
+    attempt.last_heartbeat_at = datetime.now(UTC) - timedelta(seconds=7)
+    await uow.commit()
+
+    result = await uow.quiz_attempts.get_for_user_and_quiz(quiz.id, user.id)
+    assert result is not None
+    await uow.commit()
+
+    resumed = await resume_attempt_use_case(uow, user, attempt.id)
+    assert resumed.remaining_seconds == 113
+
+
+async def test_save_answer_rejected_when_budget_exhausted(uow: UnitOfWork) -> None:
+    """At zero remaining active time, answers are locked but still submittable."""
+    user = await make_user(uow, "out-of-time@example.com")
+    quiz, option_id = await _takeable_quiz(uow, user)
+    attempt = await _attempt(
+        uow,
+        quiz_id=quiz.id,
+        user_id=user.id,
+        status=AttemptStatus.IN_PROGRESS,
+        budget_remaining_seconds=0,
+    )
+    question_id = (await uow.quiz_questions.list_for_quiz(quiz.id))[0].id
+
+    with pytest.raises(AttemptBudgetExhaustedError):
+        await save_answer_use_case(uow, user, attempt.id, question_id, option_id)
+
+    result = await submit_attempt_use_case(uow, user, attempt.id)
+    assert result.status is AttemptStatus.COMPLETED
+
+
+async def test_submit_after_budget_exhausted_grades_stored_answers(uow: UnitOfWork) -> None:
+    """Manual submit always works for an in-progress attempt, even at 0 budget."""
+    user = await make_user(uow, "zero-budget-submit@example.com")
+    quiz, option_id = await _takeable_quiz(uow, user)
+    attempt = await _attempt(
+        uow,
+        quiz_id=quiz.id,
+        user_id=user.id,
+        status=AttemptStatus.IN_PROGRESS,
+        budget_remaining_seconds=0,
+    )
+    question_id = (await uow.quiz_questions.list_for_quiz(quiz.id))[0].id
+    uow.session.add(
+        QuizAnswer(
+            attempt_id=attempt.id,
+            question_id=question_id,
+            selected_option_id=option_id,
+        )
+    )
+    await uow.commit()
+
+    result = await submit_attempt_use_case(uow, user, attempt.id)
+
+    assert result.status is AttemptStatus.COMPLETED
+    assert result.score == 2
+    refreshed = await uow.quiz_attempts.get_for_user_and_quiz(quiz.id, user.id)
+    assert refreshed is not None
+    assert refreshed.status is AttemptStatus.COMPLETED
+    assert refreshed.submitted_at is not None
+
+
+async def test_save_answer_rejected_after_submit(uow: UnitOfWork) -> None:
+    """Finished attempts reject new answers (BR-27)."""
+    user = await make_user(uow, "locked-after@example.com")
+    quiz, option_id = await _takeable_quiz(uow, user)
+    done = await _attempt(
+        uow,
+        quiz_id=quiz.id,
+        user_id=user.id,
+        status=AttemptStatus.COMPLETED,
+    )
+    question_id = (await uow.quiz_questions.list_for_quiz(quiz.id))[0].id
+
+    with pytest.raises(AttemptFinishedError):
+        await save_answer_use_case(uow, user, done.id, question_id, option_id)
 
 
 async def test_answer_upsert_keeps_one_row_per_question(uow: UnitOfWork) -> None:
@@ -346,7 +413,7 @@ async def test_answer_upsert_keeps_one_row_per_question(uow: UnitOfWork) -> None
         quiz_id=quiz.id,
         user_id=user.id,
         started_at=started,
-        expires_at=started + timedelta(seconds=120),
+        budget_remaining_seconds=120,
         duration_seconds=120,
         total_points=2,
         question_count=1,
@@ -398,7 +465,7 @@ async def test_quiz_answer_requires_existing_question(uow: UnitOfWork) -> None:
         quiz_id=quiz.id,
         user_id=user.id,
         started_at=started,
-        expires_at=started + timedelta(seconds=120),
+        budget_remaining_seconds=120,
         duration_seconds=120,
         total_points=0,
         question_count=0,

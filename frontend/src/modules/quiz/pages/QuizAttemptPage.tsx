@@ -9,6 +9,7 @@ import { useAttempt } from "../hooks/useAttempt";
 import { useQuizForTake } from "../hooks/useQuizForTake";
 import { useSaveAnswer } from "../hooks/useSaveAnswer";
 import { useSubmitAttempt } from "../hooks/useSubmitAttempt";
+import { useHeartbeat } from "../hooks/useHeartbeat";
 import { useQuizTimer } from "../hooks/useQuizTimer";
 import { QuizTimer } from "../components/QuizTimer";
 import { QuestionCard } from "../components/QuestionCard";
@@ -31,6 +32,11 @@ export default function QuizAttemptPage() {
   const [selectedMap, setSelectedMap] = useState<Record<string, string>>({});
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [hasSubmitted, setHasSubmitted] = useState(false);
+  // Server-anchored active-time budget from heartbeat/save responses (V2).
+  const [budgetAnchor, setBudgetAnchor] = useState<{
+    remainingSeconds: number;
+    serverTime: string;
+  } | null>(null);
   const announcedRef = useRef(new Set<number>());
   const startAttemptTriggeredRef = useRef(false);
 
@@ -48,22 +54,34 @@ export default function QuizAttemptPage() {
 
   const questions = takeData?.questions ?? [];
 
-  const handleExpire = useCallback(() => {
-    if (hasSubmitted || !attemptId) return;
-    setHasSubmitted(true);
-    submitAttempt.mutate(attemptId, {
-      onSuccess: () => {
-        navigate(`/quizzes/${quizId}/result?attemptId=${attemptId}`);
-      },
-      onError: () => setHasSubmitted(false),
-    });
-  }, [attemptId, quizId, hasSubmitted, navigate, submitAttempt]);
+  const timerRemaining =
+    budgetAnchor?.remainingSeconds ?? attempt?.remaining_seconds ?? 0;
+  const timerServerTime =
+    budgetAnchor?.serverTime ??
+    attempt?.server_time ??
+    new Date().toISOString();
+  const answersLocked =
+    hasSubmitted || (attemptId != null && attempt?.status !== "IN_PROGRESS");
 
   const timer = useQuizTimer({
-    remainingSeconds: attempt?.remaining_seconds ?? 0,
-    serverTime: attempt?.server_time ?? new Date().toISOString(),
-    onExpire: handleExpire,
+    remainingSeconds: timerRemaining,
+    serverTime: timerServerTime,
   });
+
+  useHeartbeat({
+    attemptId: attemptId ?? "",
+    enabled: !!attemptId && attempt?.status === "IN_PROGRESS",
+    onAnchor: (body) =>
+      setBudgetAnchor({
+        remainingSeconds: body.remaining_seconds,
+        serverTime: body.server_time,
+      }),
+  });
+
+  // A fresh resume payload is already server-anchored; drop any older anchor.
+  useEffect(() => {
+    setBudgetAnchor(null);
+  }, [attempt?.id]);
 
   // Start attempt on mount if we have quizId but no attemptId
   useEffect(() => {
@@ -123,7 +141,11 @@ export default function QuizAttemptPage() {
   useEffect(() => {
     const sec = timer.secondsLeft;
     for (const threshold of ANNOUNCE_SECONDS) {
-      if (sec <= threshold && sec > threshold - 1 && !announcedRef.current.has(threshold)) {
+      if (
+        sec <= threshold &&
+        sec > threshold - 1 &&
+        !announcedRef.current.has(threshold)
+      ) {
         announcedRef.current.add(threshold);
         break;
       }
@@ -147,6 +169,7 @@ export default function QuizAttemptPage() {
   const handleSelect = useCallback(
     (optionId: string) => {
       if (!currentQuestion || !attemptId) return;
+      if (answersLocked || timer.isExpired) return;
       setSelectedMap((prev) => ({ ...prev, [currentQuestion.id]: optionId }));
       setSaveStatus("saving");
       saveAnswer.mutate(
@@ -156,12 +179,18 @@ export default function QuizAttemptPage() {
           selectedOptionId: optionId,
         },
         {
-          onSuccess: () => setSaveStatus("saved"),
+          onSuccess: (body) => {
+            setSaveStatus("saved");
+            setBudgetAnchor({
+              remainingSeconds: body.remaining_seconds,
+              serverTime: body.server_time,
+            });
+          },
           onError: () => setSaveStatus("failed"),
         },
       );
     },
-    [currentQuestion, attemptId, saveAnswer],
+    [currentQuestion, attemptId, answersLocked, timer.isExpired, saveAnswer],
   );
 
   const handleSubmit = useCallback(() => {
@@ -197,7 +226,10 @@ export default function QuizAttemptPage() {
 
   if (startAttempt.isError && !attemptId) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 p-8" role="alert">
+      <div
+        className="flex flex-col items-center justify-center gap-4 p-8"
+        role="alert"
+      >
         <p className="text-destructive">{tCommon("errors.unknown")}</p>
         <Button variant="outline" onClick={() => window.location.reload()}>
           {tCommon("retry")}
@@ -251,6 +283,7 @@ export default function QuizAttemptPage() {
           onSelect={handleSelect}
           questionNumber={currentIndex + 1}
           totalQuestions={questions.length}
+          disabled={answersLocked || timer.isExpired}
         />
       )}
 
@@ -258,7 +291,8 @@ export default function QuizAttemptPage() {
       <div className="flex items-center justify-between">
         <AutosaveIndicator status={saveStatus} />
         <span className="text-sm text-muted-foreground">
-          {t("take.question")} {currentIndex + 1} {t("take.of", { total: questions.length })}
+          {t("take.question")} {currentIndex + 1}{" "}
+          {t("take.of", { total: questions.length })}
         </span>
       </div>
 
@@ -273,10 +307,11 @@ export default function QuizAttemptPage() {
         </Button>
 
         {isLastQuestion ? (
-          <Button onClick={handleSubmit} disabled={hasSubmitted || submitAttempt.isPending}>
-            {submitAttempt.isPending
-              ? t("take.submitting")
-              : t("take.finish")}
+          <Button
+            onClick={handleSubmit}
+            disabled={hasSubmitted || submitAttempt.isPending}
+          >
+            {submitAttempt.isPending ? t("take.submitting") : t("take.finish")}
           </Button>
         ) : (
           <Button

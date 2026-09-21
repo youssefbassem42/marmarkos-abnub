@@ -1,8 +1,9 @@
-"""Attempt lifecycle (Part 1 §4.6, BR-24..BR-30).
+"""Attempt lifecycle (Part 1 §4.6, V2 timing).
 
-COMPLETED: submitted by the user inside the server-side window.
-AUTO_FINISHED: expired (submit after expiry, lazy touch or scheduler
-batch); still graded from the stored answers.
+COMPLETED: submitted by the user — the only way an attempt ends (V2).
+AUTO_FINISHED: legacy rows from the removed auto-finish logic (expiry
+lazy-touch / scheduler batch). Kept as a terminal read-only status so
+existing analytics/result pages still understand them.
 """
 
 from enum import StrEnum

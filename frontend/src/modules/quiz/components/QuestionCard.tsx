@@ -11,6 +11,8 @@ interface QuestionCardProps {
   onSelect: (optionId: string) => void;
   questionNumber: number;
   totalQuestions: number;
+  /** Answers are locked once the active-time budget hits zero (V2). */
+  disabled?: boolean;
 }
 
 const OPTION_LABELS = ["A", "B", "C", "D"];
@@ -21,6 +23,7 @@ export function QuestionCard({
   onSelect,
   questionNumber,
   totalQuestions,
+  disabled = false,
 }: QuestionCardProps) {
   const { t } = useTranslation("quiz");
 
@@ -36,23 +39,25 @@ export function QuestionCard({
           </Badge>
         </div>
         <p className="text-sm text-muted-foreground">
-          {t("take.question")} {questionNumber} {t("take.of", { total: totalQuestions })}
+          {t("take.question")} {questionNumber}{" "}
+          {t("take.of", { total: totalQuestions })}
         </p>
       </CardHeader>
       <CardContent>
         <RadioGroup
           value={selectedOptionId}
           onValueChange={onSelect}
+          disabled={disabled}
           className="gap-3"
         >
           {question.options.map((option, idx) => (
             <label
               key={option.id}
               className={cn(
-                "flex items-center gap-3 rounded-lg border p-3 cursor-pointer transition-colors",
-                "hover:bg-accent/50",
-                selectedOptionId === option.id &&
-                  "border-primary bg-primary/5",
+                "flex items-center gap-3 rounded-lg border p-3 transition-colors",
+                !disabled && "cursor-pointer hover:bg-accent/50",
+                disabled && "cursor-not-allowed opacity-70",
+                selectedOptionId === option.id && "border-primary bg-primary/5",
               )}
             >
               <RadioGroupItem value={option.id} id={option.id} />

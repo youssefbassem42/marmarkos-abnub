@@ -141,16 +141,16 @@ class AttemptExistsError(_DataCarryingError):
     message = "You have already started this quiz"
 
 
-class AttemptExpiredError(AppError):
-    """BR-26: the server-side timer has passed its grace window."""
+class AttemptBudgetExhaustedError(AppError):
+    """V2: the active-time budget hit zero; answers are locked for grading."""
 
     status_code = 409
-    code = "attempt_expired"
-    message = "Time is up for this attempt"
+    code = "budget_exhausted"
+    message = "The active time budget is exhausted; submit your answers"
 
 
 class AttemptFinishedError(AppError):
-    """BR-26: answers can no longer change after submit/auto-finish."""
+    """BR-26: answers can no longer change after submit/finish."""
 
     status_code = 409
     code = "attempt_finished"

@@ -1,9 +1,8 @@
 """Internal scheduler tick endpoint (P5-019, D-3, Part 1 §5.8).
 
-One POST publishes due schedules, auto-finishes expired attempts and
-drains the outbox. Single-item failures are counted, never raised —
-the tick answers 200 with counters so a cron monitor only sees real
-outages.
+One POST publishes due schedules and drains the outbox. Single-item failures
+are counted, never raised — the tick answers 200 with counters so a cron
+monitor only sees real outages.
 """
 
 
@@ -17,9 +16,6 @@ from app.config import settings
 from app.core.database import async_session_factory
 from app.modules.bible.application.services.publication_service import publish_due
 from app.modules.internal.presentation.dependencies import CronOrAdmin
-from app.modules.quiz.application.services.attempt_expiry_service import (
-    auto_finish_expired,
-)
 from app.shared.application.outbox_dispatcher import dispatch_pending
 
 router = APIRouter(prefix="/internal", tags=["Internal"])
@@ -30,7 +26,7 @@ class SchedulerTickResponse(BaseModel):
 
     published: int = Field(ge=0, description="Schedules published this tick")
     publish_failed: int = Field(ge=0, description="Publications that failed and will retry")
-    auto_finished_attempts: int = Field(ge=0, description="Expired attempts graded")
+    auto_finished_attempts: int = Field(ge=0, description="Attempts auto-graded (always 0, V2)")
     outbox_processed: int = Field(ge=0, description="Outbox events processed")
     outbox_failed: int = Field(ge=0, description="Outbox events failed (backoff)")
 
@@ -54,16 +50,14 @@ async def scheduler_tick(actor: CronOrAdmin) -> SchedulerTickResponse:
     publication = await publish_due(
         async_session_factory, limit=settings.SCHEDULER_TICK_MAX_BATCH
     )
-    expiry = await auto_finish_expired(
-        async_session_factory, limit=settings.SCHEDULER_TICK_MAX_BATCH
-    )
     delivery = await dispatch_pending(
         async_session_factory, limit=settings.SCHEDULER_TICK_MAX_BATCH
     )
     return SchedulerTickResponse(
         published=publication["published"],
         publish_failed=publication["failed"],
-        auto_finished_attempts=expiry["auto_finished"],
+        # V2: attempts are never auto-finished; the member must submit.
+        auto_finished_attempts=0,
         outbox_processed=delivery["processed"],
         outbox_failed=delivery["failed"],
     )

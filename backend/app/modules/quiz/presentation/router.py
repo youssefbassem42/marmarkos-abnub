@@ -16,6 +16,7 @@ from app.core.pagination import Page, PageParams
 from app.modules.auth.presentation.dependencies import get_current_user
 from app.modules.bible.presentation.dependencies import BibleManager
 from app.modules.quiz.application.commands.attempt_commands import (
+    heartbeat_attempt_use_case,
     resume_attempt_use_case,
     save_answer_use_case,
     start_attempt,
@@ -36,6 +37,7 @@ from app.modules.quiz.application.commands.quiz_commands import (
     update_quiz,
 )
 from app.modules.quiz.application.dto.attempt_dto import (
+    AttemptHeartbeatResponse,
     AttemptResumeResponse,
     AttemptResultResponse,
     AttemptStartResponse,
@@ -229,17 +231,31 @@ async def get_attempt_status(
     return await resume_attempt_use_case(uow, viewer, attempt_id)
 
 
-@attempt_router.put("/{attempt_id}/answers/{question_id}", status_code=204)
+@attempt_router.put("/{attempt_id}/answers/{question_id}")
 async def save_answer_endpoint(
     attempt_id: UUID,
     question_id: UUID,
     payload: SaveAnswerRequest,
     viewer: CurrentUser,
     uow: _UoW,
-):
-    """BR-26: upsert the current selection."""
-    await save_answer_use_case(uow, viewer, attempt_id, question_id, payload.selected_option_id)
+) -> AttemptHeartbeatResponse:
+    """BR-26: upsert the current selection; returns the fresh budget anchor."""
+    result = await save_answer_use_case(
+        uow, viewer, attempt_id, question_id, payload.selected_option_id
+    )
     await uow.commit()
+    return result
+
+
+@attempt_router.post("/{attempt_id}/heartbeat")
+async def heartbeat_attempt_endpoint(
+    attempt_id: UUID, viewer: CurrentUser, uow: _UoW
+) -> AttemptHeartbeatResponse:
+    """V2: charge active time while the member is in the quiz (clock pauses
+    between heartbeats)."""
+    result = await heartbeat_attempt_use_case(uow, viewer, attempt_id)
+    await uow.commit()
+    return result
 
 
 @attempt_router.post("/{attempt_id}/submit")
