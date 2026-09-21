@@ -4,7 +4,7 @@ import uuid
 from collections.abc import Sequence
 from datetime import date, datetime
 
-from sqlalchemy import case, func, select
+from sqlalchemy import case, delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -58,6 +58,19 @@ class PointTransactionRepository:
         )
         row = existing.scalar_one()
         return row, False
+
+    async def delete_for_attempt(self, quiz_attempt_id: uuid.UUID) -> None:
+        """Remove a ghost attempt's ledger entry before it is retaken.
+
+        An empty auto-finished attempt may have left a 0-point row keyed by
+        its id; resetting that attempt in place would otherwise make the real
+        take's award a no-op (unique quiz_attempt_id, BR-31).
+        """
+        await self._session.execute(
+            delete(PointTransaction).where(
+                PointTransaction.quiz_attempt_id == quiz_attempt_id
+            )
+        )
 
     async def totals_for_user(self, user_id: uuid.UUID, *, today: date) -> dict[str, int]:
         """Lifetime / this-week / this-month sums in one query each (BR-34).

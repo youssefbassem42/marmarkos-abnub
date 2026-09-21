@@ -13,8 +13,11 @@ from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 
 from app.core.database import async_session_factory
+from app.core.exceptions import AttemptExistsError
 from app.modules.bible.domain.enums import VerseStatus
 from app.modules.bible.infrastructure.persistence.models import BibleVerse
+from app.modules.quiz.application.commands.attempt_commands import start_attempt
+from app.modules.quiz.domain.enums import AttemptStatus, QuizStatus
 from app.modules.quiz.infrastructure.persistence.models import (
     Quiz,
     QuizAnswer,
@@ -157,6 +160,143 @@ async def test_unique_attempt_per_user_per_quiz(uow: UnitOfWork) -> None:
                 )
             )
             await second.commit()
+
+
+async def _takeable_quiz(uow: UnitOfWork, user) -> tuple[Quiz, uuid.UUID]:
+    """Published quiz with one question + verse read; returns (quiz, option_id)."""
+    quiz = await _quiz(uow, status=QuizStatus.PUBLISHED)
+    question = await _question_with_options(uow, quiz.id)
+    await uow.verse_reads.mark_read(quiz.verse_id, user.id)
+    await uow.commit()
+    option_id = (
+        await uow.session.execute(
+            select(QuizOption.id).where(QuizOption.question_id == question.id).limit(1)
+        )
+    ).scalar_one()
+    return quiz, option_id
+
+
+async def _attempt(
+    uow: UnitOfWork,
+    *,
+    quiz_id: uuid.UUID,
+    user_id: uuid.UUID,
+    status: AttemptStatus,
+    expires_at: datetime | None = None,
+) -> QuizAttempt:
+    started_at = datetime.now(UTC) - timedelta(seconds=60)
+    attempt = QuizAttempt(
+        quiz_id=quiz_id,
+        user_id=user_id,
+        started_at=started_at,
+        expires_at=expires_at or (started_at + timedelta(seconds=120)),
+        duration_seconds=120,
+        total_points=2,
+        question_count=1,
+        status=status,
+    )
+    if status is not AttemptStatus.IN_PROGRESS:
+        attempt.finished_at = started_at
+        attempt.score = 0
+    await uow.quiz_attempts.add(attempt)
+    await uow.commit()
+    return attempt
+
+
+async def test_ghost_expired_attempt_is_restarted_in_place(uow: UnitOfWork) -> None:
+    """An abandoned (expired, never submitted) attempt must not block a take."""
+    user = await make_user(uow, "ghost-expired@example.com")
+    quiz, _ = await _takeable_quiz(uow, user)
+    ghost = await _attempt(
+        uow,
+        quiz_id=quiz.id,
+        user_id=user.id,
+        status=AttemptStatus.IN_PROGRESS,
+        expires_at=datetime.now(UTC) - timedelta(seconds=5),
+    )
+
+    result = await start_attempt(uow, user, quiz.id)
+
+    assert result.id == ghost.id  # same row reused, no unique-index violation
+    assert result.remaining_seconds == 120
+    refreshed = await uow.quiz_attempts.get_for_user_and_quiz(quiz.id, user.id)
+    assert refreshed is not None
+    assert refreshed.status is AttemptStatus.IN_PROGRESS
+    assert refreshed.expires_at > datetime.now(UTC)
+
+
+async def test_ghost_auto_finished_empty_attempt_is_restarted(uow: UnitOfWork) -> None:
+    """A lazy-expired ghost (finished, zero real selections) restarts too."""
+    user = await make_user(uow, "ghost-empty@example.com")
+    quiz, _ = await _takeable_quiz(uow, user)
+    ghost = await _attempt(
+        uow,
+        quiz_id=quiz.id,
+        user_id=user.id,
+        status=AttemptStatus.AUTO_FINISHED,
+    )
+    # Lazy auto-finish writes one row per question with no selection (BR-30).
+    uow.session.add(
+        QuizAnswer(
+            attempt_id=ghost.id,
+            question_id=(await uow.quiz_questions.list_for_quiz(quiz.id))[0].id,
+            selected_option_id=None,
+            is_correct=False,
+            points_awarded=0,
+        )
+    )
+    await uow.commit()
+
+    result = await start_attempt(uow, user, quiz.id)
+
+    assert result.id == ghost.id
+    refreshed = await uow.quiz_attempts.get_for_user_and_quiz(quiz.id, user.id)
+    assert refreshed is not None
+    assert refreshed.status is AttemptStatus.IN_PROGRESS
+    assert refreshed.finished_at is None
+    # Ghost's empty answers were wiped.
+    assert not (await uow.quiz_answers.list_for_attempt(ghost.id))
+
+
+async def test_real_finished_attempt_is_one_shot(uow: UnitOfWork) -> None:
+    """An attempt with a real selection keeps the D-4 block; result shown."""
+    user = await make_user(uow, "one-shot@example.com")
+    quiz, option_id = await _takeable_quiz(uow, user)
+    done = await _attempt(
+        uow,
+        quiz_id=quiz.id,
+        user_id=user.id,
+        status=AttemptStatus.COMPLETED,
+    )
+    uow.session.add(
+        QuizAnswer(
+            attempt_id=done.id,
+            question_id=(await uow.quiz_questions.list_for_quiz(quiz.id))[0].id,
+            selected_option_id=option_id,
+            is_correct=True,
+            points_awarded=2,
+        )
+    )
+    await uow.commit()
+
+    with pytest.raises(AttemptExistsError):
+        await start_attempt(uow, user, quiz.id)
+
+
+async def test_live_in_progress_attempt_resumes_not_restarts(uow: UnitOfWork) -> None:
+    """An in-flight attempt with the clock running resumes (BR-27)."""
+    user = await make_user(uow, "live-session@example.com")
+    quiz, _ = await _takeable_quiz(uow, user)
+    await _attempt(
+        uow,
+        quiz_id=quiz.id,
+        user_id=user.id,
+        status=AttemptStatus.IN_PROGRESS,
+        expires_at=datetime.now(UTC) + timedelta(seconds=120),
+    )
+
+    with pytest.raises(AttemptExistsError):
+        await start_attempt(uow, user, quiz.id)
 
 
 async def test_answer_upsert_keeps_one_row_per_question(uow: UnitOfWork) -> None:

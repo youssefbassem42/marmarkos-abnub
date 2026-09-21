@@ -97,9 +97,63 @@ async def start_attempt(
 
     existing = await uow.quiz_attempts.get_for_user_and_quiz(quiz_id, actor.id)
     if existing is not None:
-        raise AttemptExistsError(
-            "An attempt already exists for this quiz",
-            data={"attempt_id": str(existing.id)},
+        now = now_utc()
+
+        # A live in-progress session is resumed, never duplicated (D-4/BR-27).
+        if existing.status is AttemptStatus.IN_PROGRESS and existing.expires_at > now:
+            raise AttemptExistsError(
+                "An attempt already exists for this quiz",
+                data={"attempt_id": str(existing.id)},
+            )
+
+        # A finished attempt with any real selection is a genuine take:
+        # one-shot, the result is shown, never overwritten (D-4/BR-27).
+        if (
+            existing.status is not AttemptStatus.IN_PROGRESS
+            and await uow.quiz_answers.has_selected_answers(existing.id)
+        ):
+            raise AttemptExistsError(
+                "An attempt already exists for this quiz",
+                data={"attempt_id": str(existing.id)},
+            )
+
+        # --- Ghost attempt recovery ---
+        # The broken take flow (submit 500s, abandoned pages) left attempts
+        # that were never genuinely taken; lazy expiry then auto-finished them
+        # empty at score 0. Those ghosts are the finished attempts with no
+        # real selection, plus IN_PROGRESS rows past their deadline (abandoned,
+        # never submitted). They must not permanently block a real take.
+        #
+        # Reset the same row in place: the schema allows exactly one row per
+        # user+quiz, and clearing the ghost's ledger row keeps awarding on the
+        # retake from being swallowed by on_conflict_do_nothing.
+        questions = await _load_questions_with_options(uow, quiz.id)
+        if not questions:
+            raise QuizNotAvailableError("Quiz has no questions")
+        await uow.quiz_answers.delete_for_attempt(existing.id)
+        await uow.point_transactions.delete_for_attempt(existing.id)
+        existing.started_at = now
+        existing.expires_at = now + timedelta(seconds=quiz.duration_seconds)
+        existing.submitted_at = None
+        existing.finished_at = None
+        existing.status = AttemptStatus.IN_PROGRESS
+        existing.score = 0
+        existing.correct_count = 0
+        existing.incorrect_count = 0
+        items = await asyncio.gather(
+            *[_take_question(q, selected=None, answered=False) for q in questions]
+        )
+        return AttemptStartResponse(
+            id=existing.id,
+            quiz_id=quiz.id,
+            started_at=now,
+            expires_at=existing.expires_at,
+            remaining_seconds=quiz.duration_seconds,
+            server_time=now,
+            duration_seconds=quiz.duration_seconds,
+            total_points=quiz.total_points,
+            question_count=len(items),
+            questions=items,
         )
 
     questions = await _load_questions_with_options(uow, quiz.id)

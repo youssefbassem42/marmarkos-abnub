@@ -28,12 +28,24 @@ class QuizAttemptRepository:
     async def get_for_user_and_quiz(
         self, quiz_id: uuid.UUID, user_id: uuid.UUID
     ) -> QuizAttempt | None:
+        """Most recent attempt for a user+quiz, or None.
+
+        Ghost recovery may leave several rows behind; callers always want the
+        latest, so order deterministically and take the first instead of the
+        ``scalar_one_or_none`` pitfall (which 500s on duplicates).
+        """
         result = await self._session.execute(
-            select(QuizAttempt).where(
+            select(QuizAttempt)
+            .where(
                 QuizAttempt.quiz_id == quiz_id, QuizAttempt.user_id == user_id
             )
+            .order_by(
+                QuizAttempt.started_at.desc(),
+                QuizAttempt.id.desc(),
+            )
+            .limit(1)
         )
-        return result.scalar_one_or_none()
+        return result.scalars().first()
 
     async def finalise(
         self,

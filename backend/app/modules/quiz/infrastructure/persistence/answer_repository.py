@@ -4,7 +4,7 @@ import uuid
 from collections.abc import Sequence
 from datetime import datetime
 
-from sqlalchemy import func, select, update
+from sqlalchemy import delete, func, select, update
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -41,6 +41,27 @@ class QuizAnswerRepository:
             select(QuizAnswer).where(QuizAnswer.attempt_id == attempt_id)
         )
         return result.scalars().all()
+
+    async def delete_for_attempt(self, attempt_id: uuid.UUID) -> None:
+        """Wipe all answers for an abandoned attempt (ghost recovery)."""
+        await self._session.execute(
+            delete(QuizAnswer).where(QuizAnswer.attempt_id == attempt_id)
+        )
+
+    async def has_selected_answers(self, attempt_id: uuid.UUID) -> bool:
+        """Any real (non-null) selection recorded for the attempt.
+
+        Distinguishes a genuine take from an empty ghost: lazy auto-finish
+        writes one row per question (selected_option_id NULL), so counting
+        rows would misclassify empty attempts as real ones.
+        """
+        result = await self._session.execute(
+            select(func.count()).where(
+                QuizAnswer.attempt_id == attempt_id,
+                QuizAnswer.selected_option_id.is_not(None),
+            )
+        )
+        return int(result.scalar_one() or 0) > 0
 
     async def grade_bulk(
         self,
