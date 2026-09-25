@@ -9,9 +9,11 @@ monitor only sees real outages.
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
-# Importing the handler module registers bible_verse.published in the
+# Importing the handler modules registers their event types in the
 # dispatcher registry (import-time side effect by design).
+import app.modules.attendance.application.handlers.attendance_event_handlers  # noqa: F401,E402
 import app.modules.bible.application.handlers.bible_verse_published_handler  # noqa: F401,E402
+import app.modules.users.application.handlers.user_registered_handler  # noqa: F401,E402
 from app.config import settings
 from app.core.database import async_session_factory
 from app.modules.bible.application.services.publication_service import publish_due

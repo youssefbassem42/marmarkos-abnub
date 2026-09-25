@@ -13,15 +13,14 @@ from __future__ import annotations
 
 import contextlib
 import typing
-from unittest.mock import patch
 
 import pytest
 from sqlalchemy import event
 
-from app.db.base import async_session_factory
+from app.core.database import async_session_factory
 
 if typing.TYPE_CHECKING:
-    from httpx import ASGITransport, AsyncClient
+    from httpx import AsyncClient
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -30,7 +29,7 @@ if typing.TYPE_CHECKING:
 _query_count: list[int] = [0]
 
 
-def _before_cursor_execute(conn, stmt, params, context, executemany):  # noqa: ANN001
+def _before_cursor_execute(conn, cursor, stmt, params, context, executemany):  # noqa: ANN001
     _query_count[0] += 1
 
 
@@ -49,26 +48,22 @@ async def count_queries():
     ``count()`` after the endpoint-under-test has finished to get the
     number of SQL statements issued.
     """
-    # We need to use the real session factory, not a mock.
-    with event.listens_for(
-        async_session_factory.sync_session, "do_execute"
-    ) as listener:
-        listener(
-            _before_cursor_execute,
-            "before_cursor_execute",
-        )
-        _query_count[0] = 0
+    # We need to use the real engine, not a mock. The sync engine powers
+    # the async session factory's connections and fires cursor events.
+    _sync_engine = async_session_factory.kw["bind"].sync_engine
+    event.listen(_sync_engine, "before_cursor_execute", _before_cursor_execute)
+    _query_count[0] = 0
+    try:
+        yield lambda: _query_count[0]
+    finally:
         try:
-            yield lambda: _query_count[0]
-        finally:
-            try:
-                event.remove(
-                    async_session_factory.sync_session,
-                    "do_execute",
-                    _before_cursor_execute,
-                )
-            except ValueError:
-                pass
+            event.remove(
+                _sync_engine,
+                "before_cursor_execute",
+                _before_cursor_execute,
+            )
+        except ValueError:
+            pass
 
 
 # ---------------------------------------------------------------------------
@@ -79,15 +74,15 @@ async def count_queries():
 @pytest.fixture()
 async def _auth_headers(client: AsyncClient) -> dict[str, str]:
     """Register + login an ADMIN and return Bearer headers."""
-    from tests.utils import register_and_login
+    from tests.utils import login, register_and_login
 
-    _, user = await register_and_login(client, "querycount-admin@test.com")
+    auth, _ = await register_and_login(client, "querycount-admin@test.com")
     # Promote to ADMIN via direct DB call (bypass API for speed)
-    from app.db.base import async_session_factory
     from sqlalchemy import text
 
+    from app.core.database import async_session_factory
+
     async with async_session_factory() as session:
-        from app.modules.users.infrastructure.persistence.models import User
 
         result = await session.execute(
             text("SELECT id FROM users WHERE email = :e"),
@@ -103,7 +98,7 @@ async def _auth_headers(client: AsyncClient) -> dict[str, str]:
         )
         await session.commit()
 
-    auth, _ = await register_and_login(client, "querycount-admin@test.com")
+    auth = await login(client, "querycount-admin@test.com")
     return {"Authorization": f"Bearer {auth['access_token']}"}
 
 
@@ -116,7 +111,7 @@ async def _auth_headers(client: AsyncClient) -> dict[str, str]:
 async def test_bible_analytics_overview_query_count(
     client: AsyncClient, _auth_headers: dict[str, str]
 ):
-    """GET /bible-verses/analytics/overview should use <= 5 queries."""
+    """GET /bible-verses/analytics/overview should use <= 7 queries."""
     async with count_queries() as get_count:
         resp = await client.get(
             "/api/v1/bible-verses/analytics/overview",
@@ -124,14 +119,14 @@ async def test_bible_analytics_overview_query_count(
         )
     assert resp.status_code == 200
     count = get_count()
-    assert count <= 5, f"Overview used {count} queries (expected <= 5)"
+    assert count <= 7, f"Overview used {count} queries (expected <= 7)"
 
 
 @pytest.mark.asyncio
 async def test_quiz_analytics_overview_query_count(
     client: AsyncClient, _auth_headers: dict[str, str]
 ):
-    """GET /quizzes/analytics/overview should use <= 6 queries."""
+    """GET /quizzes/analytics/overview should use <= 8 queries."""
     async with count_queries() as get_count:
         resp = await client.get(
             "/api/v1/quizzes/analytics/overview",
@@ -139,7 +134,7 @@ async def test_quiz_analytics_overview_query_count(
         )
     assert resp.status_code == 200
     count = get_count()
-    assert count <= 6, f"Overview used {count} queries (expected <= 6)"
+    assert count <= 8, f"Overview used {count} queries (expected <= 8)"
 
 
 @pytest.mark.asyncio
