@@ -1,12 +1,6 @@
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  BookOpen,
-  Clock,
-  Trophy,
-  Lock,
-  ArrowRight,
-} from "lucide-react";
+import { BookOpen, Clock, Trophy, Lock, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
@@ -33,18 +27,14 @@ export function QuizTeaserCard({
   return (
     <section className="rounded-2xl border border-border bg-card p-5 card-elevated md:p-6">
       <div className="flex items-start justify-between">
-        <h3
-          className="text-base font-bold text-ink font-arabic text-lg"
-        >
+        <h3 className="text-base font-bold text-ink font-arabic text-lg">
           {t("quizCard.title")}
         </h3>
         {completed && (
           <Badge variant="secondary">{t("quizCard.completed")}</Badge>
         )}
       </div>
-      <p
-        className="mt-1 text-sm text-muted-foreground font-arabic text-base"
-      >
+      <p className="mt-1 text-sm text-muted-foreground font-arabic text-base">
         {t("quizCard.body")}
       </p>
 
@@ -70,9 +60,7 @@ export function QuizTeaserCard({
               <Lock className="h-4 w-4" aria-hidden="true" />
               {t("quizCard.locked")}
             </Button>
-            <p
-              className="text-center text-xs text-muted-foreground font-arabic"
-            >
+            <p className="text-center text-xs text-muted-foreground font-arabic">
               {t("quizCard.lockedHint")}
             </p>
           </div>
@@ -80,10 +68,7 @@ export function QuizTeaserCard({
           <Button asChild className="w-full">
             <Link to={`/quizzes/${quiz.quiz_id}/take`}>
               {t("quizCard.start")}
-              <ArrowRight
-                className="h-4 w-4 rtl:hidden"
-                aria-hidden="true"
-              />
+              <ArrowRight className="h-4 w-4 rtl:hidden" aria-hidden="true" />
               <ArrowRight
                 className="hidden h-4 w-4 rotate-180 rtl:block"
                 aria-hidden="true"
@@ -94,10 +79,7 @@ export function QuizTeaserCard({
           <Button asChild variant="outline" className="w-full">
             <Link to={`/quizzes/${quiz.quiz_id}/result`}>
               {t("quizCard.viewResult")}
-              <ArrowRight
-                className="h-4 w-4 rtl:hidden"
-                aria-hidden="true"
-              />
+              <ArrowRight className="h-4 w-4 rtl:hidden" aria-hidden="true" />
               <ArrowRight
                 className="hidden h-4 w-4 rotate-180 rtl:block"
                 aria-hidden="true"
@@ -108,10 +90,7 @@ export function QuizTeaserCard({
           <Button asChild className="w-full">
             <Link to={`/quizzes/${quiz.quiz_id}/take`}>
               {t("quizCard.start")}
-              <ArrowRight
-                className="h-4 w-4 rtl:hidden"
-                aria-hidden="true"
-              />
+              <ArrowRight className="h-4 w-4 rtl:hidden" aria-hidden="true" />
               <ArrowRight
                 className="hidden h-4 w-4 rotate-180 rtl:block"
                 aria-hidden="true"

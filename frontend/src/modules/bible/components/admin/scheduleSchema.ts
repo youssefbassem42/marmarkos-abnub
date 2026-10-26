@@ -1,7 +1,9 @@
 import { z } from "zod";
 import type { TFunction } from "i18next";
 
-export type ScheduleFormValues = z.infer<ReturnType<typeof createScheduleSchema>>;
+export type ScheduleFormValues = z.infer<
+  ReturnType<typeof createScheduleSchema>
+>;
 
 export function createScheduleSchema(t: TFunction<["bible"]>) {
   return z

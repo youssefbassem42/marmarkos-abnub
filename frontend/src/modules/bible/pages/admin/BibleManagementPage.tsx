@@ -1,7 +1,14 @@
 import { useCallback } from "react";
 import { useTranslation } from "react-i18next";
 import { Link, useSearchParams } from "react-router-dom";
-import { Plus, BookOpen, Lightbulb, BarChart3, CalendarClock, BookMarked } from "lucide-react";
+import {
+  Plus,
+  BookOpen,
+  Lightbulb,
+  BarChart3,
+  CalendarClock,
+  BookMarked,
+} from "lucide-react";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
 import { EmptyState } from "@/components/common/EmptyState";
@@ -31,11 +38,9 @@ const PAGE_SIZES = [10, 20, 50];
 function VerseTableSkeleton({ rows = 5 }: { rows?: number }) {
   return (
     <div className="space-y-3 p-5">
-      {[0, 1, 2, 3, 4]
-        .slice(0, rows)
-        .map((i) => (
-          <Skeleton key={i} className="h-12 rounded-lg" />
-        ))}
+      {[0, 1, 2, 3, 4].slice(0, rows).map((i) => (
+        <Skeleton key={i} className="h-12 rounded-lg" />
+      ))}
     </div>
   );
 }
@@ -43,17 +48,18 @@ function VerseTableSkeleton({ rows = 5 }: { rows?: number }) {
 function VerseCardSkeleton({ rows = 4 }: { rows?: number }) {
   return (
     <div className="divide-y divide-border p-4">
-      {[0, 1, 2, 3]
-        .slice(0, rows)
-        .map((i) => (
-          <div key={i} className="flex items-start gap-3 py-4 first:pt-0 last:pb-0">
-            <div className="min-w-0 flex-1 space-y-2">
-              <Skeleton className="h-4 w-48 rounded" />
-              <Skeleton className="h-3 w-24 rounded" />
-            </div>
-            <Skeleton className="h-8 w-8 rounded" />
+      {[0, 1, 2, 3].slice(0, rows).map((i) => (
+        <div
+          key={i}
+          className="flex items-start gap-3 py-4 first:pt-0 last:pb-0"
+        >
+          <div className="min-w-0 flex-1 space-y-2">
+            <Skeleton className="h-4 w-48 rounded" />
+            <Skeleton className="h-3 w-24 rounded" />
           </div>
-        ))}
+          <Skeleton className="h-8 w-8 rounded" />
+        </div>
+      ))}
     </div>
   );
 }
@@ -64,8 +70,7 @@ export default function BibleManagementPage() {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const status = (searchParams.get("status") || undefined) as
-    | VerseStatus
-    | undefined;
+    VerseStatus | undefined;
   const q = searchParams.get("q") || undefined;
   const page = Number(searchParams.get("page")) || 1;
   const size = Number(searchParams.get("size")) || 20;
@@ -74,14 +79,17 @@ export default function BibleManagementPage() {
 
   const patchParams = useCallback(
     (updates: Record<string, string | undefined>) => {
-      setSearchParams((prev) => {
-        const next = new URLSearchParams(prev);
-        Object.entries(updates).forEach(([k, v]) => {
-          if (v === undefined || v === "") next.delete(k);
-          else next.set(k, v);
-        });
-        return next;
-      }, { replace: true });
+      setSearchParams(
+        (prev) => {
+          const next = new URLSearchParams(prev);
+          Object.entries(updates).forEach(([k, v]) => {
+            if (v === undefined || v === "") next.delete(k);
+            else next.set(k, v);
+          });
+          return next;
+        },
+        { replace: true },
+      );
     },
     [setSearchParams],
   );

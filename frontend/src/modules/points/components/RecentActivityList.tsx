@@ -22,7 +22,10 @@ export function RecentActivityList() {
   const locale = "ar-EG";
   const [expanded, setExpanded] = useState(false);
 
-  const query = usePointsHistory({ page: 1, size: expanded ? 50 : INITIAL_COUNT });
+  const query = usePointsHistory({
+    page: 1,
+    size: expanded ? 50 : INITIAL_COUNT,
+  });
 
   const items = query.data?.items ?? [];
 
@@ -50,7 +53,9 @@ export function RecentActivityList() {
           <span className="grid h-16 w-16 place-items-center rounded-full bg-mint/15">
             <Activity className="h-8 w-8 text-mint" aria-hidden="true" />
           </span>
-          <p className="text-sm text-muted-foreground">{t("page.empty.title")}</p>
+          <p className="text-sm text-muted-foreground">
+            {t("page.empty.title")}
+          </p>
         </div>
       ) : (
         <>
@@ -88,7 +93,12 @@ export function RecentActivityList() {
             onClick={() => setExpanded((v) => !v)}
             className="mt-4 flex items-center gap-1 text-sm font-medium text-brand-blue hover:underline"
           >
-            <ChevronLeft className={cn("h-4 w-4 transition-transform", expanded && "rotate-90")} />
+            <ChevronLeft
+              className={cn(
+                "h-4 w-4 transition-transform",
+                expanded && "rotate-90",
+              )}
+            />
             {expanded ? t("page.activity") : t("page.viewAllActivity")}
           </button>
         </>

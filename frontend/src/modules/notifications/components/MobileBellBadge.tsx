@@ -12,9 +12,7 @@ export function MobileBellBadge() {
   const unread = data?.unread_count ?? 0;
   if (unread <= 0) return null;
 
-  const numberFormat = new Intl.NumberFormat(
-    "ar-EG",
-  );
+  const numberFormat = new Intl.NumberFormat("ar-EG");
   const badge = unread > 99 ? "99+" : numberFormat.format(unread);
 
   return (

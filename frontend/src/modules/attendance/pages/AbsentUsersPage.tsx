@@ -43,14 +43,17 @@ export function AbsentUsersPage() {
 
   const title = useMemo(() => {
     if (!meetingDate) return t("dashboard.absent.titleOpen");
-    return `${t("dashboard.absent.title")} — ${new Intl.DateTimeFormat(locale).format(
-      new Date(`${meetingDate}T00:00:00`),
-    )}`;
+    return `${t("dashboard.absent.title")} — ${new Intl.DateTimeFormat(
+      locale,
+    ).format(new Date(`${meetingDate}T00:00:00`))}`;
   }, [meetingDate, t, locale]);
 
   return (
     <div dir="rtl" lang="ar">
-      <AdminTopbar title={t("dashboard.absent.pageTitle")} subtitle={t("dashboard.absent.subtitle")} />
+      <AdminTopbar
+        title={t("dashboard.absent.pageTitle")}
+        subtitle={t("dashboard.absent.subtitle")}
+      />
       <main className="mx-auto w-full max-w-4xl space-y-5 px-5 pb-16 pt-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <Button variant="ghost" size="sm" asChild>

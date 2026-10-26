@@ -108,7 +108,7 @@ export function ProfilePage() {
 
   if (!user) return null;
   const inputClass = cn(
-    "h-11 rounded-xl border-border bg-background focus-ring font-arabic text-lg placeholder:text-base"
+    "h-11 rounded-xl border-border bg-background focus-ring font-arabic text-lg placeholder:text-base",
   );
 
   const handleAvatarChange = async (file: File | undefined) => {
@@ -210,23 +210,15 @@ export function ProfilePage() {
     `${(user.first_name ?? "?")[0]}${(user.last_name ?? "")[0] ?? ""}`.toUpperCase();
 
   return (
-    <div
-      dir="rtl"
-      lang="ar"
-      className="min-h-screen bg-background"
-    >
+    <div dir="rtl" lang="ar" className="min-h-screen bg-background">
       <Navbar />
 
       <main className="mx-auto max-w-3xl px-5 pb-16 pt-28 lg:px-8">
         <header className="text-center">
-          <h1
-            className="text-3xl font-extrabold tracking-tight text-ink font-arabic"
-          >
+          <h1 className="text-3xl font-extrabold tracking-tight text-ink font-arabic">
             {t("heading")}
           </h1>
-          <p
-            className="mt-2 text-muted-foreground font-arabic text-lg"
-          >
+          <p className="mt-2 text-muted-foreground font-arabic text-lg">
             {t("subtitle")}
           </p>
         </header>
@@ -263,9 +255,7 @@ export function ProfilePage() {
             />
           </div>
           <div className="text-center sm:text-start">
-            <p
-              className="font-bold text-ink font-arabic text-xl"
-            >
+            <p className="font-bold text-ink font-arabic text-xl">
               {user.first_name} {user.last_name}
             </p>
             <p className="text-sm text-muted-foreground">{t("avatar.hint")}</p>
@@ -288,15 +278,11 @@ export function ProfilePage() {
             )}
           </div>
           <div className="flex-1">
-            <h2
-              className="flex items-center justify-center gap-2 font-extrabold text-ink sm:justify-start font-arabic text-xl"
-            >
+            <h2 className="flex items-center justify-center gap-2 font-extrabold text-ink sm:justify-start font-arabic text-xl">
               <QrCode className="h-5 w-5 text-mint" aria-hidden="true" />
               {t("qr.title")}
             </h2>
-            <p
-              className="mt-1 text-sm leading-6 text-muted-foreground font-arabic"
-            >
+            <p className="mt-1 text-sm leading-6 text-muted-foreground font-arabic">
               {t("qr.hint")}
             </p>
             <Button
@@ -324,9 +310,7 @@ export function ProfilePage() {
             const my = myAttendance;
             return (
               <section className="mt-6 rounded-2xl border border-border bg-card p-6 card-elevated">
-                <h2
-                  className="flex items-center justify-between gap-2 font-extrabold text-ink sm:justify-start font-arabic text-xl"
-                >
+                <h2 className="flex items-center justify-between gap-2 font-extrabold text-ink sm:justify-start font-arabic text-xl">
                   <CalendarCheck
                     className="h-5 w-5 text-mint"
                     aria-hidden="true"
@@ -345,9 +329,7 @@ export function ProfilePage() {
                     <p className="font-heading text-2xl font-bold text-ink">
                       {my.data.meetings_held}
                     </p>
-                    <p
-                      className="text-xs text-muted-foreground font-arabic"
-                    >
+                    <p className="text-xs text-muted-foreground font-arabic">
                       {t("attendance.held")}
                     </p>
                   </div>
@@ -355,9 +337,7 @@ export function ProfilePage() {
                     <p className="font-heading text-2xl font-bold text-ink">
                       {my.data.attended_count}
                     </p>
-                    <p
-                      className="text-xs text-muted-foreground font-arabic"
-                    >
+                    <p className="text-xs text-muted-foreground font-arabic">
                       {t("attendance.attended")}
                     </p>
                   </div>
@@ -368,9 +348,7 @@ export function ProfilePage() {
                     >
                       {my.data.attendance_rate}%
                     </p>
-                    <p
-                      className="text-xs text-muted-foreground font-arabic"
-                    >
+                    <p className="text-xs text-muted-foreground font-arabic">
                       {t("attendance.rate")}
                     </p>
                   </div>
@@ -387,14 +365,11 @@ export function ProfilePage() {
                           className="text-sm text-ink font-arabic"
                           dir="auto"
                         >
-                          {new Intl.DateTimeFormat(
-                            "ar-EG",
-                            {
-                              weekday: "long",
-                              day: "numeric",
-                              month: "long",
-                            },
-                          ).format(new Date(record.meeting_date))}
+                          {new Intl.DateTimeFormat("ar-EG", {
+                            weekday: "long",
+                            day: "numeric",
+                            month: "long",
+                          }).format(new Date(record.meeting_date))}
                         </span>
                         <AttendanceStatusBadge status={record.status} />
                       </li>
@@ -515,17 +490,13 @@ export function ProfilePage() {
           noValidate
           className="mt-6 space-y-5 rounded-2xl border border-border bg-card p-6 card-elevated sm:p-8"
         >
-          <h2
-            className="flex items-center gap-2 font-extrabold text-ink font-arabic text-xl"
-          >
+          <h2 className="flex items-center gap-2 font-extrabold text-ink font-arabic text-xl">
             <KeyRound className="h-5 w-5 text-mint" aria-hidden="true" />
             {t("password.heading")}
           </h2>
 
           {!user.has_password && (
-            <p
-              className="rounded-xl bg-blue-50 px-4 py-3 text-sm text-brand-blue font-arabic"
-            >
+            <p className="rounded-xl bg-blue-50 px-4 py-3 text-sm text-brand-blue font-arabic">
               {t("password.noCurrentHint")}
             </p>
           )}

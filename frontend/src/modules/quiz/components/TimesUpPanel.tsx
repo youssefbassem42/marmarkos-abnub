@@ -21,17 +21,9 @@ export function TimesUpPanel({ onSubmit, isSubmitting }: TimesUpPanelProps) {
           <CardTitle className="text-xl">{t("take.timesUp")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            {t("take.expired")}
-          </p>
-          <Button
-            onClick={onSubmit}
-            disabled={isSubmitting}
-            className="w-full"
-          >
-            {isSubmitting
-              ? t("take.submitting")
-              : t("result.viewPoints")}
+          <p className="text-sm text-muted-foreground">{t("take.expired")}</p>
+          <Button onClick={onSubmit} disabled={isSubmitting} className="w-full">
+            {isSubmitting ? t("take.submitting") : t("result.viewPoints")}
           </Button>
         </CardContent>
       </Card>

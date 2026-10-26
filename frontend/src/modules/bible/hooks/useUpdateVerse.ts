@@ -7,11 +7,18 @@ export function useUpdateVerse() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ verseId, data }: { verseId: string; data: UpdateVersePayload }) =>
-      bibleApi.updateVerse(verseId, data),
+    mutationFn: ({
+      verseId,
+      data,
+    }: {
+      verseId: string;
+      data: UpdateVersePayload;
+    }) => bibleApi.updateVerse(verseId, data),
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: bibleKeys.verses() });
-      void queryClient.invalidateQueries({ queryKey: bibleKeys.detail(variables.verseId) });
+      void queryClient.invalidateQueries({
+        queryKey: bibleKeys.detail(variables.verseId),
+      });
     },
   });
 }

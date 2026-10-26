@@ -15,8 +15,7 @@ export const bibleKeys = {
   current: () => [...bibleKeys.all, "current"] as const,
   published: (params?: PublishedVersesParams) =>
     [...bibleKeys.all, "published", params ?? {}] as const,
-  detail: (verseId: string) =>
-    [...bibleKeys.verses(), verseId] as const,
+  detail: (verseId: string) => [...bibleKeys.verses(), verseId] as const,
   schedule: (verseId: string) =>
     [...bibleKeys.verses(), verseId, "schedule"] as const,
 };

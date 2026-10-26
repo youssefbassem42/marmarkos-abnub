@@ -8,7 +8,9 @@ export function useCancelSchedule() {
   return useMutation({
     mutationFn: (verseId: string) => bibleApi.cancelSchedule(verseId),
     onSuccess: (_data, verseId) => {
-      void queryClient.invalidateQueries({ queryKey: bibleKeys.schedule(verseId) });
+      void queryClient.invalidateQueries({
+        queryKey: bibleKeys.schedule(verseId),
+      });
       void queryClient.invalidateQueries({ queryKey: bibleKeys.verses() });
     },
   });

@@ -153,9 +153,7 @@ export function BrandVerseBlock({ lang, className }: BrandPieceProps) {
     >
       <Quote className="h-6 w-6 fill-mint text-mint" aria-hidden="true" />
       <blockquote
-        className={cn(
-          "mt-3 font-verse leading-relaxed text-white text-2xl",
-        )}
+        className={cn("mt-3 font-verse leading-relaxed text-white text-2xl")}
       >
         {t("brand.verse")}
       </blockquote>

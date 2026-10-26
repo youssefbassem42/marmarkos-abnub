@@ -35,9 +35,7 @@ export function VerseHeroCard({ verse }: VerseHeroCardProps) {
           </time>
         </div>
 
-        <h2
-          className="mt-3 text-xl font-bold text-brand-blue md:text-2xl font-arabic"
-        >
+        <h2 className="mt-3 text-xl font-bold text-brand-blue md:text-2xl font-arabic">
           {verse.title}
         </h2>
 

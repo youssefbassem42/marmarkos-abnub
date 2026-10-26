@@ -67,8 +67,7 @@ export function formatWeekRange(
   const startDay = fmt.format(start);
   const endDay = fmt.format(end);
 
-  const label =
-    locale === "ar" ? "هذا الأسبوع" : "This Week";
+  const label = locale === "ar" ? "هذا الأسبوع" : "This Week";
 
   return `${label} (${startDay}–${endDay})`;
 }
@@ -91,9 +90,6 @@ export function formatMonthYear(
 /**
  * Alias for `formatRelativeDate` — same behaviour, intent is timestamps.
  */
-export function formatTimeAgo(
-  dateStr: string,
-  locale: string = "en",
-): string {
+export function formatTimeAgo(dateStr: string, locale: string = "en"): string {
   return formatRelativeDate(dateStr, locale);
 }

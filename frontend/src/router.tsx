@@ -43,7 +43,9 @@ function lazyWithRetry<T extends ComponentType>(
       if (!revalidatedChunkManifest) {
         revalidatedChunkManifest = true;
         window.location.assign(
-          window.location.pathname + window.location.search + window.location.hash,
+          window.location.pathname +
+            window.location.search +
+            window.location.hash,
         );
       }
       return Promise.reject(error) as never;
@@ -104,59 +106,59 @@ const AdminAnonymousMessagesPage = lazyWithRetry(() =>
 );
 
 // Bible module
-const BibleVersesPage = lazyWithRetry(() =>
-  import("@/modules/bible/pages/BibleVersesPage"),
+const BibleVersesPage = lazyWithRetry(
+  () => import("@/modules/bible/pages/BibleVersesPage"),
 );
-const VerseDetailPage = lazyWithRetry(() =>
-  import("@/modules/bible/pages/VerseDetailPage"),
+const VerseDetailPage = lazyWithRetry(
+  () => import("@/modules/bible/pages/VerseDetailPage"),
 );
-const BibleManagementPage = lazyWithRetry(() =>
-  import("@/modules/bible/pages/admin/BibleManagementPage"),
+const BibleManagementPage = lazyWithRetry(
+  () => import("@/modules/bible/pages/admin/BibleManagementPage"),
 );
-const VerseFormPage = lazyWithRetry(() =>
-  import("@/modules/bible/pages/admin/VerseFormPage"),
+const VerseFormPage = lazyWithRetry(
+  () => import("@/modules/bible/pages/admin/VerseFormPage"),
 );
-const VerseSchedulePage = lazyWithRetry(() =>
-  import("@/modules/bible/pages/admin/VerseSchedulePage"),
+const VerseSchedulePage = lazyWithRetry(
+  () => import("@/modules/bible/pages/admin/VerseSchedulePage"),
 );
-const VerseAnalyticsPage = lazyWithRetry(() =>
-  import("@/modules/bible/pages/admin/VerseAnalyticsPage"),
+const VerseAnalyticsPage = lazyWithRetry(
+  () => import("@/modules/bible/pages/admin/VerseAnalyticsPage"),
 );
-const VerseQuizRedirectPage = lazyWithRetry(() =>
-  import("@/modules/bible/pages/admin/VerseQuizRedirectPage"),
+const VerseQuizRedirectPage = lazyWithRetry(
+  () => import("@/modules/bible/pages/admin/VerseQuizRedirectPage"),
 );
 
 // Quiz module
-const QuizAttemptPage = lazyWithRetry(() =>
-  import("@/modules/quiz/pages/QuizAttemptPage"),
+const QuizAttemptPage = lazyWithRetry(
+  () => import("@/modules/quiz/pages/QuizAttemptPage"),
 );
-const QuizResultPage = lazyWithRetry(() =>
-  import("@/modules/quiz/pages/QuizResultPage"),
+const QuizResultPage = lazyWithRetry(
+  () => import("@/modules/quiz/pages/QuizResultPage"),
 );
-const QuizListPage = lazyWithRetry(() =>
-  import("@/modules/quiz/pages/admin/QuizListPage"),
+const QuizListPage = lazyWithRetry(
+  () => import("@/modules/quiz/pages/admin/QuizListPage"),
 );
-const QuizManagePage = lazyWithRetry(() =>
-  import("@/modules/quiz/pages/admin/QuizManagePage"),
+const QuizManagePage = lazyWithRetry(
+  () => import("@/modules/quiz/pages/admin/QuizManagePage"),
 );
-const QuizBuilderPage = lazyWithRetry(() =>
-  import("@/modules/quiz/pages/admin/QuizBuilderPage"),
+const QuizBuilderPage = lazyWithRetry(
+  () => import("@/modules/quiz/pages/admin/QuizBuilderPage"),
 );
-const QuestionFormPage = lazyWithRetry(() =>
-  import("@/modules/quiz/pages/admin/QuestionFormPage"),
+const QuestionFormPage = lazyWithRetry(
+  () => import("@/modules/quiz/pages/admin/QuestionFormPage"),
 );
-const QuizAnalyticsPage = lazyWithRetry(() =>
-  import("@/modules/quiz/pages/admin/QuizAnalyticsPage"),
+const QuizAnalyticsPage = lazyWithRetry(
+  () => import("@/modules/quiz/pages/admin/QuizAnalyticsPage"),
 );
 
 // Points module
-const PointsPage = lazyWithRetry(() =>
-  import("@/modules/points/pages/PointsPage"),
+const PointsPage = lazyWithRetry(
+  () => import("@/modules/points/pages/PointsPage"),
 );
 
 // Analytics module
-const MonthlyAnalyticsPage = lazyWithRetry(() =>
-  import("@/modules/analytics/pages/MonthlyAnalyticsPage"),
+const MonthlyAnalyticsPage = lazyWithRetry(
+  () => import("@/modules/analytics/pages/MonthlyAnalyticsPage"),
 );
 
 export const router = createBrowserRouter([

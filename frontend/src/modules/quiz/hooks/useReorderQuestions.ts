@@ -7,11 +7,18 @@ export function useReorderQuestions() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ quizId, data }: { quizId: string; data: ReorderQuestionsPayload }) =>
-      quizApi.reorderQuestions(quizId, data),
+    mutationFn: ({
+      quizId,
+      data,
+    }: {
+      quizId: string;
+      data: ReorderQuestionsPayload;
+    }) => quizApi.reorderQuestions(quizId, data),
     onSuccess: (_data, variables) => {
       void queryClient.invalidateQueries({ queryKey: quizKeys.quizzes() });
-      void queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId) });
+      void queryClient.invalidateQueries({
+        queryKey: quizKeys.detail(variables.quizId),
+      });
     },
   });
 }

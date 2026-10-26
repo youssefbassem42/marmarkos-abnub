@@ -45,17 +45,9 @@ export default function VerseDetailPage() {
 
   return (
     <div dir="rtl" lang="ar" className="space-y-6">
-      <Button
-        asChild
-        variant="ghost"
-        size="sm"
-        className="gap-1 font-arabic"
-      >
+      <Button asChild variant="ghost" size="sm" className="gap-1 font-arabic">
         <Link to="/bible-verses">
-          <ArrowLeft
-            className="h-4 w-4 rtl:hidden"
-            aria-hidden="true"
-          />
+          <ArrowLeft className="h-4 w-4 rtl:hidden" aria-hidden="true" />
           <ArrowLeft
             className="hidden h-4 w-4 rotate-180 rtl:block"
             aria-hidden="true"

@@ -11,14 +11,17 @@ export function VerseQuickStatsCard() {
   const { data, isPending, isError } = useVerseQuickStats();
 
   const fmt = (value: number) => new Intl.NumberFormat(LOCALE).format(value);
-  const empty = !isPending && !isError && (!data || data.top_verse_reference === null);
+  const empty =
+    !isPending && !isError && (!data || data.top_verse_reference === null);
 
   if (isPending) {
     return (
       <div className="rounded-2xl border border-border bg-card p-5">
         <div className="mb-3 flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-brand-blue" />
-          <h3 className="font-bold font-arabic">{t("admin.quickStats.title")}</h3>
+          <h3 className="font-bold font-arabic">
+            {t("admin.quickStats.title")}
+          </h3>
         </div>
         <div className="space-y-3">
           {[0, 1, 2, 3].map((index) => (
@@ -34,7 +37,9 @@ export function VerseQuickStatsCard() {
       <div className="rounded-2xl border border-border bg-card p-5">
         <div className="mb-3 flex items-center gap-2">
           <BarChart3 className="h-5 w-5 text-brand-blue" />
-          <h3 className="font-bold font-arabic">{t("admin.quickStats.title")}</h3>
+          <h3 className="font-bold font-arabic">
+            {t("admin.quickStats.title")}
+          </h3>
         </div>
         <p className="text-sm text-muted-foreground font-arabic">
           {t("admin.quickStats.empty")}

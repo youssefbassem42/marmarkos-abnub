@@ -11,7 +11,10 @@ import { ErrorRetry } from "@/components/common/ErrorRetry";
 import { BookOpen } from "lucide-react";
 import { useCurrentVerse } from "../hooks/useCurrentVerse";
 import { useVerseFeed } from "../hooks/useVerseFeed";
-import { VerseHeroCard, VerseHeroCardSkeleton } from "../components/VerseHeroCard";
+import {
+  VerseHeroCard,
+  VerseHeroCardSkeleton,
+} from "../components/VerseHeroCard";
 import { VerseCard, VerseCardSkeleton } from "../components/VerseCard";
 import { VerseFilters } from "../components/VerseFilters";
 
@@ -23,12 +26,9 @@ export default function BibleVersesPage() {
 
   const searchQuery = searchParams.get("q") ?? "";
   const readFilter = (searchParams.get("read") ?? "all") as
-    | "all"
-    | "true"
-    | "false";
+    "all" | "true" | "false";
   const hasQuizFilter = (searchParams.get("has_quiz") ?? "all") as
-    | "all"
-    | "true";
+    "all" | "true";
   const page = Number(searchParams.get("page") ?? "1");
 
   const updateParam = useCallback(
@@ -90,7 +90,10 @@ export default function BibleVersesPage() {
   const feed = useVerseFeed(feedParams);
 
   const showHero =
-    !searchQuery && readFilter === "all" && hasQuizFilter === "all" && page === 1;
+    !searchQuery &&
+    readFilter === "all" &&
+    hasQuizFilter === "all" &&
+    page === 1;
 
   return (
     <div dir="rtl" lang="ar" className="min-h-screen bg-background">
@@ -103,10 +106,7 @@ export default function BibleVersesPage() {
           className="mb-4 gap-1 font-arabic"
         >
           <Link to="/">
-            <ArrowLeft
-              className="h-4 w-4 rtl:hidden"
-              aria-hidden="true"
-            />
+            <ArrowLeft className="h-4 w-4 rtl:hidden" aria-hidden="true" />
             <ArrowLeft
               className="hidden h-4 w-4 rotate-180 rtl:block"
               aria-hidden="true"
@@ -116,73 +116,64 @@ export default function BibleVersesPage() {
         </Button>
 
         <header>
-          <h1
-            className="text-2xl font-bold text-ink md:text-3xl font-arabic"
-          >
+          <h1 className="text-2xl font-bold text-ink md:text-3xl font-arabic">
             {t("list.title")}
           </h1>
-          <p
-            className="mt-1 text-sm text-muted-foreground font-arabic text-base"
-          >
+          <p className="mt-1 text-sm text-muted-foreground font-arabic text-base">
             {t("list.subtitle")}
           </p>
         </header>
 
-      <VerseFilters
-        search={searchQuery}
-        onSearchChange={handleSearchChange}
-        read={readFilter}
-        onReadChange={handleReadChange}
-        hasQuiz={hasQuizFilter}
-        onHasQuizChange={handleHasQuizChange}
-      />
-
-      {currentVerse.isError && <ErrorRetry onRetry={currentVerse.refetch} />}
-
-      {showHero && currentVerse.isLoading && <VerseHeroCardSkeleton />}
-
-      {showHero && currentVerse.data && (
-        <VerseHeroCard verse={currentVerse.data} />
-      )}
-
-      <h2
-        className="text-lg font-bold text-ink font-arabic text-xl"
-      >
-        {t("list.previous")}
-      </h2>
-
-      {feed.isError && <ErrorRetry onRetry={feed.refetch} />}
-
-      {feed.isLoading && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <VerseCardSkeleton key={i} />
-          ))}
-        </div>
-      )}
-
-      {!feed.isLoading && feed.data && feed.data.items.length === 0 && (
-        <EmptyState
-          Icon={BookOpen}
-          title={t("list.empty.title")}
+        <VerseFilters
+          search={searchQuery}
+          onSearchChange={handleSearchChange}
+          read={readFilter}
+          onReadChange={handleReadChange}
+          hasQuiz={hasQuizFilter}
+          onHasQuizChange={handleHasQuizChange}
         />
-      )}
 
-      {feed.data && feed.data.items.length > 0 && (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {feed.data.items.map((verse) => (
-            <VerseCard key={verse.id} verse={verse} />
-          ))}
-        </div>
-      )}
+        {currentVerse.isError && <ErrorRetry onRetry={currentVerse.refetch} />}
 
-      {feed.data && feed.data.pages > 1 && (
-        <AppPagination
-          page={feed.data.page}
-          pages={feed.data.pages}
-          onPageChange={handlePageChange}
-        />
-      )}
+        {showHero && currentVerse.isLoading && <VerseHeroCardSkeleton />}
+
+        {showHero && currentVerse.data && (
+          <VerseHeroCard verse={currentVerse.data} />
+        )}
+
+        <h2 className="text-lg font-bold text-ink font-arabic text-xl">
+          {t("list.previous")}
+        </h2>
+
+        {feed.isError && <ErrorRetry onRetry={feed.refetch} />}
+
+        {feed.isLoading && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <VerseCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
+
+        {!feed.isLoading && feed.data && feed.data.items.length === 0 && (
+          <EmptyState Icon={BookOpen} title={t("list.empty.title")} />
+        )}
+
+        {feed.data && feed.data.items.length > 0 && (
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {feed.data.items.map((verse) => (
+              <VerseCard key={verse.id} verse={verse} />
+            ))}
+          </div>
+        )}
+
+        {feed.data && feed.data.pages > 1 && (
+          <AppPagination
+            page={feed.data.page}
+            pages={feed.data.pages}
+            onPageChange={handlePageChange}
+          />
+        )}
       </main>
     </div>
   );

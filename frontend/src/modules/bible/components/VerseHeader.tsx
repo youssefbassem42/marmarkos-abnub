@@ -34,9 +34,7 @@ export function VerseHeader({ verse }: VerseHeaderProps) {
             </time>
           )}
         </div>
-        <h1
-          className="mt-3 text-2xl font-bold text-ink md:text-3xl font-arabic"
-        >
+        <h1 className="mt-3 text-2xl font-bold text-ink md:text-3xl font-arabic">
           {verse.title}
         </h1>
       </div>

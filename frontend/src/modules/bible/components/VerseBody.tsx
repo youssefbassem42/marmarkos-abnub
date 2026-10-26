@@ -10,7 +10,11 @@ interface VerseBodyProps {
   reflection: string;
 }
 
-export function VerseBody({ text, verseReference, reflection }: VerseBodyProps) {
+export function VerseBody({
+  text,
+  verseReference,
+  reflection,
+}: VerseBodyProps) {
   const { t } = useTranslation("bible");
   const [expanded, setExpanded] = useState(false);
 
@@ -36,9 +40,7 @@ export function VerseBody({ text, verseReference, reflection }: VerseBodyProps) 
       </section>
 
       <section className="rounded-2xl border border-border bg-card p-5 md:p-6 card-elevated">
-        <h2
-          className="text-base font-bold text-ink font-arabic text-lg"
-        >
+        <h2 className="text-base font-bold text-ink font-arabic text-lg">
           {t("detail.reflection")}
         </h2>
         <div

@@ -147,7 +147,10 @@ export function BuilderQuestionEditor({
             </Form>
           </div>
           <div className="space-y-6">
-            <QuestionPreview question={watchedQuestion} options={watchedOptions} />
+            <QuestionPreview
+              question={watchedQuestion}
+              options={watchedOptions}
+            />
             <QuestionValidationPanel
               question={watchedQuestion}
               options={watchedOptions}

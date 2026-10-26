@@ -33,9 +33,7 @@ export function VerseFilters({
   const { t } = useTranslation("bible");
 
   return (
-    <div
-      className="flex flex-col gap-3 sm:flex-row sm:items-center font-arabic"
-    >
+    <div className="flex flex-col gap-3 sm:flex-row sm:items-center font-arabic">
       <div className="relative flex-1">
         <Search
           className="absolute top-1/2 start-3 h-4 w-4 -translate-y-1/2 text-muted-foreground"

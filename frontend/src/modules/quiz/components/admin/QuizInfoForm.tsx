@@ -65,9 +65,7 @@ export function QuizInfoForm({ form, verseId, isEdit }: QuizInfoFormProps) {
             <FormControl>
               <div className="relative">
                 <Textarea
-                  placeholder={t(
-                    "admin.builder.descriptionPlaceholder",
-                  )}
+                  placeholder={t("admin.builder.descriptionPlaceholder")}
                   maxLength={DESCRIPTION_MAX}
                   className="min-h-[80px] resize-none"
                   {...field}
@@ -83,9 +81,7 @@ export function QuizInfoForm({ form, verseId, isEdit }: QuizInfoFormProps) {
       />
 
       <div className="space-y-2">
-        <p className="text-sm font-medium">
-          {t("admin.builder.relatedVerse")}
-        </p>
+        <p className="text-sm font-medium">{t("admin.builder.relatedVerse")}</p>
         {verse ? (
           <div className="flex items-center gap-2 rounded-lg border bg-muted/30 p-3">
             <BookOpen className="h-4 w-4 text-muted-foreground" />

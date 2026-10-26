@@ -240,9 +240,7 @@ export function Navbar({
                   to="/login"
                   className="btn-primary ms-1 hidden px-6 py-2.5 text-sm sm:inline-flex"
                 >
-                  <span className="font-arabic">
-                    {t("nav.login")}
-                  </span>
+                  <span className="font-arabic">{t("nav.login")}</span>
                 </Link>
               )}
 
@@ -268,10 +266,7 @@ export function Navbar({
 
       {open && !isAuth && (
         <div className="border-t border-border bg-background lg:hidden">
-          <ul
-            dir="rtl"
-            className="mx-auto max-w-7xl px-5 py-3"
-          >
+          <ul dir="rtl" className="mx-auto max-w-7xl px-5 py-3">
             {NAV_ITEMS.map((item) => (
               <li key={item.key}>
                 <Link
@@ -349,9 +344,7 @@ export function Navbar({
                   onClick={() => setOpen(false)}
                   className="btn-primary flex-1 justify-center py-3"
                 >
-                  <span className="font-arabic">
-                    {t("nav.login")}
-                  </span>
+                  <span className="font-arabic">{t("nav.login")}</span>
                 </Link>
               )}
             </li>

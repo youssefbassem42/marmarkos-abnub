@@ -41,20 +41,14 @@ export function About() {
                     aria-hidden="true"
                   />
                 </span>
-                <span
-                  className={cn(
-                    "text-sm text-ink font-arabic text-base",
-                  )}
-                >
+                <span className={cn("text-sm text-ink font-arabic text-base")}>
                   {item}
                 </span>
               </li>
             ))}
           </ul>
           <a href="#contact" className="btn-primary mt-8 px-6 py-3.5 text-sm">
-            <span className="font-arabic">
-              {t("about.cta")}
-            </span>
+            <span className="font-arabic">{t("about.cta")}</span>
             <ArrowRight
               className={cn("h-4 w-4", "-scale-x-100")}
               aria-hidden="true"
@@ -66,9 +60,7 @@ export function About() {
           <div className="overflow-hidden">
             <img
               src={church}
-              alt={
-                "شباب متجمعون أمام كنيسة مضاءة في المساء"
-              }
+              alt={"شباب متجمعون أمام كنيسة مضاءة في المساء"}
               width={1200}
               height={912}
               loading="lazy"

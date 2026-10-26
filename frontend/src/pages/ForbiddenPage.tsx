@@ -17,20 +17,14 @@ export function ForbiddenPage() {
       <span className="grid h-20 w-20 place-items-center rounded-full bg-brand-red/10">
         <ShieldAlert className="h-10 w-10 text-brand-red" aria-hidden="true" />
       </span>
-      <h1
-        className="mt-6 text-3xl font-bold text-ink font-arabic text-4xl"
-      >
+      <h1 className="mt-6 text-3xl font-bold text-ink font-arabic text-4xl">
         {t("forbidden.title")}
       </h1>
-      <p
-        className="mt-3 max-w-md leading-relaxed text-muted-foreground font-arabic text-lg"
-      >
+      <p className="mt-3 max-w-md leading-relaxed text-muted-foreground font-arabic text-lg">
         {t("forbidden.body")}
       </p>
       <Link to="/" className="btn-outline mt-8 px-6 py-3">
-        <span className="font-arabic">
-          {t("forbidden.cta")}
-        </span>
+        <span className="font-arabic">{t("forbidden.cta")}</span>
       </Link>
     </div>
   );

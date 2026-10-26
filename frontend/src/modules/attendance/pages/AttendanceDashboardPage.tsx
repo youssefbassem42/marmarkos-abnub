@@ -437,9 +437,7 @@ export function AttendanceDashboardPage() {
                     {t("status.EXCUSED")}
                     {excuseTarget?.name ? ` — ${excuseTarget.name}` : ""}
                   </AlertDialogTitle>
-                  <AlertDialogDescription
-                    className={cn("font-arabic")}
-                  >
+                  <AlertDialogDescription className={cn("font-arabic")}>
                     {t("dashboard.absent.provisional")}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
@@ -448,10 +446,7 @@ export function AttendanceDashboardPage() {
                   onChange={(event) => setExcuseReason(event.target.value)}
                   placeholder={t("history.filters.member")}
                   aria-label={t("history.filters.member")}
-                  className={cn(
-                    "rounded-xl focus-ring",
-                    "font-arabic",
-                  )}
+                  className={cn("rounded-xl focus-ring", "font-arabic")}
                 />
                 <AlertDialogFooter>
                   <AlertDialogCancel className={cn("font-arabic")}>
@@ -549,7 +544,8 @@ export function AttendanceDashboardPage() {
                     </li>
                   ))}
                 </ul>
-                {absent.data.absent_count > (absent.data.absent_users.length ?? 0) && (
+                {absent.data.absent_count >
+                  (absent.data.absent_users.length ?? 0) && (
                   <Link
                     to={`/admin/attendance/absent${
                       selected ? `?meeting_date=${selected}` : ""

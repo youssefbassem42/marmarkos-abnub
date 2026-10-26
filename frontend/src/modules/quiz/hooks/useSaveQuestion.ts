@@ -7,11 +7,20 @@ export function useSaveQuestion() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ quizId, data }: { quizId: string; data: CreateQuestionPayload }) =>
-      quizApi.createQuestion(quizId, data),
+    mutationFn: ({
+      quizId,
+      data,
+    }: {
+      quizId: string;
+      data: CreateQuestionPayload;
+    }) => quizApi.createQuestion(quizId, data),
     onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({ queryKey: quizKeys.detail(variables.quizId) });
-      void queryClient.invalidateQueries({ queryKey: quizKeys.questions(variables.quizId) });
+      void queryClient.invalidateQueries({
+        queryKey: quizKeys.detail(variables.quizId),
+      });
+      void queryClient.invalidateQueries({
+        queryKey: quizKeys.questions(variables.quizId),
+      });
     },
   });
 }

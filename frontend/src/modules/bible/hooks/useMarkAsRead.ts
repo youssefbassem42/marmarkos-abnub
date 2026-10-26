@@ -10,8 +10,10 @@ export function useMarkAsRead() {
     onMutate: async (verseId) => {
       await queryClient.cancelQueries({ queryKey: bibleKeys.detail(verseId) });
       const previous = queryClient.getQueryData(bibleKeys.detail(verseId));
-      queryClient.setQueryData(bibleKeys.detail(verseId), (old: Awaited<ReturnType<typeof bibleApi.getVerse>> | undefined) =>
-        old ? { ...old, is_read: true } : old,
+      queryClient.setQueryData(
+        bibleKeys.detail(verseId),
+        (old: Awaited<ReturnType<typeof bibleApi.getVerse>> | undefined) =>
+          old ? { ...old, is_read: true } : old,
       );
       return { previous };
     },
@@ -21,7 +23,9 @@ export function useMarkAsRead() {
       }
     },
     onSettled: (_data, _err, verseId) => {
-      void queryClient.invalidateQueries({ queryKey: bibleKeys.detail(verseId) });
+      void queryClient.invalidateQueries({
+        queryKey: bibleKeys.detail(verseId),
+      });
       void queryClient.invalidateQueries({ queryKey: bibleKeys.published() });
       void queryClient.invalidateQueries({ queryKey: bibleKeys.current() });
     },

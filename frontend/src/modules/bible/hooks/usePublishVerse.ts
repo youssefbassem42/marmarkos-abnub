@@ -9,7 +9,9 @@ export function usePublishVerse() {
     mutationFn: (verseId: string) => bibleApi.publishVerse(verseId),
     onSuccess: (_data, verseId) => {
       void queryClient.invalidateQueries({ queryKey: bibleKeys.verses() });
-      void queryClient.invalidateQueries({ queryKey: bibleKeys.detail(verseId) });
+      void queryClient.invalidateQueries({
+        queryKey: bibleKeys.detail(verseId),
+      });
     },
   });
 }

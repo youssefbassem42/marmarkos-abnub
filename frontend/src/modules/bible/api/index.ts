@@ -163,7 +163,11 @@ export const bibleApi = {
   /** Per-verse analytics: opens/reads KPIs, engagement series, quiz */
   getVerseAnalytics: async (
     verseId: string,
-    params?: { granularity?: "daily" | "weekly"; date_from?: string; date_to?: string },
+    params?: {
+      granularity?: "daily" | "weekly";
+      date_from?: string;
+      date_to?: string;
+    },
   ): Promise<VerseAnalyticsDetail> => {
     const response = await apiClient.get(`/bible-verses/${verseId}/analytics`, {
       params,
@@ -174,7 +178,12 @@ export const bibleApi = {
   /** Per-user engagement table for one verse */
   getVerseAnalyticsUsers: async (
     verseId: string,
-    params?: { q?: string; read?: "all" | "read" | "unread"; page?: number; size?: number },
+    params?: {
+      q?: string;
+      read?: "all" | "read" | "unread";
+      page?: number;
+      size?: number;
+    },
   ): Promise<Paginated<VerseUserEngagementItem>> => {
     const response = await apiClient.get(
       `/bible-verses/${verseId}/analytics/users`,

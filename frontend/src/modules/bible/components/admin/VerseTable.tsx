@@ -38,7 +38,9 @@ export function VerseTable({ items }: VerseTableProps) {
           <TableHead>{t("admin.table.colDate")}</TableHead>
           <TableHead className="text-center">{t("admin.colOpens")}</TableHead>
           <TableHead>{t("admin.colQuiz")}</TableHead>
-          <TableHead className="text-end">{t("admin.table.colActions")}</TableHead>
+          <TableHead className="text-end">
+            {t("admin.table.colActions")}
+          </TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>

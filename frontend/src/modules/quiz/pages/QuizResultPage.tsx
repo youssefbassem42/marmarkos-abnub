@@ -18,13 +18,20 @@ export default function QuizResultPage() {
   const searchParams = new URLSearchParams(window.location.search);
   const attemptId = searchParams.get("attemptId") ?? "";
 
-  const { data: result, isLoading, isError } = useAttemptResult(attemptId, {
+  const {
+    data: result,
+    isLoading,
+    isError,
+  } = useAttemptResult(attemptId, {
     enabled: !!attemptId,
   });
 
   if (!attemptId) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 p-8" role="alert">
+      <div
+        className="flex flex-col items-center justify-center gap-4 p-8"
+        role="alert"
+      >
         <p className="text-destructive">{tCommon("errors.unknown")}</p>
         <Button variant="outline" onClick={() => navigate(-1)}>
           {tCommon("back")}
@@ -55,7 +62,10 @@ export default function QuizResultPage() {
 
   if (isError || !result) {
     return (
-      <div className="flex flex-col items-center justify-center gap-4 p-8" role="alert">
+      <div
+        className="flex flex-col items-center justify-center gap-4 p-8"
+        role="alert"
+      >
         <p className="text-destructive">{tCommon("errors.unknown")}</p>
         <Button variant="outline" onClick={() => window.location.reload()}>
           {tCommon("retry")}

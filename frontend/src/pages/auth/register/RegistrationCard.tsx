@@ -35,11 +35,7 @@ export function RegistrationCard({ lang }: RegistrationCardProps) {
           <h2 className="mt-4 font-heading text-3xl font-bold text-ink">
             {t("card.heading")}
           </h2>
-          <p
-            className={cn(
-              "mt-2 text-muted-foreground font-arabic text-xl",
-            )}
-          >
+          <p className={cn("mt-2 text-muted-foreground font-arabic text-xl")}>
             {t("card.subtitle")}
           </p>
         </div>

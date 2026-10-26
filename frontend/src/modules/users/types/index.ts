@@ -1,9 +1,5 @@
 export type UserRole = "MEMBER" | "SERVANT" | "ADMIN";
-export type UserStatus =
-  | "ACTIVE"
-  | "SUSPENDED"
-  | "BANNED"
-  | "INACTIVE";
+export type UserStatus = "ACTIVE" | "SUSPENDED" | "BANNED" | "INACTIVE";
 
 export interface UserAdminItem {
   id: string;

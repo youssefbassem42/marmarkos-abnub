@@ -143,7 +143,9 @@ export function CoverImageField({
           ) : (
             <Upload className="me-2 h-4 w-4" />
           )}
-          {uploading ? t("admin.form.fields.uploading") : t("admin.form.fields.dragDrop")}
+          {uploading
+            ? t("admin.form.fields.uploading")
+            : t("admin.form.fields.dragDrop")}
         </Button>
       )}
     </div>

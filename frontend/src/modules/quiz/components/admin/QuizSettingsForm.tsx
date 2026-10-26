@@ -105,9 +105,7 @@ export function QuizSettingsForm({ form, totalPoints }: QuizSettingsFormProps) {
                     type="number"
                     min={30}
                     max={7200}
-                    placeholder={t(
-                      "admin.builder.customDurationPlaceholder",
-                    )}
+                    placeholder={t("admin.builder.customDurationPlaceholder")}
                     className="w-32"
                     value={field.value}
                     onChange={(e) =>
@@ -154,12 +152,8 @@ export function QuizSettingsForm({ form, totalPoints }: QuizSettingsFormProps) {
       </div>
 
       <div className="space-y-2">
-        <p className="text-sm font-medium">
-          {t("admin.builder.questionType")}
-        </p>
-        <Badge variant="outline">
-          {t("admin.builder.multipleChoice")}
-        </Badge>
+        <p className="text-sm font-medium">{t("admin.builder.questionType")}</p>
+        <Badge variant="outline">{t("admin.builder.multipleChoice")}</Badge>
       </div>
     </div>
   );

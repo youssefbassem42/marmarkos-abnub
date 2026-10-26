@@ -46,13 +46,28 @@ interface AllowEntry {
 // test dies (plan §15/P4-902).
 const ALLOWLIST: AllowEntry[] = [
   // Vendored primitives nothing renders today (D-16 out of scope).
-  { file: "components/ui/context-menu.tsx", reason: "not rendered anywhere (D-16)" },
+  {
+    file: "components/ui/context-menu.tsx",
+    reason: "not rendered anywhere (D-16)",
+  },
   { file: "components/ui/menubar.tsx", reason: "not rendered anywhere (D-16)" },
-  { file: "components/ui/navigation-menu.tsx", reason: "not rendered anywhere (D-16)" },
-  { file: "components/ui/carousel.tsx", reason: "not rendered anywhere (D-16)" },
-  { file: "components/ui/resizable.tsx", reason: "not rendered anywhere (D-16)" },
+  {
+    file: "components/ui/navigation-menu.tsx",
+    reason: "not rendered anywhere (D-16)",
+  },
+  {
+    file: "components/ui/carousel.tsx",
+    reason: "not rendered anywhere (D-16)",
+  },
+  {
+    file: "components/ui/resizable.tsx",
+    reason: "not rendered anywhere (D-16)",
+  },
   { file: "components/ui/chart.tsx", reason: "not rendered anywhere (D-16)" },
-  { file: "components/ui/alert.tsx", reason: "not rendered anywhere (verified by import grep)" },
+  {
+    file: "components/ui/alert.tsx",
+    reason: "not rendered anywhere (verified by import grep)",
+  },
   // Dialog centering is direction-neutral; converting it would break it.
   {
     file: "components/ui/dialog.tsx",
@@ -78,11 +93,20 @@ const ALLOWLIST: AllowEntry[] = [
   },
   // A camera viewport is a square, not a text flow: corners stay
   // physical in both directions (P4-303 documented choice).
-  { file: "modules/attendance/components/ScannerFrame.tsx", reason: "camera frame corners must not mirror" },
+  {
+    file: "modules/attendance/components/ScannerFrame.tsx",
+    reason: "camera frame corners must not mirror",
+  },
   // Decorative collage offsets are composed against fixed artwork and
   // deliberately do NOT mirror (§3.11 'deliberately untouched').
-  { file: "pages/landing/sections/About.tsx", reason: "decorative collage offsets must not mirror" },
-  { file: "pages/landing/sections/Hero.tsx", reason: "decorative collage offsets must not mirror" },
+  {
+    file: "pages/landing/sections/About.tsx",
+    reason: "decorative collage offsets must not mirror",
+  },
+  {
+    file: "pages/landing/sections/Hero.tsx",
+    reason: "decorative collage offsets must not mirror",
+  },
 ];
 
 function listTsxCandidates(dir: string): string[] {

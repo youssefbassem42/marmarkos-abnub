@@ -1,7 +1,14 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import { MoreHorizontal, Pencil, Calendar, Brain, BarChart3, Archive } from "lucide-react";
+import {
+  MoreHorizontal,
+  Pencil,
+  Calendar,
+  Brain,
+  BarChart3,
+  Archive,
+} from "lucide-react";
 import { toast } from "sonner";
 import {
   DropdownMenu,
@@ -79,7 +86,9 @@ export function VerseRowActions({ verse }: VerseRowActionsProps) {
           </DropdownMenuItem>
           <DropdownMenuItem
             className="cursor-pointer gap-2"
-            onClick={() => navigate(`/admin/bible-verses/${verse.id}/analytics`)}
+            onClick={() =>
+              navigate(`/admin/bible-verses/${verse.id}/analytics`)
+            }
           >
             <BarChart3 className="h-4 w-4" aria-hidden="true" />
             {t("admin.actions.analytics")}
@@ -98,7 +107,9 @@ export function VerseRowActions({ verse }: VerseRowActionsProps) {
       <AlertDialog open={archiveOpen} onOpenChange={setArchiveOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("admin.archiveConfirm.title")}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("admin.archiveConfirm.title")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
               {t("admin.archiveConfirm.description")}
             </AlertDialogDescription>

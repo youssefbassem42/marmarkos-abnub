@@ -145,10 +145,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
             autoComplete="email"
             inputMode="email"
             aria-invalid={Boolean(errors.email)}
-            className={cn(
-              inputClass,
-              "w-full ps-9 pe-3 font-arabic",
-            )}
+            className={cn(inputClass, "w-full ps-9 pe-3 font-arabic")}
             {...register("email")}
           />
         </div>
@@ -213,10 +210,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
               type="date"
               max={new Date().toISOString().slice(0, 10)}
               aria-invalid={Boolean(errors.dateOfBirth)}
-              className={cn(
-                inputClass,
-                "ps-9 pe-3 font-arabic",
-              )}
+              className={cn(inputClass, "ps-9 pe-3 font-arabic")}
               {...register("dateOfBirth")}
             />
           </div>
@@ -241,10 +235,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
               inputMode="tel"
               dir="ltr"
               aria-invalid={Boolean(errors.phone)}
-              className={cn(
-                inputClass,
-                "ps-9 pe-3 text-start font-arabic",
-              )}
+              className={cn(inputClass, "ps-9 pe-3 text-start font-arabic")}
               {...register("phone")}
             />
           </div>
@@ -268,10 +259,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
             placeholder={t("form.addressPlaceholder")}
             autoComplete="street-address"
             aria-invalid={Boolean(errors.address)}
-            className={cn(
-              inputClass,
-              "ps-9 pe-3 font-arabic",
-            )}
+            className={cn(inputClass, "ps-9 pe-3 font-arabic")}
             {...register("address")}
           />
         </div>
@@ -348,9 +336,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
       <div className="flex items-center gap-3" aria-hidden="true">
         <span className="h-px flex-1 bg-border" />
         <span
-          className={cn(
-            "text-sm text-muted-foreground font-arabic text-lg",
-          )}
+          className={cn("text-sm text-muted-foreground font-arabic text-lg")}
         >
           {t("form.or")}
         </span>
@@ -363,9 +349,7 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
       />
 
       <p
-        className={cn(
-          "text-center text-muted-foreground font-arabic text-lg",
-        )}
+        className={cn("text-center text-muted-foreground font-arabic text-lg")}
       >
         {t("loginPrompt")}{" "}
         <Link

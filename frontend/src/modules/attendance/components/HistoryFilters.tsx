@@ -261,9 +261,7 @@ export function HistoryFilters({ values, onChange }: HistoryFiltersProps) {
           }}
           className="btn-outline h-11 flex-1 justify-center px-4 text-sm"
         >
-          <span className="font-arabic">
-            {t("history.filters.reset")}
-          </span>
+          <span className="font-arabic">{t("history.filters.reset")}</span>
         </button>
       </div>
     </div>

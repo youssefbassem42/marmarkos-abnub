@@ -21,7 +21,10 @@ interface PointsOverTimeChartProps {
   isPending: boolean;
 }
 
-export function PointsOverTimeChart({ data, isPending }: PointsOverTimeChartProps) {
+export function PointsOverTimeChart({
+  data,
+  isPending,
+}: PointsOverTimeChartProps) {
   const { t } = useTranslation("points");
   const locale = "ar-EG";
 
@@ -54,12 +57,14 @@ export function PointsOverTimeChart({ data, isPending }: PointsOverTimeChartProp
   return (
     <div className="rounded-2xl border border-border bg-card p-5 card-elevated">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2
-          className="font-heading text-lg font-bold text-ink font-arabic"
-        >
+        <h2 className="font-heading text-lg font-bold text-ink font-arabic">
           {t("page.overTime")}
         </h2>
-        <div className="flex gap-1" role="radiogroup" aria-label={t("page.overTime")}>
+        <div
+          className="flex gap-1"
+          role="radiogroup"
+          aria-label={t("page.overTime")}
+        >
           {RANGE_OPTIONS.map((r) => (
             <button
               key={r}
@@ -94,11 +99,7 @@ export function PointsOverTimeChart({ data, isPending }: PointsOverTimeChartProp
                 axisLine={false}
                 reversed
               />
-              <YAxis
-                tickLine={false}
-                axisLine={false}
-                orientation="right"
-              />
+              <YAxis tickLine={false} axisLine={false} orientation="right" />
               <Tooltip
                 content={({ active, payload }) => {
                   if (!active || !payload?.length) return null;

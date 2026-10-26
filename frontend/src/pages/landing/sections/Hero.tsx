@@ -49,14 +49,10 @@ export function Hero() {
           <div className="mt-8 flex flex-wrap gap-3">
             <a href="#events" className="btn-primary px-6 py-3.5 text-sm">
               <CalendarDays className="h-4 w-4" aria-hidden="true" />
-              <span className="font-arabic">
-                {t("hero.ctaPrimary")}
-              </span>
+              <span className="font-arabic">{t("hero.ctaPrimary")}</span>
             </a>
             <a href="#about" className="btn-outline px-6 py-3.5 text-sm">
-              <span className="font-arabic">
-                {t("hero.ctaSecondary")}
-              </span>
+              <span className="font-arabic">{t("hero.ctaSecondary")}</span>
             </a>
           </div>
         </div>
@@ -64,9 +60,7 @@ export function Hero() {
         <div className="relative reveal">
           <img
             src={hero}
-            alt={
-              "شباب يعبدون بأيدي مرفوعة بجانب صليب مضيء عند الغروب"
-            }
+            alt={"شباب يعبدون بأيدي مرفوعة بجانب صليب مضيء عند الغروب"}
             width={1200}
             height={912}
             className="brush-mask w-full object-cover"

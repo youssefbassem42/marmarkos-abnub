@@ -33,12 +33,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Tooltip,
   TooltipContent,
@@ -56,7 +51,10 @@ import { usePublishQuiz } from "../../hooks/usePublishQuiz";
 import { useQuizValidation } from "../../hooks/useQuizValidation";
 import { useQuizByVerse } from "../../hooks/useQuizByVerse";
 import { useVerse } from "@/modules/bible/hooks/useVerse";
-import { quizSchema, type QuizFormValues } from "../../components/admin/quizSchema";
+import {
+  quizSchema,
+  type QuizFormValues,
+} from "../../components/admin/quizSchema";
 import { QuizInfoForm } from "../../components/admin/QuizInfoForm";
 import { QuizSettingsForm } from "../../components/admin/QuizSettingsForm";
 import { VersePickerField } from "../../components/admin/VersePickerField";
@@ -326,7 +324,9 @@ export default function QuizBuilderPage() {
                   <Button
                     size="sm"
                     onClick={handlePublish}
-                    disabled={!validation?.is_publishable || publishQuiz.isPending}
+                    disabled={
+                      !validation?.is_publishable || publishQuiz.isPending
+                    }
                   >
                     <Send className="me-1 h-4 w-4" />
                     {publishQuiz.isPending
@@ -353,7 +353,9 @@ export default function QuizBuilderPage() {
   return (
     <div dir="rtl" lang="ar">
       <AdminTopbar
-        title={isEdit ? t("admin.builder.editTitle") : t("admin.builder.newTitle")}
+        title={
+          isEdit ? t("admin.builder.editTitle") : t("admin.builder.newTitle")
+        }
         subtitle={t("admin.manage.subtitle")}
       />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
@@ -520,23 +522,44 @@ export default function QuizBuilderPage() {
                 >
                   <div className="flex items-center gap-3 rounded-lg border p-3">
                     <RadioGroupItem value="DRAFT" id="status-draft" />
-                    <Label htmlFor="status-draft" className="cursor-pointer flex-1">
-                      <span className="font-medium font-arabic">{t("admin.manage.draftBadge")}</span>
-                      <p className="text-xs text-muted-foreground font-arabic">مرجع للمسؤولين فقط.</p>
+                    <Label
+                      htmlFor="status-draft"
+                      className="cursor-pointer flex-1"
+                    >
+                      <span className="font-medium font-arabic">
+                        {t("admin.manage.draftBadge")}
+                      </span>
+                      <p className="text-xs text-muted-foreground font-arabic">
+                        مرجع للمسؤولين فقط.
+                      </p>
                     </Label>
                   </div>
                   <div className="flex items-center gap-3 rounded-lg border p-3">
                     <RadioGroupItem value="PUBLISHED" id="status-published" />
-                    <Label htmlFor="status-published" className="cursor-pointer flex-1">
-                      <span className="font-medium font-arabic">{t("admin.manage.publishedBadge")}</span>
-                      <p className="text-xs text-muted-foreground font-arabic">متاح لجميع المستخدمين.</p>
+                    <Label
+                      htmlFor="status-published"
+                      className="cursor-pointer flex-1"
+                    >
+                      <span className="font-medium font-arabic">
+                        {t("admin.manage.publishedBadge")}
+                      </span>
+                      <p className="text-xs text-muted-foreground font-arabic">
+                        متاح لجميع المستخدمين.
+                      </p>
                     </Label>
                   </div>
                   <div className="flex items-center gap-3 rounded-lg border p-3">
                     <RadioGroupItem value="ARCHIVED" id="status-archived" />
-                    <Label htmlFor="status-archived" className="cursor-pointer flex-1">
-                      <span className="font-medium font-arabic">{t("admin.manage.archivedBadge")}</span>
-                      <p className="text-xs text-muted-foreground font-arabic">مخفى عن المستخدمين.</p>
+                    <Label
+                      htmlFor="status-archived"
+                      className="cursor-pointer flex-1"
+                    >
+                      <span className="font-medium font-arabic">
+                        {t("admin.manage.archivedBadge")}
+                      </span>
+                      <p className="text-xs text-muted-foreground font-arabic">
+                        مخفى عن المستخدمين.
+                      </p>
                     </Label>
                   </div>
                 </RadioGroup>

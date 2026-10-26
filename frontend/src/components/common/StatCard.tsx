@@ -34,9 +34,7 @@ export function StatCard({
   tone = "default",
 }: StatCardProps) {
   const formattedValue =
-    typeof value === "number"
-      ? new Intl.NumberFormat().format(value)
-      : value;
+    typeof value === "number" ? new Intl.NumberFormat().format(value) : value;
 
   return (
     <Card className="overflow-hidden">
@@ -48,11 +46,7 @@ export function StatCard({
           )}
         >
           <Icon
-            className={cn(
-              "h-6 w-6",
-              iconToneMap[tone],
-              iconClassName,
-            )}
+            className={cn("h-6 w-6", iconToneMap[tone], iconClassName)}
             aria-hidden="true"
           />
         </span>

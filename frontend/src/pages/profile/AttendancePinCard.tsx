@@ -98,23 +98,17 @@ export function AttendancePinCard() {
 
   return (
     <section className="mt-6 rounded-2xl border border-border bg-card p-6 card-elevated">
-      <h2
-        className="flex items-center gap-2 font-extrabold text-ink font-arabic text-xl"
-      >
+      <h2 className="flex items-center gap-2 font-extrabold text-ink font-arabic text-xl">
         <KeyRound className="h-5 w-5 text-mint" aria-hidden="true" />
         {t("pin.title")}
         {loaded && pinSet ? (
-          <span
-            className="ms-auto rounded-full bg-mint/15 px-3 py-1 text-xs font-semibold text-ink font-arabic"
-          >
+          <span className="ms-auto rounded-full bg-mint/15 px-3 py-1 text-xs font-semibold text-ink font-arabic">
             {t("pin.setLabel")}
           </span>
         ) : null}
       </h2>
 
-      <p
-        className="mt-2 text-sm text-muted-foreground font-arabic text-base"
-      >
+      <p className="mt-2 text-sm text-muted-foreground font-arabic text-base">
         {t("pin.description")}
       </p>
 
@@ -179,16 +173,12 @@ export function AttendancePinCard() {
                 <AlertDialogTitle className="font-arabic">
                   {t("pin.deleteTitle")}
                 </AlertDialogTitle>
-                <AlertDialogDescription
-                className="font-arabic"
-                >
+                <AlertDialogDescription className="font-arabic">
                   {t("pin.deleteBody")}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel
-            className="rounded-xl font-arabic"
-                >
+                <AlertDialogCancel className="rounded-xl font-arabic">
                   {t("pin.cancel")}
                 </AlertDialogCancel>
                 <AlertDialogAction

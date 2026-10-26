@@ -23,11 +23,7 @@ export function AuthFooter({ lang }: AuthFooterProps) {
   const items = t("footer", { returnObjects: true }) as readonly FooterItem[];
 
   return (
-    <section
-      dir="rtl"
-      lang="ar"
-      className="bg-navy py-14"
-    >
+    <section dir="rtl" lang="ar" className="bg-navy py-14">
       <div className="mx-auto grid max-w-7xl gap-8 px-5 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         {items.map(({ title, description }, index) => {
           const { Icon, accent } = footerIcons[index];

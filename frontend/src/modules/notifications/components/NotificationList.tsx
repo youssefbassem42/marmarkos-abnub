@@ -7,18 +7,12 @@ interface NotificationListProps {
 }
 
 /** The feed body: one accessible card per notification, newest first. */
-export function NotificationList({
-  items,
-  onMarkRead,
-}: NotificationListProps) {
+export function NotificationList({ items, onMarkRead }: NotificationListProps) {
   return (
     <ul className="space-y-3" aria-live="polite">
       {items.map((item) => (
         <li key={item.id}>
-          <NotificationRow
-            item={item}
-            onMarkRead={onMarkRead}
-          />
+          <NotificationRow item={item} onMarkRead={onMarkRead} />
         </li>
       ))}
     </ul>

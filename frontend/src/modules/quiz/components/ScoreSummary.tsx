@@ -16,7 +16,8 @@ export function ScoreSummary({
   incorrectCount,
 }: ScoreSummaryProps) {
   const { t } = useTranslation("quiz");
-  const percentage = totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
+  const percentage =
+    totalPoints > 0 ? Math.round((score / totalPoints) * 100) : 0;
 
   return (
     <div className="space-y-4">
@@ -36,8 +37,12 @@ export function ScoreSummary({
           <CardContent className="flex items-center gap-2 p-3">
             <CheckCircle className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
             <div>
-              <p className="text-lg font-semibold leading-tight">{correctCount}</p>
-              <p className="text-xs text-muted-foreground">{t("result.correct")}</p>
+              <p className="text-lg font-semibold leading-tight">
+                {correctCount}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("result.correct")}
+              </p>
             </div>
           </CardContent>
         </Card>
@@ -45,8 +50,12 @@ export function ScoreSummary({
           <CardContent className="flex items-center gap-2 p-3">
             <XCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
             <div>
-              <p className="text-lg font-semibold leading-tight">{incorrectCount}</p>
-              <p className="text-xs text-muted-foreground">{t("result.incorrect")}</p>
+              <p className="text-lg font-semibold leading-tight">
+                {incorrectCount}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("result.incorrect")}
+              </p>
             </div>
           </CardContent>
         </Card>

@@ -33,7 +33,9 @@ export function VerseFilterBar({
         <Input
           placeholder={t("admin.filters.search")}
           value={q ?? ""}
-          onChange={(e) => onPatch({ q: e.target.value || undefined, page: undefined })}
+          onChange={(e) =>
+            onPatch({ q: e.target.value || undefined, page: undefined })
+          }
           className="ps-8"
         />
       </div>
@@ -42,7 +44,9 @@ export function VerseFilterBar({
         <Input
           type="date"
           value={dateFrom ?? ""}
-          onChange={(e) => onPatch({ date_from: e.target.value || undefined, page: undefined })}
+          onChange={(e) =>
+            onPatch({ date_from: e.target.value || undefined, page: undefined })
+          }
           className="w-[150px]"
           aria-label={t("admin.dateFrom")}
         />
@@ -50,7 +54,9 @@ export function VerseFilterBar({
         <Input
           type="date"
           value={dateTo ?? ""}
-          onChange={(e) => onPatch({ date_to: e.target.value || undefined, page: undefined })}
+          onChange={(e) =>
+            onPatch({ date_to: e.target.value || undefined, page: undefined })
+          }
           className="w-[150px]"
           aria-label={t("admin.dateTo")}
         />
@@ -60,7 +66,14 @@ export function VerseFilterBar({
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => onPatch({ q: undefined, date_from: undefined, date_to: undefined, page: undefined })}
+          onClick={() =>
+            onPatch({
+              q: undefined,
+              date_from: undefined,
+              date_to: undefined,
+              page: undefined,
+            })
+          }
           className="gap-1"
         >
           <X className="h-3.5 w-3.5" aria-hidden="true" />

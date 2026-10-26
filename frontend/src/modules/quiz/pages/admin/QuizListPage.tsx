@@ -73,11 +73,7 @@ export default function QuizListPage() {
       />
 
       <main className="mx-auto w-full max-w-7xl px-5 py-8 lg:px-8">
-        <div
-          dir="rtl"
-          lang="ar"
-          className="space-y-5"
-        >
+        <div dir="rtl" lang="ar" className="space-y-5">
           {/* Filter bar */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">
@@ -88,7 +84,9 @@ export default function QuizListPage() {
                 />
                 <Input
                   value={searchQuery}
-                  onChange={(e) => patchParams({ q: e.target.value || undefined })}
+                  onChange={(e) =>
+                    patchParams({ q: e.target.value || undefined })
+                  }
                   placeholder={t("admin.list.search")}
                   className="h-9 pe-9 ps-3"
                 />
@@ -135,7 +133,10 @@ export default function QuizListPage() {
             {query.isPending && (
               <div className="space-y-2 p-5">
                 {[0, 1, 2, 3, 4].map((i) => (
-                  <div key={i} className="h-12 animate-pulse rounded-lg bg-primary/10" />
+                  <div
+                    key={i}
+                    className="h-12 animate-pulse rounded-lg bg-primary/10"
+                  />
                 ))}
               </div>
             )}

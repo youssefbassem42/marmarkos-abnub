@@ -14,7 +14,14 @@ export function useVerseAnalyticsUsers(
   params: VerseAnalyticsUsersParams = {},
 ) {
   return useQuery({
-    queryKey: [...bibleKeys.all, "analytics", "verse", verseId, "users", params],
+    queryKey: [
+      ...bibleKeys.all,
+      "analytics",
+      "verse",
+      verseId,
+      "users",
+      params,
+    ],
     queryFn: () => bibleApi.getVerseAnalyticsUsers(verseId, params),
     enabled: !!verseId,
   });

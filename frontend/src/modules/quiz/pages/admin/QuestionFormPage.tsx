@@ -15,12 +15,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuiz } from "../../hooks/useQuiz";
@@ -136,11 +131,7 @@ export default function QuestionFormPage() {
           {t("admin.question.backToQuiz")}
         </Link>
       </Button>
-      <Button
-        size="sm"
-        onClick={handleSave}
-        disabled={saveQuestion.isPending}
-      >
+      <Button size="sm" onClick={handleSave} disabled={saveQuestion.isPending}>
         <Save className="me-1 h-4 w-4" />
         {saveQuestion.isPending
           ? t("admin.question.savingButton")

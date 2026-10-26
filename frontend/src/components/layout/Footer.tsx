@@ -1,10 +1,4 @@
-import {
-  MapPin,
-  Mail,
-  Facebook,
-  Instagram,
-  Youtube,
-} from "lucide-react";
+import { MapPin, Mail, Facebook, Instagram, Youtube } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
@@ -27,12 +21,7 @@ export function Footer() {
   }) as readonly string[];
 
   return (
-    <footer
-      id="contact"
-      dir="rtl"
-      lang="ar"
-      className="bg-navy text-white"
-    >
+    <footer id="contact" dir="rtl" lang="ar" className="bg-navy text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))] lg:px-8">
         <div>
           <img

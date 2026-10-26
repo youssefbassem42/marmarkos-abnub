@@ -9,11 +9,7 @@ export function ForgotPasswordPage() {
   const [sentEmail, setSentEmail] = useState<string | undefined>(undefined);
 
   return (
-    <div
-      dir="rtl"
-      lang="ar"
-      className="min-h-screen bg-background"
-    >
+    <div dir="rtl" lang="ar" className="min-h-screen bg-background">
       <Navbar variant="auth" />
 
       <main className="flex min-h-[calc(100vh-61px)] flex-col lg:flex-row">

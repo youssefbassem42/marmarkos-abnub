@@ -38,7 +38,11 @@ export function QuestionReviewList({
         const isOpen = openIds.has(q.id);
         const isTimedOut = status === "AUTO_FINISHED";
         return (
-          <Collapsible key={q.id} open={isOpen} onOpenChange={() => toggle(q.id)}>
+          <Collapsible
+            key={q.id}
+            open={isOpen}
+            onOpenChange={() => toggle(q.id)}
+          >
             <Card>
               <CollapsibleTrigger asChild>
                 <button
@@ -55,7 +59,10 @@ export function QuestionReviewList({
                   <CardTitle className="flex-1 text-sm font-medium">
                     {t("result.review.question", { number: idx + 1 })}
                   </CardTitle>
-                  <Badge variant={q.is_correct ? "default" : "destructive"} className="shrink-0">
+                  <Badge
+                    variant={q.is_correct ? "default" : "destructive"}
+                    className="shrink-0"
+                  >
                     {q.points_awarded}/{q.points}
                   </Badge>
                   {isTimedOut && (

@@ -17,9 +17,7 @@ const queryClient = new QueryClient({
 
 /** Toasts carry secondary feedback only; direction follows the language. */
 function AppToaster() {
-  return (
-    <Toaster position="top-center" dir={i18n.dir()} />
-  );
+  return <Toaster position="top-center" dir={i18n.dir()} />;
 }
 
 export function AppProviders() {

@@ -144,11 +144,7 @@ export function AttendanceHistoryPage() {
             </Link>
           </Button>
         </div>
-        <div
-          dir="rtl"
-          lang="ar"
-          className="space-y-5"
-        >
+        <div dir="rtl" lang="ar" className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <HistoryFilters
               values={values}
@@ -167,9 +163,7 @@ export function AttendanceHistoryPage() {
               className="btn-outline h-11 px-4 text-sm"
             >
               <Download className="h-4 w-4" aria-hidden="true" />
-              <span className="font-arabic">
-                {t("history.export.csv")}
-              </span>
+              <span className="font-arabic">{t("history.export.csv")}</span>
             </button>
           </div>
 
@@ -209,7 +203,7 @@ export function AttendanceHistoryPage() {
                     onClick={() => setSearchParams({}, { replace: true })}
                     className="btn-outline mt-1 px-5 py-2 text-sm"
                   >
-              <span className="font-arabic">
+                    <span className="font-arabic">
                       {t("history.filters.reset")}
                     </span>
                   </button>

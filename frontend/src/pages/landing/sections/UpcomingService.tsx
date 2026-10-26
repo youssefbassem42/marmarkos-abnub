@@ -26,16 +26,12 @@ export function UpcomingService() {
           <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-[15px]">
             <span className="inline-flex items-center gap-2">
               <Clock className="h-4 w-4 text-mint" aria-hidden="true" />{" "}
-              <span className="font-arabic">
-                {t("upcoming.time")}
-              </span>
+              <span className="font-arabic">{t("upcoming.time")}</span>
             </span>
             <span className="hidden h-5 w-px bg-white/25 sm:block" />
             <span className="inline-flex items-center gap-2">
               <MapPin className="h-4 w-4 text-mint" aria-hidden="true" />{" "}
-              <span className="font-arabic">
-                {t("upcoming.location")}
-              </span>
+              <span className="font-arabic">{t("upcoming.location")}</span>
             </span>
           </div>
           <p
@@ -53,9 +49,7 @@ export function UpcomingService() {
           href="#contact"
           className="focus-ring inline-flex items-center justify-center gap-3 rounded-xl bg-mint px-7 py-3.5 text-sm font-bold text-white transition-transform duration-200 hover:-translate-y-0.5"
         >
-          <span className="font-arabic">
-            {t("upcoming.cta")}
-          </span>
+          <span className="font-arabic">{t("upcoming.cta")}</span>
           <ArrowRight
             className={cn("h-4 w-4", "-scale-x-100")}
             aria-hidden="true"

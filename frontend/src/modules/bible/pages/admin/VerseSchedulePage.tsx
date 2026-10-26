@@ -126,131 +126,125 @@ export default function VerseSchedulePage() {
         subtitle={t("admin.schedule.subtitle")}
       />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
-      {/* Breadcrumb */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/admin">{tAdmin("nav.dashboard")}</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/admin/bible-verses">
-                {tAdmin("nav.bibleVerses")}
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              {t("admin.schedule.title")}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+        {/* Breadcrumb */}
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/admin">{tAdmin("nav.dashboard")}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/admin/bible-verses">
+                  {tAdmin("nav.bibleVerses")}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{t("admin.schedule.title")}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <Button variant="ghost" size="icon" asChild>
-          <Link to="/admin/bible-verses">
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-        </Button>
-        <div>
-          <h1 className="text-2xl font-bold">
-            {t("admin.schedule.title")}
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            {t("admin.schedule.subtitle")}
-          </p>
-        </div>
-      </div>
-
-      {/* Steps */}
-      <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2">
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
-            <Check className="h-3.5 w-3.5" />
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <Button variant="ghost" size="icon" asChild>
+            <Link to="/admin/bible-verses">
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">{t("admin.schedule.title")}</h1>
+            <p className="text-muted-foreground text-sm">
+              {t("admin.schedule.subtitle")}
+            </p>
           </div>
-          <span className="text-sm font-medium">
-            {t("admin.schedule.steps.step1")}
-          </span>
         </div>
-        <Separator className="w-8 h-px bg-border" />
-        <div className="flex items-center gap-2">
-          <div
-            className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium ${
-              activeStep === 2
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground"
-            }`}
-          >
-            {activeStep === 2 ? (
-              <span>2</span>
-            ) : (
-              <span>2</span>
-            )}
-          </div>
-          <span className="text-sm font-medium">
-            {t("admin.schedule.steps.step2")}
-          </span>
-        </div>
-      </div>
 
-      {/* Selected Verse Card */}
-      {verse && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-base">
-              <FileText className="h-4 w-4" />
-              {t("admin.schedule.steps.step1")}
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-start justify-between">
-              <div className="space-y-1">
-                <h3 className="font-semibold">{verse.title}</h3>
-                <p className="text-sm text-muted-foreground">
-                  {verse.verse_reference}
-                </p>
-                <Badge variant="secondary">{verse.book}</Badge>
-              </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => navigate(`/admin/bible-verses/${verseId}/edit`)}
-              >
-                {t("admin.actions.edit")}
-              </Button>
+        {/* Steps */}
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2">
+            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-primary text-primary-foreground text-xs font-medium">
+              <Check className="h-3.5 w-3.5" />
             </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Separator />
-
-      {/* Already Scheduled Warning */}
-      {isAlreadyScheduled && existingSchedule && (
-        <AlreadyScheduledCard
-          schedule={existingSchedule}
-          onReschedule={() => setActiveStep(2)}
-          onCancel={handleCancel}
-          isCancelling={cancelMutation.isPending}
-        />
-      )}
-
-      {isPublished && (
-        <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-400">
-          {t("admin.schedule.already.published")}
+            <span className="text-sm font-medium">
+              {t("admin.schedule.steps.step1")}
+            </span>
+          </div>
+          <Separator className="w-8 h-px bg-border" />
+          <div className="flex items-center gap-2">
+            <div
+              className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-medium ${
+                activeStep === 2
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground"
+              }`}
+            >
+              {activeStep === 2 ? <span>2</span> : <span>2</span>}
+            </div>
+            <span className="text-sm font-medium">
+              {t("admin.schedule.steps.step2")}
+            </span>
+          </div>
         </div>
-      )}
 
-      {/* Schedule Form */}
-      {!isAlreadyScheduled && !isPublished && (
-        <ScheduleForm onSubmit={handleSchedule} isLoading={isLoading} />
-      )}
+        {/* Selected Verse Card */}
+        {verse && (
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="flex items-center gap-2 text-base">
+                <FileText className="h-4 w-4" />
+                {t("admin.schedule.steps.step1")}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-start justify-between">
+                <div className="space-y-1">
+                  <h3 className="font-semibold">{verse.title}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    {verse.verse_reference}
+                  </p>
+                  <Badge variant="secondary">{verse.book}</Badge>
+                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() =>
+                    navigate(`/admin/bible-verses/${verseId}/edit`)
+                  }
+                >
+                  {t("admin.actions.edit")}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        <Separator />
+
+        {/* Already Scheduled Warning */}
+        {isAlreadyScheduled && existingSchedule && (
+          <AlreadyScheduledCard
+            schedule={existingSchedule}
+            onReschedule={() => setActiveStep(2)}
+            onCancel={handleCancel}
+            isCancelling={cancelMutation.isPending}
+          />
+        )}
+
+        {isPublished && (
+          <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-400">
+            {t("admin.schedule.already.published")}
+          </div>
+        )}
+
+        {/* Schedule Form */}
+        {!isAlreadyScheduled && !isPublished && (
+          <ScheduleForm onSubmit={handleSchedule} isLoading={isLoading} />
+        )}
       </main>
     </div>
   );

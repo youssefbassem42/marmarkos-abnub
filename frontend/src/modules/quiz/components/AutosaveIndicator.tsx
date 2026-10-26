@@ -22,9 +22,7 @@ export function AutosaveIndicator({ status }: AutosaveIndicatorProps) {
       )}
       aria-live="polite"
     >
-      {status === "saving" && (
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-      )}
+      {status === "saving" && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
       {status === "saved" && <Check className="h-3.5 w-3.5" />}
       {status === "failed" && <AlertCircle className="h-3.5 w-3.5" />}
       <span>

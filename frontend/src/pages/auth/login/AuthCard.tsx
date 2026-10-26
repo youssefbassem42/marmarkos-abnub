@@ -40,9 +40,7 @@ export function AuthCard({ lang }: AuthCardProps) {
             className="h-4 w-4 shrink-0 text-mint"
             aria-hidden="true"
           />
-          <span className={cn("font-arabic text-base")}>
-            {t("security")}
-          </span>
+          <span className={cn("font-arabic text-base")}>{t("security")}</span>
         </div>
       </div>
     </section>

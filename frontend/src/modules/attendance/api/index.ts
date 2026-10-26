@@ -50,7 +50,9 @@ export const attendanceApi = {
     meetingDate?: string,
     options?: { page?: number; size?: number },
   ): Promise<AbsentUsersResponse> => {
-    const params = meetingDate ? { meeting_date: meetingDate, ...options } : options;
+    const params = meetingDate
+      ? { meeting_date: meetingDate, ...options }
+      : options;
     const response = await apiClient.get("/attendance/absent", { params });
     return response.data;
   },

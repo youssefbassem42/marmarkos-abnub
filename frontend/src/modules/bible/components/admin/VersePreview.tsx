@@ -63,11 +63,7 @@ export function VersePreview({
           )}
         >
           {image && (
-            <img
-              src={image}
-              alt={title}
-              className="w-full h-48 object-cover"
-            />
+            <img src={image} alt={title} className="w-full h-48 object-cover" />
           )}
           <div className="p-4 space-y-3">
             <div>

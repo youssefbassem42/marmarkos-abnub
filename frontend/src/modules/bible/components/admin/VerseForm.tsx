@@ -120,15 +120,10 @@ export function VerseForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>{t("admin.form.fields.book")}</FormLabel>
-              <Select
-                value={field.value}
-                onValueChange={field.onChange}
-              >
+              <Select value={field.value} onValueChange={field.onChange}>
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue
-                      placeholder={t("admin.form.fields.book")}
-                    />
+                    <SelectValue placeholder={t("admin.form.fields.book")} />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
@@ -197,7 +192,11 @@ export function VerseForm() {
                     min={1}
                     max={150}
                     value={field.value ?? ""}
-                    onChange={(e) => field.onChange(e.target.value ? Number(e.target.value) : null)}
+                    onChange={(e) =>
+                      field.onChange(
+                        e.target.value ? Number(e.target.value) : null,
+                      )
+                    }
                   />
                 </FormControl>
                 <FormMessage />

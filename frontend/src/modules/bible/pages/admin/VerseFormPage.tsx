@@ -4,13 +4,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { toast } from "sonner";
-import {
-  ArrowLeft,
-  Calendar,
-  CheckCircle,
-  Loader2,
-  Save,
-} from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
@@ -24,9 +18,18 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Form } from "@/components/ui/form";
-import { useVerse, useCreateVerse, useUpdateVerse, usePublishVerse } from "../../hooks";
+import {
+  useVerse,
+  useCreateVerse,
+  useUpdateVerse,
+  usePublishVerse,
+} from "../../hooks";
 import { VerseForm } from "../../components/admin/VerseForm";
-import { createVerseSchema, generateVerseRef, type VerseFormValues } from "../../components/admin/verseSchema";
+import {
+  createVerseSchema,
+  generateVerseRef,
+  type VerseFormValues,
+} from "../../components/admin/verseSchema";
 
 export default function VerseFormPage() {
   const { verseId } = useParams<{ verseId: string }>();
@@ -183,130 +186,122 @@ export default function VerseFormPage() {
         subtitle={t("admin.form.title")}
       />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
-      {/* Breadcrumb */}
-      <Breadcrumb>
-        <BreadcrumbList>
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/admin">{tAdmin("nav.dashboard")}</Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbLink asChild>
-              <Link to="/admin/bible-verses">
-                {tAdmin("nav.bibleVerses")}
-              </Link>
-            </BreadcrumbLink>
-          </BreadcrumbItem>
-          <BreadcrumbSeparator />
-          <BreadcrumbItem>
-            <BreadcrumbPage>
-              {isEdit
-                ? t("admin.form.edit")
-                : t("admin.form.create")}
-            </BreadcrumbPage>
-          </BreadcrumbItem>
-        </BreadcrumbList>
-      </Breadcrumb>
+        {/* Breadcrumb */}
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/admin">{tAdmin("nav.dashboard")}</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/admin/bible-verses">
+                  {tAdmin("nav.bibleVerses")}
+                </Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>
+                {isEdit ? t("admin.form.edit") : t("admin.form.create")}
+              </BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/admin/bible-verses">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">
-              {isEdit
-                ? t("admin.form.edit")
-                : t("admin.form.create")}
-            </h1>
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Button variant="ghost" size="icon" asChild>
+              <Link to="/admin/bible-verses">
+                <ArrowLeft className="h-4 w-4" />
+              </Link>
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold">
+                {isEdit ? t("admin.form.edit") : t("admin.form.create")}
+              </h1>
+            </div>
+          </div>
+
+          {/* Desktop Action Buttons */}
+          <div className="hidden md:flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSaveDraft}
+              disabled={isSaving}
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {t("admin.form.saveDraft")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSchedule}
+              disabled={isSaving}
+            >
+              <Calendar className="h-4 w-4" />
+              {t("admin.form.schedule")}
+            </Button>
+            <Button type="button" onClick={handlePublish} disabled={isSaving}>
+              <CheckCircle className="h-4 w-4" />
+              {t("admin.form.publish")}
+            </Button>
           </div>
         </div>
 
-        {/* Desktop Action Buttons */}
-        <div className="hidden md:flex items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSaveDraft}
-            disabled={isSaving}
-          >
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
-            {t("admin.form.saveDraft")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSchedule}
-            disabled={isSaving}
-          >
-            <Calendar className="h-4 w-4" />
-            {t("admin.form.schedule")}
-          </Button>
-          <Button
-            type="button"
-            onClick={handlePublish}
-            disabled={isSaving}
-          >
-            <CheckCircle className="h-4 w-4" />
-            {t("admin.form.publish")}
-          </Button>
+        <Separator />
+
+        {/* Form */}
+        <Form {...form}>
+          <VerseForm />
+        </Form>
+
+        {/* Mobile Sticky Footer */}
+        <div className="fixed bottom-0 inset-x-0 border-t bg-background p-4 md:hidden z-40">
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSaveDraft}
+              disabled={isSaving}
+              className="flex-1"
+            >
+              {isSaving ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Save className="h-4 w-4" />
+              )}
+              {t("admin.form.saveDraft")}
+            </Button>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSchedule}
+              disabled={isSaving}
+              className="flex-1"
+            >
+              <Calendar className="h-4 w-4" />
+              {t("admin.form.schedule")}
+            </Button>
+            <Button
+              type="button"
+              onClick={handlePublish}
+              disabled={isSaving}
+              className="flex-1"
+            >
+              <CheckCircle className="h-4 w-4" />
+              {t("admin.form.publish")}
+            </Button>
+          </div>
         </div>
-      </div>
-
-      <Separator />
-
-      {/* Form */}
-      <Form {...form}>
-        <VerseForm />
-      </Form>
-
-      {/* Mobile Sticky Footer */}
-      <div className="fixed bottom-0 inset-x-0 border-t bg-background p-4 md:hidden z-40">
-        <div className="flex gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSaveDraft}
-            disabled={isSaving}
-            className="flex-1"
-          >
-            {isSaving ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Save className="h-4 w-4" />
-            )}
-            {t("admin.form.saveDraft")}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleSchedule}
-            disabled={isSaving}
-            className="flex-1"
-          >
-            <Calendar className="h-4 w-4" />
-            {t("admin.form.schedule")}
-          </Button>
-          <Button
-            type="button"
-            onClick={handlePublish}
-            disabled={isSaving}
-            className="flex-1"
-          >
-            <CheckCircle className="h-4 w-4" />
-            {t("admin.form.publish")}
-          </Button>
-        </div>
-      </div>
       </main>
     </div>
   );

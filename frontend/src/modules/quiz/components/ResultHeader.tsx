@@ -11,9 +11,7 @@ export function ResultHeader() {
       </div>
       <div>
         <h1 className="text-2xl font-bold">{t("result.completed")}</h1>
-        <p className="text-sm text-muted-foreground">
-          {t("result.subtitle")}
-        </p>
+        <p className="text-sm text-muted-foreground">{t("result.subtitle")}</p>
       </div>
     </div>
   );

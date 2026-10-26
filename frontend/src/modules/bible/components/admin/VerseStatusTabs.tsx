@@ -39,11 +39,7 @@ export function VerseStatusTabs({ value, onChange }: VerseStatusTabsProps) {
     >
       <TabsList className="w-full justify-start overflow-x-auto">
         {STATUS_ORDER.map((key) => (
-          <TabsTrigger
-            key={key}
-            value={key}
-            className="gap-1.5"
-          >
+          <TabsTrigger key={key} value={key} className="gap-1.5">
             {t(`admin.statuses.${key}`)}
             <Badge
               variant="secondary"

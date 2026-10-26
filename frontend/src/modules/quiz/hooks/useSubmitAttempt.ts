@@ -8,7 +8,9 @@ export function useSubmitAttempt() {
   return useMutation({
     mutationFn: (attemptId: string) => quizApi.submitAttempt(attemptId),
     onSuccess: (_data, attemptId) => {
-      void queryClient.invalidateQueries({ queryKey: quizKeys.attempt(attemptId) });
+      void queryClient.invalidateQueries({
+        queryKey: quizKeys.attempt(attemptId),
+      });
     },
   });
 }

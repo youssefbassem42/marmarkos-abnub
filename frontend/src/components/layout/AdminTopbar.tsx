@@ -54,16 +54,12 @@ export function AdminTopbar({ title, subtitle, backHref }: AdminTopbarProps) {
 
         <div className="min-w-0">
           {title ? (
-            <h1
-              className="truncate font-heading text-2xl font-bold text-ink font-arabic"
-            >
+            <h1 className="truncate font-heading text-2xl font-bold text-ink font-arabic">
               {title}
             </h1>
           ) : null}
           {subtitle ? (
-            <p
-              className="truncate text-sm text-muted-foreground font-arabic"
-            >
+            <p className="truncate text-sm text-muted-foreground font-arabic">
               {subtitle}
             </p>
           ) : null}

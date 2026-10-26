@@ -25,9 +25,7 @@ export function VerseCard({ verse }: VerseCardProps) {
         />
       )}
       <div className="p-4">
-        <h3
-          className="text-base font-bold text-ink line-clamp-1 font-arabic"
-        >
+        <h3 className="text-base font-bold text-ink line-clamp-1 font-arabic">
           {verse.title}
         </h3>
         <p

@@ -10,21 +10,17 @@ export const quizKeys = {
   quizzes: () => [...quizKeys.all, "quizzes"] as const,
   quizList: (params?: Record<string, unknown>) =>
     [...quizKeys.quizzes(), "list", params ?? {}] as const,
-  detail: (quizId: string) =>
-    [...quizKeys.quizzes(), quizId] as const,
+  detail: (quizId: string) => [...quizKeys.quizzes(), quizId] as const,
   questions: (quizId: string) =>
     [...quizKeys.quizzes(), quizId, "questions"] as const,
   validate: (quizId: string) =>
     [...quizKeys.quizzes(), quizId, "validate"] as const,
-  byVerse: (verseId: string) =>
-    [...quizKeys.all, "by-verse", verseId] as const,
+  byVerse: (verseId: string) => [...quizKeys.all, "by-verse", verseId] as const,
   analytics: (quizId: string) =>
     [...quizKeys.quizzes(), quizId, "analytics"] as const,
-  take: (quizId: string) =>
-    [...quizKeys.all, "take", quizId] as const,
+  take: (quizId: string) => [...quizKeys.all, "take", quizId] as const,
   attempts: () => [...quizKeys.all, "attempts"] as const,
-  attempt: (attemptId: string) =>
-    [...quizKeys.attempts(), attemptId] as const,
+  attempt: (attemptId: string) => [...quizKeys.attempts(), attemptId] as const,
   attemptResult: (attemptId: string) =>
     [...quizKeys.attempts(), attemptId, "result"] as const,
   attemptReview: (attemptId: string) =>

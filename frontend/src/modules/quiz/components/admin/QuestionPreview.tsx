@@ -1,12 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Eye } from "lucide-react";
 
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import type { OptionField } from "./questionSchema";
 
@@ -36,9 +31,7 @@ export function QuestionPreview({ question, options }: QuestionPreviewProps) {
           {t("admin.question.previewHint")}
         </p>
 
-        {question && (
-          <p className="font-medium">{question}</p>
-        )}
+        {question && <p className="font-medium">{question}</p>}
 
         <div className="space-y-2">
           {options.map((opt, i) => (
@@ -65,7 +58,8 @@ export function QuestionPreview({ question, options }: QuestionPreviewProps) {
         {correctIndex >= 0 && (
           <p className="text-xs text-green-600">
             {t("admin.question.correctAnswerLabel", {
-              letter: letters[correctIndex] ?? String.fromCharCode(65 + correctIndex),
+              letter:
+                letters[correctIndex] ?? String.fromCharCode(65 + correctIndex),
             })}
           </p>
         )}

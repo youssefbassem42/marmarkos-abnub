@@ -1,12 +1,13 @@
 import { useTranslation } from "react-i18next";
-import { CheckCircle2, XCircle, Lightbulb, Check, AlertTriangle } from "lucide-react";
-
 import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+  CheckCircle2,
+  XCircle,
+  Lightbulb,
+  Check,
+  AlertTriangle,
+} from "lucide-react";
+
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useQuizValidation } from "../../hooks/useQuizValidation";
 import type { QuizValidationRule } from "../../types";

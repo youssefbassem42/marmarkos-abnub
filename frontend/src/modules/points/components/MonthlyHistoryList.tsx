@@ -21,7 +21,10 @@ interface MonthlyHistoryListProps {
 
 const INITIAL_COUNT = 6;
 
-export function MonthlyHistoryList({ data, isPending }: MonthlyHistoryListProps) {
+export function MonthlyHistoryList({
+  data,
+  isPending,
+}: MonthlyHistoryListProps) {
   const { t } = useTranslation("points");
   const [expanded, setExpanded] = useState(false);
   const locale = "ar-EG";
@@ -83,7 +86,12 @@ export function MonthlyHistoryList({ data, isPending }: MonthlyHistoryListProps)
           onClick={() => setExpanded((v) => !v)}
           className="mt-4 flex items-center gap-1 text-sm font-medium text-brand-blue hover:underline"
         >
-          <ChevronLeft className={cn("h-4 w-4 transition-transform", expanded && "rotate-90")} />
+          <ChevronLeft
+            className={cn(
+              "h-4 w-4 transition-transform",
+              expanded && "rotate-90",
+            )}
+          />
           {expanded ? t("page.history") : t("page.viewAllHistory")}
         </button>
       )}

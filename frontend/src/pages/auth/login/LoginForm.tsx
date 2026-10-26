@@ -220,9 +220,7 @@ export function LoginForm({ lang }: LoginFormProps) {
       />
 
       <p
-        className={cn(
-          "text-center text-muted-foreground font-arabic text-lg",
-        )}
+        className={cn("text-center text-muted-foreground font-arabic text-lg")}
       >
         {t("noAccount")}{" "}
         <Link

@@ -13,11 +13,7 @@ export function AttendanceLayout() {
   const { t } = useTranslation("attendance");
 
   return (
-    <div
-      dir="rtl"
-      lang="ar"
-      className="min-h-screen bg-background"
-    >
+    <div dir="rtl" lang="ar" className="min-h-screen bg-background">
       <main className="flex min-h-screen flex-col lg:flex-row">
         <BrandPanel
           lang="ar"

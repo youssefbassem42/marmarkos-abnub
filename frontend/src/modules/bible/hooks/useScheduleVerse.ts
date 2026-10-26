@@ -7,10 +7,17 @@ export function useScheduleVerse() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ verseId, data }: { verseId: string; data: SchedulePayload }) =>
-      bibleApi.scheduleVerse(verseId, data),
+    mutationFn: ({
+      verseId,
+      data,
+    }: {
+      verseId: string;
+      data: SchedulePayload;
+    }) => bibleApi.scheduleVerse(verseId, data),
     onSuccess: (_data, variables) => {
-      void queryClient.invalidateQueries({ queryKey: bibleKeys.schedule(variables.verseId) });
+      void queryClient.invalidateQueries({
+        queryKey: bibleKeys.schedule(variables.verseId),
+      });
       void queryClient.invalidateQueries({ queryKey: bibleKeys.verses() });
     },
   });

@@ -28,7 +28,8 @@ interface VersePickerFieldProps {
 }
 
 const STATUS_STYLES: Record<VerseStatus, string> = {
-  PUBLISHED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
+  PUBLISHED:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
   SCHEDULED: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-400",
   DRAFT: "bg-muted text-muted-foreground",
   ARCHIVED: "bg-muted text-muted-foreground line-through",
@@ -44,8 +45,15 @@ export function VersePickerField({
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
 
-  const versesQuery = useAdminVerses({ q: search || undefined, page: 1, size: 50 });
-  const verses = useMemo(() => versesQuery.data?.items ?? [], [versesQuery.data]);
+  const versesQuery = useAdminVerses({
+    q: search || undefined,
+    page: 1,
+    size: 50,
+  });
+  const verses = useMemo(
+    () => versesQuery.data?.items ?? [],
+    [versesQuery.data],
+  );
 
   const selectedVerse = useMemo(() => {
     if (!value) return undefined;
@@ -89,7 +97,10 @@ export function VersePickerField({
           <ChevronsUpDown className="ms-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-[min(22rem,calc(100vw-2rem))] p-0">
+      <PopoverContent
+        align="start"
+        className="w-[min(22rem,calc(100vw-2rem))] p-0"
+      >
         <Command shouldFilter={false}>
           <CommandInput
             placeholder={t("admin.versePicker.search")}

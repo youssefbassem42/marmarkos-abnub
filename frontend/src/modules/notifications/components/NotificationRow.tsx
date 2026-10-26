@@ -18,10 +18,7 @@ interface NotificationRowProps {
  * trailing time block with an unread dot. Clicking marks the row read;
  * a stored CTA is followed on the same click.
  */
-export function NotificationRow({
-  item,
-  onMarkRead,
-}: NotificationRowProps) {
+export function NotificationRow({ item, onMarkRead }: NotificationRowProps) {
   const { t } = useTranslation("notifications");
   const navigate = useNavigate();
   const accent = NOTIFICATION_ACCENTS[item.type];
@@ -71,9 +68,7 @@ export function NotificationRow({
       <span className="flex shrink-0 flex-col items-end gap-1.5">
         <time
           dateTime={item.created_at}
-          className={cn(
-            "text-xs text-muted-foreground font-arabic",
-          )}
+          className={cn("text-xs text-muted-foreground font-arabic")}
         >
           {relativeTime(item.created_at, t)}
         </time>

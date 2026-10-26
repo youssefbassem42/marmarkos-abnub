@@ -47,10 +47,7 @@ export function OptionRow({
 
       <div className="flex items-center gap-2">
         <label className="flex items-center gap-1.5 text-xs text-muted-foreground">
-          <RadioGroupItem
-            value={String(index)}
-            onSelect={onCorrectChange}
-          />
+          <RadioGroupItem value={String(index)} onSelect={onCorrectChange} />
           {t("admin.question.correct")}
         </label>
       </div>

@@ -24,9 +24,7 @@ export function NotificationBell({ to, className }: NotificationBellProps) {
 
   // Locale-aware digits: Arabic renders Arabic-Indic numerals (٣), LTR
   // layouts keep Latin digits — never hand-format counts.
-  const numberFormat = new Intl.NumberFormat(
-    "ar-EG",
-  );
+  const numberFormat = new Intl.NumberFormat("ar-EG");
   const badge = unread > 99 ? "99+" : numberFormat.format(unread);
 
   return (

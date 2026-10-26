@@ -23,7 +23,8 @@ interface QuizTableProps {
 
 const STATUS_STYLES: Record<QuizStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground",
-  PUBLISHED: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  PUBLISHED:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
   ARCHIVED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 };
 
@@ -73,7 +74,9 @@ export function QuizTable({ items, isPending }: QuizTableProps) {
               {t("admin.list.colDuration")}
             </TableHead>
             <TableHead>{t("admin.list.colStatus")}</TableHead>
-            <TableHead className="text-end">{t("admin.list.colActions")}</TableHead>
+            <TableHead className="text-end">
+              {t("admin.list.colActions")}
+            </TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -91,18 +94,28 @@ export function QuizTable({ items, isPending }: QuizTableProps) {
                   {quiz.title}
                 </Link>
               </TableCell>
-              <TableCell
-                className="hidden text-muted-foreground sm:table-cell font-arabic"
-              >
+              <TableCell className="hidden text-muted-foreground sm:table-cell font-arabic">
                 {quiz.verse_reference}
               </TableCell>
-              <TableCell className="hidden md:table-cell" dir="ltr" tabular-nums>
+              <TableCell
+                className="hidden md:table-cell"
+                dir="ltr"
+                tabular-nums
+              >
                 {quiz.question_count}
               </TableCell>
-              <TableCell className="hidden md:table-cell" dir="ltr" tabular-nums>
+              <TableCell
+                className="hidden md:table-cell"
+                dir="ltr"
+                tabular-nums
+              >
                 {quiz.total_points}
               </TableCell>
-              <TableCell className="hidden lg:table-cell" dir="ltr" tabular-nums>
+              <TableCell
+                className="hidden lg:table-cell"
+                dir="ltr"
+                tabular-nums
+              >
                 {formatClock(quiz.duration_seconds)}
               </TableCell>
               <TableCell>

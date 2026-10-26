@@ -9,10 +9,7 @@ import { PointsKpiRow } from "../components/PointsKpiRow";
 import { PointsOverTimeChart } from "../components/PointsOverTimeChart";
 import { MonthlyHistoryList } from "../components/MonthlyHistoryList";
 import { RecentActivityList } from "../components/RecentActivityList";
-import {
-  useMyPoints,
-  useMonthlyPoints,
-} from "../hooks";
+import { useMyPoints, useMonthlyPoints } from "../hooks";
 
 export default function PointsPage() {
   const { t } = useTranslation("points");
@@ -35,10 +32,7 @@ export default function PointsPage() {
       className="mb-4 gap-1 font-arabic"
     >
       <Link to="/">
-        <ArrowLeft
-          className="h-4 w-4 rtl:hidden"
-          aria-hidden="true"
-        />
+        <ArrowLeft className="h-4 w-4 rtl:hidden" aria-hidden="true" />
         <ArrowLeft
           className="hidden h-4 w-4 rotate-180 rtl:block"
           aria-hidden="true"
@@ -74,14 +68,10 @@ export default function PointsPage() {
           <BackArrow />
           <div className="space-y-6">
             <div>
-              <h1
-                className="font-heading text-2xl font-bold text-ink font-arabic"
-              >
+              <h1 className="font-heading text-2xl font-bold text-ink font-arabic">
                 {t("page.title")}
               </h1>
-              <p
-                className="mt-1 text-sm text-muted-foreground font-arabic"
-              >
+              <p className="mt-1 text-sm text-muted-foreground font-arabic">
                 {t("page.subtitle")}
               </p>
             </div>
@@ -107,14 +97,10 @@ export default function PointsPage() {
         <BackArrow />
         <div className="space-y-6">
           <div>
-            <h1
-              className="font-heading text-2xl font-bold text-ink font-arabic"
-            >
+            <h1 className="font-heading text-2xl font-bold text-ink font-arabic">
               {t("page.title")}
             </h1>
-            <p
-              className="mt-1 text-sm text-muted-foreground font-arabic"
-            >
+            <p className="mt-1 text-sm text-muted-foreground font-arabic">
               {t("page.subtitle")}
             </p>
           </div>

@@ -1,5 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { toast } from "sonner";
 import {
   ChevronRight,
@@ -55,7 +60,9 @@ export default function QuizManagePage() {
   const quizByVerse = useQuizByVerse(effectiveVerseId ?? "");
 
   const quiz = effectiveQuizId ? quizById.data : quizByVerse.data;
-  const isLoading = effectiveQuizId ? quizById.isLoading : quizByVerse.isLoading;
+  const isLoading = effectiveQuizId
+    ? quizById.isLoading
+    : quizByVerse.isLoading;
   const error = effectiveQuizId ? quizById.error : quizByVerse.error;
 
   const resolvedQuizId = quiz?.id;
@@ -90,9 +97,13 @@ export default function QuizManagePage() {
   if (error || !quiz) {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
-        <p className="text-muted-foreground font-arabic">{tCommon("errors.unknown")}</p>
+        <p className="text-muted-foreground font-arabic">
+          {tCommon("errors.unknown")}
+        </p>
         <Button variant="link" asChild className="mt-2">
-          <Link to="/admin/quizzes" className="font-arabic">{t("admin.builder.backToList")}</Link>
+          <Link to="/admin/quizzes" className="font-arabic">
+            {t("admin.builder.backToList")}
+          </Link>
         </Button>
       </div>
     );

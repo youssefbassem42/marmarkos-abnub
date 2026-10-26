@@ -70,11 +70,7 @@ export function GoogleCallbackPage() {
   }, [location.hash, navigate]);
 
   return (
-    <div
-      dir="rtl"
-      lang="ar"
-      className="min-h-screen bg-background"
-    >
+    <div dir="rtl" lang="ar" className="min-h-screen bg-background">
       <Navbar variant="auth" />
 
       <main className="flex min-h-[calc(100vh-61px)] flex-col items-center justify-center gap-4 px-5 text-center">
@@ -84,24 +80,15 @@ export function GoogleCallbackPage() {
               className="h-10 w-10 animate-spin text-mint"
               aria-hidden="true"
             />
-            <p
-              className={cn(
-                "text-muted-foreground font-arabic text-lg",
-              )}
-            >
+            <p className={cn("text-muted-foreground font-arabic text-lg")}>
               جارٍ إكمال تسجيل الدخول...
             </p>
           </>
         ) : (
           <>
             <XCircle className="h-12 w-12 text-brand-red" aria-hidden="true" />
-            <p
-              className={cn(
-                "text-ink font-arabic text-xl",
-              )}
-            >
-              {errorMessage ??
-                "تعذّر إكمال تسجيل الدخول عبر Google."}
+            <p className={cn("text-ink font-arabic text-xl")}>
+              {errorMessage ?? "تعذّر إكمال تسجيل الدخول عبر Google."}
             </p>
             <Button
               asChild

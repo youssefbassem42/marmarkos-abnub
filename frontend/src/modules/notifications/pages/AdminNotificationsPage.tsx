@@ -106,11 +106,7 @@ export function AdminNotificationsPage() {
                 role="alert"
                 className="card-elevated rounded-2xl border border-border bg-card p-8 text-center"
               >
-                <p
-                  className={cn(
-                    "font-semibold text-ink font-arabic",
-                  )}
-                >
+                <p className={cn("font-semibold text-ink font-arabic")}>
                   {t("error.title")}
                 </p>
                 <p

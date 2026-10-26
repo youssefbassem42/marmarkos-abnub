@@ -58,10 +58,7 @@ export function ScheduleForm({ onSubmit, isLoading }: ScheduleFormProps) {
               <Label className="text-xs text-muted-foreground">
                 {t("admin.schedule.summary.time")}
               </Label>
-              <Input
-                type="time"
-                {...form.register("time")}
-              />
+              <Input type="time" {...form.register("time")} />
               {form.formState.errors.time && (
                 <p className="text-[0.8rem] font-medium text-destructive">
                   {form.formState.errors.time.message}

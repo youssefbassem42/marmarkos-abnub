@@ -81,10 +81,7 @@ export function AdminUserMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-44">
         <DropdownMenuItem asChild>
-          <Link
-            to="/profile"
-            className="cursor-pointer font-arabic"
-          >
+          <Link to="/profile" className="cursor-pointer font-arabic">
             <UserIcon className="me-2 h-4 w-4" aria-hidden="true" />
             {tLanding("nav.profile")}
           </Link>
@@ -102,10 +99,7 @@ export function AdminUserMenu() {
         )}
         {getUserRole() === "ADMIN" && (
           <DropdownMenuItem asChild>
-            <Link
-              to="/admin/dashboard"
-              className="cursor-pointer font-arabic"
-            >
+            <Link to="/admin/dashboard" className="cursor-pointer font-arabic">
               <LayoutDashboard className="me-2 h-4 w-4" aria-hidden="true" />
               {t("adminPanel")}
             </Link>

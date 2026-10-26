@@ -53,11 +53,7 @@ export function PasswordRequirements({
             ) : (
               <Circle className="h-4 w-4 shrink-0" aria-hidden="true" />
             )}
-            <span
-              className={cn(
-                "text-sm leading-snug font-arabic text-base",
-              )}
-            >
+            <span className={cn("text-sm leading-snug font-arabic text-base")}>
               {label}
             </span>
           </li>

@@ -59,7 +59,16 @@ type NavKey =
 
 interface SubItem {
   to: string;
-  labelKey: Extract<NavKey, "checkIn" | "history" | "verses" | "weeklyVerses" | "verseAnalytics" | "quizAnalytics" | "monthlyAnalytics">;
+  labelKey: Extract<
+    NavKey,
+    | "checkIn"
+    | "history"
+    | "verses"
+    | "weeklyVerses"
+    | "verseAnalytics"
+    | "quizAnalytics"
+    | "monthlyAnalytics"
+  >;
 }
 
 interface DisabledItem {
@@ -142,9 +151,7 @@ export function AdminSidebar() {
   return (
     <Sidebar side="right" collapsible="icon">
       <SidebarHeader>
-        <div
-          className="flex items-center gap-2 px-2 py-3 font-arabic"
-        >
+        <div className="flex items-center gap-2 px-2 py-3 font-arabic">
           <img src={logo} alt="" aria-hidden="true" className="h-10 w-auto" />
           <span className="text-sm font-bold text-ink group-data-[collapsible=icon]:hidden">
             {t("nav.section")}
