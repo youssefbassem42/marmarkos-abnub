@@ -104,11 +104,13 @@ class QuizOptionRepository:
         analytics stay stable across edits.
         """
         existing = (
-            (await self._session.execute(
-                select(QuizOption)
-                .where(QuizOption.question_id == question_id)
-                .order_by(QuizOption.position)
-            ))
+            (
+                await self._session.execute(
+                    select(QuizOption)
+                    .where(QuizOption.question_id == question_id)
+                    .order_by(QuizOption.position)
+                )
+            )
             .scalars()
             .all()
         )
@@ -137,11 +139,13 @@ class QuizOptionRepository:
         await self._session.flush()
 
         refreshed = (
-            (await self._session.execute(
-                select(QuizOption)
-                .where(QuizOption.question_id == question_id)
-                .order_by(QuizOption.position)
-            ))
+            (
+                await self._session.execute(
+                    select(QuizOption)
+                    .where(QuizOption.question_id == question_id)
+                    .order_by(QuizOption.position)
+                )
+            )
             .scalars()
             .all()
         )

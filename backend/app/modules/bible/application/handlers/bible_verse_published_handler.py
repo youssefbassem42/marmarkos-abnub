@@ -53,10 +53,7 @@ async def handle_bible_verse_published(uow: UnitOfWork, event: OutboxEvent) -> N
         schedule = await uow.verse_schedules.get_by_id(UUID(str(raw_schedule_id)))
 
     # Idempotent replay: already delivered successfully.
-    if (
-        schedule is not None
-        and schedule.notification_status is NotificationDeliveryStatus.SENT
-    ):
+    if schedule is not None and schedule.notification_status is NotificationDeliveryStatus.SENT:
         return
 
     creator = None
@@ -94,9 +91,7 @@ async def handle_bible_verse_published(uow: UnitOfWork, event: OutboxEvent) -> N
                     schedule, NotificationDeliveryStatus.FAILED
                 )
                 schedule.last_error = "email delivery failed repeatedly"
-                logger.error(
-                    "Verse publication email permanently failed for verse %s", verse_id
-                )
+                logger.error("Verse publication email permanently failed for verse %s", verse_id)
                 return
         raise RuntimeError("Verse publication email delivery failed")
 

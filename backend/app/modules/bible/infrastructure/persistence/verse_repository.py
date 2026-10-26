@@ -176,9 +176,7 @@ class BibleVerseRepository:
             select(BibleVerse.status, func.count()).group_by(BibleVerse.status)
         )
         counts = {status: int(count) for status, count in result.all()}
-        return {
-            status: counts.get(status, 0) for status in VerseStatus
-        }
+        return {status: counts.get(status, 0) for status in VerseStatus}
 
     # -- legacy helpers kept for compatibility -----------------------------
 
@@ -216,8 +214,6 @@ class BibleVerseRepository:
         return list(result.scalars().all())
 
     async def count_published(self, filters: PublishedFilters) -> int:
-        stmt = _apply_published_filters(
-            select(func.count()).select_from(BibleVerse), filters
-        )
+        stmt = _apply_published_filters(select(func.count()).select_from(BibleVerse), filters)
         result = await self._session.execute(stmt)
         return int(result.scalar_one())

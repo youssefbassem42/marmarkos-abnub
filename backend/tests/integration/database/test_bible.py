@@ -177,9 +177,7 @@ async def test_cascade_delete_removes_engagement_and_schedules(uow: UnitOfWork) 
     await uow.commit()
 
     schedules = await uow.session.execute(
-        select(VersePublicationSchedule).where(
-            VersePublicationSchedule.verse_id == verse.id
-        )
+        select(VersePublicationSchedule).where(VersePublicationSchedule.verse_id == verse.id)
     )
     views = await uow.session.execute(select(VerseView).where(VerseView.verse_id == verse.id))
     assert schedules.first() is None

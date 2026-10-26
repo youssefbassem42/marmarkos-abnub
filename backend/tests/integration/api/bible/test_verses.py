@@ -14,7 +14,9 @@ from tests.utils import bearer, create_user_direct, login, register_and_login
 VERSES_URL = "/api/v1/bible-verses"
 
 
-async def _servant_token(client: AsyncClient, db_engine, email: str = "verse-servant@example.com") -> str:
+async def _servant_token(
+    client: AsyncClient, db_engine, email: str = "verse-servant@example.com"
+) -> str:
     await create_user_direct(engine=db_engine, email=email, role_name=RoleName.SERVANT)
     auth = await login(client, email=email)
     return auth["access_token"]
@@ -115,7 +117,9 @@ async def test_publish_patch_archive_restore_flow(client: AsyncClient, db_engine
     assert invalid.json()["detail"]["code"] == "invalid_status_transition"
 
 
-async def test_draft_invisible_to_member_but_visible_to_manager(client: AsyncClient, db_engine) -> None:
+async def test_draft_invisible_to_member_but_visible_to_manager(
+    client: AsyncClient, db_engine
+) -> None:
     servant_token = await _servant_token(client, db_engine)
     verse = await _create_verse(client, servant_token)
 
@@ -123,9 +127,7 @@ async def test_draft_invisible_to_member_but_visible_to_manager(client: AsyncCli
     member_token = member_auth["access_token"]
 
     # BR-3: 404, never 403 — never leak existence.
-    response = await client.get(
-        f"{VERSES_URL}/{verse['id']}", headers=bearer(member_token)
-    )
+    response = await client.get(f"{VERSES_URL}/{verse['id']}", headers=bearer(member_token))
     assert response.status_code == 404
 
     manager_response = await client.get(

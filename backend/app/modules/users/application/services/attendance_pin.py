@@ -48,12 +48,11 @@ def hash_attendance_pin(pin: str) -> str:
     raw_pepper = settings.ATTENDANCE_PIN_PEPPER
     if not raw_pepper:
         import logging
+
         logging.getLogger(__name__).warning(
             "ATTENDANCE_PIN_PEPPER is not set; falling back to a JWT_SECRET derivative. "
             "Set a dedicated ATTENDANCE_PIN_PEPPER so PIN hashes survive JWT rotation."
         )
-        raw_pepper = hashlib.sha256(
-            f"attendance-pin:{settings.JWT_SECRET}".encode()
-        ).hexdigest()
+        raw_pepper = hashlib.sha256(f"attendance-pin:{settings.JWT_SECRET}".encode()).hexdigest()
     pepper = hashlib.sha256(f"attendance-pin:{raw_pepper}".encode()).hexdigest()
     return hashlib.sha256(f"{pepper}:{pin}".encode()).hexdigest()

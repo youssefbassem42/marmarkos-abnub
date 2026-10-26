@@ -66,9 +66,7 @@ def _apply_fields(verse: BibleVerse, payload: VerseCreateRequest | VerseUpdateRe
             setattr(verse, field, value)
 
 
-async def create_verse(
-    uow: UnitOfWork, actor: User, payload: VerseCreateRequest
-) -> BibleVerse:
+async def create_verse(uow: UnitOfWork, actor: User, payload: VerseCreateRequest) -> BibleVerse:
     """BR-1/BR-2: validated creation; optional immediate publication."""
     assert_manager(actor)
     verse = BibleVerse(
@@ -128,9 +126,7 @@ async def update_verse(
     return verse
 
 
-async def archive_verse(
-    uow: UnitOfWork, actor: User, verse_id: uuid.UUID
-) -> BibleVerse:
+async def archive_verse(uow: UnitOfWork, actor: User, verse_id: uuid.UUID) -> BibleVerse:
     """D-11: DELETE is an archive; BR-6 cascades the quiz to ARCHIVED."""
     assert_manager(actor)
     verse = await uow.bible_verses.get_by_id(verse_id)
@@ -147,9 +143,7 @@ async def archive_verse(
     return verse
 
 
-async def restore_verse(
-    uow: UnitOfWork, actor: User, verse_id: uuid.UUID
-) -> BibleVerse:
+async def restore_verse(uow: UnitOfWork, actor: User, verse_id: uuid.UUID) -> BibleVerse:
     """ARCHIVED → DRAFT (D-11 restore path)."""
     assert_manager(actor)
     verse = await uow.bible_verses.get_by_id(verse_id)
@@ -196,9 +190,7 @@ async def publish_verse_now(
     return verse
 
 
-async def cancel_schedule(
-    uow: UnitOfWork, actor: User, verse_id: uuid.UUID
-) -> BibleVerse:
+async def cancel_schedule(uow: UnitOfWork, actor: User, verse_id: uuid.UUID) -> BibleVerse:
     """Cancel the active schedule; the verse returns to DRAFT (BR-9)."""
     assert_manager(actor)
     verse = await uow.bible_verses.get_by_id(verse_id)

@@ -38,9 +38,7 @@ async def require_cron_or_admin(
     x_cron_secret: Annotated[
         str | None, Header(description="Shared secret matching CRON_SECRET")
     ] = None,
-    credentials: Annotated[
-        HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)
-    ] = None,
+    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)] = None,
     session: Annotated[AsyncSession | None, Depends(get_db_session)] = None,
 ) -> User | None:
     """Return the acting ADMIN user, or ``None`` for a valid cron call."""

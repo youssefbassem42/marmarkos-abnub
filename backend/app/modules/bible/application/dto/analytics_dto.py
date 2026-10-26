@@ -51,9 +51,7 @@ class VerseAnalyticsResponse(BaseModel):
     total_reads: int = Field(ge=0, description="Unique member readers")
     unique_readers: int = Field(ge=0, description="Distinct member readers")
     read_rate: float = Field(description="unique_readers / unique_opens × 100")
-    series: list[EngagementSeriesPoint] = Field(
-        description="Gap-filled opens/reads per bucket"
-    )
+    series: list[EngagementSeriesPoint] = Field(description="Gap-filled opens/reads per bucket")
     quiz: RelatedQuizSummary | None = Field(default=None, description="Related quiz performance")
 
 

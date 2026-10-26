@@ -102,11 +102,7 @@ class AbsenceCalculationService:
         )
 
         # Count query (no ORDER BY / LIMIT for correctness).
-        count_stmt = (
-            select(func.count())
-            .select_from(User)
-            .where(*base_where)
-        )
+        count_stmt = select(func.count()).select_from(User).where(*base_where)
         absent_count = int((await self._session.execute(count_stmt)).scalar_one())
 
         # Paginated data query.
@@ -121,8 +117,7 @@ class AbsenceCalculationService:
 
         result = await self._session.execute(data_stmt)
         absent_users = [
-            AbsentUserDTO(user_id=user.id, **self._display(user))
-            for user in result.scalars().all()
+            AbsentUserDTO(user_id=user.id, **self._display(user)) for user in result.scalars().all()
         ]
 
         return absent_count, absent_users

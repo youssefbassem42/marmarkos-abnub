@@ -5,7 +5,6 @@ are counted, never raised — the tick answers 200 with counters so a cron
 monitor only sees real outages.
 """
 
-
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 
@@ -49,9 +48,7 @@ async def scheduler_tick(actor: CronOrAdmin) -> SchedulerTickResponse:
     """
     _ = actor
 
-    publication = await publish_due(
-        async_session_factory, limit=settings.SCHEDULER_TICK_MAX_BATCH
-    )
+    publication = await publish_due(async_session_factory, limit=settings.SCHEDULER_TICK_MAX_BATCH)
     delivery = await dispatch_pending(
         async_session_factory, limit=settings.SCHEDULER_TICK_MAX_BATCH
     )

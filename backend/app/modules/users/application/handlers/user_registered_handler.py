@@ -34,9 +34,7 @@ async def handle_user_registered(uow: UnitOfWork, event: OutboxEvent) -> None:
     if ok:
         return
     if event.attempts >= MAX_WELCOME_ATTEMPTS - 1:
-        logger.error(
-            "Welcome email permanently failed for %s; dropping event %s", email, event.id
-        )
+        logger.error("Welcome email permanently failed for %s; dropping event %s", email, event.id)
         return
     raise RuntimeError("Welcome email delivery failed")
 

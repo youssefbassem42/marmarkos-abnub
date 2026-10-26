@@ -27,9 +27,7 @@ from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 logger = logging.getLogger(__name__)
 
 
-async def create_quiz(
-    uow: UnitOfWork, actor: User, payload: CreateQuizRequest
-) -> Quiz:
+async def create_quiz(uow: UnitOfWork, actor: User, payload: CreateQuizRequest) -> Quiz:
     """BR-18: exactly one quiz per verse; 409 when one already exists."""
     assert_manager(actor)
     if await uow.bible_verses.get_by_id(payload.verse_id) is None:
@@ -88,7 +86,9 @@ def _check_publishable(quiz: Quiz, question_count: int) -> list[QuizValidationRu
         QuizValidationRule(
             code="has_questions",
             passed=question_count >= 1,
-            detail="At least one question is required" if question_count == 0 else "Questions present",
+            detail=(
+                "At least one question is required" if question_count == 0 else "Questions present"
+            ),
         ),
         QuizValidationRule(
             code="has_options",
@@ -119,9 +119,7 @@ async def _publish(quiz: Quiz, uow: UnitOfWork) -> None:
     await uow.quizzes.set_status(quiz, QuizStatus.PUBLISHED)
 
 
-async def publish_quiz(
-    uow: UnitOfWork, actor: User, quiz_id: uuid.UUID
-) -> Quiz:
+async def publish_quiz(uow: UnitOfWork, actor: User, quiz_id: uuid.UUID) -> Quiz:
     """BR-21: DRAFT → PUBLISHED only when the readiness gate passes."""
     assert_manager(actor)
     quiz = await _get_quiz(uow, quiz_id)

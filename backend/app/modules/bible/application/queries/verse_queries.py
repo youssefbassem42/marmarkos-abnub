@@ -58,9 +58,7 @@ async def verse_stats_query(uow: UnitOfWork) -> VerseStatsResponse:
     )
 
 
-async def _quiz_state_map(
-    uow: UnitOfWork, verse_ids: list[uuid.UUID]
-) -> dict[uuid.UUID, _QuizRef]:
+async def _quiz_state_map(uow: UnitOfWork, verse_ids: list[uuid.UUID]) -> dict[uuid.UUID, _QuizRef]:
     """One grouped lookup of quiz presence/status per page of verses."""
     from sqlalchemy import select
 
@@ -92,8 +90,7 @@ async def _schedule_map(
         .subquery()
     )
     rows = await uow.session.execute(
-        select(VersePublicationSchedule)
-        .join(
+        select(VersePublicationSchedule).join(
             latest,
             (VersePublicationSchedule.verse_id == latest.c.vid)
             & (VersePublicationSchedule.created_at == latest.c.max_created),
@@ -115,9 +112,7 @@ async def verse_list_query(
         sort=params.sort,
         order=params.order,
     )
-    verses = await uow.bible_verses.list_for_manager(
-        filters, limit=page.size, offset=page.offset
-    )
+    verses = await uow.bible_verses.list_for_manager(filters, limit=page.size, offset=page.offset)
     total = await uow.bible_verses.count_for_manager(filters)
 
     verse_ids = [verse.id for verse in verses]
@@ -192,9 +187,7 @@ def _card_quiz_state(
         return None
     attempt = attempts.get(quiz.quiz_id)
     if attempt is not None:
-        return (
-            "completed" if attempt.status != AttemptStatus.IN_PROGRESS else "in_progress"
-        )
+        return "completed" if attempt.status != AttemptStatus.IN_PROGRESS else "in_progress"
     if verse_id not in read_map:
         return "locked_read_required"
     return "available"

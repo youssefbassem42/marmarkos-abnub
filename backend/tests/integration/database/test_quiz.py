@@ -113,7 +113,12 @@ async def test_partial_unique_index_blocks_two_correct_options(uow: UnitOfWork) 
     with pytest.raises(IntegrityError):
         async with UnitOfWork.create(async_session_factory) as second:
             second.session.add(
-                QuizOption(question_id=question.id, option_text="Extra", is_correct=True, position=4)
+                QuizOption(
+                    question_id=question.id,
+                    option_text="Extra",
+                    is_correct=True,
+                    position=4,
+                )
             )
             await second.commit()
 
@@ -420,13 +425,7 @@ async def test_answer_upsert_keeps_one_row_per_question(uow: UnitOfWork) -> None
     )
     await uow.quiz_attempts.add(attempt)
     await uow.commit()
-    correct_option_id = (
-        (
-            await uow.session.execute(
-                select_correct_option(question.id)
-            )
-        ).scalar_one()
-    )
+    correct_option_id = (await uow.session.execute(select_correct_option(question.id))).scalar_one()
 
     first_at = await uow.quiz_answers.upsert(attempt.id, question.id, correct_option_id)
     other_option_id = (

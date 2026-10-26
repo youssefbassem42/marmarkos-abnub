@@ -84,9 +84,7 @@ async def _apply_options(
     await uow.quiz_options.replace_for_question(question_id, desired)
 
 
-async def delete_question(
-    uow: UnitOfWork, actor: User, question_id: uuid.UUID
-) -> None:
+async def delete_question(uow: UnitOfWork, actor: User, question_id: uuid.UUID) -> None:
     """Hard delete; questions are not user-visible history."""
     assert_manager(actor)
     question = await _get_quiz_question(uow, question_id)
@@ -95,9 +93,7 @@ async def delete_question(
     await uow.quizzes.recompute_total_points(quiz_id)
 
 
-async def duplicate_question(
-    uow: UnitOfWork, actor: User, question_id: uuid.UUID
-) -> QuizQuestion:
+async def duplicate_question(uow: UnitOfWork, actor: User, question_id: uuid.UUID) -> QuizQuestion:
     """Append a copy of the question (and options) at the end."""
     assert_manager(actor)
     question = await _get_quiz_question(uow, question_id)
@@ -134,8 +130,6 @@ async def reorder_questions(
         raise NotFoundError("Quiz not found")
     existing = await uow.quiz_questions.list_for_quiz(quiz_id)
     existing_ids = {q.id for q in existing}
-    if set(payload.question_ids) != existing_ids or len(payload.question_ids) != len(
-        existing_ids
-    ):
+    if set(payload.question_ids) != existing_ids or len(payload.question_ids) != len(existing_ids):
         raise InvalidReorderError("question_ids must be a permutation of the quiz's questions")
     await uow.quiz_questions.reorder(quiz_id, payload.question_ids)

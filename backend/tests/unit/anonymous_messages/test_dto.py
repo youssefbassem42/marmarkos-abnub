@@ -79,9 +79,7 @@ def test_message_is_stripped_before_the_length_check() -> None:
         ),
     ],
 )
-def test_invalid_input_is_a_validation_error_not_a_crash(
-    payload: dict, expected_type: str
-) -> None:
+def test_invalid_input_is_a_validation_error_not_a_crash(payload: dict, expected_type: str) -> None:
     # A TypeError escaping here is the bug this module exists to prevent: it
     # becomes a 500 instead of a 422.
     with pytest.raises(ValidationError) as excinfo:

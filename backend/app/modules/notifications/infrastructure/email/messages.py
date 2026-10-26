@@ -94,9 +94,7 @@ def notification_email(
     return BrandEmailContent(
         subject=f"{title_ar} — {_BRAND_EN}",
         preheader=message_ar,
-        sections=(
-            EmailSection(heading=_esc(title_ar), paragraphs=(_esc(message_ar),), rtl=True),
-        ),
+        sections=(EmailSection(heading=_esc(title_ar), paragraphs=(_esc(message_ar),), rtl=True),),
         cta_label=cta_label,
         cta_url=cta_url,
     )

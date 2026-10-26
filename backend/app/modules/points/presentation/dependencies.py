@@ -9,6 +9,4 @@ from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.infrastructure.persistence.models import User
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
-AnalyticsViewer = Annotated[
-    User, Depends(require_role(RoleName.ADMIN, RoleName.SERVANT))
-]
+AnalyticsViewer = Annotated[User, Depends(require_role(RoleName.ADMIN, RoleName.SERVANT))]

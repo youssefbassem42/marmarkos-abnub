@@ -44,9 +44,7 @@ class QuizAnswerRepository:
 
     async def delete_for_attempt(self, attempt_id: uuid.UUID) -> None:
         """Wipe all answers for an abandoned attempt (ghost recovery)."""
-        await self._session.execute(
-            delete(QuizAnswer).where(QuizAnswer.attempt_id == attempt_id)
-        )
+        await self._session.execute(delete(QuizAnswer).where(QuizAnswer.attempt_id == attempt_id))
 
     async def grade_bulk(
         self,

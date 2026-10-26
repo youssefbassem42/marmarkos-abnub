@@ -72,7 +72,9 @@ async def test_unset_secret_without_bearer_is_scheduler_disabled(client: AsyncCl
     assert response.json()["detail"]["code"] == "scheduler_disabled"
 
 
-async def test_correct_secret_publishes_and_returns_counters(client: AsyncClient, db_engine) -> None:
+async def test_correct_secret_publishes_and_returns_counters(
+    client: AsyncClient, db_engine
+) -> None:
     secret = "tick-secret-123"
     settings.CRON_SECRET = secret
     try:
