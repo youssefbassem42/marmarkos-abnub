@@ -161,4 +161,7 @@ async def test_blog_post_consumer_creates_broadcast_with_cta(
     assert rows[0].data["cta_url"].endswith("/blog/new-hope")
 
     assert {content.subject for _, content in captured_emails}
-    assert all("New post" in c.subject for _, c in captured_emails)
+    # The platform ships Arabic copy only (the English bundle was removed in
+    # the Arabic-only i18n change), so the broadcast subject is the Arabic one.
+    assert all("منشور جديد" in c.subject for _, c in captured_emails)
+    assert all("رجاء جديد" in c.subject for _, c in captured_emails)

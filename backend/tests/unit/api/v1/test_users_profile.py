@@ -199,7 +199,18 @@ async def test_avatar_upload_sets_url_when_configured(client: AsyncClient) -> No
     assert response.json()["avatar"] == "https://res.cloudinary.com/demo/avatar.jpg"
 
 
-async def test_avatar_upload_rejected_without_cloudinary(client: AsyncClient) -> None:
+async def test_avatar_upload_rejected_without_cloudinary(
+    client: AsyncClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    # Force the "image uploads are not configured" branch explicitly, so the
+    # test never depends on the ambient environment (and can never reach the
+    # real Cloudinary API).
+    from app.config import settings
+
+    monkeypatch.setattr(settings, "CLOUDINARY_CLOUD_NAME", None)
+    monkeypatch.setattr(settings, "CLOUDINARY_API_KEY", None)
+    monkeypatch.setattr(settings, "CLOUDINARY_API_SECRET", None)
+
     auth, _ = await register_and_login(client)
     headers = bearer(auth["access_token"])
 

@@ -28,9 +28,7 @@ from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 async def _scheduled_verse_with_creator(db_engine) -> tuple:
     from tests.utils import create_user_direct
 
-    creator_id = await create_user_direct(
-        engine=db_engine, email="creator@example.com"
-    )
+    creator_id = await create_user_direct(engine=db_engine, email="creator@example.com")
     async with UnitOfWork.create(async_session_factory) as uow:
         verse = BibleVerse(
             title="Psalm 23",
@@ -63,6 +61,10 @@ async def test_publication_sends_exactly_one_email_and_one_notification(
 
     await register_and_login(client, email="member-feed@example.com")
 
+    # The registration queued a `user.registered` outbox event of its own;
+    # drain it so the assertions below only observe the publication event.
+    await dispatch_pending(async_session_factory)
+
     await _scheduled_verse_with_creator(db_engine)
     counters = await publish_due(async_session_factory)
     assert counters["published"] == 1
@@ -77,8 +79,10 @@ async def test_publication_sends_exactly_one_email_and_one_notification(
     assert len(captured_emails) == emails_before + 1
     to_email, content = captured_emails[-1]
     assert to_email == "creator@example.com"
-    assert "published" in content.subject.lower()
-    assert any("Psalm 23" in paragraph for paragraph in content.sections[1].paragraphs)
+    # The platform ships Arabic copy only, so the subject is the Arabic one.
+    assert "تم نشر" in content.subject
+    paragraphs = [p for section in content.sections for p in section.paragraphs]
+    assert any("Psalm 23" in p for p in paragraphs)
 
     # Re-running the dispatcher sends nothing more (idempotent handler).
     again = await dispatch_pending(async_session_factory)

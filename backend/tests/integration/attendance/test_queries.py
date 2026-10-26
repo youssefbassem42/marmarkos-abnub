@@ -203,7 +203,18 @@ async def test_monthly_statistics(
     expected_total = sum(attended_per_user.values())
     assert stats.total_attendance == expected_total
     assert stats.average_attendance == round(expected_total / len(held), 2)
-    assert stats.attendance_rate == round(expected_total * 100 / (5 * len(held)), 2)
+
+    # BR-4: the expected population is computed *per meeting week* (a member
+    # who registered during the month is not expected at the earlier
+    # meetings), so the monthly rate uses the sum of the per-meeting
+    # expected counts - not a constant roster size.
+    expected_by_meeting = {
+        meeting: await AbsenceCalculationService(db_session).calculate_expected_count(meeting)
+        for meeting in held
+    }
+    expected_denominator = sum(expected_by_meeting.values())
+    assert expected_denominator > 0
+    assert stats.attendance_rate == round(expected_total * 100 / expected_denominator, 2)
 
     assert stats.distinct_attendees == 3
     assert stats.no_attendance_count == 2

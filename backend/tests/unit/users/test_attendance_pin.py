@@ -14,6 +14,7 @@ from app.modules.users.application.services.attendance_pin import (
 @pytest.fixture(autouse=True)
 def _stable_secret(monkeypatch: MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "JWT_SECRET", "test-secret")
+    monkeypatch.setattr(settings, "ATTENDANCE_PIN_PEPPER", "test-attendance-pepper")
 
 
 def test_five_digits_are_accepted():
@@ -36,9 +37,25 @@ def test_hash_is_deterministic_and_peppered(_baseline_hash: str):
     assert _baseline_hash == hash_attendance_pin("42424")
     assert _baseline_hash != hash_attendance_pin("42425")
 
+    # The dedicated pepper drives the hash: changing it invalidates every PIN.
     with MonkeyPatch().context() as mp:
-        mp.setattr(settings, "JWT_SECRET", "other-secret")
+        mp.setattr(settings, "ATTENDANCE_PIN_PEPPER", "other-pepper")
         assert hash_attendance_pin("42424") != _baseline_hash
+
+
+def test_dedicated_pepper_decouples_the_pin_from_the_jwt_secret(_baseline_hash: str):
+    """Rotating JWT_SECRET must not invalidate the members' attendance PINs."""
+    with MonkeyPatch().context() as mp:
+        mp.setattr(settings, "JWT_SECRET", "rotated-jwt-secret")
+        assert hash_attendance_pin("42424") == _baseline_hash
+
+
+def test_legacy_fallback_pepper_follows_the_jwt_secret(monkeypatch: MonkeyPatch):
+    """Without a dedicated pepper the legacy fallback is derived from JWT_SECRET."""
+    monkeypatch.setattr(settings, "ATTENDANCE_PIN_PEPPER", "")
+    legacy = hash_attendance_pin("42424")
+    monkeypatch.setattr(settings, "JWT_SECRET", "rotated-jwt-secret")
+    assert hash_attendance_pin("42424") != legacy
 
 
 def test_hash_is_hex_sha256_length():

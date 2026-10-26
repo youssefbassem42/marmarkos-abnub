@@ -83,7 +83,6 @@ async def _auth_headers(client: AsyncClient) -> dict[str, str]:
     from app.core.database import async_session_factory
 
     async with async_session_factory() as session:
-
         result = await session.execute(
             text("SELECT id FROM users WHERE email = :e"),
             {"e": "querycount-admin@test.com"},
@@ -138,13 +137,11 @@ async def test_quiz_analytics_overview_query_count(
 
 
 @pytest.mark.asyncio
-async def test_monthly_analytics_query_count(
-    client: AsyncClient, _auth_headers: dict[str, str]
-):
+async def test_monthly_analytics_query_count(client: AsyncClient, _auth_headers: dict[str, str]):
     """GET /quiz-analytics/monthly (2-month trend) should use <= 12 queries."""
     async with count_queries() as get_count:
         resp = await client.get(
-            "/api/v1/quiz-analytics/monthly?year=2026&month=9",
+            "/api/v1/quiz-analytics/monthly?month=2026-09",
             headers=_auth_headers,
         )
     assert resp.status_code == 200
@@ -154,13 +151,35 @@ async def test_monthly_analytics_query_count(
 
 
 @pytest.mark.asyncio
-async def test_monthly_export_query_count(
+async def test_monthly_analytics_accepts_legacy_year_month_shape(
     client: AsyncClient, _auth_headers: dict[str, str]
 ):
+    """The deprecated `?year=2026&month=9` shape still resolves (one release)."""
+    resp = await client.get(
+        "/api/v1/quiz-analytics/monthly?year=2026&month=9",
+        headers=_auth_headers,
+    )
+    assert resp.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_monthly_analytics_rejects_an_unparsable_month(
+    client: AsyncClient, _auth_headers: dict[str, str]
+):
+    """A month that is neither YYYY-MM nor a legacy number is a 422."""
+    resp = await client.get(
+        "/api/v1/quiz-analytics/monthly?month=not-a-month",
+        headers=_auth_headers,
+    )
+    assert resp.status_code == 422
+
+
+@pytest.mark.asyncio
+async def test_monthly_export_query_count(client: AsyncClient, _auth_headers: dict[str, str]):
     """GET /quiz-analytics/monthly/export should use <= 10 queries."""
     async with count_queries() as get_count:
         resp = await client.get(
-            "/api/v1/quiz-analytics/monthly/export?year=2026&month=9",
+            "/api/v1/quiz-analytics/monthly/export?month=2026-09",
             headers=_auth_headers,
         )
     # Export returns CSV (200) or empty (204)

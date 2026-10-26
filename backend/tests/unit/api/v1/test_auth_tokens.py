@@ -49,7 +49,10 @@ async def test_refresh_rotates_refresh_token(client: AsyncClient) -> None:
     new_token = client.cookies.get("refresh_token")
     assert new_token and new_token != old_token
 
-    reuse = await client.post(REFRESH_URL, cookies={"refresh_token": old_token})
+    # httpx >= 0.28 deprecates per-request cookies: set the stale token on
+    # the client jar instead (same request, no deprecation warning).
+    client.cookies.set("refresh_token", old_token)
+    reuse = await client.post(REFRESH_URL)
     assert reuse.status_code == 401
 
 
@@ -70,7 +73,8 @@ async def test_logout_revokes_refresh_token(client: AsyncClient) -> None:
     assert response.status_code == 200
     assert client.cookies.get("refresh_token") is None
 
-    reuse = await client.post(REFRESH_URL, cookies={"refresh_token": token})
+    client.cookies.set("refresh_token", token)
+    reuse = await client.post(REFRESH_URL)
     assert reuse.status_code == 401
 
 

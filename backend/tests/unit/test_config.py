@@ -16,7 +16,9 @@ def test_settings_defaults(monkeypatch: pytest.MonkeyPatch) -> None:
 
     assert settings.APP_NAME == "Marmarkos ABNUB API"
     assert settings.APP_ENV == "development"
-    assert settings.DEBUG is True
+    # Debug mode is opt-in: the default must stay False so a deployment can
+    # never leak internals by accident.
+    assert settings.DEBUG is False
     assert settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES == 30
     assert settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS == 30
     assert settings.CORS_ORIGINS == "http://localhost:5173"

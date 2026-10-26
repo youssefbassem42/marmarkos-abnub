@@ -68,8 +68,16 @@ def test_is_absence_final_before_and_after_cutoff():
     assert after.is_absence_final(open_meeting) is True
 
 
-def test_week_closed_boundary_is_wednesday_2359_in_utc():
+def test_week_closed_boundary_is_the_start_of_the_next_day_in_utc():
+    """The meeting week closes at 00:00 of the day after the week end.
+
+    The bound is exclusive on purpose: a member registered at Wednesday
+    23:59:30 must already belong to that week's expected population, which
+    an inclusive 23:59 bound would miss.
+    """
     meeting = date(2026, 8, 20)  # Thursday; week ends Wednesday 2026-08-26.
     closed_at = AbsenceCalculationService(None)._week_closed_at(meeting)  # type: ignore[arg-type]
-    expected = local_datetime(date(2026, 8, 26), "23:59").astimezone(UTC)
+    expected = local_datetime(date(2026, 8, 27), "00:00").astimezone(UTC)
     assert closed_at == expected
+    # The old inclusive bound (Wed 23:59) is one minute too early.
+    assert closed_at > local_datetime(date(2026, 8, 26), "23:59").astimezone(UTC)
