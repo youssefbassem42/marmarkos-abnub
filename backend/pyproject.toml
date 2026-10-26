@@ -19,12 +19,15 @@ dependencies = [
     "asyncpg>=0.30",
     "alembic>=1.14",
 
-    "python-jose[cryptography]>=3.3",
-    "passlib[bcrypt]>=1.7",
+    # PyJWT replaces python-jose (PYSEC-2026-4298): the app only signs and
+    # verifies HS256 tokens, so the swap keeps every existing token valid.
+    "PyJWT>=2.9",
     "bcrypt>=4.2",
     "python-multipart>=0.0.20",
 
     "httpx>=0.28",
+    # Transitive of httpx; floor raised past PYSEC-2026-4320.
+    "certifi>=2026.10.19",
     "segno>=1.6",
 
     "email-validator>=2.2",
@@ -42,7 +45,6 @@ dev = [
     "pytest-cov>=6.0",
     "ruff>=0.9",
     "mypy>=1.14",
-    "types-python-jose>=1.3",
     "httpx>=0.28"
 ]
 

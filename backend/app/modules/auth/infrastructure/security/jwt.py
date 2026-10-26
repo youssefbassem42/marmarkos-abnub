@@ -1,7 +1,8 @@
 import uuid
 from datetime import UTC, datetime, timedelta
 
-from jose import JWTError, jwt
+import jwt
+from jwt import PyJWTError
 
 from app.config import settings
 from app.core.exceptions import UnauthorizedError
@@ -37,7 +38,7 @@ class JWTService:
     def decode_access_token(self, token: str) -> uuid.UUID:
         try:
             payload = jwt.decode(token, self._secret, algorithms=[self._algorithm])
-        except JWTError as exc:
+        except PyJWTError as exc:
             raise UnauthorizedError("Invalid or expired token") from exc
         subject = payload.get("sub")
         if subject is None or payload.get("type") != ACCESS_TOKEN_TYPE:

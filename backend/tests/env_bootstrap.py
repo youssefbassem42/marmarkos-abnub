@@ -36,8 +36,10 @@ os.environ["APP_ENV"] = "test"
 os.environ.setdefault(
     "DATABASE_URL", "postgresql+asyncpg://marmarkos:marmarkos@localhost:55432/marmarkos_test"
 )
-os.environ.setdefault("JWT_SECRET", "test-jwt-secret")
-os.environ.setdefault("JWT_REFRESH_SECRET", "test-jwt-refresh-secret")
+# HS256 keys must be at least 32 bytes (RFC 7518 §3.2); PyJWT warns about
+# shorter ones, and a short key is exactly what the audit flagged.
+os.environ.setdefault("JWT_SECRET", "test-jwt-secret-0123456789-0123456789")
+os.environ.setdefault("JWT_REFRESH_SECRET", "test-jwt-refresh-secret-0123456789-0123456789")
 # Hard assignment (not setdefault): no test may ever open a real mail socket.
 os.environ["MAIL_PROVIDER"] = "console"
 

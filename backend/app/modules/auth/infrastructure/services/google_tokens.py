@@ -2,7 +2,7 @@
 
 The browser is redirected to Google, Google returns an authorization code to
 ``GET /api/v1/auth/google/callback``, and the backend exchanges that code —
-so the client secret never reaches the frontend. Only httpx + python-jose are
+so the client secret never reaches the frontend. Only httpx + PyJWT are
 used; no extra SDK dependency.
 """
 
@@ -12,8 +12,8 @@ from typing import Any
 from urllib.parse import urlencode
 
 import httpx
-from jose import jwt as jose_jwt
-from jose.exceptions import JOSEError
+import jwt
+from jwt import PyJWTError
 
 from app.config import settings
 from app.core.exceptions import ForbiddenError, UnauthorizedError
@@ -103,8 +103,10 @@ async def exchange_google_code(code: str, redirect_uri: str) -> GoogleIdentity:
         raise UnauthorizedError("Google did not return an identity")
 
     try:
-        claims = jose_jwt.get_unverified_claims(id_token)
-    except JOSEError as exc:
+        # The token came straight from Google's token endpoint over TLS, so
+        # the claims are read without re-verifying the signature.
+        claims = jwt.decode(id_token, options={"verify_signature": False})
+    except PyJWTError as exc:
         logger.warning("Could not parse Google ID token claims: %s", exc)
         raise UnauthorizedError("Could not complete Google sign-in") from exc
 
