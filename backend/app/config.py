@@ -2,6 +2,7 @@
 
 import os
 
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -158,6 +159,27 @@ class Settings(BaseSettings):
     QUIZ_ANALYTICS_MAX_PAGE_SIZE: int = 100
     POINTS_HISTORY_MAX_MONTHS: int = 24
     ANALYTICS_EXPORT_MAX_ROWS: int = 5000
+
+    @model_validator(mode="after")
+    def _production_requirements(self) -> "Settings":
+        """Refuse to start a production deployment with a weak setup.
+
+        The attendance-PIN pepper falls back to a derivative of
+        ``JWT_SECRET`` when it is empty. That is fine for a legacy
+        deployment, but in production the two secrets must be independent:
+        rotating the JWT secret would otherwise invalidate every member's
+        PIN. A production deployment without a dedicated pepper must not
+        start at all (SEC-006).
+        """
+        if self.APP_ENV.strip().lower() in ("production", "prod") and not (
+            self.ATTENDANCE_PIN_PEPPER.strip()
+        ):
+            raise ValueError(
+                "ATTENDANCE_PIN_PEPPER must be set in production: without it the PIN "
+                "hashes depend on JWT_SECRET and a JWT rotation would invalidate every "
+                "member's attendance PIN."
+            )
+        return self
 
     model_config = SettingsConfigDict(
         env_file=_dotenv_file(),

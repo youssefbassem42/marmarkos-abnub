@@ -80,11 +80,10 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
       onSuccess(values.email);
     } catch (error) {
       if (error instanceof ApiError) {
-        if (error.status === 409) {
-          setSubmitError(t("apiErrors.emailTaken"));
-        } else {
-          setSubmitError(t("apiErrors.registrationFailed"));
-        }
+        // The API answers 202 with a fixed body for every address (it
+        // must not reveal which addresses exist), so a duplicate no
+        // longer arrives as 409 - only real failures reach this branch.
+        setSubmitError(t("apiErrors.registrationFailed"));
       } else {
         setSubmitError(t("apiErrors.networkError"));
       }

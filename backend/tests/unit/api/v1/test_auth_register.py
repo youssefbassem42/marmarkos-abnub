@@ -1,17 +1,43 @@
 from uuid import UUID
 
 from httpx import AsyncClient
-from sqlalchemy import select
+from sqlalchemy import NullPool, select
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
+from sqlalchemy.orm import selectinload
 
+from app.config import settings
+from app.core.database import sanitize_database_url
 from app.modules.auth.infrastructure.security import verify_password
 from app.modules.users.domain.enums.role_name import RoleName
+from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.infrastructure.persistence.models import Role, User
 from tests.utils import REGISTER_URL, register_user
+
+REGISTER_MESSAGE = "If this address can be registered, a verification email has been sent"
+
+
+async def _registered_user(email: str) -> User:
+    """The account as it is stored, read back with its role loaded."""
+    engine = create_async_engine(sanitize_database_url(settings.DATABASE_URL), poolclass=NullPool)
+    try:
+        session_factory = async_sessionmaker(engine, expire_on_commit=False)
+        async with session_factory() as session:
+            user = (
+                await session.execute(
+                    select(User).where(User.email == email.lower()).options(selectinload(User.role))
+                )
+            ).scalar_one()
+            session.expunge(user)
+            return user
+    finally:
+        await engine.dispose()
+
 
 _SENSITIVE_FIELDS = {"password", "password_hash", "refresh_token", "access_token", "token_hash"}
 
 
 async def test_register_success_creates_active_user(client: AsyncClient) -> None:
+    """The answer is uniform (202 + a fixed body), the account is created."""
     response = await client.post(
         REGISTER_URL,
         json={
@@ -25,15 +51,17 @@ async def test_register_success_creates_active_user(client: AsyncClient) -> None
         },
     )
 
-    assert response.status_code == 201
-    body = response.json()
-    assert body["email"] == "new@example.com"
-    assert body["first_name"] == "New"
-    assert body["last_name"] == "User"
-    assert body["phone"] == "+201234567890"
-    assert body["role"] == RoleName.MEMBER
-    assert body["status"] == "ACTIVE"
-    assert body["public_id"].startswith("USR_")
+    assert response.status_code == 202
+    assert response.json()["message"] == REGISTER_MESSAGE
+
+    user = await _registered_user("new@example.com")
+    assert user.email == "new@example.com"
+    assert user.first_name == "New"
+    assert user.last_name == "User"
+    assert user.phone == "+201234567890"
+    assert user.role.name == RoleName.MEMBER
+    assert user.status == UserStatus.ACTIVE
+    assert user.public_id.startswith("USR_")
 
 
 async def test_register_response_excludes_sensitive_fields(client: AsyncClient) -> None:
@@ -42,7 +70,14 @@ async def test_register_response_excludes_sensitive_fields(client: AsyncClient) 
     assert _SENSITIVE_FIELDS.isdisjoint(user.keys())
 
 
-async def test_register_rejects_duplicate_email(client: AsyncClient) -> None:
+async def test_register_answers_a_duplicate_email_like_a_fresh_one(
+    client: AsyncClient,
+) -> None:
+    """A known address must not be distinguishable from an unknown one.
+
+    The old answer was 409 "An account with this email already exists",
+    which turned the endpoint into an account oracle (SEC-007/SEC-013).
+    """
     await register_user(client, email="dup@example.com")
 
     response = await client.post(
@@ -58,8 +93,11 @@ async def test_register_rejects_duplicate_email(client: AsyncClient) -> None:
         },
     )
 
-    assert response.status_code == 409
-    assert response.json()["detail"]["message"] == "An account with this email already exists"
+    assert response.status_code == 202
+    assert response.json()["message"] == REGISTER_MESSAGE
+    # The existing account is untouched.
+    user = await _registered_user("dup@example.com")
+    assert user.first_name == "Test"
 
 
 async def test_register_rejects_invalid_email(client: AsyncClient) -> None:

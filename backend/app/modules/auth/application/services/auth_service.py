@@ -1,5 +1,6 @@
 import logging
 import secrets
+import uuid
 from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 
@@ -7,6 +8,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
+from app.core.database import async_session_factory
 from app.core.exceptions import (
     ConflictError,
     EmailNotVerifiedError,
@@ -99,7 +101,10 @@ class RegistrationService:
         )
         await self._uow.commit()
 
-        await self._send_verification_link(user)
+        # The verification mail is sent by the caller as a background job
+        # (``send_verification_email_in_background``): sending it inline
+        # made the registration endpoint slow for a new address and fast
+        # for a known one - an account oracle (SEC-007/SEC-013).
         return user
 
     @staticmethod
@@ -111,7 +116,7 @@ class RegistrationService:
             return ConflictError("An account with this email already exists")
         return ConflictError("An account with these details already exists")
 
-    async def _send_verification_link(self, user: User) -> None:
+    async def send_verification_link(self, user: User) -> None:
         raw = generate_refresh_token()
         token = AuthToken(
             user_id=user.id,
@@ -138,6 +143,20 @@ class RegistrationService:
                 "Verification email could not be delivered to %s; the member can use resend.",
                 user.email,
             )
+
+
+async def send_verification_email_in_background(user_id: uuid.UUID) -> None:
+    """Background job: issue the verification token and send the mail.
+
+    It runs on its own session, because the request-scoped one is closed
+    once the response has been sent.
+    """
+    async with async_session_factory() as session:
+        uow = UnitOfWork(session)
+        user = await uow.users.get_by_id(user_id)
+        if user is None or user.email_verified:
+            return
+        await RegistrationService(session).send_verification_link(user)
 
 
 class AuthenticationService:

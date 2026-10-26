@@ -1,11 +1,11 @@
 import logging
 import secrets
 
-from fastapi import APIRouter, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Request, Response
 from fastapi.responses import RedirectResponse
 
 from app.config import settings
-from app.core.exceptions import AppError, ForbiddenError, UnauthorizedError
+from app.core.exceptions import AppError, ConflictError, ForbiddenError, UnauthorizedError
 from app.modules.auth.application.dto import (
     AuthResponse,
     ForgotPasswordRequest,
@@ -22,6 +22,9 @@ from app.modules.auth.application.services import (
     EmailVerificationService,
     PasswordResetService,
     RegistrationService,
+    resend_verification_in_background,
+    send_password_reset_in_background,
+    send_verification_email_in_background,
 )
 from app.modules.auth.infrastructure.services import (
     build_google_authorize_url,
@@ -41,7 +44,6 @@ from app.modules.auth.presentation.rate_limit import (
     check_resend_verification_attempt,
     clear_login_failures,
 )
-from app.modules.users.application.dto import UserResponse
 from app.modules.users.application.mappers.user_mapper import map_user_to_response
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
@@ -135,13 +137,33 @@ async def google_login_callback(
     return success
 
 
-@router.post("/register", response_model=UserResponse, status_code=201)
+@router.post("/register", response_model=MessageResponse, status_code=202)
 async def register(
-    payload: RegisterRequest, request: Request, session: SessionDependency
-) -> UserResponse:
+    payload: RegisterRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
+    session: SessionDependency,
+) -> MessageResponse:
+    """Create the account and answer with the same body in every case.
+
+    A duplicate address used to answer 409 and a fresh one 201, which
+    turned this endpoint into an account oracle (SEC-007/SEC-013). The
+    answer is now always 202 with the same body; the verification mail
+    is sent in the background, so the response time does not reveal the
+    difference either.
+    """
     check_register_attempt(request)
-    user = await RegistrationService(session).register(payload)
-    return map_user_to_response(user)
+    try:
+        user = await RegistrationService(session).register(payload)
+    except ConflictError:
+        # The address is taken: say exactly what a fresh registration says.
+        return MessageResponse(
+            message="If this address can be registered, a verification email has been sent"
+        )
+    background_tasks.add_task(send_verification_email_in_background, user.id)
+    return MessageResponse(
+        message="If this address can be registered, a verification email has been sent"
+    )
 
 
 @router.post("/verify-email", response_model=MessageResponse)
@@ -151,23 +173,37 @@ async def verify_email(payload: VerifyEmailRequest, session: SessionDependency) 
     return MessageResponse(message="Email verified successfully")
 
 
-@router.post("/resend-verification", response_model=MessageResponse)
+@router.post("/resend-verification", response_model=MessageResponse, status_code=202)
 async def resend_verification(
-    payload: ResendVerificationRequest, request: Request, session: SessionDependency
+    payload: ResendVerificationRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
 ) -> MessageResponse:
-    """Re-send the verification link (quiet no-op for unknown addresses)."""
+    """Re-send the verification link (quiet no-op for unknown addresses).
+
+    The mail is sent in the background and the answer is always the
+    same, so neither the body nor the response time reveals whether the
+    address exists (SEC-013).
+    """
     check_resend_verification_attempt(request)
-    await EmailVerificationService(session).resend(payload.email.lower())
+    background_tasks.add_task(resend_verification_in_background, payload.email.lower())
     return MessageResponse(message="If the account exists, a verification email has been sent")
 
 
-@router.post("/password/forgot", response_model=MessageResponse)
+@router.post("/password/forgot", response_model=MessageResponse, status_code=202)
 async def forgot_password(
-    payload: ForgotPasswordRequest, request: Request, session: SessionDependency
+    payload: ForgotPasswordRequest,
+    request: Request,
+    background_tasks: BackgroundTasks,
 ) -> MessageResponse:
-    """Email a reset link; always succeeds to avoid address enumeration."""
+    """Email a reset link; always succeeds to avoid address enumeration.
+
+    The mail is sent in the background and the answer is always the
+    same, so neither the body nor the response time reveals whether the
+    address exists (SEC-013).
+    """
     check_password_reset_attempt(request)
-    await PasswordResetService(session).request_reset(payload)
+    background_tasks.add_task(send_password_reset_in_background, payload.email.lower())
     return MessageResponse(
         message="If an account exists for this email, a reset link has been sent"
     )

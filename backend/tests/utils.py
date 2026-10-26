@@ -3,7 +3,8 @@ from datetime import datetime
 
 from httpx import AsyncClient
 from sqlalchemy import NullPool, insert, select, update
-from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import selectinload
 
 from app.config import settings
 from app.core.database import sanitize_database_url
@@ -82,6 +83,29 @@ async def _mark_email_verified(email: str) -> None:
         await engine.dispose()
 
 
+async def _fetch_registered_user(email: str) -> dict:
+    """Read the created account back, the way the API used to return it.
+
+    The registration endpoint now answers with a uniform body (SEC-007 /
+    SEC-013), so the tests read the row from the database instead of
+    parsing the response.
+    """
+    from app.modules.users.application.mappers.user_mapper import map_user_to_response
+
+    engine = create_async_engine(sanitize_database_url(settings.DATABASE_URL), poolclass=NullPool)
+    try:
+        session_factory = async_sessionmaker(engine, expire_on_commit=False)
+        async with session_factory() as session:
+            user = (
+                await session.execute(
+                    select(User).where(User.email == email.lower()).options(selectinload(User.role))
+                )
+            ).scalar_one()
+            return map_user_to_response(user).model_dump(mode="json")
+    finally:
+        await engine.dispose()
+
+
 async def register_user(
     client: AsyncClient,
     email: str = "user@example.com",
@@ -101,9 +125,11 @@ async def register_user(
         **overrides,
     }
     response = await client.post(REGISTER_URL, json=payload)
-    assert response.status_code == 201, response.text
+    # The endpoint answers 202 with a uniform body (SEC-013), so the
+    # created account is read back from the database.
+    assert response.status_code == 202, response.text
     await _mark_email_verified(email)
-    return response.json()
+    return await _fetch_registered_user(email)
 
 
 async def login(

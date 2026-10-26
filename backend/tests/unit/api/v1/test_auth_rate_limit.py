@@ -92,7 +92,7 @@ async def test_registration_is_rate_limited_per_ip(
             "phone": "+201000000001",
         },
     )
-    assert first.status_code == 201
+    assert first.status_code == 202
 
     second = await client.post(
         REGISTER_URL,
@@ -106,7 +106,7 @@ async def test_registration_is_rate_limited_per_ip(
             "phone": "+201000000002",
         },
     )
-    assert second.status_code == 201
+    assert second.status_code == 202
 
     blocked = await client.post(
         REGISTER_URL,
@@ -131,7 +131,7 @@ async def test_password_reset_is_rate_limited_per_ip(
 
     for index in range(2):
         response = await client.post(FORGOT_URL, json={"email": f"member{index}@example.com"})
-        assert response.status_code == 200
+        assert response.status_code == 202
 
     blocked = await client.post(FORGOT_URL, json={"email": "member@example.com"})
     assert blocked.status_code == 429
@@ -145,7 +145,7 @@ async def test_verification_resend_is_rate_limited_per_ip(
 
     for index in range(2):
         response = await client.post(RESEND_URL, json={"email": f"member{index}@example.com"})
-        assert response.status_code == 200
+        assert response.status_code == 202
 
     blocked = await client.post(RESEND_URL, json={"email": "member@example.com"})
     assert blocked.status_code == 429

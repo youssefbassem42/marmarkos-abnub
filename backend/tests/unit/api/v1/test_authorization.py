@@ -35,7 +35,7 @@ async def test_admin_can_list_users(client: AsyncClient, db_engine) -> None:
             "address": "Abnub, Asyut, Egypt",
         },
     )
-    assert response.status_code == 201
+    assert response.status_code == 202
 
     response = await client.post(
         LOGIN_URL, json={"email": "admin@example.com", "password": DEFAULT_PASSWORD}

@@ -244,15 +244,15 @@ export interface RegisteredUser {
   email_verified: boolean;
 }
 
-/** Register a new member. Returns the created user (no tokens on register). */
-export async function registerUser(
-  payload: RegisterPayload,
-): Promise<RegisteredUser> {
-  const { data } = await apiClient.post<RegisteredUser>(
-    "/auth/register",
-    payload,
-  );
-  return data;
+/**
+ * Register a new member.
+ *
+ * The API answers 202 with a fixed message in every case - a known
+ * address is not distinguishable from an unknown one (the backend must
+ * not become an account oracle), so the response carries no user data.
+ */
+export async function registerUser(payload: RegisterPayload): Promise<void> {
+  await apiClient.post("/auth/register", payload);
 }
 
 export interface RequestPasswordResetPayload {

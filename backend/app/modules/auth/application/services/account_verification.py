@@ -13,7 +13,8 @@ from datetime import UTC, datetime, timedelta
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
-from app.core.exceptions import NotFoundError, UnauthorizedError
+from app.core.database import async_session_factory
+from app.core.exceptions import UnauthorizedError
 from app.modules.auth.application.dto.forgot_password_request import ForgotPasswordRequest
 from app.modules.auth.application.dto.reset_password_request import ResetPasswordRequest
 from app.modules.auth.domain.enums.auth_token_purpose import AuthTokenPurpose
@@ -28,6 +29,27 @@ from app.modules.users.infrastructure.persistence.models import User
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 logger = logging.getLogger(__name__)
+
+
+async def send_password_reset_in_background(email: str) -> None:
+    """Background job: issue a reset token and send the mail, if it applies.
+
+    The endpoint that schedules this job answers *immediately* with a
+    fixed body, so the response time can no longer tell an attacker
+    whether the address exists (SEC-013). The job runs on its own
+    session, because the request-scoped one is closed once the response
+    has been sent.
+    """
+    async with async_session_factory() as session:
+        service = PasswordResetService(session)
+        await service.request_reset(email)
+
+
+async def resend_verification_in_background(email: str) -> None:
+    """Background job: re-send the verification link, if it applies."""
+    async with async_session_factory() as session:
+        service = EmailVerificationService(session)
+        await service.resend(email)
 
 
 def _frontend_origin() -> str:
@@ -85,7 +107,12 @@ class EmailVerificationService:
             logger.warning("Verification email could not be delivered to %s", user.email)
 
     async def resend(self, email: str) -> None:
-        """Re-send the link; silently succeeds for unknown/unverified-proof emails."""
+        """Re-send the link; silently succeeds for unknown/unverified-proof emails.
+
+        The endpoint schedules this as a background job, so the time the
+        request takes does not depend on whether the address exists
+        (SEC-013).
+        """
         user = await self._uow.users.get_by_email(email.lower())
         if user is None:
             return
@@ -124,9 +151,15 @@ class PasswordResetService:
         self._uow = UnitOfWork(session)
         self._email = EmailService()
 
-    async def request_reset(self, request: ForgotPasswordRequest) -> None:
-        """Always returns quietly to avoid leaking which emails exist."""
-        user = await self._uow.users.get_by_email(request.email.lower())
+    async def request_reset(self, request: ForgotPasswordRequest | str) -> None:
+        """Always returns quietly to avoid leaking which emails exist.
+
+        The endpoint schedules this as a background job (see
+        ``send_password_reset_in_background``), so both the body and the
+        response time are the same for a known and an unknown address.
+        """
+        email = request if isinstance(request, str) else request.email
+        user = await self._uow.users.get_by_email(email.lower())
         if user is None or not user.email_verified:
             return
 
@@ -159,7 +192,9 @@ class PasswordResetService:
 
         user = await self._uow.users.get_by_id(stored.user_id)
         if user is None:
-            raise NotFoundError("Account not found")
+            # The same answer as for an unknown token: the token is the
+            # secret, the account behind it must not become visible.
+            raise UnauthorizedError("This reset link is invalid or has expired")
 
         await self._uow.auth_tokens.mark_used(stored, now)
         user.password_hash = hash_password(request.password)
