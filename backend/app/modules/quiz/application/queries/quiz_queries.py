@@ -2,7 +2,7 @@
 
 import uuid
 
-from app.core.exceptions import ForbiddenError, NotFoundError
+from app.core.exceptions import NotFoundError
 from app.core.pagination import Page, PageParams
 from app.modules.bible.infrastructure.persistence.models import BibleVerse
 from app.modules.quiz.application.commands.permissions import assert_manager
@@ -34,9 +34,7 @@ def _serialize_option(option: QuizOption, *, include_correct: bool) -> QuestionO
     )
 
 
-def _serialize_question(
-    question: QuizQuestion, *, include_correct: bool
-) -> QuestionResponse:
+def _serialize_question(question: QuizQuestion, *, include_correct: bool) -> QuestionResponse:
     return QuestionResponse(
         id=question.id,
         question=question.question,
@@ -67,8 +65,13 @@ async def _admin_item(uow: UnitOfWork, quiz: Quiz) -> QuizAdminItem:
 
 
 async def quiz_list_query(
-    uow: UnitOfWork, actor: User, page: PageParams, *, status: str | None = None,
-    q: str | None = None, verse_id: uuid.UUID | None = None,
+    uow: UnitOfWork,
+    actor: User,
+    page: PageParams,
+    *,
+    status: str | None = None,
+    q: str | None = None,
+    verse_id: uuid.UUID | None = None,
 ) -> Page[QuizAdminItem]:
     assert_manager(actor)
     status_enum = QuizStatus(status) if status else None
@@ -83,9 +86,7 @@ async def quiz_list_query(
     return Page.build(items, total, page)
 
 
-async def quiz_detail_query(
-    uow: UnitOfWork, actor: User, quiz_id: uuid.UUID
-) -> QuizDetailResponse:
+async def quiz_detail_query(uow: UnitOfWork, actor: User, quiz_id: uuid.UUID) -> QuizDetailResponse:
     """Manager detail with questions incl. correctness."""
     assert_manager(actor)
     quiz = await uow.quizzes.get_with_questions(quiz_id)
@@ -104,9 +105,7 @@ async def quiz_detail_query(
         published_at=quiz.published_at,
         created_at=quiz.created_at,
         description=quiz.description,
-        questions=[
-            _serialize_question(q, include_correct=True) for q in quiz.questions
-        ],
+        questions=[_serialize_question(q, include_correct=True) for q in quiz.questions],
     )
 
 
@@ -138,37 +137,3 @@ async def quiz_detail_query_by_verse(
     if loaded is None:
         raise NotFoundError("Quiz not found")
     return await quiz_detail_query(uow, actor, quiz.id)
-
-
-async def quiz_summary_query(
-    uow: UnitOfWork, actor: User, verse_id: uuid.UUID
-) -> "QuizSummaryResponse":
-    """P5-027: member 'Test Your Understanding' card for a verse's quiz."""
-    from app.modules.quiz.application.dto.attempt_dto import (
-        AttemptState,
-        QuizSummaryResponse,
-    )
-    from app.modules.quiz.domain.enums import AttemptStatus, QuizStatus
-
-    quiz = await uow.quizzes.get_by_verse(verse_id)
-    if quiz is None:
-        raise NotFoundError("Quiz not found")
-    question_count = await uow.quiz_questions.count_for_quiz(quiz.id)
-    has_read = await uow.verse_reads.has_read(verse_id, actor.id)
-    attempt = await uow.quiz_attempts.get_for_user_and_quiz(quiz.id, actor.id)
-    return QuizSummaryResponse(
-        quiz_id=quiz.id,
-        title=quiz.title,
-        description=quiz.description,
-        question_count=question_count,
-        total_points=quiz.total_points,
-        duration_seconds=quiz.duration_seconds,
-        is_available=quiz.status is QuizStatus.PUBLISHED,
-        requires_read=True,
-        has_read=has_read,
-        attempt=(
-            AttemptState(attempt_id=attempt.id, status=attempt.status)
-            if attempt is not None
-            else None
-        ),
-    )

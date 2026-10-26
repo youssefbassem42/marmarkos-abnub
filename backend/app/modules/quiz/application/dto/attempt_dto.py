@@ -10,7 +10,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.modules.quiz.domain.enums import AttemptStatus, QuizStatus
+from app.modules.quiz.domain.enums import AttemptStatus
 
 
 class TakeQuestionItem(BaseModel):
@@ -131,25 +131,3 @@ class QuizTakeResponse(BaseModel):
     total_points: int = Field(description="Total points")
     question_count: int = Field(description="Number of questions")
     questions: list[TakeQuestionItem] = Field(description="Questions without correctness")
-
-
-class AttemptState(BaseModel):
-    """Embedded attempt state on the member quiz summary card (P5-027)."""
-
-    attempt_id: uuid.UUID = Field(description="Attempt id")
-    status: AttemptStatus = Field(description="Lifecycle state")
-
-
-class QuizSummaryResponse(BaseModel):
-    """GET /bible-verses/{verse_id}/quiz/summary (P5-027)."""
-
-    quiz_id: uuid.UUID = Field(description="Quiz id")
-    title: str = Field(description="Quiz title")
-    description: str | None = Field(default=None, description="Quiz description")
-    question_count: int = Field(description="Number of questions")
-    total_points: int = Field(description="Total points")
-    duration_seconds: int = Field(description="Time limit")
-    is_available: bool = Field(description="Quiz is PUBLISHED and available")
-    requires_read: bool = Field(description="Verse must be read before starting (D-6)")
-    has_read: bool = Field(description="Caller has marked the verse read")
-    attempt: AttemptState | None = Field(default=None, description="Existing attempt state")
