@@ -34,8 +34,26 @@ def sanitize_database_url(url: str) -> str:
 
 
 def _create_engine(url: str) -> AsyncEngine:
-    poolclass = NullPool if settings.APP_ENV == "test" else None
-    return create_async_engine(sanitize_database_url(url), poolclass=poolclass, pool_pre_ping=True)
+    """The engine with an explicit pool (PERF-003).
+
+    The test suite uses ``NullPool`` (every session gets a fresh
+    connection, so a test never inherits a connection of another test).
+    Everywhere else the pool is sized explicitly: the defaults of
+    SQLAlchemy are implicit and wrong for a serverless deployment, where
+    every replica opens its own pool.
+    """
+    if settings.APP_ENV == "test":
+        return create_async_engine(
+            sanitize_database_url(url), poolclass=NullPool, pool_pre_ping=True
+        )
+    return create_async_engine(
+        sanitize_database_url(url),
+        pool_size=settings.DB_POOL_SIZE,
+        max_overflow=settings.DB_MAX_OVERFLOW,
+        pool_timeout=settings.DB_POOL_TIMEOUT_SECONDS,
+        pool_recycle=settings.DB_POOL_RECYCLE_SECONDS,
+        pool_pre_ping=True,
+    )
 
 
 engine: AsyncEngine = _create_engine(settings.DATABASE_URL)

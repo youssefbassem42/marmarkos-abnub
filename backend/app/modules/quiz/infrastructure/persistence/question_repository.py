@@ -64,6 +64,21 @@ class QuizQuestionRepository:
         )
         return int(result.scalar_one())
 
+    async def counts_for_quizzes(self, quiz_ids: Sequence[uuid.UUID]) -> dict[uuid.UUID, int]:
+        """The question count of every given quiz, in ONE query.
+
+        The manager list used to ask for the count of every quiz one by
+        one (an N+1); this grouped query replaces 2N round-trips with one.
+        """
+        if not quiz_ids:
+            return {}
+        rows = await self._session.execute(
+            select(QuizQuestion.quiz_id, func.count())
+            .where(QuizQuestion.quiz_id.in_(quiz_ids))
+            .group_by(QuizQuestion.quiz_id)
+        )
+        return {quiz_id: int(count) for quiz_id, count in rows.all()}
+
     async def next_position(self, quiz_id: uuid.UUID) -> int:
         result = await self._session.execute(
             select(func.coalesce(func.max(QuizQuestion.position), 0)).where(

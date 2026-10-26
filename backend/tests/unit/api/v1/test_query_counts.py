@@ -11,94 +11,17 @@ during each request.
 
 from __future__ import annotations
 
-import contextlib
 import typing
 
 import pytest
-from sqlalchemy import event
 
-from app.core.database import async_session_factory
+from tests.query_counter import count_queries
 
 if typing.TYPE_CHECKING:
     from httpx import AsyncClient
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-_query_count: list[int] = [0]
-
-
-def _before_cursor_execute(conn, cursor, stmt, params, context, executemany):  # noqa: ANN001
-    _query_count[0] += 1
-
-
-@pytest.fixture(autouse=True)
-def _reset_query_count():
-    _query_count[0] = 0
-    yield
-    _query_count[0] = 0
-
-
-@contextlib.asynccontextmanager
-async def count_queries():
-    """Context manager that returns (session, count_fn).
-
-    Attaches a SQLAlchemy event listener for the duration.  Call
-    ``count()`` after the endpoint-under-test has finished to get the
-    number of SQL statements issued.
-    """
-    # We need to use the real engine, not a mock. The sync engine powers
-    # the async session factory's connections and fires cursor events.
-    _sync_engine = async_session_factory.kw["bind"].sync_engine
-    event.listen(_sync_engine, "before_cursor_execute", _before_cursor_execute)
-    _query_count[0] = 0
-    try:
-        yield lambda: _query_count[0]
-    finally:
-        try:
-            event.remove(
-                _sync_engine,
-                "before_cursor_execute",
-                _before_cursor_execute,
-            )
-        except ValueError:
-            pass
-
-
-# ---------------------------------------------------------------------------
-# Fixtures — reuse existing auth helpers
-# ---------------------------------------------------------------------------
-
-
-@pytest.fixture()
-async def _auth_headers(client: AsyncClient) -> dict[str, str]:
-    """Register + login an ADMIN and return Bearer headers."""
-    from tests.utils import login, register_and_login
-
-    auth, _ = await register_and_login(client, "querycount-admin@test.com")
-    # Promote to ADMIN via direct DB call (bypass API for speed)
-    from sqlalchemy import text
-
-    from app.core.database import async_session_factory
-
-    async with async_session_factory() as session:
-        result = await session.execute(
-            text("SELECT id FROM users WHERE email = :e"),
-            {"e": "querycount-admin@test.com"},
-        )
-        uid = result.scalar_one()
-        await session.execute(
-            text(
-                "UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'ADMIN') "
-                "WHERE id = :uid"
-            ),
-            {"uid": uid},
-        )
-        await session.commit()
-
-    auth = await login(client, "querycount-admin@test.com")
-    return {"Authorization": f"Bearer {auth['access_token']}"}
+# The admin fixture and the statement counter live in tests/conftest.py
+# and tests/query_counter.py, so every N+1 guard shares them.
 
 
 # ---------------------------------------------------------------------------
@@ -108,13 +31,13 @@ async def _auth_headers(client: AsyncClient) -> dict[str, str]:
 
 @pytest.mark.asyncio
 async def test_bible_analytics_overview_query_count(
-    client: AsyncClient, _auth_headers: dict[str, str]
+    client: AsyncClient, admin_auth_headers: dict[str, str]
 ):
     """GET /bible-verses/analytics/overview should use <= 7 queries."""
     async with count_queries() as get_count:
         resp = await client.get(
             "/api/v1/bible-verses/analytics/overview",
-            headers=_auth_headers,
+            headers=admin_auth_headers,
         )
     assert resp.status_code == 200
     count = get_count()
@@ -123,13 +46,13 @@ async def test_bible_analytics_overview_query_count(
 
 @pytest.mark.asyncio
 async def test_quiz_analytics_overview_query_count(
-    client: AsyncClient, _auth_headers: dict[str, str]
+    client: AsyncClient, admin_auth_headers: dict[str, str]
 ):
     """GET /quizzes/analytics/overview should use <= 8 queries."""
     async with count_queries() as get_count:
         resp = await client.get(
             "/api/v1/quizzes/analytics/overview",
-            headers=_auth_headers,
+            headers=admin_auth_headers,
         )
     assert resp.status_code == 200
     count = get_count()
@@ -137,12 +60,14 @@ async def test_quiz_analytics_overview_query_count(
 
 
 @pytest.mark.asyncio
-async def test_monthly_analytics_query_count(client: AsyncClient, _auth_headers: dict[str, str]):
+async def test_monthly_analytics_query_count(
+    client: AsyncClient, admin_auth_headers: dict[str, str]
+):
     """GET /quiz-analytics/monthly (2-month trend) should use <= 12 queries."""
     async with count_queries() as get_count:
         resp = await client.get(
             "/api/v1/quiz-analytics/monthly?month=2026-09",
-            headers=_auth_headers,
+            headers=admin_auth_headers,
         )
     assert resp.status_code == 200
     count = get_count()
@@ -152,35 +77,35 @@ async def test_monthly_analytics_query_count(client: AsyncClient, _auth_headers:
 
 @pytest.mark.asyncio
 async def test_monthly_analytics_accepts_legacy_year_month_shape(
-    client: AsyncClient, _auth_headers: dict[str, str]
+    client: AsyncClient, admin_auth_headers: dict[str, str]
 ):
     """The deprecated `?year=2026&month=9` shape still resolves (one release)."""
     resp = await client.get(
         "/api/v1/quiz-analytics/monthly?year=2026&month=9",
-        headers=_auth_headers,
+        headers=admin_auth_headers,
     )
     assert resp.status_code == 200
 
 
 @pytest.mark.asyncio
 async def test_monthly_analytics_rejects_an_unparsable_month(
-    client: AsyncClient, _auth_headers: dict[str, str]
+    client: AsyncClient, admin_auth_headers: dict[str, str]
 ):
     """A month that is neither YYYY-MM nor a legacy number is a 422."""
     resp = await client.get(
         "/api/v1/quiz-analytics/monthly?month=not-a-month",
-        headers=_auth_headers,
+        headers=admin_auth_headers,
     )
     assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
-async def test_monthly_export_query_count(client: AsyncClient, _auth_headers: dict[str, str]):
+async def test_monthly_export_query_count(client: AsyncClient, admin_auth_headers: dict[str, str]):
     """GET /quiz-analytics/monthly/export should use <= 10 queries."""
     async with count_queries() as get_count:
         resp = await client.get(
             "/api/v1/quiz-analytics/monthly/export?month=2026-09",
-            headers=_auth_headers,
+            headers=admin_auth_headers,
         )
     # Export returns CSV (200) or empty (204)
     assert resp.status_code in (200, 204)

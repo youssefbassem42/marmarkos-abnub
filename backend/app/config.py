@@ -30,6 +30,16 @@ class Settings(BaseSettings):
 
     DATABASE_URL: str
 
+    # -- Connection pool (PERF-003) ------------------------------------------
+    # The pool was implicit: SQLAlchemy's default (5 + 10 overflow) is
+    # wrong for a serverless deployment, where every replica opens its
+    # own pool and the database runs out of connections. The values below
+    # are explicit, so the behaviour is visible and tunable.
+    DB_POOL_SIZE: int = 5
+    DB_MAX_OVERFLOW: int = 10
+    DB_POOL_TIMEOUT_SECONDS: int = 30
+    DB_POOL_RECYCLE_SECONDS: int = 1800
+
     JWT_SECRET: str
     JWT_REFRESH_SECRET: str
 
@@ -121,6 +131,13 @@ class Settings(BaseSettings):
     TELEGRAM_SEND_ATTEMPTS: int = 2  # inline attempts within one request
     # Read X-Forwarded-For first hop as the client IP (behind a reverse proxy).
     TRUST_PROXY_HEADERS: bool = False
+
+    # -- Cache headers (PERF-004) --------------------------------------------
+    # The member feed is personalised, so it is cached in the browser
+    # only ("private"); the endpoints with personal or administrative
+    # data are never stored ("no-store"). 0 switches the feed cache off.
+    CACHE_CONTROL_ENABLED: bool = True
+    FEED_CACHE_MAX_AGE_SECONDS: int = 30
 
     # -- Security headers (SEC-009) ------------------------------------------
     # Hardening headers on every response. CSP_REPORT_ONLY stages the

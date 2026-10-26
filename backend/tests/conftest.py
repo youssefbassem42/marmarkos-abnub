@@ -12,7 +12,7 @@ from sqlalchemy.ext.asyncio import AsyncEngine, create_async_engine
 
 import app.modules.users.infrastructure.persistence.models  # noqa: F401
 from app.config import settings
-from app.core.database import sanitize_database_url
+from app.core.database import async_session_factory, sanitize_database_url
 from app.modules.notifications.infrastructure.email.service import EmailService
 from app.modules.notifications.infrastructure.email.templates import BrandEmailContent
 from app.modules.users.domain.enums.role_name import RoleName
@@ -122,6 +122,34 @@ async def captured_emails(
 
     monkeypatch.setattr(EmailService, "send", _capture)
     return sent
+
+
+@pytest_asyncio.fixture()
+async def admin_auth_headers(client: AsyncClient) -> dict[str, str]:
+    """A signed-in ADMIN and its bearer header.
+
+    The member is created through the API and then promoted directly in
+    the database - the promotion is a test shortcut, not a product path.
+    """
+    from sqlalchemy import text
+
+    from tests.utils import login, register_and_login
+
+    email = "querycount-admin@test.com"
+    await register_and_login(client, email)
+
+    async with async_session_factory() as session:
+        await session.execute(
+            text(
+                "UPDATE users SET role_id = (SELECT id FROM roles WHERE name = 'ADMIN') "
+                "WHERE email = :e"
+            ),
+            {"e": email},
+        )
+        await session.commit()
+
+    auth = await login(client, email)
+    return {"Authorization": f"Bearer {auth['access_token']}"}
 
 
 @pytest_asyncio.fixture()

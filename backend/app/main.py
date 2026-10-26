@@ -8,7 +8,7 @@ from fastapi.responses import JSONResponse
 from app.api.router import api_router
 from app.config import settings
 from app.core.exceptions import register_exception_handlers
-from app.core.middleware import SecurityHeadersMiddleware
+from app.core.middleware import CacheControlMiddleware, SecurityHeadersMiddleware
 from app.core.observability import RequestContextMiddleware, install_request_id_filter
 
 logger = logging.getLogger(__name__)
@@ -67,6 +67,9 @@ def create_app() -> FastAPI:
     # Hardening headers on every response (SEC-009). Registered after the
     # CORS middleware so the security headers are added last.
     application.add_middleware(SecurityHeadersMiddleware)
+
+    # Cache policy of the well-known routes (PERF-004).
+    application.add_middleware(CacheControlMiddleware)
 
     # Every log line carries the request id (SEC-014).
     install_request_id_filter()

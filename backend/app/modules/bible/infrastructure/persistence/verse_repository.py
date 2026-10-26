@@ -6,6 +6,7 @@ grouped queries so lists never N+1.
 """
 
 import uuid
+from collections.abc import Collection
 from dataclasses import dataclass
 from datetime import date, datetime
 from typing import Any
@@ -131,6 +132,19 @@ class BibleVerseRepository:
             .options(selectinload(BibleVerse.created_by_user))
         )
         return result.scalar_one_or_none()
+
+    async def get_references(self, verse_ids: Collection[uuid.UUID]) -> dict[uuid.UUID, str]:
+        """The verse reference of every given verse, in ONE query.
+
+        The manager quiz list needs the reference of every quiz on the
+        page; fetching them one by one was an N+1 (PERF-001).
+        """
+        if not verse_ids:
+            return {}
+        rows = await self._session.execute(
+            select(BibleVerse.id, BibleVerse.verse_reference).where(BibleVerse.id.in_(verse_ids))
+        )
+        return {verse_id: reference for verse_id, reference in rows.all()}
 
     async def set_status(
         self,

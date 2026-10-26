@@ -47,21 +47,35 @@ def _serialize_question(question: QuizQuestion, *, include_correct: bool) -> Que
     )
 
 
-async def _admin_item(uow: UnitOfWork, quiz: Quiz) -> QuizAdminItem:
-    verse = await uow.session.get(BibleVerse, quiz.verse_id)
-    question_count = await uow.quiz_questions.count_for_quiz(quiz.id)
-    return QuizAdminItem(
-        id=quiz.id,
-        title=quiz.title,
-        verse_id=quiz.verse_id,
-        verse_reference=verse.verse_reference if verse else "",
-        total_points=quiz.total_points,
-        duration_seconds=quiz.duration_seconds,
-        question_count=question_count,
-        status=quiz.status,
-        published_at=quiz.published_at,
-        created_at=quiz.created_at,
-    )
+async def _admin_items(uow: UnitOfWork, quizzes: list[Quiz]) -> list[QuizAdminItem]:
+    """Build the manager list items with a constant number of queries.
+
+    The verses and the question counts are fetched for the whole page in
+    one query each; asking for them per quiz was an N+1 (2N+1 statements
+    for a page of N quizzes, PERF-001).
+    """
+    if not quizzes:
+        return []
+
+    verse_ids = {quiz.verse_id for quiz in quizzes}
+    verses = await uow.bible_verses.get_references(verse_ids)
+    counts = await uow.quiz_questions.counts_for_quizzes([quiz.id for quiz in quizzes])
+
+    return [
+        QuizAdminItem(
+            id=quiz.id,
+            title=quiz.title,
+            verse_id=quiz.verse_id,
+            verse_reference=verses.get(quiz.verse_id, ""),
+            total_points=quiz.total_points,
+            duration_seconds=quiz.duration_seconds,
+            question_count=counts.get(quiz.id, 0),
+            status=quiz.status,
+            published_at=quiz.published_at,
+            created_at=quiz.created_at,
+        )
+        for quiz in quizzes
+    ]
 
 
 async def quiz_list_query(
@@ -82,7 +96,7 @@ async def quiz_list_query(
         limit=page.size,
         offset=page.offset,
     )
-    items = [await _admin_item(uow, quiz) for quiz in quizzes]
+    items = await _admin_items(uow, quizzes)
     return Page.build(items, total, page)
 
 
