@@ -2,7 +2,7 @@
 
 import uuid
 from collections.abc import Sequence
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from sqlalchemy import ColumnElement, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -13,6 +13,9 @@ from app.modules.bible.domain.enums import (
     ScheduleStatus,
 )
 from app.modules.bible.infrastructure.persistence.models import VersePublicationSchedule
+
+#: How long a publication claim stays exclusive (BR-10).
+CLAIM_LEASE = timedelta(minutes=5)
 
 
 class VerseScheduleRepository:
@@ -30,10 +33,18 @@ class VerseScheduleRepository:
         self._session.add(schedule)
         await self._session.flush()
 
-    async def get_by_id(self, schedule_id: uuid.UUID) -> VersePublicationSchedule | None:
-        result = await self._session.execute(
-            select(VersePublicationSchedule).where(VersePublicationSchedule.id == schedule_id)
-        )
+    async def get_by_id(
+        self, schedule_id: uuid.UUID, *, for_update: bool = False
+    ) -> VersePublicationSchedule | None:
+        """Load one schedule; ``for_update`` locks the row for the transaction.
+
+        The publication runner locks the row it is about to publish so two
+        concurrent workers can never transition the same schedule.
+        """
+        stmt = select(VersePublicationSchedule).where(VersePublicationSchedule.id == schedule_id)
+        if for_update:
+            stmt = stmt.with_for_update()
+        result = await self._session.execute(stmt)
         return result.scalar_one_or_none()
 
     async def get_active_for_verse(self, verse_id: uuid.UUID) -> VersePublicationSchedule | None:
@@ -60,19 +71,18 @@ class VerseScheduleRepository:
         Uses ``SELECT … FOR UPDATE SKIP LOCKED`` to serialise concurrent
         claimants, then marks each claimed row so later ticks skip it.
         """
-        unclaimed = (
-            (VersePublicationSchedule.claimed_at.is_(None))
-            | (VersePublicationSchedule.claimed_at < now)
+        # A claim is a *lease*: the row stays claimed for CLAIM_LEASE, so a
+        # concurrent tick cannot re-claim (and re-publish) a schedule that
+        # another worker is publishing right now. A crashed worker's row
+        # becomes claimable again once the lease expires.
+        unclaimed = (VersePublicationSchedule.claimed_at.is_(None)) | (
+            VersePublicationSchedule.claimed_at < now - CLAIM_LEASE
         )
-        retryable_failed = (
-            (VersePublicationSchedule.status == ScheduleStatus.FAILED)
-            & (VersePublicationSchedule.attempts < 5)
+        retryable_failed = (VersePublicationSchedule.status == ScheduleStatus.FAILED) & (
+            VersePublicationSchedule.attempts < 5
         )
-        due = (
-            VersePublicationSchedule.scheduled_at <= now
-        ) & (
-            (VersePublicationSchedule.status == ScheduleStatus.SCHEDULED)
-            | retryable_failed
+        due = (VersePublicationSchedule.scheduled_at <= now) & (
+            (VersePublicationSchedule.status == ScheduleStatus.SCHEDULED) | retryable_failed
         )
 
         lock_stmt = (
@@ -95,8 +105,7 @@ class VerseScheduleRepository:
         )
 
         rows = await self._session.execute(
-            select(VersePublicationSchedule)
-            .where(VersePublicationSchedule.id.in_(claimed_ids))
+            select(VersePublicationSchedule).where(VersePublicationSchedule.id.in_(claimed_ids))
         )
         return list(rows.scalars().all())
 
@@ -168,9 +177,7 @@ class VerseScheduleRepository:
             ).scalar_one()
         )
         stmt = (
-            stmt.order_by(VersePublicationSchedule.scheduled_at.desc())
-            .limit(limit)
-            .offset(offset)
+            stmt.order_by(VersePublicationSchedule.scheduled_at.desc()).limit(limit).offset(offset)
         )
         rows: Sequence[VersePublicationSchedule] = (
             (await self._session.execute(stmt)).scalars().all()

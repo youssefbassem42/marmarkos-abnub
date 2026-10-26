@@ -58,7 +58,9 @@ async def _publish_one(
     from app.modules.bible.domain.events.bible_verse_published import BibleVersePublished
 
     async with UnitOfWork.create(session_factory) as uow:
-        schedule = await uow.verse_schedules.get_by_id(schedule_id)
+        # Lock the row for the whole transaction: a concurrent publisher
+        # waits here and then sees the PUBLISHED status (BR-10).
+        schedule = await uow.verse_schedules.get_by_id(schedule_id, for_update=True)
         if schedule is None:
             return "skipped"
         if schedule.status not in (ScheduleStatus.SCHEDULED, ScheduleStatus.FAILED):
@@ -67,10 +69,7 @@ async def _publish_one(
         if schedule.status is ScheduleStatus.FAILED and schedule.attempts >= 5:
             return "skipped"  # BR-11: retry budget exhausted; surfaced to admins
         verse = await uow.bible_verses.get_by_id(schedule.verse_id)
-        if (
-            verse is None
-            or verse.status not in (VerseStatus.DRAFT, VerseStatus.SCHEDULED)
-        ):
+        if verse is None or verse.status not in (VerseStatus.DRAFT, VerseStatus.SCHEDULED):
             # BR-11: never publish archived/withdrawn content.
             schedule.last_error = "verse no longer publishable"
             await uow.session.flush()

@@ -76,6 +76,37 @@ async def test_concurrent_ticks_publish_once_total() -> None:
     assert total_published == 1
 
 
+async def test_a_claim_is_a_lease_and_is_not_reclaimed_immediately() -> None:
+    """A second tick must not re-claim a schedule another worker is publishing.
+
+    The claim used to expire the instant it was written, so two ticks a
+    few milliseconds apart could both claim (and publish) the same row.
+    """
+    from app.modules.bible.infrastructure.persistence.schedule_repository import CLAIM_LEASE
+
+    _verse, schedule = await _scheduled_verse()
+    now = datetime.now(UTC)
+
+    async with UnitOfWork.create(async_session_factory) as uow:
+        claimed = await uow.verse_schedules.claim_due(limit=10, now=now)
+        assert [row.id for row in claimed] == [schedule.id]
+        await uow.commit()
+
+    # A tick one second later must not claim the same row again.
+    async with UnitOfWork.create(async_session_factory) as uow:
+        again = await uow.verse_schedules.claim_due(limit=10, now=now + timedelta(seconds=1))
+        assert again == []
+        await uow.commit()
+
+    # Once the lease expires, a crashed worker's row is picked up again.
+    async with UnitOfWork.create(async_session_factory) as uow:
+        expired = await uow.verse_schedules.claim_due(
+            limit=10, now=now + CLAIM_LEASE + timedelta(seconds=1)
+        )
+        assert [row.id for row in expired] == [schedule.id]
+        await uow.commit()
+
+
 async def test_archived_verse_is_skipped_not_published() -> None:
     verse, schedule = await _scheduled_verse()
     async with UnitOfWork.create(async_session_factory) as uow:
@@ -124,13 +155,7 @@ async def test_forced_failure_marks_failed_and_retries_next_tick() -> None:
     async with UnitOfWork.create(async_session_factory) as uow:
         from sqlalchemy import select
 
-        rows = (
-            (
-                await uow.session.execute(select(VersePublicationSchedule))
-            )
-            .scalars()
-            .all()
-        )
+        rows = (await uow.session.execute(select(VersePublicationSchedule))).scalars().all()
         assert rows[0].attempts == 1
         assert rows[0].status is ScheduleStatus.PUBLISHED
 
