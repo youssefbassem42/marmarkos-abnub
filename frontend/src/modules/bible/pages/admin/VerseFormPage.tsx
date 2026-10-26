@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zodResolver";
 import { toast } from "sonner";
 import { ArrowLeft, Calendar, CheckCircle, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";

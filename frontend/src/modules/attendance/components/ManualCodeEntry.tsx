@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { zodResolver } from "@/lib/zodResolver";
 import { z } from "zod";
 import { useTranslation } from "react-i18next";
 import { ChevronLeft, ChevronRight, Keyboard, Loader2 } from "lucide-react";
