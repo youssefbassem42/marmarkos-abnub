@@ -1,7 +1,5 @@
 """Points query use cases (P5-032, BR-34/BR-36)."""
 
-import uuid
-
 from app.core.pagination import Page, PageParams
 from app.core.time.clock import today_local
 from app.core.time.periods import last_n_months

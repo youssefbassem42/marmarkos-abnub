@@ -3,12 +3,77 @@
 import uuid
 from collections.abc import Sequence
 from datetime import datetime
+from typing import TypedDict, cast
 
 from sqlalchemy import case, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.quiz.domain.enums import AttemptStatus
 from app.modules.quiz.infrastructure.persistence.models import QuizAttempt
+
+
+class MemberStats(TypedDict):
+    """Member points-card aggregates (P5-032)."""
+
+    quizzes_completed: int
+    average_score_out_of_10: float
+
+
+class QuizKpis(TypedDict):
+    """Per-quiz analytics aggregates (P5-034)."""
+
+    participants: int
+    completed: int
+    auto_finished: int
+    highest_score: int
+    lowest_score: int
+    total_points_awarded: int
+    max_possible_points: int
+
+
+class QuizResultRow(TypedDict):
+    """One row of the per-user quiz results table (P5-034)."""
+
+    user_id: uuid.UUID
+    first_name: str | None
+    last_name: str | None
+    email: str
+    avatar: str | None
+    score: int
+    total_points: int
+    status: AttemptStatus
+    finished_at: datetime
+    started_at: datetime
+    points_awarded: int
+
+
+class ManagerAttemptRow(TypedDict):
+    """One finished attempt as a manager sees it (P5-034)."""
+
+    id: uuid.UUID
+    quiz_id: uuid.UUID
+    status: AttemptStatus
+    score: int
+    total_points: int
+    correct_count: int
+    incorrect_count: int
+    question_count: int
+    finished_at: datetime
+    started_at: datetime
+    user_id: uuid.UUID
+    first_name: str | None
+    last_name: str | None
+    email: str
+    avatar: str | None
+
+
+class ManagerUserBlock(TypedDict):
+    """The member block embedded in the manager review response (P5-034)."""
+
+    user_id: uuid.UUID
+    full_name: str
+    email: str
+    avatar: str | None
 
 
 class QuizAttemptRepository:
@@ -36,9 +101,7 @@ class QuizAttemptRepository:
         """
         result = await self._session.execute(
             select(QuizAttempt)
-            .where(
-                QuizAttempt.quiz_id == quiz_id, QuizAttempt.user_id == user_id
-            )
+            .where(QuizAttempt.quiz_id == quiz_id, QuizAttempt.user_id == user_id)
             .order_by(
                 QuizAttempt.started_at.desc(),
                 QuizAttempt.id.desc(),
@@ -70,7 +133,7 @@ class QuizAttemptRepository:
 
     # -- analytics aggregates (wave 5C; kept beside the table) -------------
 
-    async def quiz_kpis(self, quiz_id: uuid.UUID) -> dict[str, object]:
+    async def quiz_kpis(self, quiz_id: uuid.UUID) -> QuizKpis:
         rows = await self._session.execute(
             select(
                 func.count().label("participants"),
@@ -134,7 +197,7 @@ class QuizAttemptRepository:
         )
         return [(uid, int(count)) for uid, count in rows.all()]
 
-    async def member_stats(self, user_id: uuid.UUID) -> dict[str, object]:
+    async def member_stats(self, user_id: uuid.UUID) -> MemberStats:
         """Finished-attempt count + average score/10 for the points card (P5-032)."""
         result = await self._session.execute(
             select(
@@ -149,9 +212,7 @@ class QuizAttemptRepository:
         row = result.one()
         count = int(row.quizzes_completed)
         max_total = int(row.max_total or 0)
-        avg_score_out_of_10 = (
-            round(float(row.avg_score) / max_total * 10, 1) if max_total else 0.0
-        )
+        avg_score_out_of_10 = round(float(row.avg_score) / max_total * 10, 1) if max_total else 0.0
         return {
             "quizzes_completed": count,
             "average_score_out_of_10": avg_score_out_of_10,
@@ -169,7 +230,7 @@ class QuizAttemptRepository:
         date_to: datetime | None,
         limit: int,
         offset: int,
-    ) -> tuple[list[dict[str, object]], int]:
+    ) -> tuple[list[QuizResultRow], int]:
         """Filtered/sorted user results page (P5-034) — one grouped query."""
         from app.modules.users.infrastructure.persistence.models import User
 
@@ -219,16 +280,16 @@ class QuizAttemptRepository:
         )
         total = int((await self._session.execute(count_stmt)).scalar_one())
         rows = await self._session.execute(
-            base.order_by(QuizAttempt.score.desc(), QuizAttempt.finished_at).limit(limit).offset(
-                offset
-            )
+            base.order_by(QuizAttempt.score.desc(), QuizAttempt.finished_at)
+            .limit(limit)
+            .offset(offset)
         )
-        return [dict(r._mapping) for r in rows.all()], total
+        return [cast(QuizResultRow, dict(r._mapping)) for r in rows.all()], total
 
     async def manager_attempt(
         self, attempt_id: uuid.UUID
-    ) -> tuple[dict[str, object] | None, dict[str, object]]:
-        """(user_block, None) when found, else (None, {})."""
+    ) -> tuple[ManagerAttemptRow | None, ManagerUserBlock | None]:
+        """(attempt, user_block) when found, else (None, None)."""
         from app.modules.users.infrastructure.persistence.models import User
 
         row = (
@@ -255,9 +316,9 @@ class QuizAttemptRepository:
             )
         ).first()
         if row is None:
-            return None, {}
-        mapping = dict(row._mapping)
-        user_block = {
+            return None, None
+        mapping = cast(ManagerAttemptRow, dict(row._mapping))
+        user_block: ManagerUserBlock = {
             "user_id": mapping["user_id"],
             "full_name": _display_name(mapping.get("first_name"), mapping.get("last_name")),
             "email": mapping["email"],

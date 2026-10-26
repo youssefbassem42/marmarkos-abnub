@@ -28,11 +28,11 @@ from app.core.time.clock import now_utc, to_local
 from app.core.time.periods import iso_week_start, month_start
 from app.modules.quiz.application.dto.attempt_dto import (
     AttemptHeartbeatResponse,
-    AttemptResumeResponse,
     AttemptResultResponse,
+    AttemptResumeResponse,
     AttemptStartResponse,
-    TakeQuestionItem,
     TakeOptionItem,
+    TakeQuestionItem,
 )
 from app.modules.quiz.application.services.grading_service import grade
 from app.modules.quiz.domain.enums import AttemptStatus, QuizStatus
@@ -74,9 +74,7 @@ def _charge_active_time(attempt: QuizAttempt, now: datetime | None = None) -> No
     attempt.last_heartbeat_at = now
 
 
-async def _own_attempt(
-    uow: UnitOfWork, attempt_id: uuid.UUID, user_id: uuid.UUID
-) -> QuizAttempt:
+async def _own_attempt(uow: UnitOfWork, attempt_id: uuid.UUID, user_id: uuid.UUID) -> QuizAttempt:
     """Own attempt only; cross-user access → 404 (security gate)."""
     attempt = await uow.quiz_attempts.get_by_id(attempt_id)
     if attempt is None or attempt.user_id != user_id:
@@ -104,15 +102,12 @@ async def _take_question(
         answered=answered,
         selected_option_id=selected,
         options=[
-            TakeOptionItem(id=o.id, option_text=o.option_text, position=o.position)
-            for o in opts
+            TakeOptionItem(id=o.id, option_text=o.option_text, position=o.position) for o in opts
         ],
     )
 
 
-async def start_attempt(
-    uow: UnitOfWork, actor: User, quiz_id: uuid.UUID
-) -> AttemptStartResponse:
+async def start_attempt(uow: UnitOfWork, actor: User, quiz_id: uuid.UUID) -> AttemptStartResponse:
     """P5-028: begin the single attempt per user+quiz (D-4, V2)."""
     quiz = await uow.quizzes.get_by_id(quiz_id)
     if quiz is None:
@@ -148,7 +143,9 @@ async def start_attempt(
     )
     await uow.quiz_attempts.add(attempt)
 
-    items = await asyncio.gather(*[_take_question(q, selected=None, answered=False) for q in questions])
+    items = await asyncio.gather(
+        *[_take_question(q, selected=None, answered=False) for q in questions]
+    )
     return AttemptStartResponse(
         id=attempt.id,
         quiz_id=quiz.id,
@@ -162,9 +159,7 @@ async def start_attempt(
     )
 
 
-async def _load_questions_with_options(
-    uow: UnitOfWork, quiz_id: uuid.UUID
-) -> list[QuizQuestion]:
+async def _load_questions_with_options(uow: UnitOfWork, quiz_id: uuid.UUID) -> list[QuizQuestion]:
     """Questions with their options eager-loaded (single query)."""
     from sqlalchemy.orm import selectinload
 
@@ -187,10 +182,7 @@ async def resume_attempt_use_case(
     if quiz is None:
         raise NotFoundError("Quiz not found")
     questions = await _load_questions_with_options(uow, quiz.id)
-    stored = {
-        a.question_id: a
-        for a in await uow.quiz_answers.list_for_attempt(attempt.id)
-    }
+    stored = {a.question_id: a for a in await uow.quiz_answers.list_for_attempt(attempt.id)}
     now = now_utc()
     return AttemptResumeResponse(
         id=attempt.id,

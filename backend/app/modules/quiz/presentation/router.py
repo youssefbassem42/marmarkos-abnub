@@ -4,16 +4,15 @@ Content management lives on ``/quizzes`` + ``/quiz-questions``; member
 attempt routes on ``/quiz-attempts``; analytics live on ``/quizzes/{id}/analytics``.
 """
 
-from typing import Annotated
 from datetime import datetime
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.config import settings
 from app.core.database import get_unit_of_work
 from app.core.pagination import Page, PageParams
-from app.modules.auth.presentation.dependencies import get_current_user
 from app.modules.bible.presentation.dependencies import BibleManager
 from app.modules.quiz.application.commands.attempt_commands import (
     heartbeat_attempt_use_case,
@@ -36,10 +35,15 @@ from app.modules.quiz.application.commands.quiz_commands import (
     publish_quiz,
     update_quiz,
 )
+from app.modules.quiz.application.dto.analytics_dto import (
+    ManagerAttemptReviewResponse,
+    QuizAnalyticsResponse,
+    QuizUserResultItem,
+)
 from app.modules.quiz.application.dto.attempt_dto import (
     AttemptHeartbeatResponse,
-    AttemptResumeResponse,
     AttemptResultResponse,
+    AttemptResumeResponse,
     AttemptStartResponse,
     SaveAnswerRequest,
     StartAttemptRequest,
@@ -58,25 +62,20 @@ from app.modules.quiz.application.dto.quiz_dto import (
     UpdateQuizRequest,
 )
 from app.modules.quiz.application.queries.attempt_queries import result_query
+from app.modules.quiz.application.queries.quiz_analytics_query import (
+    manager_attempt_review_query,
+    quiz_analytics_query,
+    quiz_analytics_users_export,
+    quiz_analytics_users_query,
+)
+from app.modules.quiz.application.queries.quiz_overview_query import (
+    quiz_analytics_overview_query,
+)
 from app.modules.quiz.application.queries.quiz_queries import (
     quiz_by_verse_query,
     quiz_detail_query,
     quiz_list_query,
     quiz_validation_query,
-)
-from app.modules.quiz.application.queries.quiz_analytics_query import (
-    quiz_analytics_query,
-    quiz_analytics_users_query,
-    quiz_analytics_users_export,
-    manager_attempt_review_query,
-)
-from app.modules.quiz.application.queries.quiz_overview_query import (
-    quiz_analytics_overview_query,
-)
-from app.modules.quiz.application.dto.analytics_dto import (
-    QuizAnalyticsResponse,
-    QuizUserResultItem,
-    ManagerAttemptReviewResponse,
 )
 from app.modules.quiz.presentation.dependencies import CurrentUser
 from app.modules.quiz.presentation.mappers import question_to_response
@@ -138,10 +137,11 @@ async def patch_quiz(
 
 
 @quiz_router.delete("/{quiz_id}", status_code=204)
-async def delete_quiz(quiz_id: UUID, actor: BibleManager, uow: _UoW):
+async def delete_quiz(quiz_id: UUID, actor: BibleManager, uow: _UoW) -> Response:
     """D-11: archive (soft delete)."""
     await archive_quiz(uow, actor, quiz_id)
     await uow.commit()
+    return Response(status_code=204)
 
 
 @quiz_router.post("/{quiz_id}/publish", responses={422: {"description": "quiz_not_publishable"}})
@@ -177,9 +177,10 @@ async def add_question_endpoint(
 @quiz_router.put("/{quiz_id}/questions/reorder")
 async def reorder_quiz_questions(
     quiz_id: UUID, payload: ReorderQuestionsRequest, actor: BibleManager, uow: _UoW
-):
+) -> Response:
     await reorder_questions(uow, actor, quiz_id, payload)
     await uow.commit()
+    return Response(status_code=204)
 
 
 @question_router.patch("/{question_id}", responses={404: {"description": "Question not found"}})
@@ -194,9 +195,10 @@ async def patch_question(
 
 
 @question_router.delete("/{question_id}", status_code=204)
-async def delete_question_endpoint(question_id: UUID, actor: BibleManager, uow: _UoW):
+async def delete_question_endpoint(question_id: UUID, actor: BibleManager, uow: _UoW) -> Response:
     await delete_question(uow, actor, question_id)
     await uow.commit()
+    return Response(status_code=204)
 
 
 @question_router.post("/{question_id}/duplicate", status_code=201)
@@ -280,9 +282,7 @@ async def get_attempt_result(
 
 
 @quiz_router.get("/analytics/overview")
-async def quiz_analytics_overview(
-    actor: BibleManager, uow: _UoW
-) -> dict[str, object]:
+async def quiz_analytics_overview(actor: BibleManager, uow: _UoW) -> dict[str, object]:
     """Aggregate quiz stats for the admin dashboard (P5-057)."""
     assert_manager(actor)
     return await quiz_analytics_overview_query(uow)
@@ -345,7 +345,7 @@ async def quiz_analytics_export(
     status: str | None = None,
     date_from: datetime | None = None,
     date_to: datetime | None = None,
-):
+) -> Response:
     """CSV export of the quiz results table (P5-036, BR-40)."""
     from app.core.csv import stream_csv
 

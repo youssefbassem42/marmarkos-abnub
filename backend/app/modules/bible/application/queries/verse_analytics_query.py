@@ -4,12 +4,12 @@ import uuid
 from collections.abc import Sequence
 from datetime import date, datetime, timedelta
 
-from sqlalchemy import func, select
+from sqlalchemy import Select, func, select
 
 from app.core.exceptions import NotFoundError
 from app.core.pagination import Page, PageParams
-from app.core.time.clock import platform_timezone, today_local, to_local
-from app.core.time.periods import iso_week_start, last_n_months
+from app.core.time.clock import platform_timezone, to_local, today_local
+from app.core.time.periods import iso_week_start
 from app.modules.bible.application.dto.analytics_dto import (
     EngagementSeriesPoint,
     RelatedQuizSummary,
@@ -31,7 +31,7 @@ async def _member_role_id(uow: UnitOfWork) -> int:
     return role.id
 
 
-def _member_subquery(uow: UnitOfWork, member_role_id: int):
+def _member_subquery(uow: UnitOfWork, member_role_id: int) -> Select[tuple[uuid.UUID]]:
     return select(User.id).join(Role, Role.id == User.role_id).where(Role.id == member_role_id)
 
 
@@ -112,7 +112,7 @@ async def verse_quick_stats_query(uow: UnitOfWork) -> VerseQuickStats:
     distinct_verses = len(totals)
     avg_reads = round(total_opens / distinct_verses, 1) if distinct_verses else 0.0
 
-    top_verse_id = max(totals, key=totals.get) if totals else None
+    top_verse_id = max(totals, key=lambda verse_id: totals[verse_id]) if totals else None
     top_verse_opens = totals.get(top_verse_id, 0) if top_verse_id else 0
     top_verse_reference: str | None = None
     if top_verse_id is not None:
@@ -177,7 +177,6 @@ async def verse_analytics_query(
 
 
 async def _related_quiz(uow: UnitOfWork, verse_id: uuid.UUID) -> RelatedQuizSummary | None:
-    from app.modules.quiz.infrastructure.persistence.models import Quiz
 
     quiz = await uow.quizzes.get_by_verse(verse_id)
     if quiz is None:
@@ -259,9 +258,11 @@ async def verse_analytics_users_export(
         row for row in rows if read is None or (read == "read") == (row.get("read_row") is not None)
     ]
     if len(filtered) > max_rows:
-        raise ExportTooLargeError(max_rows)
+        raise ExportTooLargeError(
+            f"Too many rows to export (max {max_rows}). Narrow the filters first"
+        )
     header = ["user_id", "full_name", "opened_count", "has_read", "last_opened_at"]
-    out = [
+    out: list[tuple[object, ...]] = [
         (
             row["user_id"],
             _full_name(row.get("first_name"), row.get("last_name")),
@@ -275,7 +276,8 @@ async def verse_analytics_users_export(
 
 
 def _local_utc(day: date) -> datetime:
-    from datetime import UTC, time as dtime
+    from datetime import UTC
+    from datetime import time as dtime
 
     local = datetime.combine(day, dtime.min, tzinfo=platform_timezone())
     return local.astimezone(UTC)

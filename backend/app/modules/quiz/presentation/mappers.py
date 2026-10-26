@@ -5,7 +5,6 @@ from app.modules.quiz.application.dto.quiz_dto import (
     QuestionResponse,
 )
 from app.modules.quiz.infrastructure.persistence.models import (
-    QuizOption,
     QuizQuestion,
 )
 

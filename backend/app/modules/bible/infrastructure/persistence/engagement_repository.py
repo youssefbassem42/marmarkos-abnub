@@ -3,12 +3,25 @@
 import uuid
 from collections.abc import Sequence
 from datetime import datetime, timedelta
+from typing import TypedDict, cast
 
 from sqlalchemy import func, insert, literal, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.modules.bible.infrastructure.persistence.models import VerseRead, VerseView
+
+
+class EngagementUserRow(TypedDict):
+    """One row of the per-user engagement table (wave 5C)."""
+
+    user_id: uuid.UUID
+    first_name: str | None
+    last_name: str | None
+    avatar: str | None
+    opened_count: int
+    last_opened_at: datetime | None
+    read_row: uuid.UUID | None
 
 
 class VerseEngagementRepository:
@@ -88,9 +101,7 @@ class VerseEngagementRepository:
 
     async def has_read(self, verse_id: uuid.UUID, user_id: uuid.UUID) -> bool:
         result = await self._session.execute(
-            select(VerseRead.id).where(
-                VerseRead.verse_id == verse_id, VerseRead.user_id == user_id
-            )
+            select(VerseRead.id).where(VerseRead.verse_id == verse_id, VerseRead.user_id == user_id)
         )
         return result.first() is not None
 
@@ -219,7 +230,7 @@ class VerseEngagementRepository:
         q: str | None = None,
         limit: int,
         offset: int,
-    ) -> tuple[list[dict[str, object]], int]:
+    ) -> tuple[list[EngagementUserRow], int]:
         """Per-user engagement page (wave 5C): opened count, has_read,
         last_opened_at — one grouped query joining users."""
         from app.modules.users.infrastructure.persistence.models import Role, User
@@ -248,14 +259,12 @@ class VerseEngagementRepository:
             )
         subquery = base.subquery()
         total = int(
-            (
-                await self._session.execute(select(func.count()).select_from(subquery))
-            ).scalar_one()
+            (await self._session.execute(select(func.count()).select_from(subquery))).scalar_one()
         )
         rows = (
             await self._session.execute(base.order_by("opened_count").limit(limit).offset(offset))
         ).all()
-        return [dict(row._mapping) for row in rows], total
+        return [cast(EngagementUserRow, dict(row._mapping)) for row in rows], total
 
     # -- role-filtered aggregates (P5-033, BR-13: exclude managers) --------
 
@@ -264,26 +273,18 @@ class VerseEngagementRepository:
     ) -> dict[str, int]:
         """Member-only opens, unique openers, readers/unique readers."""
 
-        def _member_join(src_uid_col):
-            return src_uid_col.in_(
-                select(User.id)
-                .join(Role, Role.id == User.role_id)
-                .where(Role.id == member_role_id)
-            )
-
         from app.modules.users.infrastructure.persistence.models import Role, User
+
+        member_subq = (
+            select(User.id).join(Role, Role.id == User.role_id).where(Role.id == member_role_id)
+        )
 
         total_opens = int(
             (
                 await self._session.execute(
-                    select(func.count())
-                    .where(
+                    select(func.count()).where(
                         VerseView.verse_id == verse_id,
-                        VerseView.user_id.in_(
-                            select(User.id).join(Role, Role.id == User.role_id).where(
-                                Role.id == member_role_id
-                            )
-                        ),
+                        VerseView.user_id.in_(member_subq),
                     )
                 )
             ).scalar_one()
@@ -293,11 +294,7 @@ class VerseEngagementRepository:
                 await self._session.execute(
                     select(func.count(func.distinct(VerseView.user_id))).where(
                         VerseView.verse_id == verse_id,
-                        VerseView.user_id.in_(
-                            select(User.id).join(Role, Role.id == User.role_id).where(
-                                Role.id == member_role_id
-                            )
-                        ),
+                        VerseView.user_id.in_(member_subq),
                     )
                 )
             ).scalar_one()
@@ -307,11 +304,7 @@ class VerseEngagementRepository:
                 await self._session.execute(
                     select(func.count(func.distinct(VerseRead.user_id))).where(
                         VerseRead.verse_id == verse_id,
-                        VerseRead.user_id.in_(
-                            select(User.id).join(Role, Role.id == User.role_id).where(
-                                Role.id == member_role_id
-                            )
-                        ),
+                        VerseRead.user_id.in_(member_subq),
                     )
                 )
             ).scalar_one()
@@ -330,14 +323,12 @@ class VerseEngagementRepository:
         date_from: datetime,
         date_to: datetime,
         weekly: bool = False,
-    ) -> tuple[list[tuple[datetime, int, int]], list[tuple[datetime, int, int]]]:
+    ) -> tuple[list[tuple[datetime, int]], list[tuple[datetime, int]]]:
         """Member opens/reads bucketed daily or weekly (BR-13)."""
         from app.modules.users.infrastructure.persistence.models import Role, User
 
         member_subq = (
-            select(User.id)
-            .join(Role, Role.id == User.role_id)
-            .where(Role.id == member_role_id)
+            select(User.id).join(Role, Role.id == User.role_id).where(Role.id == member_role_id)
         )
         trunc = "week" if weekly else "day"
 
@@ -373,16 +364,12 @@ class VerseEngagementRepository:
         read_list = [(b, int(c)) for b, c in reads.all()]
         return open_list, read_list
 
-    async def member_open_and_read_totals_overall(
-        self, member_role_id: int
-    ) -> tuple[int, int]:
+    async def member_open_and_read_totals_overall(self, member_role_id: int) -> tuple[int, int]:
         """Dashboard totals across all verses (BR-13, BR-16)."""
         from app.modules.users.infrastructure.persistence.models import Role, User
 
         member_subq = (
-            select(User.id)
-            .join(Role, Role.id == User.role_id)
-            .where(Role.id == member_role_id)
+            select(User.id).join(Role, Role.id == User.role_id).where(Role.id == member_role_id)
         )
         opens = int(
             (

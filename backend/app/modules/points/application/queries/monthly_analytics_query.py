@@ -15,6 +15,9 @@ from app.modules.points.application.dto.monthly_dto import (
     TopUser,
     TrendPoint,
 )
+from app.modules.points.infrastructure.persistence.point_transaction_repository import (
+    MonthlyKpis,
+)
 from app.modules.quiz.application.commands.permissions import assert_manager
 from app.modules.users.infrastructure.persistence.models import User
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
@@ -47,7 +50,7 @@ async def monthly_analytics_query(
 async def _trend(uow: UnitOfWork, month: date) -> list[TrendPoint]:
     """Last 3 months trend including the given month."""
     months = last_n_months(month, 3)
-    points_map: dict[date, dict[str, int]] = {}
+    points_map: dict[date, MonthlyKpis] = {}
     for m in months:
         kpis = await uow.point_transactions.monthly_kpis(m)
         points_map[m] = kpis
@@ -72,7 +75,7 @@ async def _completion_distribution(uow: UnitOfWork, month: date) -> list[Complet
 
 
 class MonthlyUserItem:
-    def __init__(
+    def __init__(  # noqa: PLR0913 - explicit keyword-only constructor
         self,
         *,
         rank: int,
@@ -84,7 +87,7 @@ class MonthlyUserItem:
         average_score_out_of_10: float,
         sparkline: list[int],
         completion_rate: float,
-    ):
+    ) -> None:
         self.rank = rank
         self.user_id = user_id
         self.full_name = full_name
@@ -107,7 +110,7 @@ async def monthly_users_query(
     score_range: str | None = None,
     completion_rate: str | None = None,
     min_quizzes: int | None = None,
-):
+) -> Page[dict[str, object]]:
     """Paginated user results page for a month with sparkline."""
     assert_manager(actor)
     months = last_n_months(month, 6)
@@ -202,7 +205,9 @@ async def monthly_users_export(
         sparkline_months=months,
     )
     if len(rows) > max_rows:
-        raise ExportTooLargeError(max_rows)
+        raise ExportTooLargeError(
+            f"Too many rows to export (max {max_rows}). Narrow the filters first"
+        )
     published = max(await uow.quizzes.count_published_in_month(month), 1)
     header = [
         "user_id",
@@ -212,7 +217,7 @@ async def monthly_users_export(
         "average_score_out_of_10",
         "completion_rate",
     ]
-    out = [
+    out: list[tuple[object, ...]] = [
         (
             row["user_id"],
             row["full_name"],

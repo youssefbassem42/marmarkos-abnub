@@ -7,32 +7,24 @@ Cross-user access is denied with 404.
 import uuid
 
 from app.core.exceptions import NotFoundError
-from app.core.time.clock import now_utc, today_local, to_local
+from app.core.time.clock import to_local, today_local
 from app.core.time.periods import iso_week_start, month_start
 from app.modules.quiz.application.dto.attempt_dto import (
-    AttemptResumeResponse,
     AttemptResultResponse,
     GradedOptionItem,
     PointsSnapshot,
     ReviewQuestionItem,
-    TakeQuestionItem,
-    TakeOptionItem,
 )
 from app.modules.quiz.domain.enums import AttemptStatus
 from app.modules.quiz.infrastructure.persistence.models import (
-    Quiz,
-    QuizAnswer,
     QuizAttempt,
-    QuizOption,
     QuizQuestion,
 )
 from app.modules.users.infrastructure.persistence.models import User
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 
-async def _own_attempt(
-    uow: UnitOfWork, attempt_id: uuid.UUID, user_id: uuid.UUID
-) -> QuizAttempt:
+async def _own_attempt(uow: UnitOfWork, attempt_id: uuid.UUID, user_id: uuid.UUID) -> QuizAttempt:
     attempt = await uow.quiz_attempts.get_by_id(attempt_id)
     if attempt is None or attempt.user_id != user_id:
         raise NotFoundError("Attempt not found")
@@ -65,17 +57,13 @@ async def result_query(
     return await _build_result(uow, attempt)
 
 
-async def _build_result(
-    uow: UnitOfWork, attempt: QuizAttempt
-) -> AttemptResultResponse:
+async def _build_result(uow: UnitOfWork, attempt: QuizAttempt) -> AttemptResultResponse:
     quiz = await uow.quizzes.get_by_id(attempt.quiz_id)
     if quiz is None:
         raise NotFoundError("Quiz not found")
     questions = await _load_questions(uow, attempt.quiz_id)
     correct_map = await uow.quiz_options.get_correct_option_ids([q.id for q in questions])
-    answers = await uow.quiz_answers.answers_for_questions(
-        attempt.id, [q.id for q in questions]
-    )
+    answers = await uow.quiz_answers.answers_for_questions(attempt.id, [q.id for q in questions])
 
     review = [
         ReviewQuestionItem(
@@ -85,7 +73,7 @@ async def _build_result(
             points=q.points,
             selected_option_id=answers[q.id].selected_option_id if q.id in answers else None,
             correct_option_id=correct_map.get(q.id),
-            is_correct=(answers[q.id].is_correct if q.id in answers else False),
+            is_correct=bool(answers[q.id].is_correct) if q.id in answers else False,
             points_awarded=(answers[q.id].points_awarded if q.id in answers else 0),
             options=[
                 GradedOptionItem(
@@ -106,7 +94,10 @@ async def _build_result(
     # Compute "before" by subtracting this attempt's ledger points when
     # the award landed in the current week/month buckets.
     attempt_pts = attempt.score
-    local_finish = to_local(attempt.finished_at).date()
+    # A result only exists for a finished attempt; the fallbacks keep the
+    # arithmetic well-defined for an attempt that is still being closed.
+    finished_at = attempt.finished_at or attempt.submitted_at or attempt.started_at
+    local_finish = to_local(finished_at).date()
     in_week = iso_week_start(local_finish) == iso_week_start(today)
     in_month = month_start(local_finish) == month_start(today)
 
@@ -125,7 +116,7 @@ async def _build_result(
     percentage = (
         round(attempt.score / attempt.total_points * 100, 1) if attempt.total_points else 0.0
     )
-    time_taken = max(0, int((attempt.finished_at - attempt.started_at).total_seconds()))
+    time_taken = max(0, int((finished_at - attempt.started_at).total_seconds()))
 
     return AttemptResultResponse(
         attempt_id=attempt.id,
@@ -140,7 +131,7 @@ async def _build_result(
         incorrect_count=attempt.incorrect_count,
         question_count=attempt.question_count,
         points_awarded=attempt_pts,
-        finished_at=attempt.finished_at,
+        finished_at=finished_at,
         time_taken_seconds=time_taken,
         points=points,
         review=review,

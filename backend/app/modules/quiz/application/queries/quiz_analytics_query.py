@@ -5,7 +5,7 @@ from datetime import datetime
 
 from sqlalchemy import select
 
-from app.core.exceptions import NotFoundError, ExportTooLargeError
+from app.core.exceptions import ExportTooLargeError, NotFoundError
 from app.core.pagination import Page, PageParams
 from app.modules.quiz.application.commands.permissions import assert_manager
 from app.modules.quiz.application.dto.analytics_dto import (
@@ -19,8 +19,10 @@ from app.modules.quiz.application.dto.analytics_dto import (
     ScoreDistributionBucket,
 )
 from app.modules.quiz.domain.enums import AttemptStatus
+from app.modules.quiz.infrastructure.persistence.attempt_repository import (
+    QuizResultRow,
+)
 from app.modules.quiz.infrastructure.persistence.models import (
-    QuizAnswer,
     QuizOption,
     QuizQuestion,
 )
@@ -107,7 +109,7 @@ async def quiz_analytics_users_query(
     return Page.build(items, total, page)
 
 
-def _result_item(row: dict[str, object]) -> QuizUserResultItem:
+def _result_item(row: QuizResultRow) -> QuizUserResultItem:
     total_points = int(row["total_points"] or 0)
     score = int(row["score"] or 0)
     percentage = round(score / total_points * 100, 1) if total_points else 0.0
@@ -126,7 +128,7 @@ def _result_item(row: dict[str, object]) -> QuizUserResultItem:
     )
 
 
-def _name(first: object, last: object) -> str:
+def _name(first: str | None, last: str | None) -> str:
     return " ".join(n for n in (first, last) if n).strip() or "Unknown"
 
 
@@ -136,7 +138,7 @@ async def manager_attempt_review_query(
     """Manager view of one finished attempt incl. the user block (P5-034)."""
     assert_manager(actor)
     mapping, user_block = await uow.quiz_attempts.manager_attempt(attempt_id)
-    if mapping is None:
+    if mapping is None or user_block is None:
         raise NotFoundError("Attempt not found")
     quiz = await uow.quizzes.get_by_id(mapping["quiz_id"])
     if quiz is None:
@@ -246,7 +248,9 @@ async def quiz_analytics_users_export(
         offset=0,
     )
     if len(rows) > max_rows:
-        raise ExportTooLargeError(max_rows)
+        raise ExportTooLargeError(
+            f"Too many rows to export (max {max_rows}). Narrow the filters first"
+        )
     header = [
         "user_id",
         "full_name",
@@ -257,7 +261,7 @@ async def quiz_analytics_users_export(
         "finished_at",
         "time_taken_seconds",
     ]
-    out = [
+    out: list[tuple[object, ...]] = [
         (
             row["user_id"],
             _name(row.get("first_name"), row.get("last_name")),

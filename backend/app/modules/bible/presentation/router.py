@@ -140,6 +140,7 @@ async def upload_verse_cover(
     data = await file.read()
     if len(data) > 2 * 1024 * 1024:
         from app.core.exceptions import ValidationError
+
         raise ValidationError("Image must be 2 MB or smaller")
     url = await upload_image(data, content_type, folder="bible-covers")
     return {"url": url}
@@ -371,7 +372,7 @@ async def verse_analytics_export(
     uow: _UoW,
     q: Annotated[str | None, Query(max_length=200)] = None,
     read: Annotated[str | None, Query(pattern="^(all|read|unread)$")] = None,
-):
+) -> Response:
     """CSV export of the verse user-engagement table (P5-036, BR-40)."""
     from app.config import settings
     from app.core.csv import stream_csv
