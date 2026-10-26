@@ -12,7 +12,9 @@ The remediation started with the two phases that unlock everything else, and the
 * **Phase 0 (safety)** — the test suite can no longer touch production systems, and the pipeline can no longer destroy a production database.
 * **Phase 1 (truthful gates)** — all four backend gates are green, and the frontend lint gate is green too.
 
-**Every backend quality gate is now passing for the first time in the project's history**, and the frontend lint gate went from 820 problems to 0.
+**Every backend quality gate is now passing for the first time in the project's history**, the frontend lint gate went from 820 problems to 0, and **Phase 2 (security hardening) is complete**: the auth endpoints are rate limited, the token hashes are keyed, the flows no longer leak which addresses exist, the responses carry hardening headers, and every request has an id.
+
+**The dependency scanners are clean**: `npm audit` reports **0 findings** (was 3 high + 8 more) and `pip-audit` reports **0 findings** (was 3 vulnerabilities in 2 packages).
 
 While doing that, the work uncovered **four genuine production defects** that no gate had ever caught (details in §4) — including two that would have returned HTTP 500 on the monthly-analytics endpoints, and a race that could publish a scheduled verse **twice**. A fifth finding turned out to be intentional redundancy, not a defect.
 
@@ -34,6 +36,9 @@ While doing that, the work uncovered **four genuine production defects** that no
 | `frontend: npm run build` | pass | **pass** | ✅ |
 | Test-suite hermeticity | ❌ real Cloudinary API call observed | ✅ **no outbound socket is possible** | ✅ |
 | Test-DB safety | ❌ `drop_all` on any `DATABASE_URL` | ✅ refuses non-`test` databases | ✅ |
+| `npm audit` | 3 high (+ 8 more) | **0** | ✅ |
+| `pip-audit` | 3 vulnerabilities / 2 packages | **0** | ✅ |
+| Backend tests | 373 passed / 8 failed | **421 passed / 0 failed** | ✅ |
 
 ---
 
@@ -100,6 +105,20 @@ The 100 errors were 90 % "repository returns `dict[str, object]`" noise. The fix
 | httpx per-request `cookies=` → client cookie jar in the auth-token tests | DEP-004 |
 | Frontend: **prettier** formatting for the whole `src/` tree + the real `exhaustive-deps` fixes (`tCommon` dependencies, stable `users` array) + removal of two stale ESLint directives + a scoped ESLint exception for the generated shadcn primitives | CODE-005 |
 
+### Phase 2 — Security hardening (complete)
+
+| # | Item | What was done | Finding |
+|---|---|---|---|
+| 2.1 | **Rate-limit the auth endpoints** | `/auth/login`, `/register`, `/password/forgot`, `/resend-verification` and `/refresh` are now limited. The login limits count **failures only** (per IP *and* per account) and a success clears the account window — a whole church service signing in from one address is never locked out. The e-mail endpoints count every attempt (each one costs a message). The answer is always **429 + `Retry-After`**, never a hard lockout (that would be a denial-of-service vector against the members). All limits are settings. | SEC-007 |
+| 2.2 | **Keyed token hashes** | Refresh tokens and e-mail action links are stored as `v2:<hmac-sha256>`, keyed with `JWT_REFRESH_SECRET` (the secret that existed for this purpose but was never used). A token issued before the migration is still accepted (dual read) and its session is replaced by a v2 one, so the legacy format disappears on its own. The migration `b2e5c7a91d34` only **widens** the two columns (`VARCHAR 64 → 128`); the downgrade fails loudly instead of truncating a hash. | SEC-005 |
+| 2.3 | **PIN pepper fail-fast** | A deployment with `APP_ENV=production` and no `ATTENDANCE_PIN_PEPPER` no longer starts — otherwise a JWT rotation would invalidate every member's attendance PIN. | SEC-006 |
+| 2.4 | **Dependency patches** | Backend: `python-jose` → **PyJWT** (PYSEC-2026-4298; the app only signs HS256, so every issued token stays valid), `passlib` dropped (never imported), `certifi` floor raised (PYSEC-2026-4320). Frontend: **axios 1.20**, **zod 4.6.7**, **vitest 4.1.12**, **vite 6.4.5**, and npm `overrides` for the transitive packages. `@hookform/resolvers` was replaced by a 40-line local adapter (`src/lib/zodResolver.ts`) because its v6 line cannot be installed next to the `effect` peer it drags in — the alternative would have been `--legacy-peer-deps`, i.e. switching off every peer check in CI. | SEC-008 / DEP-005 |
+| 2.5 | **Security headers + CSP** | Every response carries `nosniff`, `DENY`, a referrer policy, a permissions policy (the camera stays on for the QR scan), COOP and CORP. The API serves JSON only, so the CSP is `default-src 'none'`. HSTS is only sent over TLS. `CSP_REPORT_ONLY` stages the rollout. | SEC-009 |
+| 2.6 | **OpenAPI accuracy** | The anonymous-message submission no longer advertises a security requirement (the optional token is read from the header directly — OpenAPI cannot say "optional"). The cron secret is a proper API-key scheme, so the scheduler tick documents both accepted ways. **Found while fixing this:** `/openapi.json` was still served in production (only `/docs` and `/redoc` were hidden) — the full schema was public. It is hidden now. | SEC-010 |
+| 2.7 | **Anti-enumeration** | Registration, password reset and verification resend answer **202 with the same body** in every case, and the mails are sent as **background jobs** — so neither the status code nor the response time reveals whether an address exists. A reset link whose account is gone gets the same answer as an invalid link. | SEC-007 / SEC-013 |
+| 2.8 | **`frontend/.env.example`** | Same-origin `/api/v1` instead of the production host. | SEC-012 |
+| 2.9 | **Request ids + metrics** | Every request gets an id (the client's `X-Request-ID` when it is safe, a fresh one otherwise), it is bound to the context, echoed in the response and added to **every log line**. A counter registry (no new dependency) counts requests, outbox events, rate-limited calls and durations. `GET /api/v1/internal/metrics` exposes them in the Prometheus format, behind the same guard as the scheduler tick; the pending-outbox gauge is read from the database. | SEC-014 / OPS-004 |
+
 ---
 
 ## 4. Real bugs found and fixed while making the gates green
@@ -158,8 +177,7 @@ Additional checks performed:
 
 | Phase | Content | Size |
 |---|---|---|
-| **Phase 2 (rest)** | Auth rate limiting · refresh-token HMAC + migration · production fail-fast for the PIN pepper · dependency patches (axios ≥ 1.20, zod 4 + resolvers 6, PyJWT instead of `python-jose`, drop `passlib`) · security headers + CSP · OpenAPI accuracy for the public endpoint · anti-enumeration responses · request-id + `/metrics` | ~3 days |
-| **Phase 3 (rest)** | Frontend client for `/quiz-analytics/*` · remove the N+1 in `GET /quizzes` + query-count guard · memory-first access token behind a flag · connection-pool sizing · cache headers | ~4 days |
+| **Phase 3** | Frontend client for `/quiz-analytics/*` · remove the N+1 in `GET /quizzes` + query-count guard · memory-first access token behind a flag · connection-pool sizing · cache headers | ~4 days |
 | **Phase 4** | `app/shared/contracts/` · break the two import cycles · domain ports speak domain objects · one `UnitOfWork` lifecycle · frontend direction handling · replace `assert` guards · the `TODO(phase-blog)` branch · single dependency source + lock · move the 53 MB of design PNGs out of git | ~2 weeks |
 | **Phase 5** | CI hardening (`npm ci`, lint gate, `npm audit`, `pip-audit`, `gitleaks`, `alembic check`, coverage gates) · frontend coverage 21.92 % → ≥ 70 % · E2E golden paths · OpenAPI contract test · production frontend image (nginx) · non-root containers, healthchecks, advisory-locked migrations · Renovate | ~2 weeks |
 
@@ -167,19 +185,19 @@ Additional checks performed:
 
 | Item | Reason |
 |---|---|
-| `python-jose` → `PyJWT` | Behaviour-identical, but it invalidates nothing and touches the auth path — it belongs in its own reviewed PR with the manual login/refresh round-trip |
-| `zod` 3 → 4 | Requires `@hookform/resolvers` 6 at the same time; the form schemas must be re-validated by hand |
-| Memory-first access token (SEC-004) | Needs the flag + a staged rollout + a CSP first; rushing it risks locking every member out |
+| Memory-first access token (SEC-004) | Needs the flag + a staged rollout + the CSP first; rushing it risks locking every member out. The CSP is now in place, so Phase 3 can do it behind `VITE_AUTH_PERSISTENCE` |
 | Domain-port rework (ARCH-005) | Large, type-level refactor; best done *after* the shared-contracts extraction in Phase 4.1 |
+| `/metrics` as a Prometheus scrape target | The endpoint exists and speaks the exposition format; the scrape config and the alerting rules belong with the deployment (Phase 5) |
+| Re-hashing the legacy token rows in bulk | Not needed: every legacy token is single-use and is replaced by a v2 one when it is redeemed, so the old format disappears on its own |
 
 ---
 
 ## 7. Recommended next session
 
-1. **Phase 2.4** — dependency patches (the only items with known CVEs that do not need a design decision).
-2. **Phase 2.1** — auth rate limiting (reuses the existing `SlidingWindowRateLimiter`; no schema change).
-3. **Phase 3.3** — the `GET /quizzes` N+1 with a query-count guard (visible performance win, low risk).
-4. **Phase 5.1/5.2** — switch CI from "always red" to "always green and strict": `npm ci`, `--max-warnings 0`, `npm audit`, `pip-audit`, `gitleaks`, `alembic check`, coverage thresholds (start at the current values, only ever raise them).
-5. **Phase 4.1** — `app/shared/contracts/` with re-exports, so the import cycles can be broken in two small follow-up PRs.
+1. **Phase 3.3** — the `GET /quizzes` N+1 with a query-count guard (visible performance win, low risk).
+2. **Phase 3.4** — the memory-first access token behind `VITE_AUTH_PERSISTENCE` (the CSP it needs is now in place).
+3. **Phase 5.1/5.2** — switch CI from "always red" to "always green and strict": `npm ci`, `--max-warnings 0`, `npm audit`, `pip-audit`, `gitleaks`, `alembic check`, coverage thresholds (start at the current values, only ever raise them).
+4. **Phase 4.1** — `app/shared/contracts/` with re-exports, so the import cycles can be broken in two small follow-up PRs.
+5. **Phase 3.1/3.2** — the frontend client for the analytics endpoints and the removal of the legacy `year`/`month` branch (one release after the deprecation).
 
 > Rule for every follow-up PR: **one concern per PR**, behaviour-preserving, with the test that proves it. The pipeline is green now — the cheapest way to keep it that way is to never merge a red branch again.

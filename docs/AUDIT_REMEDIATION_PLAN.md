@@ -72,15 +72,15 @@ Companion to `docs/CODEBASE_AUDIT_REPORT.md` (report ID `AUDIT-2026-10-26-FULL`,
 
 | # | Item | Finding | Status | Notes |
 |---|---|---|---|---|
-| 2.1 | Rate-limit the auth endpoints (login / forgot / resend / register) | SEC-007 | `[ ]` | Reuse `SlidingWindowRateLimiter`; 429 + existing `rate_limited` code. |
-| 2.2 | Refresh tokens → HMAC-SHA-256 + `v2:` prefix, dual read, column widen | SEC-005 | `[ ]` | Expand migration first (`VARCHAR(64) → VARCHAR(128)`). |
-| 2.3 | Attendance-PIN pepper: fail fast in production, loud warning | SEC-006 | `[~]` | Behaviour locked by tests (dedicated pepper decouples the PIN from `JWT_SECRET`); the production fail-fast is still to do. |
-| 2.4 | Dependency patches: axios ≥ 1.20, zod 4 + resolvers 6, PyJWT, drop `passlib` | SEC-008 / DEP-005 | `[ ]` | `npm ci` reproducibility comes with Phase 5. |
-| 2.5 | Security headers + CSP (report-only → enforce) | SEC-009 | `[ ]` | Additive middleware. |
-| 2.6 | OpenAPI accuracy for the public anonymous-message route | SEC-010 | `[ ]` | `security=[]` on the decorator. |
-| 2.7 | Uniform auth responses (anti-enumeration) | SEC-013 | `[ ]` | Same status + body for known/unknown users. |
+| 2.1 | Rate-limit the auth endpoints (login / forgot / resend / register) | SEC-007 | `[x]` | Failures only for the login, every attempt for the e-mail endpoints, 429 + `Retry-After`, never a lockout. |
+| 2.2 | Refresh tokens → HMAC-SHA-256 + `v2:` prefix, dual read, column widen | SEC-005 | `[x]` | Keyed with `JWT_REFRESH_SECRET`; migration `b2e5c7a91d34` widens the two columns. |
+| 2.3 | Attendance-PIN pepper: fail fast in production, loud warning | SEC-006 | `[x]` | `Settings` refuses to start with `APP_ENV=production` and no pepper. |
+| 2.4 | Dependency patches: axios ≥ 1.20, zod 4, PyJWT, drop `passlib` | SEC-008 / DEP-005 | `[x]` | axios 1.20, zod 4.6.7, vitest 4.1.12, PyJWT 2.15; `npm audit` and `pip-audit` are clean. |
+| 2.5 | Security headers + CSP (report-only → enforce) | SEC-009 | `[x]` | Additive middleware; `CSP_REPORT_ONLY` stages the rollout. |
+| 2.6 | OpenAPI accuracy for the public anonymous-message route | SEC-010 | `[x]` | The optional token is read from the header, so the route declares no security; the cron secret is a scheme. |
+| 2.7 | Uniform auth responses (anti-enumeration) | SEC-013 | `[x]` | 202 + one body everywhere; the mails are sent in the background, so the timing is uniform too. |
 | 2.8 | `frontend/.env.example` → same-origin `/api/v1` | SEC-012 | `[x]` | Local dev can no longer write to production. |
-| 2.9 | Request-id middleware + `/metrics` counters | SEC-014 / OPS-004 | `[ ]` | Additive; makes the scheduler observable. |
+| 2.9 | Request-id middleware + `/metrics` counters | SEC-014 / OPS-004 | `[x]` | `X-Request-ID` on every response, the id in every log line, counters behind the internal guard. |
 | 2.10 | Deprecated `starlette.HTTP_422_UNPROCESSABLE_ENTITY` → `HTTP_422_UNPROCESSABLE_CONTENT` | DEP-003 | `[x]` | Same 422, no warning. |
 | 2.11 | Deprecated httpx per-request `cookies=` → client jar | DEP-004 | `[x]` | Test-only change. |
 
@@ -130,6 +130,21 @@ Companion to `docs/CODEBASE_AUDIT_REPORT.md` (report ID `AUDIT-2026-10-26-FULL`,
 ## Progress log
 
 Newest first. Full detail in `docs/AUDIT_REMEDIATION_FEEDBACK.md`.
+
+### 2026-10-26 — Phase 2 complete (security hardening)
+
+| Item | Result |
+|---|---|
+| Auth rate limits | Login counts **failures** only (per IP and per account), the e-mail endpoints count every attempt, 429 + `Retry-After`, never a lockout |
+| Token hashes | HMAC-SHA-256 keyed with `JWT_REFRESH_SECRET`, `v2:` marker, dual read with the legacy SHA-256, columns widened to `VARCHAR(128)` |
+| PIN pepper | A production deployment without `ATTENDANCE_PIN_PEPPER` no longer starts |
+| Dependencies | `npm audit`: 0 findings · `pip-audit`: 0 findings (python-jose, ecdsa, certifi and the whole axios/zod/vitest chain are gone) |
+| Security headers | `nosniff`, `DENY`, referrer, permissions, COOP/CORP, a strict CSP (`default-src 'none'`), HSTS over TLS only |
+| OpenAPI | The public route declares no security, the cron secret is a scheme, and `/openapi.json` is hidden in production (it used to be served) |
+| Anti-enumeration | Register / reset / resend answer 202 with one body; the mails are sent in the background, so the timing is uniform too |
+| Observability | `X-Request-ID` on every response, the id in every log line, `/api/v1/internal/metrics` behind the cron/admin guard |
+
+New gates: **421 backend tests** (was 386), **52 frontend tests** (was 48), `mypy` 0, `ruff` 0, `npm audit` 0, `pip-audit` 0.
 
 ### 2026-10-26 — Phase 0 + Phase 1 complete (backend), frontend formatting done
 
