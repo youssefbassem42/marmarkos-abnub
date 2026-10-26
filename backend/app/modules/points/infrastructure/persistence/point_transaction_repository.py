@@ -3,13 +3,68 @@
 import uuid
 from collections.abc import Sequence
 from datetime import date, datetime
+from typing import TypedDict, cast
 
-from sqlalchemy import case, delete, func, select
+from sqlalchemy import Numeric, case, delete, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.time.periods import iso_week_start, month_start
 from app.modules.points.infrastructure.persistence.models import PointTransaction
+
+
+class MonthlyKpis(TypedDict):
+    """Cross-user KPIs for one month (P5-035)."""
+
+    participants: int
+    quizzes_completed: int
+    total_points: int
+    average_score_out_of_10: float
+
+
+class PointHistoryRow(TypedDict):
+    """One row of the member points history (P5-032)."""
+
+    id: uuid.UUID
+    points: int
+    awarded_at: datetime
+    source: str
+    quiz_id: uuid.UUID | None
+    quiz_title: str | None
+    verse_id: uuid.UUID | None
+    verse_reference: str | None
+
+
+class LeaderboardRow(TypedDict):
+    """One row of the monthly leaderboard (P5-035)."""
+
+    rank: int
+    user_id: uuid.UUID
+    full_name: str
+    avatar: str | None
+    points: int
+
+
+class QuizBreakdownRow(TypedDict):
+    """One row of the per-user monthly quiz breakdown (P5-035)."""
+
+    quiz_id: uuid.UUID
+    quiz_title: str
+    score: int
+    total_points: int
+    score_out_of_10: float
+
+
+class MonthlyUserRow(TypedDict):
+    """One row of the monthly users table (P5-035)."""
+
+    user_id: uuid.UUID
+    full_name: str
+    avatar: str | None
+    total_points: int
+    quizzes_completed: int
+    average_score_out_of_10: float
+    sparkline: list[int]
 
 
 class PointTransactionRepository:
@@ -67,9 +122,7 @@ class PointTransactionRepository:
         take's award a no-op (unique quiz_attempt_id, BR-31).
         """
         await self._session.execute(
-            delete(PointTransaction).where(
-                PointTransaction.quiz_attempt_id == quiz_attempt_id
-            )
+            delete(PointTransaction).where(PointTransaction.quiz_attempt_id == quiz_attempt_id)
         )
 
     async def totals_for_user(self, user_id: uuid.UUID, *, today: date) -> dict[str, int]:
@@ -150,7 +203,7 @@ class PointTransactionRepository:
 
     async def history_page_with_titles(
         self, user_id: uuid.UUID, *, limit: int, offset: int
-    ) -> tuple[list[dict[str, object]], int]:
+    ) -> tuple[list[PointHistoryRow], int]:
         """Paginated history joined to quiz title + verse reference (P5-032)."""
         from app.modules.bible.infrastructure.persistence.models import BibleVerse
         from app.modules.quiz.infrastructure.persistence.models import Quiz, QuizAttempt
@@ -181,11 +234,11 @@ class PointTransactionRepository:
         rows = await self._session.execute(
             base.order_by(PointTransaction.awarded_at.desc()).limit(limit).offset(offset)
         )
-        return [dict(row._mapping) for row in rows.all()], total
+        return [cast(PointHistoryRow, dict(row._mapping)) for row in rows.all()], total
 
     # -- Monthly analytics (P5-035) ------------------------------------------
 
-    async def monthly_kpis(self, month: date) -> dict[str, object]:
+    async def monthly_kpis(self, month: date) -> MonthlyKpis:
         """Cross-user KPIs for a given month (BR-39)."""
         from app.modules.quiz.infrastructure.persistence.models import QuizAttempt
 
@@ -200,8 +253,8 @@ class PointTransactionRepository:
                             (
                                 QuizAttempt.total_points > 0,
                                 func.round(
-                                    QuizAttempt.score.cast(float)
-                                    / QuizAttempt.total_points.cast(float)
+                                    QuizAttempt.score.cast(Numeric)
+                                    / QuizAttempt.total_points.cast(Numeric)
                                     * 10,
                                     1,
                                 ),
@@ -261,7 +314,7 @@ class PointTransactionRepository:
                 buckets["<50%"] += 1
         return [(k, v) for k, v in buckets.items() if v > 0]
 
-    async def monthly_leaderboard(self, month: date, *, limit: int = 3) -> list[dict[str, object]]:
+    async def monthly_leaderboard(self, month: date, *, limit: int = 3) -> list[LeaderboardRow]:
         """Top users by points for the month with dense rank (BR-39)."""
         from app.modules.users.infrastructure.persistence.models import User
 
@@ -286,7 +339,7 @@ class PointTransactionRepository:
                 .limit(limit)
             )
         ).all()
-        result: list[dict[str, object]] = []
+        result: list[LeaderboardRow] = []
         rank = 0
         prev_points: int | None = None
         for i, row in enumerate(rows):
@@ -318,7 +371,7 @@ class PointTransactionRepository:
         limit: int,
         offset: int,
         sparkline_months: Sequence[date],
-    ) -> tuple[list[dict[str, object]], int]:
+    ) -> tuple[list[MonthlyUserRow], int]:
         """Paginated user results for the month with sparkline (P5-035)."""
         from app.modules.quiz.infrastructure.persistence.models import QuizAttempt
         from app.modules.users.infrastructure.persistence.models import User
@@ -334,8 +387,8 @@ class PointTransactionRepository:
                         (
                             QuizAttempt.total_points > 0,
                             func.round(
-                                QuizAttempt.score.cast(float)
-                                / QuizAttempt.total_points.cast(float)
+                                QuizAttempt.score.cast(Numeric)
+                                / QuizAttempt.total_points.cast(Numeric)
                                 * 10,
                                 1,
                             ),
@@ -406,7 +459,7 @@ class PointTransactionRepository:
             for sid, pm, pts in spark_rows:
                 sparkline_map.setdefault(sid, {})[pm] = int(pts)
 
-        result: list[dict[str, object]] = []
+        result: list[MonthlyUserRow] = []
         for row in rows:
             name = " ".join(n for n in (row.first_name, row.last_name) if n).strip() or "Unknown"
             spark = [sparkline_map.get(row.uid, {}).get(m, 0) for m in sparkline_months]
@@ -436,9 +489,7 @@ class PointTransactionRepository:
         )
         return [(pm, int(pts)) for pm, pts in rows.all()]
 
-    async def user_month_breakdown(
-        self, user_id: uuid.UUID, month: date
-    ) -> list[dict[str, object]]:
+    async def user_month_breakdown(self, user_id: uuid.UUID, month: date) -> list[QuizBreakdownRow]:
         """Per-quiz breakdown for a user in a given month."""
         from app.modules.quiz.infrastructure.persistence.models import Quiz, QuizAttempt
 
