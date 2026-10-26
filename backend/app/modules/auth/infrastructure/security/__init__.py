@@ -3,6 +3,8 @@ from app.modules.auth.infrastructure.security.password import hash_password, ver
 from app.modules.auth.infrastructure.security.refresh_tokens import (
     generate_refresh_token,
     hash_refresh_token,
+    hash_refresh_token_legacy,
+    is_legacy_hash,
 )
 
 __all__ = [
@@ -11,6 +13,8 @@ __all__ = [
     "generate_refresh_token",
     "hash_password",
     "hash_refresh_token",
+    "hash_refresh_token_legacy",
+    "is_legacy_hash",
     "jwt_service",
     "verify_password",
 ]

@@ -23,6 +23,7 @@ from app.modules.auth.infrastructure.security import (
     generate_refresh_token,
     hash_password,
     hash_refresh_token,
+    hash_refresh_token_legacy,
     jwt_service,
     verify_password,
 )
@@ -237,10 +238,25 @@ class AuthenticationService:
         await self._uow.users.set_last_login(user, datetime.now(UTC))
         return await self._issue_tokens(user, user_agent, ip_address)
 
+    async def _find_refresh_token(self, refresh_token: str) -> RefreshToken | None:
+        """Find the session of a token, in both hash formats.
+
+        The keyed hash is tried first; a token that was issued before the
+        migration is still recognised through its old unkeyed hash (dual
+        read). Such a token is single-use and is replaced by a v2 token
+        when it is redeemed, so the legacy format disappears on its own.
+        """
+        stored = await self._uow.refresh_tokens.get_by_hash(hash_refresh_token(refresh_token))
+        if stored is None:
+            stored = await self._uow.refresh_tokens.get_by_hash(
+                hash_refresh_token_legacy(refresh_token)
+            )
+        return stored
+
     async def refresh(
         self, refresh_token: str, user_agent: str | None = None, ip_address: str | None = None
     ) -> AuthResult:
-        stored = await self._uow.refresh_tokens.get_by_hash(hash_refresh_token(refresh_token))
+        stored = await self._find_refresh_token(refresh_token)
         if (
             stored is None
             or stored.revoked_at is not None
@@ -256,7 +272,7 @@ class AuthenticationService:
         return await self._issue_tokens(user, user_agent, ip_address)
 
     async def logout(self, refresh_token: str) -> None:
-        stored = await self._uow.refresh_tokens.get_by_hash(hash_refresh_token(refresh_token))
+        stored = await self._find_refresh_token(refresh_token)
         if stored is not None and stored.revoked_at is None:
             await self._uow.refresh_tokens.revoke(stored, datetime.now(UTC))
             await self._uow.commit()

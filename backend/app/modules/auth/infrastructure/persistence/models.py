@@ -22,9 +22,9 @@ if TYPE_CHECKING:
 class RefreshToken(UUIDPrimaryKeyMixin, Base):
     """Persisted refresh-token session.
 
-    Only the SHA-256 hash of the token is stored; the raw token travels
-    only in the HttpOnly cookie. Revocation is explicit (``revoked_at``)
-    so logout and token reuse are detectable.
+    Only the keyed hash of the token is stored (``v2:<hmac-sha256>``);
+    the raw token travels only in the HttpOnly cookie. Revocation is
+    explicit (``revoked_at``) so logout and token reuse are detectable.
     """
 
     __tablename__ = "refresh_tokens"
@@ -32,7 +32,7 @@ class RefreshToken(UUIDPrimaryKeyMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
     )
-    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(128), unique=True, index=True, nullable=False)
     expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     revoked_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     user_agent: Mapped[str | None] = mapped_column(String(255))
@@ -47,7 +47,7 @@ class RefreshToken(UUIDPrimaryKeyMixin, Base):
 class AuthToken(TimestampMixin, UUIDPrimaryKeyMixin, Base):
     """Single-use action token for email-verified flows.
 
-    Covers email verification and password reset: only the SHA-256 hash
+    Covers email verification and password reset: only the keyed hash
     is stored, the raw token exists solely inside the emailed link.
     Consuming sets ``used_at``; issuing a new link of the same purpose
     invalidates all previous pending ones for that user.
@@ -58,7 +58,7 @@ class AuthToken(TimestampMixin, UUIDPrimaryKeyMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), index=True, nullable=False
     )
-    token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    token_hash: Mapped[str] = mapped_column(String(128), unique=True, index=True, nullable=False)
     purpose: Mapped[AuthTokenPurpose] = mapped_column(
         SAEnum(AuthTokenPurpose, native_enum=False, length=30), nullable=False, index=True
     )

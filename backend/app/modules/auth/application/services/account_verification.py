@@ -23,6 +23,7 @@ from app.modules.auth.infrastructure.security import (
     generate_refresh_token,
     hash_password,
     hash_refresh_token,
+    hash_refresh_token_legacy,
 )
 from app.modules.notifications.infrastructure.email import EmailService
 from app.modules.users.infrastructure.persistence.models import User
@@ -55,6 +56,25 @@ async def resend_verification_in_background(email: str) -> None:
 def _frontend_origin() -> str:
     url = settings.FRONTEND_URL.rstrip("/")
     return url if url.startswith(("http://", "https://")) else f"https://{url}"
+
+
+async def _find_valid_token(
+    uow: UnitOfWork,
+    raw_token: str,
+    purpose: AuthTokenPurpose,
+    now: datetime,
+) -> AuthToken | None:
+    """Find a pending token, in both hash formats (dual read).
+
+    The keyed hash is tried first; a link that was issued before the
+    migration is still recognised through its old unkeyed hash. The link
+    is single-use, so it is consumed and the legacy format disappears on
+    its own.
+    """
+    stored = await uow.auth_tokens.get_valid(hash_refresh_token(raw_token), purpose, now)
+    if stored is None:
+        stored = await uow.auth_tokens.get_valid(hash_refresh_token_legacy(raw_token), purpose, now)
+    return stored
 
 
 def _issue_token(
@@ -122,8 +142,8 @@ class EmailVerificationService:
 
     async def confirm(self, raw_token: str) -> None:
         now = datetime.now(UTC)
-        stored = await self._uow.auth_tokens.get_valid(
-            hash_refresh_token(raw_token), AuthTokenPurpose.EMAIL_VERIFICATION, now
+        stored = await _find_valid_token(
+            self._uow, raw_token, AuthTokenPurpose.EMAIL_VERIFICATION, now
         )
         if stored is None:
             raise UnauthorizedError("This verification link is invalid or has expired")
@@ -184,8 +204,8 @@ class PasswordResetService:
 
     async def reset(self, request: ResetPasswordRequest) -> None:
         now = datetime.now(UTC)
-        stored = await self._uow.auth_tokens.get_valid(
-            hash_refresh_token(request.token), AuthTokenPurpose.PASSWORD_RESET, now
+        stored = await _find_valid_token(
+            self._uow, request.token, AuthTokenPurpose.PASSWORD_RESET, now
         )
         if stored is None:
             raise UnauthorizedError("This reset link is invalid or has expired")
