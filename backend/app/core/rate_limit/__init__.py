@@ -18,6 +18,7 @@ from fastapi import Request
 
 from app.config import settings
 from app.core.exceptions.errors import RateLimitedError
+from app.core.observability import increment
 
 _MAX_TRACKED_KEYS = 10_000
 
@@ -29,11 +30,19 @@ _REGISTERED_LIMITERS: list["SlidingWindowRateLimiter"] = []
 class SlidingWindowRateLimiter:
     """Classic sliding window: keep the timestamps of recent hits per key."""
 
-    def __init__(self, *, limit: int | Callable[[], int], window_seconds: int) -> None:
+    def __init__(
+        self,
+        *,
+        limit: int | Callable[[], int],
+        window_seconds: int,
+        name: str = "unknown",
+    ) -> None:
         # The limit may be a callable so it can follow a settings value
         # that is read at request time instead of at import time.
         self._limit_source = limit if callable(limit) else lambda: int(limit)
         self._window = window_seconds
+        # The name is the label of the counter: "auth_login", "anonymous_message"...
+        self._name = name
         self._hits: dict[str, deque[float]] = {}
 
     @property
@@ -50,6 +59,7 @@ class SlidingWindowRateLimiter:
         if len(window) >= self.limit:
             # The oldest surviving hit is what blocks this one.
             retry_at = window[0] + self._window
+            increment("marmarkos_rate_limited_total", {"limiter": self._name})
             raise RateLimitedError(retry_after=max(1, math.ceil(retry_at - now)))
         window.append(now)
         self._prune_if_needed()

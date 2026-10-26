@@ -35,10 +35,12 @@ _UoW = Annotated[UnitOfWork, Depends(get_unit_of_work)]
 _PER_IP_HOURLY = SlidingWindowRateLimiter(
     limit=settings.ANONYMOUS_MESSAGE_RATE_LIMIT_PER_IP,
     window_seconds=3600,
+    name="anonymous_message_ip",
 )
 _PER_USER_DAILY = SlidingWindowRateLimiter(
     limit=settings.ANONYMOUS_MESSAGE_RATE_LIMIT_PER_USER,
     window_seconds=86400,
+    name="anonymous_message_user",
 )
 
 _StatusParam = Annotated[MessageStatus | None, Query(description="Filter by status")]

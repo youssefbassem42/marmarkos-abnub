@@ -6,7 +6,9 @@ monitor only sees real outages.
 """
 
 from fastapi import APIRouter
+from fastapi.responses import PlainTextResponse
 from pydantic import BaseModel, Field
+from sqlalchemy import func, select
 
 # Importing the handler modules registers their event types in the
 # dispatcher registry (import-time side effect by design).
@@ -15,9 +17,11 @@ import app.modules.bible.application.handlers.bible_verse_published_handler  # n
 import app.modules.users.application.handlers.user_registered_handler  # noqa: F401,E402
 from app.config import settings
 from app.core.database import async_session_factory
+from app.core.observability import render
 from app.modules.bible.application.services.publication_service import publish_due
 from app.modules.internal.presentation.dependencies import CronOrAdmin
 from app.shared.application.outbox_dispatcher import dispatch_pending
+from app.shared.infrastructure.persistence.outbox import OutboxEvent, OutboxStatus
 
 router = APIRouter(prefix="/internal", tags=["Internal"])
 
@@ -60,3 +64,44 @@ async def scheduler_tick(actor: CronOrAdmin) -> SchedulerTickResponse:
         outbox_processed=delivery["processed"],
         outbox_failed=delivery["failed"],
     )
+
+
+@router.get(
+    "/metrics",
+    response_class=PlainTextResponse,
+    responses={
+        401: {"description": "Missing or wrong cron secret / bearer"},
+        403: {"description": "Non-admin bearer"},
+        503: {"description": "scheduler_disabled: no CRON_SECRET configured"},
+    },
+    summary="The in-process counters (Prometheus exposition format)",
+)
+async def metrics(actor: CronOrAdmin) -> PlainTextResponse:
+    """Expose the operational counters (SEC-014 / OPS-004).
+
+    The endpoint is protected exactly like the scheduler tick: the cron
+    secret or an ADMIN bearer token. The counters live in the memory of
+    the process (they are reset on a restart); the number of pending
+    outbox rows is read from the database, because that number must
+    survive a restart - it is the one that says "the scheduler is
+    behind".
+    """
+    _ = actor
+    pending = await _pending_outbox_rows()
+    return PlainTextResponse(
+        render(extra=[("marmarkos_outbox_pending", pending)]),
+        media_type="text/plain; version=0.0.4; charset=utf-8",
+    )
+
+
+async def _pending_outbox_rows() -> float:
+    """How many outbox rows are still waiting to be dispatched."""
+    async with async_session_factory() as session:
+        count = (
+            await session.execute(
+                select(func.count())
+                .select_from(OutboxEvent)
+                .where(OutboxEvent.status.in_((OutboxStatus.PENDING, OutboxStatus.FAILED)))
+            )
+        ).scalar_one()
+    return float(count)

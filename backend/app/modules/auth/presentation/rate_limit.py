@@ -27,6 +27,7 @@ from fastapi import Request
 
 from app.config import settings
 from app.core.exceptions.errors import RateLimitedError
+from app.core.observability import increment
 from app.core.rate_limit import (
     SlidingWindowRateLimiter,
     client_ip,
@@ -43,31 +44,39 @@ _LOGIN_FAILURES_PER_IP = register_limiter(
     SlidingWindowRateLimiter(
         limit=lambda: settings.AUTH_LOGIN_FAILURES_PER_IP,
         window_seconds=_WINDOW,
+        name="auth_login_ip",
     )
 )
 _LOGIN_FAILURES_PER_ACCOUNT = register_limiter(
     SlidingWindowRateLimiter(
         limit=lambda: settings.AUTH_LOGIN_FAILURES_PER_ACCOUNT,
         window_seconds=_WINDOW,
+        name="auth_login_account",
     )
 )
 
 # -- e-mail sending endpoints: every attempt counts --------------------------
 _REGISTER_PER_IP = register_limiter(
-    SlidingWindowRateLimiter(limit=lambda: settings.AUTH_REGISTER_PER_IP, window_seconds=3600)
+    SlidingWindowRateLimiter(
+        limit=lambda: settings.AUTH_REGISTER_PER_IP, window_seconds=3600, name="auth_register"
+    )
 )
 _PASSWORD_RESET_PER_IP = register_limiter(
     SlidingWindowRateLimiter(limit=lambda: settings.AUTH_PASSWORD_RESET_PER_IP, window_seconds=3600)
 )
 _RESEND_VERIFICATION_PER_IP = register_limiter(
     SlidingWindowRateLimiter(
-        limit=lambda: settings.AUTH_RESEND_VERIFICATION_PER_IP, window_seconds=3600
+        limit=lambda: settings.AUTH_RESEND_VERIFICATION_PER_IP,
+        window_seconds=3600,
+        name="auth_resend_verification",
     )
 )
 
 # -- token refresh: protects the database from a token-guessing loop --------
 _REFRESH_PER_IP = register_limiter(
-    SlidingWindowRateLimiter(limit=lambda: settings.AUTH_REFRESH_PER_IP, window_seconds=60)
+    SlidingWindowRateLimiter(
+        limit=lambda: settings.AUTH_REFRESH_PER_IP, window_seconds=60, name="auth_refresh"
+    )
 )
 
 
@@ -80,11 +89,13 @@ def check_login_attempt(request: Request, email: str) -> None:
     account_failures = _LOGIN_FAILURES_PER_ACCOUNT.record(account_key)
 
     if ip_failures > settings.AUTH_LOGIN_FAILURES_PER_IP:
+        increment("marmarkos_rate_limited_total", {"limiter": "auth_login_ip"})
         raise RateLimitedError(
             "Too many failed sign-in attempts from this address. Please try again later",
             retry_after=_LOGIN_FAILURES_PER_IP.retry_after(ip_key),
         )
     if account_failures > settings.AUTH_LOGIN_FAILURES_PER_ACCOUNT:
+        increment("marmarkos_rate_limited_total", {"limiter": "auth_login_account"})
         raise RateLimitedError(
             "Too many failed sign-in attempts for this account. Please try again later",
             retry_after=_LOGIN_FAILURES_PER_ACCOUNT.retry_after(account_key),

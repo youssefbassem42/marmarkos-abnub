@@ -15,6 +15,7 @@ from typing import Any
 
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 
+from app.core.observability import increment
 from app.shared.infrastructure.persistence.outbox import (
     OutboxEvent,
     OutboxRepository,
@@ -64,6 +65,8 @@ async def dispatch_pending(
         else:
             failed += 1
 
+    increment("marmarkos_outbox_processed_total", value=processed)
+    increment("marmarkos_outbox_failed_total", value=failed)
     return {"processed": processed, "failed": failed}
 
 

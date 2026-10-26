@@ -9,6 +9,7 @@ from app.api.router import api_router
 from app.config import settings
 from app.core.exceptions import register_exception_handlers
 from app.core.middleware import SecurityHeadersMiddleware
+from app.core.observability import RequestContextMiddleware, install_request_id_filter
 
 logger = logging.getLogger(__name__)
 
@@ -59,9 +60,16 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    # Request ids + request counters (SEC-014). Registered first so every
+    # other middleware and every handler runs inside its context.
+    application.add_middleware(RequestContextMiddleware)
+
     # Hardening headers on every response (SEC-009). Registered after the
     # CORS middleware so the security headers are added last.
     application.add_middleware(SecurityHeadersMiddleware)
+
+    # Every log line carries the request id (SEC-014).
+    install_request_id_filter()
 
     register_exception_handlers(application)
 
