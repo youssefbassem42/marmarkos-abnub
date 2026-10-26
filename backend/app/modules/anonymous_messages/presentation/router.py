@@ -46,7 +46,14 @@ _PageParam = Annotated[int, Query(ge=1, description="1-based page number")]
 _SizeParam = Annotated[int, Query(ge=1, le=100, description="Items per page")]
 
 
-@router.post("", status_code=201)
+@router.post(
+    "",
+    status_code=201,
+    # The submission is public: a bearer token is optional and only used
+    # for the per-member rate limit. Without this the OpenAPI schema
+    # would advertise the endpoint as authenticated (SEC-010).
+    openapi_extra={"security": []},
+)
 async def submit_anonymous_message(
     payload: AnonymousMessageCreateRequest,
     request: Request,

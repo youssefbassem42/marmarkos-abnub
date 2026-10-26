@@ -14,8 +14,8 @@ Matrix (Part 1 §5.8 / P5-019 acceptance):
 import secrets
 from typing import Annotated
 
-from fastapi import Depends, Header
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from fastapi import Depends, Security
+from fastapi.security import APIKeyHeader, HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
@@ -32,11 +32,15 @@ from app.modules.users.infrastructure.persistence.models import User
 from app.modules.users.infrastructure.persistence.user_repository import UserRepository
 
 _bearer_scheme = HTTPBearer(auto_error=False)
+#: The shared cron secret, declared as an OpenAPI security scheme so the
+#: schema documents both ways to call the scheduler tick.
+_cron_scheme = APIKeyHeader(name="X-Cron-Secret", scheme_name="CronSecret", auto_error=False)
 
 
 async def require_cron_or_admin(
     x_cron_secret: Annotated[
-        str | None, Header(description="Shared secret matching CRON_SECRET")
+        str | None,
+        Security(_cron_scheme),
     ] = None,
     credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)] = None,
     session: Annotated[AsyncSession | None, Depends(get_db_session)] = None,

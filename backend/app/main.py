@@ -8,6 +8,7 @@ from fastapi.responses import JSONResponse
 from app.api.router import api_router
 from app.config import settings
 from app.core.exceptions import register_exception_handlers
+from app.core.middleware import SecurityHeadersMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -16,11 +17,13 @@ def create_app() -> FastAPI:
     application = FastAPI(
         title=settings.APP_NAME,
         version="0.1.0",
-        # Swagger / ReDoc are only exposed when DEBUG=true.
-        # In production (DEBUG=false) these URLs return 404 so the full
-        # API schema is never served to anonymous callers.
+        # Swagger / ReDoc / the raw schema are only exposed when DEBUG=true.
+        # In production (DEBUG=false) these URLs return 404, so the full
+        # API schema is never served to anonymous callers. (The raw
+        # /openapi.json route used to stay enabled - it is now hidden too.)
         docs_url="/docs" if settings.DEBUG else None,
         redoc_url="/redoc" if settings.DEBUG else None,
+        openapi_url="/openapi.json" if settings.DEBUG else None,
     )
 
     @application.middleware("http")
@@ -55,6 +58,10 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    # Hardening headers on every response (SEC-009). Registered after the
+    # CORS middleware so the security headers are added last.
+    application.add_middleware(SecurityHeadersMiddleware)
 
     register_exception_handlers(application)
 

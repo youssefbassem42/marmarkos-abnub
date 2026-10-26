@@ -121,6 +121,14 @@ class Settings(BaseSettings):
     # Read X-Forwarded-For first hop as the client IP (behind a reverse proxy).
     TRUST_PROXY_HEADERS: bool = False
 
+    # -- Security headers (SEC-009) ------------------------------------------
+    # Hardening headers on every response. CSP_REPORT_ONLY stages the
+    # policy: the browser reports violations instead of blocking them.
+    SECURITY_HEADERS_ENABLED: bool = True
+    CSP_ENABLED: bool = True
+    CSP_REPORT_ONLY: bool = False
+    HSTS_ENABLED: bool = True
+
     # -- Auth rate limits (SEC-007) ------------------------------------------
     # Sliding windows, per process (same limitation as the anonymous-message
     # limits: see app/core/rate_limit). The login limits count *failures*
