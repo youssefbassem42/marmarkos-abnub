@@ -33,6 +33,14 @@ from app.modules.auth.presentation.cookies import (
     set_refresh_token_cookie,
 )
 from app.modules.auth.presentation.dependencies import SessionDependency
+from app.modules.auth.presentation.rate_limit import (
+    check_login_attempt,
+    check_password_reset_attempt,
+    check_refresh_attempt,
+    check_register_attempt,
+    check_resend_verification_attempt,
+    clear_login_failures,
+)
 from app.modules.users.application.dto import UserResponse
 from app.modules.users.application.mappers.user_mapper import map_user_to_response
 
@@ -128,7 +136,10 @@ async def google_login_callback(
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
-async def register(payload: RegisterRequest, session: SessionDependency) -> UserResponse:
+async def register(
+    payload: RegisterRequest, request: Request, session: SessionDependency
+) -> UserResponse:
+    check_register_attempt(request)
     user = await RegistrationService(session).register(payload)
     return map_user_to_response(user)
 
@@ -142,18 +153,20 @@ async def verify_email(payload: VerifyEmailRequest, session: SessionDependency) 
 
 @router.post("/resend-verification", response_model=MessageResponse)
 async def resend_verification(
-    payload: ResendVerificationRequest, session: SessionDependency
+    payload: ResendVerificationRequest, request: Request, session: SessionDependency
 ) -> MessageResponse:
     """Re-send the verification link (quiet no-op for unknown addresses)."""
+    check_resend_verification_attempt(request)
     await EmailVerificationService(session).resend(payload.email.lower())
     return MessageResponse(message="If the account exists, a verification email has been sent")
 
 
 @router.post("/password/forgot", response_model=MessageResponse)
 async def forgot_password(
-    payload: ForgotPasswordRequest, session: SessionDependency
+    payload: ForgotPasswordRequest, request: Request, session: SessionDependency
 ) -> MessageResponse:
     """Email a reset link; always succeeds to avoid address enumeration."""
+    check_password_reset_attempt(request)
     await PasswordResetService(session).request_reset(payload)
     return MessageResponse(
         message="If an account exists for this email, a reset link has been sent"
@@ -173,11 +186,18 @@ async def reset_password(
 async def login(
     payload: LoginRequest, request: Request, response: Response, session: SessionDependency
 ) -> AuthResponse:
-    result = await AuthenticationService(session).login(
-        payload,
-        user_agent=request.headers.get("user-agent"),
-        ip_address=request.client.host if request.client else None,
-    )
+    try:
+        result = await AuthenticationService(session).login(
+            payload,
+            user_agent=request.headers.get("user-agent"),
+            ip_address=request.client.host if request.client else None,
+        )
+    except UnauthorizedError:
+        # Only failed sign-ins are counted: a burst of successful sign-ins
+        # (one shared address, a whole service) must never lock anyone out.
+        check_login_attempt(request, payload.email)
+        raise
+    clear_login_failures(payload.email)
     set_refresh_token_cookie(
         response, result.refresh_token, _REFRESH_COOKIE_MAX_AGE, request=request
     )
@@ -192,6 +212,7 @@ async def login(
 async def refresh(
     request: Request, response: Response, session: SessionDependency
 ) -> TokenResponse:
+    check_refresh_attempt(request)
     refresh_token = request.cookies.get(REFRESH_TOKEN_COOKIE_NAME)
     if refresh_token is None:
         raise UnauthorizedError("Not authenticated")

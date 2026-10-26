@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from app.config import settings
 from app.core.database import get_unit_of_work
 from app.core.pagination import Page, PageParams
-from app.core.rate_limit import SlidingWindowRateLimiter, hash_key
+from app.core.rate_limit import SlidingWindowRateLimiter, client_ip, hash_key
 from app.modules.anonymous_messages.application.dto.anonymous_message_dto import (
     AnonymousMessageAdminResponse,
     AnonymousMessageCreateRequest,
@@ -46,14 +46,6 @@ _PageParam = Annotated[int, Query(ge=1, description="1-based page number")]
 _SizeParam = Annotated[int, Query(ge=1, le=100, description="Items per page")]
 
 
-def _client_ip(request: Request) -> str:
-    if settings.TRUST_PROXY_HEADERS:
-        forwarded = request.headers.get("X-Forwarded-For")
-        if forwarded:
-            return forwarded.split(",")[0].strip()
-    return request.client.host if request.client else "unknown"
-
-
 @router.post("", status_code=201)
 async def submit_anonymous_message(
     payload: AnonymousMessageCreateRequest,
@@ -63,7 +55,7 @@ async def submit_anonymous_message(
 ) -> AnonymousMessageCreateResponse:
     """BR-13/BR-15: rate-check first, persist first, then Telegram inline."""
     # BR-15: both limits are enforced before anything is persisted.
-    ip_key = hash_key(_client_ip(request))
+    ip_key = hash_key(client_ip(request))
     _PER_IP_HOURLY.hit(ip_key)
     if user is not None:
         # BR-12: only the hashed identity is stored, never the id itself.

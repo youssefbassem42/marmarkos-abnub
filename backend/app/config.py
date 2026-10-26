@@ -121,6 +121,20 @@ class Settings(BaseSettings):
     # Read X-Forwarded-For first hop as the client IP (behind a reverse proxy).
     TRUST_PROXY_HEADERS: bool = False
 
+    # -- Auth rate limits (SEC-007) ------------------------------------------
+    # Sliding windows, per process (same limitation as the anonymous-message
+    # limits: see app/core/rate_limit). The login limits count *failures*
+    # only, so a shared address (a church wifi) is never locked out by
+    # successful sign-ins; the register/reset/resend limits count every
+    # attempt because each one costs an e-mail.
+    AUTH_RATE_LIMIT_WINDOW_SECONDS: int = 300
+    AUTH_LOGIN_FAILURES_PER_IP: int = 20
+    AUTH_LOGIN_FAILURES_PER_ACCOUNT: int = 5
+    AUTH_REGISTER_PER_IP: int = 10
+    AUTH_PASSWORD_RESET_PER_IP: int = 5
+    AUTH_RESEND_VERIFICATION_PER_IP: int = 5
+    AUTH_REFRESH_PER_IP: int = 60
+
     # -- Bible verses, quizzes & points (Phase 5) ---
     CRON_SECRET: str | None = None  # shared secret for /internal/scheduler/tick
     SCHEDULER_TICK_MAX_BATCH: int = 50

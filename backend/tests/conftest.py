@@ -60,6 +60,18 @@ def console_mail_provider(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(settings, "MAIL_PROVIDER", "console")
 
 
+@pytest.fixture(autouse=True)
+def reset_rate_limiters() -> None:
+    """Every test starts with empty rate-limit windows.
+
+    The limiters are module-level singletons (D-22), so without this a
+    test that trips a limit would leak that state into the next one.
+    """
+    from app.core.rate_limit import reset_all_limiters
+
+    reset_all_limiters()
+
+
 _ALLOWED_OUTBOUND_HOSTS = frozenset({"127.0.0.1", "::1", "localhost", "0.0.0.0", ""})
 
 
