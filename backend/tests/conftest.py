@@ -1,15 +1,8 @@
 import asyncio
-import os
-
-os.environ.setdefault("APP_ENV", "test")
-os.environ.setdefault(
-    "DATABASE_URL", "postgresql+asyncpg://marmarkos:marmarkos@localhost:55432/marmarkos_test"
-)
-os.environ.setdefault("JWT_SECRET", "test-jwt-secret")
-os.environ.setdefault("JWT_REFRESH_SECRET", "test-jwt-refresh-secret")
-os.environ.setdefault("MAIL_PROVIDER", "console")
-
+import socket
 from collections.abc import AsyncIterator, Iterator
+
+from tests import env_bootstrap  # isort: skip  # noqa: F401  (must run before app.config)
 
 import pytest
 import pytest_asyncio
@@ -65,6 +58,44 @@ async def clean_db(db_engine: AsyncEngine) -> None:
 def console_mail_provider(monkeypatch: pytest.MonkeyPatch) -> None:
     """No test may open a socket to a real mail provider."""
     monkeypatch.setattr(settings, "MAIL_PROVIDER", "console")
+
+
+_ALLOWED_OUTBOUND_HOSTS = frozenset({"127.0.0.1", "::1", "localhost", "0.0.0.0", ""})
+
+
+@pytest.fixture(autouse=True)
+def no_external_network(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Fail loudly when a test tries to reach a third-party service.
+
+    Only loopback connections are allowed (the local PostgreSQL container).
+    Any other outbound connection raises, so an accidental call to a real
+    API becomes an immediate, visible test failure instead of a silent
+    production request.
+    """
+    real_connect = socket.socket.connect
+    real_connect_ex = socket.socket.connect_ex
+
+    def _host_of(address: object) -> str:
+        if isinstance(address, tuple) and address:
+            return str(address[0])
+        return str(address)
+
+    def _guard_connect(
+        self: socket.socket, address: object, *args: object, **kwargs: object
+    ) -> object:
+        if _host_of(address) in _ALLOWED_OUTBOUND_HOSTS:
+            return real_connect(self, address, *args, **kwargs)
+        raise RuntimeError(f"Outbound network access is blocked in tests (attempted {address!r})")
+
+    def _guard_connect_ex(
+        self: socket.socket, address: object, *args: object, **kwargs: object
+    ) -> object:
+        if _host_of(address) in _ALLOWED_OUTBOUND_HOSTS:
+            return real_connect_ex(self, address, *args, **kwargs)
+        raise RuntimeError(f"Outbound network access is blocked in tests (attempted {address!r})")
+
+    monkeypatch.setattr(socket.socket, "connect", _guard_connect)
+    monkeypatch.setattr(socket.socket, "connect_ex", _guard_connect_ex)
 
 
 @pytest_asyncio.fixture()

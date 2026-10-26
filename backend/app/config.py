@@ -1,4 +1,22 @@
+"""Application settings (environment-driven)."""
+
+import os
+
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+def _dotenv_file() -> str | None:
+    """Path of the dotenv file to read, or ``None`` to read none.
+
+    The test suite must never read the developer's ``.env`` file: it may
+    contain real production credentials (database, mail, Telegram, Google
+    OAuth, Cloudinary).  ``APP_ENV`` is read from the *process environment*
+    only - the environment always wins over the dotenv file - so a test run
+    stays hermetic even when it is started from another working directory.
+    """
+    if os.environ.get("APP_ENV", "").strip().lower() == "test":
+        return None
+    return ".env"
 
 
 class Settings(BaseSettings):
@@ -104,23 +122,23 @@ class Settings(BaseSettings):
     TRUST_PROXY_HEADERS: bool = False
 
     # -- Bible verses, quizzes & points (Phase 5) ---
-    CRON_SECRET: str | None = None            # shared secret for /internal/scheduler/tick
+    CRON_SECRET: str | None = None  # shared secret for /internal/scheduler/tick
     SCHEDULER_TICK_MAX_BATCH: int = 50
-    VERSE_OPEN_DEDUPE_SECONDS: int = 300      # D-16
+    VERSE_OPEN_DEDUPE_SECONDS: int = 300  # D-16
     BIBLE_VERSES_PAGE_SIZE: int = 12
     BIBLE_VERSES_MAX_PAGE_SIZE: int = 50
     QUIZ_MIN_DURATION_SECONDS: int = 30
     QUIZ_MAX_DURATION_SECONDS: int = 7200
     QUIZ_MAX_QUESTIONS: int = 50
     QUIZ_MAX_OPTIONS_PER_QUESTION: int = 6
-    QUIZ_ATTEMPT_GRACE_SECONDS: int = 5       # network-latency tolerance, BR-26/27
+    QUIZ_ATTEMPT_GRACE_SECONDS: int = 5  # network-latency tolerance, BR-26/27
     QUIZ_ANALYTICS_PAGE_SIZE: int = 10
     QUIZ_ANALYTICS_MAX_PAGE_SIZE: int = 100
     POINTS_HISTORY_MAX_MONTHS: int = 24
     ANALYTICS_EXPORT_MAX_ROWS: int = 5000
 
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=_dotenv_file(),
         env_file_encoding="utf-8",
         case_sensitive=True,
     )

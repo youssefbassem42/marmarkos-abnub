@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+*.env.local
+.env.local.*
 
 # Python
 __pycache__/
@@ -14,11 +16,16 @@ venv/
 .ruff_cache/
 .coverage
 htmlcov/
+*.egg-info/
+.eggs/
+build/
 
 # Node
 node_modules/
 dist/
 .vite/
+coverage/
+frontend/coverage/
 
 # IDE
 .vscode/
