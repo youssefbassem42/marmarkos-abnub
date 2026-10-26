@@ -48,7 +48,6 @@ import {
   useVerseAnalyticsUsers,
   type VerseAnalyticsUsersParams,
 } from "../../hooks/useVerseAnalyticsUsers";
-// eslint-disable-next-line boundaries/entry-point
 import { VersePickerField } from "@/modules/quiz/components/admin/VersePickerField";
 
 const LOCALE = "ar-EG";
@@ -64,7 +63,11 @@ export default function VerseAnalyticsPage() {
   const overview = useVerseAnalyticsOverview();
   const quick = useVerseQuickStats();
   const detail = useVerseAnalytics(verseId);
-  const users = useVerseAnalyticsUsers(verseId, { page, size: 10, read: readFilter });
+  const users = useVerseAnalyticsUsers(verseId, {
+    page,
+    size: 10,
+    read: readFilter,
+  });
 
   useEffect(() => {
     setPage(1);
@@ -73,9 +76,10 @@ export default function VerseAnalyticsPage() {
   const chartData = useMemo(
     () =>
       (detail.data?.series ?? []).map((point) => ({
-        label: new Intl.DateTimeFormat(LOCALE, { day: "2-digit", month: "short" }).format(
-          new Date(`${point.bucket}T00:00:00`),
-        ),
+        label: new Intl.DateTimeFormat(LOCALE, {
+          day: "2-digit",
+          month: "short",
+        }).format(new Date(`${point.bucket}T00:00:00`)),
         opens: point.opens,
         reads: point.reads,
       })),
@@ -83,7 +87,10 @@ export default function VerseAnalyticsPage() {
   );
 
   const chartConfig = {
-    opens: { label: t("admin.analytics.series.opens"), color: "var(--brand-blue)" },
+    opens: {
+      label: t("admin.analytics.series.opens"),
+      color: "var(--brand-blue)",
+    },
     reads: { label: t("admin.analytics.series.reads"), color: "var(--mint)" },
   } satisfies ChartConfig;
 
@@ -118,9 +125,18 @@ export default function VerseAnalyticsPage() {
   ];
 
   const quickTiles = [
-    { label: t("admin.analytics.quick.thisWeek"), value: quick.data ? fmt(quick.data.this_week) : "—" },
-    { label: t("admin.analytics.quick.thisMonth"), value: quick.data ? fmt(quick.data.this_month) : "—" },
-    { label: t("admin.analytics.quick.avgReads"), value: quick.data ? fmt(quick.data.avg_reads) : "—" },
+    {
+      label: t("admin.analytics.quick.thisWeek"),
+      value: quick.data ? fmt(quick.data.this_week) : "—",
+    },
+    {
+      label: t("admin.analytics.quick.thisMonth"),
+      value: quick.data ? fmt(quick.data.this_month) : "—",
+    },
+    {
+      label: t("admin.analytics.quick.avgReads"),
+      value: quick.data ? fmt(quick.data.avg_reads) : "—",
+    },
     {
       label: t("admin.analytics.quick.topVerse"),
       value:
@@ -133,7 +149,10 @@ export default function VerseAnalyticsPage() {
 
   return (
     <div dir="rtl" lang="ar">
-      <AdminTopbar title={t("admin.analytics.title")} subtitle={t("admin.analytics.subtitle")} />
+      <AdminTopbar
+        title={t("admin.analytics.title")}
+        subtitle={t("admin.analytics.subtitle")}
+      />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" asChild>
@@ -155,7 +174,10 @@ export default function VerseAnalyticsPage() {
             >
               {Icon && <Icon className="h-6 w-6 shrink-0 text-brand-blue" />}
               <div className="min-w-0">
-                <p className="font-heading text-2xl font-bold text-ink" dir="ltr">
+                <p
+                  className="font-heading text-2xl font-bold text-ink"
+                  dir="ltr"
+                >
                   {value}
                 </p>
                 <p className="truncate text-xs text-muted-foreground font-arabic">
@@ -175,7 +197,10 @@ export default function VerseAnalyticsPage() {
             >
               {Icon && <Icon className="h-6 w-6 shrink-0 text-brand-blue" />}
               <div className="min-w-0">
-                <p className="truncate text-sm font-bold text-ink font-arabic" dir="auto">
+                <p
+                  className="truncate text-sm font-bold text-ink font-arabic"
+                  dir="auto"
+                >
                   {value}
                 </p>
                 <p className="truncate text-xs text-muted-foreground font-arabic">
@@ -240,44 +265,76 @@ export default function VerseAnalyticsPage() {
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
                       <span className="rounded-full bg-primary/10 px-2 py-1">
-                        {fmt(detail.data.total_opens)} {t("admin.analytics.opensWord")}
+                        {fmt(detail.data.total_opens)}{" "}
+                        {t("admin.analytics.opensWord")}
                       </span>
                       <span className="rounded-full bg-primary/10 px-2 py-1">
-                        {fmt(detail.data.unique_opens)} {t("admin.analytics.openersWord")}
+                        {fmt(detail.data.unique_opens)}{" "}
+                        {t("admin.analytics.openersWord")}
                       </span>
                       <span className="rounded-full bg-primary/10 px-2 py-1">
-                        {fmt(detail.data.read_rate)}% {t("admin.analytics.readRateWord")}
+                        {fmt(detail.data.read_rate)}%{" "}
+                        {t("admin.analytics.readRateWord")}
                       </span>
                     </div>
                   </div>
 
                   {detail.data.series.length > 0 ? (
-                    <ChartContainer config={chartConfig} className="mt-4 h-[260px] w-full">
+                    <ChartContainer
+                      config={chartConfig}
+                      className="mt-4 h-[260px] w-full"
+                    >
                       <BarChart data={chartData}>
                         <CartesianGrid vertical={false} strokeDasharray="3 3" />
-                        <XAxis dataKey="label" tickLine={false} axisLine={false} reversed />
-                        <YAxis tickLine={false} axisLine={false} orientation="right" allowDecimals={false} />
+                        <XAxis
+                          dataKey="label"
+                          tickLine={false}
+                          axisLine={false}
+                          reversed
+                        />
+                        <YAxis
+                          tickLine={false}
+                          axisLine={false}
+                          orientation="right"
+                          allowDecimals={false}
+                        />
                         <ChartTooltip
                           cursor={{ fill: "transparent" }}
                           content={({ active, payload, label }) => {
                             if (!active || !payload?.length) return null;
                             return (
                               <div className="rounded-lg border border-border bg-popover px-3 py-2 text-xs shadow-md">
-                                <p className="font-medium text-popover-foreground font-arabic">{label}</p>
+                                <p className="font-medium text-popover-foreground font-arabic">
+                                  {label}
+                                </p>
                                 {payload.map((entry) => (
-                                  <p key={String(entry.dataKey)} className="text-muted-foreground">
+                                  <p
+                                    key={String(entry.dataKey)}
+                                    className="text-muted-foreground"
+                                  >
                                     {entry.dataKey === "opens"
                                       ? t("admin.analytics.series.opens")
                                       : t("admin.analytics.series.reads")}
-                                    : <span className="font-semibold text-ink">{entry.value}</span>
+                                    :{" "}
+                                    <span className="font-semibold text-ink">
+                                      {entry.value}
+                                    </span>
                                   </p>
                                 ))}
                               </div>
                             );
                           }}
                         />
-                        <Bar dataKey="opens" fill="var(--color-opens)" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="reads" fill="var(--color-reads)" radius={[4, 4, 0, 0]} />
+                        <Bar
+                          dataKey="opens"
+                          fill="var(--color-opens)"
+                          radius={[4, 4, 0, 0]}
+                        />
+                        <Bar
+                          dataKey="reads"
+                          fill="var(--color-reads)"
+                          radius={[4, 4, 0, 0]}
+                        />
                       </BarChart>
                     </ChartContainer>
                   ) : (
@@ -296,11 +353,15 @@ export default function VerseAnalyticsPage() {
                     <Select
                       value={readFilter ?? "all"}
                       onValueChange={(value) =>
-                        setReadFilter(value as VerseAnalyticsUsersParams["read"])
+                        setReadFilter(
+                          value as VerseAnalyticsUsersParams["read"],
+                        )
                       }
                     >
                       <SelectTrigger className="h-9 w-full sm:w-[160px]">
-                        <SelectValue placeholder={t("admin.analytics.users.filter")} />
+                        <SelectValue
+                          placeholder={t("admin.analytics.users.filter")}
+                        />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="all">
@@ -333,75 +394,83 @@ export default function VerseAnalyticsPage() {
                     </div>
                   )}
 
-                  {!users.isPending && !users.isError && (users.data?.items.length ?? 0) === 0 && (
-                    <div className="mt-6 flex flex-col items-center gap-2 py-8 text-center">
-                      <Users className="h-7 w-7 text-muted-foreground" />
-                      <p className="text-sm text-muted-foreground font-arabic">
-                        {t("admin.analytics.users.empty")}
-                      </p>
-                    </div>
-                  )}
-
-                  {!users.isPending && !users.isError && (users.data?.items.length ?? 0) > 0 && (
-                    <>
-                      <div className="mt-4 overflow-x-auto">
-                        <Table>
-                          <TableHeader>
-                            <TableRow>
-                              <TableHead>{t("admin.analytics.users.colName")}</TableHead>
-                              <TableHead className="text-end">
-                                {t("admin.analytics.users.colOpens")}
-                              </TableHead>
-                              <TableHead className="text-end">
-                                {t("admin.analytics.users.colStatus")}
-                              </TableHead>
-                            </TableRow>
-                          </TableHeader>
-                          <TableBody>
-                            {users.data?.items.map((user) => (
-                              <TableRow key={user.user_id}>
-                                <TableCell>
-                                  <span className="flex items-center gap-2 font-medium text-ink font-arabic">
-                                    <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy text-xs font-bold text-white">
-                                      {user.full_name.charAt(0)}
-                                    </span>
-                                    <span className="truncate">{user.full_name}</span>
-                                  </span>
-                                </TableCell>
-                                <TableCell className="text-end" dir="ltr">
-                                  {fmt(user.opened_count)}
-                                </TableCell>
-                                <TableCell className="text-end">
-                                  <Badge
-                                    variant="outline"
-                                    className={cn(
-                                      "rounded-full text-xs",
-                                      user.has_read
-                                        ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
-                                        : "bg-muted text-muted-foreground",
-                                    )}
-                                  >
-                                    {user.has_read
-                                      ? t("admin.analytics.users.read")
-                                      : t("admin.analytics.users.unread")}
-                                  </Badge>
-                                </TableCell>
-                              </TableRow>
-                            ))}
-                          </TableBody>
-                        </Table>
+                  {!users.isPending &&
+                    !users.isError &&
+                    (users.data?.items.length ?? 0) === 0 && (
+                      <div className="mt-6 flex flex-col items-center gap-2 py-8 text-center">
+                        <Users className="h-7 w-7 text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground font-arabic">
+                          {t("admin.analytics.users.empty")}
+                        </p>
                       </div>
-                      {users.data && users.data.pages > 1 && (
-                        <div className="flex justify-center pt-3">
-                          <AppPagination
-                            page={users.data.page}
-                            pages={users.data.pages}
-                            onPageChange={setPage}
-                          />
+                    )}
+
+                  {!users.isPending &&
+                    !users.isError &&
+                    (users.data?.items.length ?? 0) > 0 && (
+                      <>
+                        <div className="mt-4 overflow-x-auto">
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>
+                                  {t("admin.analytics.users.colName")}
+                                </TableHead>
+                                <TableHead className="text-end">
+                                  {t("admin.analytics.users.colOpens")}
+                                </TableHead>
+                                <TableHead className="text-end">
+                                  {t("admin.analytics.users.colStatus")}
+                                </TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {users.data?.items.map((user) => (
+                                <TableRow key={user.user_id}>
+                                  <TableCell>
+                                    <span className="flex items-center gap-2 font-medium text-ink font-arabic">
+                                      <span className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-navy text-xs font-bold text-white">
+                                        {user.full_name.charAt(0)}
+                                      </span>
+                                      <span className="truncate">
+                                        {user.full_name}
+                                      </span>
+                                    </span>
+                                  </TableCell>
+                                  <TableCell className="text-end" dir="ltr">
+                                    {fmt(user.opened_count)}
+                                  </TableCell>
+                                  <TableCell className="text-end">
+                                    <Badge
+                                      variant="outline"
+                                      className={cn(
+                                        "rounded-full text-xs",
+                                        user.has_read
+                                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                                          : "bg-muted text-muted-foreground",
+                                      )}
+                                    >
+                                      {user.has_read
+                                        ? t("admin.analytics.users.read")
+                                        : t("admin.analytics.users.unread")}
+                                    </Badge>
+                                  </TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
                         </div>
-                      )}
-                    </>
-                  )}
+                        {users.data && users.data.pages > 1 && (
+                          <div className="flex justify-center pt-3">
+                            <AppPagination
+                              page={users.data.page}
+                              pages={users.data.pages}
+                              onPageChange={setPage}
+                            />
+                          </div>
+                        )}
+                      </>
+                    )}
                 </div>
               </div>
 
@@ -426,11 +495,19 @@ export default function VerseAnalyticsPage() {
                           {t("admin.analytics.quiz.avgScore")}
                         </span>
                         <span className="font-bold" dir="ltr">
-                          {detail.data.quiz.average_score_out_of_10.toFixed(1)}/10
+                          {detail.data.quiz.average_score_out_of_10.toFixed(1)}
+                          /10
                         </span>
                       </div>
-                      <Button asChild variant="outline" size="sm" className="w-full">
-                        <Link to={`/admin/quizzes/${detail.data.quiz.quiz_id}/builder`}>
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        <Link
+                          to={`/admin/quizzes/${detail.data.quiz.quiz_id}/builder`}
+                        >
                           <HeartHandshake className="me-1 h-4 w-4" />
                           {t("admin.analytics.quiz.open")}
                         </Link>

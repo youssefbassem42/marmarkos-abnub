@@ -17,7 +17,6 @@ describe("Arabic-only i18n guard", () => {
   });
 
   it("no en.ts resource file exists", () => {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const globResult = import.meta.glob("../resources/*.ts");
     const keys = Object.keys(globResult);
     const enFiles = keys.filter((k) => /en\.ts$/.test(k));

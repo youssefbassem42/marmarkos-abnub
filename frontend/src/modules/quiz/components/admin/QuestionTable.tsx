@@ -75,7 +75,7 @@ export function QuestionTable({
         },
       },
     );
-  }, [deleteId, quizId, deleteQuestion, t]);
+  }, [deleteId, quizId, deleteQuestion, t, tCommon]);
 
   const handleDuplicate = useCallback(
     (questionId: string) => {
@@ -91,7 +91,7 @@ export function QuestionTable({
         },
       );
     },
-    [quizId, duplicateQuestion, t],
+    [quizId, duplicateQuestion, t, tCommon],
   );
 
   const persistReorder = useCallback(
@@ -111,19 +111,13 @@ export function QuestionTable({
     [quizId, reorderQuestions, t],
   );
 
-  const handleDragStart = useCallback(
-    (index: number) => {
-      dragItem.current = index;
-    },
-    [],
-  );
+  const handleDragStart = useCallback((index: number) => {
+    dragItem.current = index;
+  }, []);
 
-  const handleDragEnter = useCallback(
-    (index: number) => {
-      dragOverItem.current = index;
-    },
-    [],
-  );
+  const handleDragEnter = useCallback((index: number) => {
+    dragOverItem.current = index;
+  }, []);
 
   const handleDragEnd = useCallback(() => {
     if (dragItem.current === null || dragOverItem.current === null) return;
@@ -139,9 +133,7 @@ export function QuestionTable({
 
     const ids = reordered.map((q) => q.id);
     persistReorder(ids);
-    setAnnouncement(
-      t("admin.manage.reorderSuccess"),
-    );
+    setAnnouncement(t("admin.manage.reorderSuccess"));
 
     dragItem.current = null;
     dragOverItem.current = null;
@@ -160,9 +152,7 @@ export function QuestionTable({
 
       const ids = reordered.map((q) => q.id);
       persistReorder(ids);
-      setAnnouncement(
-        t("admin.manage.reorderSuccess"),
-      );
+      setAnnouncement(t("admin.manage.reorderSuccess"));
     },
     [sorted, persistReorder, t],
   );
@@ -226,9 +216,7 @@ export function QuestionTable({
             <TableHead className="w-20">
               {t("admin.question.options")}
             </TableHead>
-            <TableHead className="w-20">
-              {t("admin.question.points")}
-            </TableHead>
+            <TableHead className="w-20">{t("admin.question.points")}</TableHead>
             <TableHead className="w-28 text-end">
               {t("admin.builder.actions")}
             </TableHead>

@@ -27,5 +27,14 @@ export default tseslint.config(
       "@typescript-eslint/no-unused-vars": "off",
     },
   },
+  {
+    // shadcn/ui primitives intentionally export their variant helpers next to
+    // the component (e.g. `buttonVariants`). Fast Refresh does not support
+    // that pattern, so the rule is switched off for the generated UI layer.
+    files: ["src/components/ui/**/*.{ts,tsx}"],
+    rules: {
+      "react-refresh/only-export-components": "off",
+    },
+  },
   eslintPluginPrettier,
 );

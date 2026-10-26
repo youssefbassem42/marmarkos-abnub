@@ -32,9 +32,11 @@ const ROLE_STYLES: Record<UserRole, string> = {
 };
 
 const STATUS_STYLES: Record<UserStatus, string> = {
-  ACTIVE: "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
+  ACTIVE:
+    "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
   INACTIVE: "bg-muted text-muted-foreground",
-  SUSPENDED: "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
+  SUSPENDED:
+    "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
   BANNED: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
 };
 
@@ -52,7 +54,9 @@ export function UsersAdminPage() {
   const { t: tCommon } = useTranslation("common");
   const locale = "ar-EG";
   const query = useUsers();
-  const users = query.data ?? [];
+  // Stable reference: `query.data ?? []` creates a new array on every render,
+  // which would invalidate every memo that depends on it.
+  const users = useMemo(() => query.data ?? [], [query.data]);
 
   const roleLabels: Record<UserRole, string> = {
     ADMIN: t("roles.ADMIN"),
@@ -70,7 +74,8 @@ export function UsersAdminPage() {
     () => ({
       total: users.length,
       active: users.filter((u) => u.status === "ACTIVE").length,
-      inactive: users.length - users.filter((u) => u.status === "ACTIVE").length,
+      inactive:
+        users.length - users.filter((u) => u.status === "ACTIVE").length,
       staff: users.filter((u) => u.role !== "MEMBER").length,
       neverLoggedIn: users.filter((u) => !u.last_login_at).length,
     }),
@@ -208,7 +213,10 @@ export function UsersAdminPage() {
                         <TableCell className="hidden md:table-cell">
                           <Badge
                             variant="outline"
-                            className={cn("rounded-full text-xs", ROLE_STYLES[user.role])}
+                            className={cn(
+                              "rounded-full text-xs",
+                              ROLE_STYLES[user.role],
+                            )}
                           >
                             {roleLabels[user.role]}
                           </Badge>
@@ -233,7 +241,10 @@ export function UsersAdminPage() {
                 </Table>
               </div>
               <p className="border-t border-border px-5 py-3 text-xs text-muted-foreground">
-                {t("count", { count: users.length, never: stats.neverLoggedIn })}
+                {t("count", {
+                  count: users.length,
+                  never: stats.neverLoggedIn,
+                })}
               </p>
             </>
           )}

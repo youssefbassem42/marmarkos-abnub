@@ -1,13 +1,6 @@
 import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  ArrowDown,
-  ArrowUp,
-  Copy,
-  Pencil,
-  Plus,
-  Trash2,
-} from "lucide-react";
+import { ArrowDown, ArrowUp, Copy, Pencil, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -21,12 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -87,7 +75,7 @@ export function QuestionOverviewList({
         },
       },
     );
-  }, [deleteId, quizId, deleteQuestion, t]);
+  }, [deleteId, quizId, deleteQuestion, t, tCommon]);
 
   const handleDuplicate = useCallback(
     (questionId: string) => {
@@ -103,7 +91,7 @@ export function QuestionOverviewList({
         },
       );
     },
-    [quizId, duplicateQuestion, t],
+    [quizId, duplicateQuestion, t, tCommon],
   );
 
   if (isLoading) {
@@ -176,11 +164,21 @@ export function QuestionOverviewList({
                 <TableHeader>
                   <TableRow>
                     <TableHead className="w-16 font-arabic">الترتيب</TableHead>
-                    <TableHead className="font-arabic">{t("admin.question.text")}</TableHead>
-                    <TableHead className="font-arabic">{t("admin.question.options")}</TableHead>
-                    <TableHead className="font-arabic">{t("admin.question.points")}</TableHead>
-                    <TableHead className="text-start font-arabic">{t("admin.question.correctAnswer")}</TableHead>
-                    <TableHead className="text-start font-arabic">{tBible("admin.table.colActions")}</TableHead>
+                    <TableHead className="font-arabic">
+                      {t("admin.question.text")}
+                    </TableHead>
+                    <TableHead className="font-arabic">
+                      {t("admin.question.options")}
+                    </TableHead>
+                    <TableHead className="font-arabic">
+                      {t("admin.question.points")}
+                    </TableHead>
+                    <TableHead className="text-start font-arabic">
+                      {t("admin.question.correctAnswer")}
+                    </TableHead>
+                    <TableHead className="text-start font-arabic">
+                      {tBible("admin.table.colActions")}
+                    </TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -280,11 +278,18 @@ export function QuestionOverviewList({
                     </Button>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium font-arabic">{q.question}</p>
+                    <p className="truncate text-sm font-medium font-arabic">
+                      {q.question}
+                    </p>
                     <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
-                      <span className="font-arabic">{q.options.length} خيارات</span>
+                      <span className="font-arabic">
+                        {q.options.length} خيارات
+                      </span>
                       <span>·</span>
-                      <Badge variant="secondary" className="text-xs font-arabic">
+                      <Badge
+                        variant="secondary"
+                        className="text-xs font-arabic"
+                      >
                         {q.points} نقطة
                       </Badge>
                     </div>
@@ -335,13 +340,17 @@ export function QuestionOverviewList({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="font-arabic">{tCommon("back")}</AlertDialogCancel>
+            <AlertDialogCancel className="font-arabic">
+              {tCommon("back")}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90 font-arabic"
               disabled={deleteQuestion.isPending}
             >
-              {deleteQuestion.isPending ? "..." : t("admin.builder.deleteQuestion")}
+              {deleteQuestion.isPending
+                ? "..."
+                : t("admin.builder.deleteQuestion")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
