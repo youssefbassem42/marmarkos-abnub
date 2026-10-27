@@ -121,38 +121,56 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
     role: Mapped[Role] = relationship(back_populates="users")
+
+    # The children whose foreign key says ``ondelete="CASCADE"`` are
+    # deleted by the database. SQLAlchemy would otherwise nullify their
+    # foreign key before deleting the member - and ``refresh_tokens.user_id``
+    # is NOT NULL: the delete of a member with a session raised an
+    # IntegrityError (a 500 for the caller). ``passive_deletes=True``
+    # hands the work to the database, as the schema says.
     qr_code: Mapped["UserQrCode | None"] = relationship(
-        back_populates="user", uselist=False, cascade="all, delete-orphan"
+        back_populates="user",
+        uselist=False,
+        cascade="all, delete-orphan",
+        passive_deletes=True,
     )
     ban_records: Mapped[list["UserBanRecord"]] = relationship(
         back_populates="user",
         foreign_keys="UserBanRecord.user_id",
         cascade="all, delete-orphan",
     )
-    refresh_tokens: Mapped[list["RefreshToken"]] = relationship(back_populates="user")
+    refresh_tokens: Mapped[list["RefreshToken"]] = relationship(
+        back_populates="user", passive_deletes=True
+    )
     attendance_records: Mapped[list["AttendanceRecord"]] = relationship(
         back_populates="user", foreign_keys="AttendanceRecord.user_id"
     )
     weekly_attendance_records: Mapped[list["WeeklyAttendanceRecord"]] = relationship(
         back_populates="user", foreign_keys="WeeklyAttendanceRecord.user_id"
     )
-    blog_posts: Mapped[list["BlogPost"]] = relationship(back_populates="author")
-    blog_likes: Mapped[list["BlogPostLike"]] = relationship(back_populates="user")
-    comments: Mapped[list["Comment"]] = relationship(back_populates="author")
-    notifications: Mapped[list["Notification"]] = relationship(back_populates="user")
+    blog_posts: Mapped[list["BlogPost"]] = relationship(
+        back_populates="author", passive_deletes=True
+    )
+    blog_likes: Mapped[list["BlogPostLike"]] = relationship(
+        back_populates="user", passive_deletes=True
+    )
+    comments: Mapped[list["Comment"]] = relationship(back_populates="author", passive_deletes=True)
+    notifications: Mapped[list["Notification"]] = relationship(
+        back_populates="user", passive_deletes=True
+    )
 
     # Phase 5 engagement (bible / quiz / points); never eager-loaded.
     verse_views: Mapped[list["VerseView"]] = relationship(
-        back_populates="user", lazy="raise_on_sql"
+        back_populates="user", lazy="raise_on_sql", passive_deletes=True
     )
     verse_reads: Mapped[list["VerseRead"]] = relationship(
-        back_populates="user", lazy="raise_on_sql"
+        back_populates="user", lazy="raise_on_sql", passive_deletes=True
     )
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(
-        back_populates="user", lazy="raise_on_sql"
+        back_populates="user", lazy="raise_on_sql", passive_deletes=True
     )
     point_transactions: Mapped[list["PointTransaction"]] = relationship(
-        back_populates="user", lazy="raise_on_sql"
+        back_populates="user", lazy="raise_on_sql", passive_deletes=True
     )
 
 
