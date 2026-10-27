@@ -8,7 +8,7 @@ exact strings from plan §14.3. Arabic first.
 from dataclasses import dataclass
 from datetime import date
 
-from app.modules.attendance.domain.enums import AttendanceStatus
+from app.shared.contracts.attendance import AttendanceStatus
 
 
 @dataclass(frozen=True)

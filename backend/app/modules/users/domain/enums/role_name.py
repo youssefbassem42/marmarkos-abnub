@@ -1,7 +1,10 @@
-from enum import StrEnum
+"""The role of a member - now a shared contract (ARCH-002).
 
+The definition lives in ``app/shared/contracts/users.py`` because every
+module needs it. This module keeps the old import path working; the
+object is the same one.
+"""
 
-class RoleName(StrEnum):
-    MEMBER = "MEMBER"
-    SERVANT = "SERVANT"
-    ADMIN = "ADMIN"
+from app.shared.contracts.users import RoleName
+
+__all__ = ["RoleName"]

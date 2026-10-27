@@ -1,9 +1,10 @@
-"""Quiz content lifecycle (Part 1 §4.5, BR-21)."""
+"""The quiz status - now a shared contract (ARCH-001).
 
-from enum import StrEnum
+The definition lives in ``app/shared/contracts/quiz.py`` because the
+bible module speaks it too. This module keeps the old import path
+working; the object is the same one.
+"""
 
+from app.shared.contracts.quiz import QuizStatus
 
-class QuizStatus(StrEnum):
-    DRAFT = "DRAFT"
-    PUBLISHED = "PUBLISHED"
-    ARCHIVED = "ARCHIVED"
+__all__ = ["QuizStatus"]

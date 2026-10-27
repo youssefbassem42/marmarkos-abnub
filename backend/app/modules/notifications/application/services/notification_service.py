@@ -13,7 +13,6 @@ from datetime import date
 
 from app.config import settings
 from app.core.exceptions.errors import ForbiddenError
-from app.modules.attendance.domain.enums import AttendanceStatus
 from app.modules.notifications.application.copy import (
     NotificationCopy,
     attendance_recorded_copy,
@@ -24,16 +23,17 @@ from app.modules.notifications.application.dto.notification_dto import (
     PushNotificationResponse,
 )
 from app.modules.notifications.domain.enums.notification_type import NotificationType
-from app.modules.notifications.infrastructure.email.messages import (
-    new_post_email,
-    notification_email,
-)
-from app.modules.notifications.infrastructure.email.service import EmailService
 from app.modules.notifications.infrastructure.email.templates import BrandEmailContent
 from app.modules.notifications.infrastructure.persistence.models import Notification
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.infrastructure.persistence.models import User
+from app.shared.contracts.attendance import AttendanceStatus
+from app.shared.infrastructure.email.messages import (
+    new_post_email,
+    notification_email,
+)
+from app.shared.infrastructure.email.service import EmailService
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 logger = logging.getLogger(__name__)

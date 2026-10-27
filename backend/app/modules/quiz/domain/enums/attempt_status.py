@@ -1,15 +1,10 @@
-"""Attempt lifecycle (Part 1 §4.6, V2 timing).
+"""The attempt status - now a shared contract (ARCH-001).
 
-COMPLETED: submitted by the user — the only way an attempt ends (V2).
-AUTO_FINISHED: legacy rows from the removed auto-finish logic (expiry
-lazy-touch / scheduler batch). Kept as a terminal read-only status so
-existing analytics/result pages still understand them.
+The definition lives in ``app/shared/contracts/quiz.py`` because the
+bible module speaks it too. This module keeps the old import path
+working; the object is the same one.
 """
 
-from enum import StrEnum
+from app.shared.contracts.quiz import AttemptStatus
 
-
-class AttemptStatus(StrEnum):
-    IN_PROGRESS = "IN_PROGRESS"
-    COMPLETED = "COMPLETED"
-    AUTO_FINISHED = "AUTO_FINISHED"
+__all__ = ["AttemptStatus"]
