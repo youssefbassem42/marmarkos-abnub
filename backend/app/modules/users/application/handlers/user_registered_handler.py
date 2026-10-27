@@ -9,8 +9,8 @@ not pin the event in a FAILED retry loop forever.
 import logging
 
 from app.config import settings
-from app.modules.notifications.infrastructure.email.service import EmailService
 from app.shared.application.outbox_dispatcher import register_handler
+from app.shared.infrastructure.email.service import EmailService
 from app.shared.infrastructure.persistence.outbox import OutboxEvent
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 

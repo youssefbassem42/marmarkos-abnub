@@ -28,12 +28,12 @@ from app.modules.auth.infrastructure.security import (
     verify_password,
 )
 from app.modules.auth.infrastructure.services.google_tokens import GoogleIdentity
-from app.modules.notifications.infrastructure.email import EmailService
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.domain.events import UserRegistered
 from app.modules.users.infrastructure.persistence.models import User
 from app.modules.users.infrastructure.services import generate_public_id
+from app.shared.infrastructure.email import EmailService
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 

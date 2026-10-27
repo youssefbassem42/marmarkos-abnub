@@ -25,11 +25,11 @@ from app.core.exceptions import (
     SchedulerDisabledError,
     UnauthorizedError,
 )
-from app.modules.auth.infrastructure.security import jwt_service
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.infrastructure.persistence.models import User
 from app.modules.users.infrastructure.persistence.user_repository import UserRepository
+from app.shared.security import jwt_service
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 #: The shared cron secret, declared as an OpenAPI security scheme so the

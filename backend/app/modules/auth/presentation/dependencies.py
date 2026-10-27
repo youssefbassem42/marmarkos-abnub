@@ -7,11 +7,11 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db_session
 from app.core.exceptions import ForbiddenError, UnauthorizedError
-from app.modules.auth.infrastructure.security import jwt_service
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.infrastructure.persistence.models import User
 from app.modules.users.infrastructure.persistence.user_repository import UserRepository
+from app.shared.security import jwt_service
 
 _bearer_scheme = HTTPBearer(auto_error=False)
 

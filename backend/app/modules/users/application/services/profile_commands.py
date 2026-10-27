@@ -11,7 +11,6 @@ from app.core.exceptions import (
     UnauthorizedError,
     ValidationError,
 )
-from app.modules.auth.infrastructure.security import hash_password, verify_password
 from app.modules.users.application.dto.profile_update import (
     ChangePasswordRequest,
     UpdateProfileRequest,
@@ -23,6 +22,7 @@ from app.modules.users.application.services.attendance_pin import (
 )
 from app.modules.users.infrastructure.persistence.models import User
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
+from app.shared.security import hash_password, verify_password
 
 
 class ProfileCommandService:

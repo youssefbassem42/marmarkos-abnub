@@ -25,8 +25,8 @@ from app.modules.auth.infrastructure.security import (
     hash_refresh_token,
     hash_refresh_token_legacy,
 )
-from app.modules.notifications.infrastructure.email import EmailService
 from app.modules.users.infrastructure.persistence.models import User
+from app.shared.infrastructure.email import EmailService
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 logger = logging.getLogger(__name__)

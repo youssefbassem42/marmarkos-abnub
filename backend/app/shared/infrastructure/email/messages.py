@@ -9,7 +9,7 @@ parameters for API/DB contract compliance.
 
 import html
 
-from app.modules.notifications.infrastructure.email.templates import (
+from app.shared.infrastructure.email.templates import (
     BrandEmailContent,
     EmailSection,
 )

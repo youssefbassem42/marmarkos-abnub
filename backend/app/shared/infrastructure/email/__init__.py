@@ -5,21 +5,21 @@ One branded layout (``templates``), dynamic per-case copy
 ``EmailService``.
 """
 
-from app.modules.notifications.infrastructure.email.messages import (
+from app.shared.infrastructure.email.messages import (
     notification_email,
     password_reset_email,
     verification_email,
     welcome_email,
 )
-from app.modules.notifications.infrastructure.email.sender import (
+from app.shared.infrastructure.email.sender import (
     BrevoEmailSender,
     EmailSender,
     GmailEmailSender,
     LoggingEmailSender,
     get_email_sender,
 )
-from app.modules.notifications.infrastructure.email.service import EmailService
-from app.modules.notifications.infrastructure.email.templates import (
+from app.shared.infrastructure.email.service import EmailService
+from app.shared.infrastructure.email.templates import (
     BrandEmailContent,
     EmailSection,
     render_brand_email,

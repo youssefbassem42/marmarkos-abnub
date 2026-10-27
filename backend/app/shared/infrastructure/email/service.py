@@ -10,18 +10,18 @@ import logging
 from typing import Any
 
 from app.config import settings
-from app.modules.notifications.infrastructure.email.messages import (
+from app.shared.infrastructure.email.messages import (
     notification_email,
     password_reset_email,
     verification_email,
     verse_published_email,
     welcome_email,
 )
-from app.modules.notifications.infrastructure.email.sender import (
+from app.shared.infrastructure.email.sender import (
     EmailSender,
     get_email_sender,
 )
-from app.modules.notifications.infrastructure.email.templates import (
+from app.shared.infrastructure.email.templates import (
     BrandEmailContent,
     render_brand_email,
 )
