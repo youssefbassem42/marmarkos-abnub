@@ -97,39 +97,57 @@ Companion to `docs/CODEBASE_AUDIT_REPORT.md` (report ID `AUDIT-2026-10-26-FULL`,
 
 ## Phase 4 — Architecture & maintainability
 
-| # | Item | Finding | Status |
-|---|---|---|---|
-| 4.1 | `app/shared/contracts/` + re-exports (no call-site changes) | ARCH-001/002 | `[ ]` |
-| 4.2 | Break `attendance ↔ notifications` | ARCH-001 | `[ ]` |
-| 4.3 | Break `bible ↔ quiz` (read-model port) | ARCH-001 | `[ ]` |
-| 4.4 | Domain ports speak domain objects (module by module) | ARCH-005 | `[ ]` |
-| 4.5 | One `UnitOfWork` lifecycle | ARCH-004 | `[ ]` |
-| 4.6 | Frontend direction handling (`useDirection`) + drop dead `"en"` arms | ARCH-007 | `[ ]` |
-| 4.7 | Replace `assert` guards in request paths with explicit errors | CODE-006 | `[ ]` |
-| 4.8 | Implement or remove the `TODO(phase-blog)` branch | CODE-007 | `[ ]` |
-| 4.9 | `pyproject.toml` as the single dependency source + generated lock | DEP-002 | `[ ]` |
-| 4.10 | Repo hygiene: LFS/external for design PNGs, drop the stray `.lovable-backup` file | OPS-006 / DOC-002 | `[~]` | The stray backup file is removed (`git rm`); the 53 MB of design PNGs still need a move to LFS/external storage. |
+| # | Item | Finding | Status | Notes |
+|---|---|---|---|---|
+| 4.1 | `app/shared/contracts/` + re-exports (no call-site changes) | ARCH-001/002 | `[x]` | `AttendanceStatus`, `AttemptStatus`, `QuizStatus`, `RoleName`, `UserStatus` live in `app/shared/contracts/`; every old path re-exports the same object (identity kept, no migration). |
+| 4.2 | Break `attendance ↔ notifications` | ARCH-001 | `[x]` | The notifications module speaks the attendance status from the shared kernel. The mail client moved to `app/shared/infrastructure/email` (with re-export shims), so the auth and users modules do not depend on the notifications module any more. |
+| 4.3 | Break `bible ↔ quiz` (read-model port) | ARCH-001 | `[x]` | `app/shared/contracts/quiz_read.py` + `QuizReadRepository`: the bible module asks the quiz module for the conditions and reads through the port. **Fixed a real bug**: the attempt map was keyed by verse id while the badge asked for the quiz id, so the feed never showed "in progress"/"completed". |
+| 4.4 | Domain ports speak domain objects (module by module) | ARCH-005 | `[ ]` | The last import cycle (`auth ↔ users`, through the layers: the route guard returns the ORM model) is the remainder. The ports of the quiz and the read model are done. |
+| 4.5 | One `UnitOfWork` lifecycle | ARCH-004 | `[x]` | `UnitOfWork.from_session()` is the one way to wrap a foreign session; the direct construction still works but warns (removed next release). New guard: no route may ask for the session and the unit of work at the same time. |
+| 4.6 | Frontend direction handling (`useDirection`) + drop dead `"en"` arms | ARCH-007 | `[x]` | 138 redundant `dir="rtl"`/`lang="ar"` attributes removed (the document root carries both), the dead `lang: "ar" \| "en"` prop deleted from 17 auth components, `src/i18n/direction.ts` added, guard test included. |
+| 4.7 | Replace `assert` guards in request paths with explicit errors | CODE-006 | `[x]` | Five asserts → `NotFoundError` / `RuntimeError`. The five `isinstance` narrowing asserts in the repositories stay (they narrow a type, they do not guard a request). |
+| 4.8 | Implement or remove the `TODO(phase-blog)` branch | CODE-007 | `[x]` | The blog module has only its data layer (no publish command exists), so the consumer ships dormant on purpose — it is finished and tested. The marker is replaced by the truth. |
+| 4.9 | `pyproject.toml` as the single dependency source + generated lock | DEP-002 | `[x]` | `scripts/sync_requirements.py` writes `requirements.txt` from `pyproject.toml`; a test fails when the two drift. The file stays in the repository: the serverless deployment reads it. |
+| 4.10 | Repo hygiene: LFS/external for design PNGs, drop the stray `.lovable-backup` file | OPS-006 / DOC-002 | `[x]` | The 44 design images are WebP now: **52 MB → 4.5 MB** (`.gitattributes` marks them binary, the folder has a README). The history still holds the PNG — rewriting it is a decision of the team, not of a remediation. |
 
 ## Phase 5 — CI/CD, frontend quality and test depth
 
-| # | Item | Finding | Status |
-|---|---|---|---|
-| 5.1 | `npm ci` + lint + `npm audit` + real test gate in frontend CI | CI-002 | `[ ]` |
-| 5.2 | `pip-audit` + `gitleaks` + `alembic check` + coverage gates in backend CI | CI-003/004/005/007 | `[ ]` |
-| 5.3 | Frontend formatting + the `exhaustive-deps` warnings + `--max-warnings 0` | CODE-005 | `[x]` |
-| 5.4 | Frontend coverage 21.92 % → ≥ 70 % (quiz/attendance hooks first) | QA-001 | `[ ]` |
-| 5.5 | E2E golden paths (Playwright) | QA-001 | `[ ]` |
-| 5.6 | OpenAPI contract test (`schemathesis`) | QA-005 | `[ ]` |
-| 5.7 | Multi-stage production frontend image (nginx) | OPS-001 | `[ ]` |
-| 5.8 | Non-root containers, healthchecks, advisory-locked migrations | OPS-002/003/005 | `[ ]` |
-| 5.9 | Dependency-update policy (Renovate, patches auto-merge) | DEP-001 | `[ ]` |
-| 5.10 | `docs/business-rules.md` mapping every `BR-xx` / `D-xx` identifier | REUSE-005 | `[ ]` |
+| # | Item | Finding | Status | Notes |
+|---|---|---|---|---|
+| 5.1 | `npm ci` + lint + `npm audit` + real test gate in frontend CI | CI-002 | `[x]` | `npm ci` (the lockfile decides), format check, `lint --max-warnings 0`, `tsc -b`, `npm audit --audit-level=high`, the tests with coverage, the build. `continue-on-error` is gone: the pipeline can no longer be red and green. |
+| 5.2 | `pip-audit` + `gitleaks` + `alembic check` + coverage gates in backend CI | CI-003/004/005/007 | `[x]` | `pip-audit --skip-editable`, gitleaks 8.28.0 (pinned by digest) with an allowlist for the fake test secret, `alembic upgrade head` + `alembic check`, the coverage floor at 77 %. |
+| 5.3 | Frontend formatting + the `exhaustive-deps` warnings + `--max-warnings 0` | CODE-005 | `[x]` | Prettier over the whole frontend; the thresholds only ever go up. |
+| 5.4 | Frontend coverage 17.97 % → ≥ 70 % (quiz/attendance hooks first) | QA-001 | `[ ]` | The measured coverage was 21.92 % **without** branch coverage; with the branch coverage that vitest counts the real number is **17.97 %**. The floor is the measured value. |
+| 5.5 | E2E golden paths (Playwright) | QA-001 | `[ ]` | Sign-in, take a quiz, check in. |
+| 5.6 | OpenAPI contract test (`schemathesis`) | QA-005 | `[x]` | The schema now describes the real answers (401/403/400/429 added, `Allow` header on 405, the rate-limited routes marked). **3 466 cases, 0 failures**; the step runs in the backend pipeline. |
+| 5.7 | Multi-stage production frontend image (nginx) | OPS-001 | `[x]` | node build → nginx 1.27 runtime, SPA fallback, the API upstream resolved per request, a healthcheck, the security headers in a snippet. |
+| 5.8 | Non-root containers, healthchecks, advisory-locked migrations | OPS-002/003/005 | `[x]` | uid 10001 for the backend, healthchecks on both images, the migrations behind a PostgreSQL advisory lock (two replicas → one migration). |
+| 5.9 | Dependency-update policy (Renovate, patches auto-merge) | DEP-001 | `[x]` | Patches auto-merge after three days, minors and majors need a human, a security advisory is always its own PR. |
+| 5.10 | `docs/business-rules.md` mapping every `BR-xx` / `D-xx` identifier | REUSE-005 | `[ ]` | The rule identifiers live today only in the docstrings. |
 
 ---
 
 ## Progress log
 
 Newest first. Full detail in `docs/AUDIT_REMEDIATION_FEEDBACK.md`.
+
+### 2026-10-27 — Phase 4 + Phase 5 (architecture, CI, operations) complete except 4.4 / 5.4 / 5.5 / 5.10
+
+| Item | Result |
+|---|---|
+| Shared kernel | `app/shared/contracts/` (the vocabulary), `app/shared/infrastructure/email/` (the mail client), `app/shared/security/` (the password rules, the token codec). Every old import path re-exports the same objects — no call site outside the moved files changed. |
+| Import cycles | **Three of five cycles broken** (attendance ↔ notifications, bible ↔ quiz, auth ↔ notifications). One remains (auth ↔ users, through the layers) and is on the list of item 4.4. A new test scans the module graph on every run: a **new** cycle fails the build. |
+| Fifth real bug | The attempt map of the member feed was keyed by verse id while the badge asked for the quiz id — the quiz badge never showed "in progress" or "completed". Fixed with the read-model port; four new tests. |
+| Unit of Work | One lifecycle: `from_session()` for a foreign session, `create()` for an owned one; the direct construction warns for one release. A route may no longer ask for two sessions. |
+| Frontend direction | 138 redundant `dir="rtl"` / `lang="ar"` attributes removed (the document root carries both), the dead `lang: "ar" \| "en"` prop deleted, `useDirection()` added, guard test included. |
+| Asserts | The five asserts in the request paths are explicit errors now (an assert vanishes under `python -O`). |
+| Dependencies | One list: `pyproject.toml`. `requirements.txt` is generated, and a test fails when it drifts. |
+| Design images | 52 MB → **4.5 MB** (WebP, quality 86, same 44 screens). |
+| OpenAPI contract | The schema describes the real answers; **3 466 schemathesis cases, 0 failures**; the step is in the pipeline. |
+| CI | `npm ci`, real lint/test gates, `npm audit`, `pip-audit`, gitleaks, `alembic check`, coverage floors, Renovate. |
+| Operations | nginx production image, non-root containers, healthchecks, advisory-locked migrations. |
+
+New gates: **449 backend tests** (was 431), **75 frontend tests** (was 71), `mypy` 0 (412 files), `ruff` 0, `tsc` 0, `eslint --max-warnings 0` 0, `npm audit` 0, `pip-audit` 0, `alembic check` clean.
 
 ### 2026-10-26 — Phase 3 complete (contract, performance, client session)
 
