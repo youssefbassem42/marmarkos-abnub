@@ -1,3 +1,4 @@
+import { downloadBlob } from "@/lib/download";
 import { attendanceApi } from "../api";
 import type { AttendanceStatusValue } from "../types";
 
@@ -53,12 +54,5 @@ export async function buildAttendanceCsv(options: {
 
 /** Trigger a browser download for a generated CSV blob. */
 export function downloadCsv(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const anchor = document.createElement("a");
-  anchor.href = url;
-  anchor.download = filename;
-  document.body.append(anchor);
-  anchor.click();
-  anchor.remove();
-  URL.revokeObjectURL(url);
+  downloadBlob(blob, filename);
 }

@@ -1,32 +1,17 @@
 /**
- * Generate a CSV blob and trigger a browser download.
+ * Trigger a browser download for a generated blob.
  *
- * Handles escaping of commas, double-quotes, and newlines inside cell values.
+ * Shared by the modules that export data (attendance, analytics): the
+ * helper lives in `src/lib` so no module has to import another module's
+ * internals.
  */
-export function downloadCsv(
-  filename: string,
-  headers: string[],
-  rows: string[][],
-): void {
-  const escape = (cell: string): string => {
-    if (cell.includes(",") || cell.includes('"') || cell.includes("\n")) {
-      return `"${cell.replace(/"/g, '""')}"`;
-    }
-    return cell;
-  };
-
-  const lines = [
-    headers.map(escape).join(","),
-    ...rows.map((row) => row.map(escape).join(",")),
-  ];
-
-  const csv = "\uFEFF" + lines.join("\r\n"); // BOM for Excel
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
-
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = filename;
-  a.click();
+  const anchor = document.createElement("a");
+  anchor.href = url;
+  anchor.download = filename;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
   URL.revokeObjectURL(url);
 }

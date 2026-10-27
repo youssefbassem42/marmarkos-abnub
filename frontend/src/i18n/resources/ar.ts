@@ -709,6 +709,49 @@ export const ar = {
       pushFailed: "تعذّر إرسال الإعلان",
     },
   },
+  analytics: {
+    title: "التحليلات الشهرية",
+    subtitle: "أداء اختبارت الشهر لكل عضو",
+    month: "الشهر",
+    kpi: {
+      participants: "المشاركون",
+      quizzesCompleted: "الاختبارات المكتملة",
+      totalPoints: "إجمالي النقاط",
+      averageScore: "متوسط الدرجة",
+      quizzesPublished: "الاختبارات المنشورة",
+    },
+    trend: {
+      title: "اتجاه آخر ٣ شهور",
+      points: "النقاط",
+      participants: "المشاركون",
+    },
+    completion: {
+      title: "توزيع نسب الإكمال",
+      users: "عضو",
+    },
+    top: {
+      title: "الأعلى نقاطًا",
+    },
+    table: {
+      title: "أعضاء الشهر",
+      search: "ابحث بالاسم...",
+      rank: "#",
+      name: "الاسم",
+      quizzes: "الاختبارات",
+      points: "النقاط",
+      average: "المتوسط",
+      completion: "نسبة الإكمال",
+      empty: "لا توجد نتائج لهذا الشهر",
+    },
+    export: {
+      button: "تصدير CSV",
+      preparing: "جارٍ التحضير...",
+      failed: "تعذر تجهيز الملف. حاول مرة تاني.",
+    },
+    errors: {
+      load: "تعذر تحميل التحليلات. حاول مرة تاني.",
+    },
+  },
   admin: {
     nav: {
       section: "الإدارة",
@@ -1241,8 +1284,14 @@ export const ar = {
       },
       analytics: {
         title: "تحليلات الاختبارات",
+        subtitle: "أداء الاختبارات لكل عضو",
         avgScore: "متوسط الدرجات",
         completionRate: "نسبة الإكمال",
+        totalQuizzes: "إجمالي الاختبارات",
+        publishedQuizzes: "الاختبارات المنشورة",
+        participants: "المشاركون",
+        completed: "المحاولات المكتملة",
+        autoFinished: "انتهت تلقائيًا",
         totalAttempts: "إجمالي المحاولات",
       },
     },
