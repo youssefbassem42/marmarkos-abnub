@@ -88,12 +88,12 @@ Companion to `docs/CODEBASE_AUDIT_REPORT.md` (report ID `AUDIT-2026-10-26-FULL`,
 
 | # | Item | Finding | Status |
 |---|---|---|---|
-| 3.1 | Analytics: deprecate `year`, canonical `month=YYYY-MM` | ARCH-003 | `[~]` | Both shapes accepted, `year` marked deprecated; the legacy branch is removed one release later. |
-| 3.2 | Frontend client + wiring for `/quiz-analytics/*` | ARCH-003 | `[ ]` |
-| 3.3 | Remove the N+1 in `GET /quizzes` + query-count guard | PERF-001 | `[ ]` |
-| 3.4 | Memory-first access token behind `VITE_AUTH_PERSISTENCE` | SEC-004 | `[ ]` |
-| 3.5 | Explicit connection-pool sizing | PERF-003 | `[ ]` |
-| 3.6 | `Cache-Control` on public read endpoints | PERF-004 | `[ ]` |
+| 3.1 | Analytics: deprecate `year`, canonical `month=YYYY-MM` | ARCH-003 | `[~]` | Both shapes accepted, `year` marked deprecated; the legacy branch is removed one release later. The frontend only sends the canonical shape. |
+| 3.2 | Frontend client + wiring for `/quiz-analytics/*` | ARCH-003 | `[x]` | New `src/modules/analytics` module (types, client, hooks, keys); the monthly page and the quiz analytics page are real pages now, not placeholders. |
+| 3.3 | Remove the N+1 in `GET /quizzes` + query-count guard | PERF-001 | `[x]` | 2N+1 → 3 statements for the whole page; the guard asserts that the statement count does **not** grow with the page size. |
+| 3.4 | Memory-first access token behind `VITE_AUTH_PERSISTENCE` | SEC-004 | `[x]` | The token lives in the memory of the page; the session is restored from the HttpOnly refresh cookie before the router renders. Rollback: `VITE_AUTH_PERSISTENCE=local`. |
+| 3.5 | Explicit connection-pool sizing | PERF-003 | `[x]` | `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` / `DB_POOL_TIMEOUT_SECONDS` / `DB_POOL_RECYCLE_SECONDS`, same effective values as before; `NullPool` in the tests. |
+| 3.6 | `Cache-Control` on public read endpoints | PERF-004 | `[x]` | The feed is authenticated, so it is `private, max-age=30` (browser only); the endpoints with personal data are `no-store`. Off with one setting. |
 
 ## Phase 4 — Architecture & maintainability
 
@@ -130,6 +130,19 @@ Companion to `docs/CODEBASE_AUDIT_REPORT.md` (report ID `AUDIT-2026-10-26-FULL`,
 ## Progress log
 
 Newest first. Full detail in `docs/AUDIT_REMEDIATION_FEEDBACK.md`.
+
+### 2026-10-26 — Phase 3 complete (contract, performance, client session)
+
+| Item | Result |
+|---|---|
+| Analytics contract | The frontend sends `month=YYYY-MM` only; the deprecated `?year=&month=` pair stays accepted on the server for one release |
+| Analytics client | New `src/modules/analytics` (types mirroring the backend DTOs, API client, react-query hooks, key factory) and two real pages instead of "coming soon" placeholders |
+| N+1 (`GET /quizzes`) | 2N+1 → 3 statements per page (list, verse references, grouped question counts). The guard tests that the statement count does not grow with the page size |
+| Access token | Memory-first (`VITE_AUTH_PERSISTENCE`, default `memory`): the token is out of web storage; the session is restored from the HttpOnly refresh cookie before the router renders |
+| Connection pool | Explicit `DB_POOL_SIZE` / `DB_MAX_OVERFLOW` / timeouts / recycle, `pool_pre_ping` kept; `NullPool` in the tests |
+| Cache headers | `private, max-age=30` on the member feed (it is authenticated and carries the viewer's flags), `no-store` on the endpoints with personal or administrative data |
+
+New gates: **431 backend tests** (was 421), **71 frontend tests** (was 52).
 
 ### 2026-10-26 — Phase 2 complete (security hardening)
 

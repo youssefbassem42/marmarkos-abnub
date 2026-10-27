@@ -12,7 +12,7 @@ The remediation started with the two phases that unlock everything else, and the
 * **Phase 0 (safety)** — the test suite can no longer touch production systems, and the pipeline can no longer destroy a production database.
 * **Phase 1 (truthful gates)** — all four backend gates are green, and the frontend lint gate is green too.
 
-**Every backend quality gate is now passing for the first time in the project's history**, the frontend lint gate went from 820 problems to 0, and **Phase 2 (security hardening) is complete**: the auth endpoints are rate limited, the token hashes are keyed, the flows no longer leak which addresses exist, the responses carry hardening headers, and every request has an id.
+**Every backend quality gate is now passing for the first time in the project's history**, the frontend lint gate went from 820 problems to 0, **Phase 2 (security hardening) is complete**: the auth endpoints are rate limited, the token hashes are keyed, the flows no longer leak which addresses exist, the responses carry hardening headers, and every request has an id — and **Phase 3 (contract, performance, client-side session security) is complete**: the admin quiz list no longer issues one query per row, the frontend has a real client for the analytics endpoints, and the access token no longer sits in web storage.
 
 **The dependency scanners are clean**: `npm audit` reports **0 findings** (was 3 high + 8 more) and `pip-audit` reports **0 findings** (was 3 vulnerabilities in 2 packages).
 
@@ -29,16 +29,19 @@ While doing that, the work uncovered **four genuine production defects** that no
 | `backend: ruff check .` | 35 errors (17 F401, 9 E501, 8 I001, **1 F821**) | **0** | ✅ |
 | `backend: ruff format --check .` | 39 files to reformat | **0** | ✅ |
 | `backend: mypy app` (strict) | 100 errors in 10 files | **0** | ✅ |
-| `backend: pytest` | 373 passed / **8 failed** (381) | **386 passed / 0 failed** | ✅ |
+| `backend: pytest` | 373 passed / **8 failed** (381) | **431 passed / 0 failed** | ✅ |
 | `backend: test warnings` | 4 (Starlette 422 + httpx cookies) | **0** | ✅ |
 | `frontend: npm run lint` | 820 problems (808 errors, 12 warnings) | **0** (also with `--max-warnings 0`) | ✅ |
-| `frontend: npm run test:run` | 48 passed (with React key warning + jsdom CORS noise) | **48 passed** | ✅ |
+| `frontend: npm run test:run` | 48 passed (with React key warning + jsdom CORS noise) | **71 passed** | ✅ |
 | `frontend: npm run build` | pass | **pass** | ✅ |
 | Test-suite hermeticity | ❌ real Cloudinary API call observed | ✅ **no outbound socket is possible** | ✅ |
 | Test-DB safety | ❌ `drop_all` on any `DATABASE_URL` | ✅ refuses non-`test` databases | ✅ |
 | `npm audit` | 3 high (+ 8 more) | **0** | ✅ |
 | `pip-audit` | 3 vulnerabilities / 2 packages | **0** | ✅ |
-| Backend tests | 373 passed / 8 failed | **421 passed / 0 failed** | ✅ |
+| Backend tests | 373 passed / 8 failed | **431 passed / 0 failed** | ✅ |
+| Frontend tests | 48 passed | **71 passed** | ✅ |
+| SQL statements for a page of 10 quizzes | 21 (2N+1) | **3** | ✅ |
+| Access token location | `localStorage` / `sessionStorage` | **memory** (flag-controlled) | ✅ |
 
 ---
 
@@ -119,6 +122,22 @@ The 100 errors were 90 % "repository returns `dict[str, object]`" noise. The fix
 | 2.8 | **`frontend/.env.example`** | Same-origin `/api/v1` instead of the production host. | SEC-012 |
 | 2.9 | **Request ids + metrics** | Every request gets an id (the client's `X-Request-ID` when it is safe, a fresh one otherwise), it is bound to the context, echoed in the response and added to **every log line**. A counter registry (no new dependency) counts requests, outbox events, rate-limited calls and durations. `GET /api/v1/internal/metrics` exposes them in the Prometheus format, behind the same guard as the scheduler tick; the pending-outbox gauge is read from the database. | SEC-014 / OPS-004 |
 
+### Phase 3 — Contract, performance and client-side session security (complete)
+
+| # | Item | What was done | Finding |
+|---|---|---|---|
+| 3.1 | **Canonical analytics month** | The server accepts `month=YYYY-MM` (canonical) and the legacy `?year=&month=` pair; the legacy shape is marked deprecated in the OpenAPI description and disappears one release later. The frontend only ever sends the canonical shape — a test asserts that `year` is never sent. | ARCH-003 |
+| 3.2 | **A frontend client for `/quiz-analytics/*`** | New module `src/modules/analytics` with types that mirror the backend DTOs, the API client (KPIs, members table, user detail, CSV export), the react-query hooks and the key factory. The monthly page and the quiz-analytics page were **"coming soon" placeholders** — they are real pages now. The endpoint contract had drifted unnoticed for exactly that reason: only the backend tests ever called it. | ARCH-003 |
+| 3.3 | **The N+1 of `GET /quizzes`** | The list issued one `SELECT` for the verse **and** one `COUNT` per quiz — **21 statements for a page of 10**. Both are now fetched for the whole page in one query each: **3 statements**. The guard is a test that asserts the statement count does **not** grow with the page size (the property an N+1 breaks) plus an absolute bound; the counter and the admin fixture are shared through `tests/query_counter.py` and `tests/conftest.py`. | PERF-001 / QA-007 |
+| 3.4 | **Memory-first access token** | The access token is a bearer credential and it lived in web storage, where any script of the origin can read it. It now lives in the memory of the page; the session is restored after a reload from the HttpOnly refresh cookie (`POST /auth/refresh` + `GET /users/me`) **before the router renders**, so the route guard no longer bounces a signed-in member to the login page. `VITE_AUTH_PERSISTENCE` chooses `memory` (default) / `session` / `local`; the rollback is one environment variable, no code change. | SEC-004 |
+| 3.5 | **Explicit connection pool** | `pool_size`, `max_overflow`, `pool_timeout` and `pool_recycle` are explicit and environment-driven (`DB_POOL_SIZE`, `DB_MAX_OVERFLOW`, `DB_POOL_TIMEOUT_SECONDS`, `DB_POOL_RECYCLE_SECONDS`) with the same effective values as before; `pool_pre_ping` is kept, and the tests keep `NullPool`. | PERF-003 |
+| 3.6 | **Cache headers** | The audit suggested `public, max-age=30` on the "public feed", but this feed is **authenticated** and carries the viewer's own read and quiz flags — a shared cache would show one member the read state of another. The feed therefore gets `private, max-age=30` (the browser only), the endpoints with personal or administrative data get `no-store`, and the whole mechanism is switched off with one setting. | PERF-004 |
+
+**Two deliberate deviations from the audit text**, both for safety:
+
+1. `public` cache headers would have leaked one member's flags to another → `private`.
+2. The "remember me" checkbox only decides **where the token is written** in the persistent modes; in the memory mode the refresh cookie (30 days) decides how long a session lasts. The cookie's lifetime was not changed, so no member loses a session.
+
 ---
 
 ## 4. Real bugs found and fixed while making the gates green
@@ -142,15 +161,15 @@ These were **not** in the original report — they were exposed by the fixes the
 cd backend
 .venv/bin/ruff check .                      # All checks passed!
 .venv/bin/ruff format --check .             # 472 files already formatted
-DEBUG=true .venv/bin/mypy app               # Success: no issues found in 387 source files
+DEBUG=true .venv/bin/mypy app               # Success: no issues found in 396 source files
 DEBUG=true APP_ENV=test \
 DATABASE_URL='postgresql+asyncpg://marmarkos:marmarkos@127.0.0.1:55432/marmarkos_test' \
-  .venv/bin/python -m pytest -q             # 386 passed
+  .venv/bin/python -m pytest -q             # 431 passed
 
 # Frontend — all green
 cd frontend
 npm run lint -- --max-warnings 0            # clean
-npm run test:run                            # 48 passed
+npm run test:run                            # 71 passed
 npm run build                               # built successfully
 ```
 
@@ -159,6 +178,9 @@ Additional checks performed:
 * The network guard was proven by running the suite with the old `.env` present — **no** outbound call was made (the avatar test now takes the "not configured" branch).
 * The concurrency regression test was run **5 times in a row** (5/5 green) and the whole suite was run repeatedly to confirm the flakiness is gone.
 * Every changed test was checked to still assert the *intent* (not weakened to pass).
+* The N+1 guard was run against pages of 2 and 8 quizzes: the statement count is identical in both cases (the property an N+1 breaks), and the absolute bound is 8 statements for a page of 8.
+* The memory-first token was verified in all three modes (`memory`, `session`, `local`) against the real `localStorage`/`sessionStorage` of jsdom, including that a token left by an earlier version is **not** picked up again in the memory mode.
+* The cache policy was checked on a real response: the feed carries `private, max-age=30`, `/users/me` and `/notifications` carry `no-store`, and the mechanism can be switched off with one setting.
 
 ---
 
@@ -177,7 +199,6 @@ Additional checks performed:
 
 | Phase | Content | Size |
 |---|---|---|
-| **Phase 3** | Frontend client for `/quiz-analytics/*` · remove the N+1 in `GET /quizzes` + query-count guard · memory-first access token behind a flag · connection-pool sizing · cache headers | ~4 days |
 | **Phase 4** | `app/shared/contracts/` · break the two import cycles · domain ports speak domain objects · one `UnitOfWork` lifecycle · frontend direction handling · replace `assert` guards · the `TODO(phase-blog)` branch · single dependency source + lock · move the 53 MB of design PNGs out of git | ~2 weeks |
 | **Phase 5** | CI hardening (`npm ci`, lint gate, `npm audit`, `pip-audit`, `gitleaks`, `alembic check`, coverage gates) · frontend coverage 21.92 % → ≥ 70 % · E2E golden paths · OpenAPI contract test · production frontend image (nginx) · non-root containers, healthchecks, advisory-locked migrations · Renovate | ~2 weeks |
 
@@ -185,7 +206,7 @@ Additional checks performed:
 
 | Item | Reason |
 |---|---|
-| Memory-first access token (SEC-004) | Needs the flag + a staged rollout + the CSP first; rushing it risks locking every member out. The CSP is now in place, so Phase 3 can do it behind `VITE_AUTH_PERSISTENCE` |
+| Memory-first access token (SEC-004) | **Done in Phase 3** behind `VITE_AUTH_PERSISTENCE`. The staged rollout is still open: watch the sign-in rate after the deployment; `VITE_AUTH_PERSISTENCE=local` rolls it back without a code change |
 | Domain-port rework (ARCH-005) | Large, type-level refactor; best done *after* the shared-contracts extraction in Phase 4.1 |
 | `/metrics` as a Prometheus scrape target | The endpoint exists and speaks the exposition format; the scrape config and the alerting rules belong with the deployment (Phase 5) |
 | Re-hashing the legacy token rows in bulk | Not needed: every legacy token is single-use and is replaced by a v2 one when it is redeemed, so the old format disappears on its own |
@@ -194,10 +215,10 @@ Additional checks performed:
 
 ## 7. Recommended next session
 
-1. **Phase 3.3** — the `GET /quizzes` N+1 with a query-count guard (visible performance win, low risk).
-2. **Phase 3.4** — the memory-first access token behind `VITE_AUTH_PERSISTENCE` (the CSP it needs is now in place).
-3. **Phase 5.1/5.2** — switch CI from "always red" to "always green and strict": `npm ci`, `--max-warnings 0`, `npm audit`, `pip-audit`, `gitleaks`, `alembic check`, coverage thresholds (start at the current values, only ever raise them).
-4. **Phase 4.1** — `app/shared/contracts/` with re-exports, so the import cycles can be broken in two small follow-up PRs.
-5. **Phase 3.1/3.2** — the frontend client for the analytics endpoints and the removal of the legacy `year`/`month` branch (one release after the deprecation).
+1. **Phase 5.1/5.2** — switch CI from "always red" to "always green and strict": `npm ci`, `--max-warnings 0`, `npm audit`, `pip-audit`, `gitleaks`, `alembic check`, coverage thresholds (start at the current values, only ever raise them). This is the highest-value item left: it keeps every gate of the last three phases from rotting.
+2. **Phase 4.1** — `app/shared/contracts/` with re-exports, so the import cycles can be broken in two small follow-up PRs.
+3. **Phase 5.4** — the frontend coverage (21.92 % → ≥ 70 %), starting with the quiz and attendance hooks; the new analytics module is already covered.
+4. **Phase 3.1 (completion)** — remove the legacy `?year=&month=` branch of the analytics endpoints **one release after the deprecation** (not before: the server still accepts it today).
+5. **Deployment watch** — after the memory-first token ships, watch the sign-in rate and the 401 rate for a week; `VITE_AUTH_PERSISTENCE=local` is the one-line rollback.
 
 > Rule for every follow-up PR: **one concern per PR**, behaviour-preserving, with the test that proves it. The pipeline is green now — the cheapest way to keep it that way is to never merge a red branch again.
