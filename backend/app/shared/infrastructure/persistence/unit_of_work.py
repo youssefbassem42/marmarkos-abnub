@@ -6,6 +6,7 @@ domain events (as outbox rows) atomically. Repositories never commit on
 their own.
 """
 
+import warnings
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 
@@ -87,19 +88,54 @@ from app.shared.infrastructure.persistence.outbox import OutboxEvent, OutboxRepo
 class UnitOfWork:
     """Coordinates a single database transaction across module repositories.
 
+    There are two ways to get one, and only two:
+
+    * ``UnitOfWork.create(session_factory)`` - the unit of work owns the
+      session: it rolls back on an error and commits the pending events
+      on a clean exit. This is the canonical form.
+    * ``UnitOfWork.from_session(session)`` - the session belongs to
+      somebody else (the request scope); the unit of work only
+      coordinates the repositories. The owner of the session is
+      responsible for the rollback.
+
     Usage::
 
-        uow = await UnitOfWork.create(session_factory)
-        async with uow:
+        async with UnitOfWork.create(session_factory) as uow:
             uow.users.add(user)
             uow.record(UserRegistered(...))
             await uow.commit()
     """
 
     def __init__(self, session: AsyncSession) -> None:
+        """Deprecated: use :meth:`from_session` (or :meth:`create`).
+
+        Kept for one release so that the code outside this repository
+        keeps working; it will be removed afterwards.
+        """
+        warnings.warn(
+            "UnitOfWork(session) is deprecated and will be removed in the next "
+            "release: use UnitOfWork.from_session(session) for a session you "
+            "do not own, or UnitOfWork.create(session_factory) to own one.",
+            DeprecationWarning,
+            stacklevel=2,
+        )
+        self._init(session)
+
+    def _init(self, session: AsyncSession) -> None:
         self._session = session
         self._events: list[DomainEvent] = []
         self._committed = False
+
+    @classmethod
+    def from_session(cls, session: AsyncSession) -> "UnitOfWork":
+        """Wrap a session that somebody else owns (the request scope).
+
+        The unit of work does not close the session and does not commit
+        on its own: the owner decides when the transaction ends.
+        """
+        uow = cls.__new__(cls)
+        uow._init(session)
+        return uow
 
     @classmethod
     @asynccontextmanager
@@ -108,7 +144,7 @@ class UnitOfWork:
     ) -> AsyncIterator["UnitOfWork"]:
         """Open a fresh session and roll back automatically on errors."""
         async with session_factory() as session:
-            uow = cls(session)
+            uow = cls.from_session(session)
             try:
                 yield uow
             except BaseException:

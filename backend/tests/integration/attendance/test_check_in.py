@@ -82,7 +82,7 @@ async def test_check_in_records_the_current_meeting(
     member_user, qr_token = member_with_qr
     open_meeting = current_meeting_date(today_local())
 
-    command = CheckInCommand(UnitOfWork(db_session), now=_on_time_now)
+    command = CheckInCommand(UnitOfWork.from_session(db_session), now=_on_time_now)
     result = await command.execute(qr_token, admin_user)
 
     assert result.success is True
@@ -118,7 +118,7 @@ async def test_explicit_open_meeting_date_is_accepted(
     _, qr_token = member_with_qr
     open_meeting = current_meeting_date(today_local())
 
-    command = CheckInCommand(UnitOfWork(db_session))
+    command = CheckInCommand(UnitOfWork.from_session(db_session))
     result = await command.execute(qr_token, admin_user, meeting_date=open_meeting)
 
     assert result.attendance.meeting_date == open_meeting
@@ -131,7 +131,7 @@ async def test_duplicate_check_in_raises_conflict(
     """Attendance cannot be taken twice for the same user and meeting."""
     _, qr_token = member_with_qr
 
-    command = CheckInCommand(UnitOfWork(db_session))
+    command = CheckInCommand(UnitOfWork.from_session(db_session))
 
     await command.execute(qr_token, admin_user)
 
@@ -149,7 +149,7 @@ async def test_duplicate_check_in_leaves_a_single_record(
     """A rejected duplicate must not create a second row."""
     member_user, qr_token = member_with_qr
 
-    command = CheckInCommand(UnitOfWork(db_session))
+    command = CheckInCommand(UnitOfWork.from_session(db_session))
     await command.execute(qr_token, admin_user)
 
     with pytest.raises(ConflictError):
@@ -168,7 +168,7 @@ async def test_future_meeting_is_rejected(
     _, qr_token = member_with_qr
     next_meeting = current_meeting_date(today_local()) + timedelta(days=MEETING_INTERVAL_DAYS)
 
-    command = CheckInCommand(UnitOfWork(db_session))
+    command = CheckInCommand(UnitOfWork.from_session(db_session))
 
     with pytest.raises(ValidationError) as exc_info:
         await command.execute(qr_token, admin_user, meeting_date=next_meeting)
@@ -184,7 +184,7 @@ async def test_past_meeting_is_rejected(
     _, qr_token = member_with_qr
     previous_meeting = current_meeting_date(today_local()) - timedelta(days=MEETING_INTERVAL_DAYS)
 
-    command = CheckInCommand(UnitOfWork(db_session))
+    command = CheckInCommand(UnitOfWork.from_session(db_session))
 
     with pytest.raises(ValidationError) as exc_info:
         await command.execute(qr_token, admin_user, meeting_date=previous_meeting)
@@ -200,7 +200,7 @@ async def test_non_meeting_date_is_rejected(
     _, qr_token = member_with_qr
     not_a_meeting = current_meeting_date(today_local()) + timedelta(days=1)  # Friday
 
-    command = CheckInCommand(UnitOfWork(db_session))
+    command = CheckInCommand(UnitOfWork.from_session(db_session))
 
     with pytest.raises(ValidationError) as exc_info:
         await command.execute(qr_token, admin_user, meeting_date=not_a_meeting)
@@ -211,7 +211,7 @@ async def test_non_meeting_date_is_rejected(
 @pytest.mark.asyncio
 async def test_invalid_qr_raises_validation_error(db_session: AsyncSession, admin_user: User):
     """Test that invalid QR code raises ValidationError."""
-    command = CheckInCommand(UnitOfWork(db_session))
+    command = CheckInCommand(UnitOfWork.from_session(db_session))
 
     with pytest.raises(ValidationError) as exc_info:
         await command.execute("invalid_qr_token", admin_user)
@@ -226,7 +226,7 @@ async def test_member_cannot_check_in_others(
     """Test that members cannot record attendance (only admin/servant can)."""
     _, qr_token = member_with_qr
 
-    command = CheckInCommand(UnitOfWork(db_session))
+    command = CheckInCommand(UnitOfWork.from_session(db_session))
 
     with pytest.raises(ForbiddenError) as exc_info:
         await command.execute(qr_token, member_user)
@@ -245,7 +245,7 @@ async def test_inactive_user_qr_raises_validation_error(
     member_user.status = UserStatus.SUSPENDED
     await db_session.commit()
 
-    command = CheckInCommand(UnitOfWork(db_session))
+    command = CheckInCommand(UnitOfWork.from_session(db_session))
 
     with pytest.raises(ValidationError) as exc_info:
         await command.execute(qr_token, admin_user)

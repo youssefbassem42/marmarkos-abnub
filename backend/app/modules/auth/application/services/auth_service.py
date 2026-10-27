@@ -62,7 +62,7 @@ class RegistrationService:
     """
 
     def __init__(self, session: AsyncSession) -> None:
-        self._uow = UnitOfWork(session)
+        self._uow = UnitOfWork.from_session(session)
         self._email = EmailService()
 
     async def register(self, request: RegisterRequest) -> User:
@@ -153,7 +153,7 @@ async def send_verification_email_in_background(user_id: uuid.UUID) -> None:
     once the response has been sent.
     """
     async with async_session_factory() as session:
-        uow = UnitOfWork(session)
+        uow = UnitOfWork.from_session(session)
         user = await uow.users.get_by_id(user_id)
         if user is None or user.email_verified:
             return
@@ -163,7 +163,7 @@ async def send_verification_email_in_background(user_id: uuid.UUID) -> None:
 class AuthenticationService:
     """Login, Google sign-in, token refresh and logout.
 
-    Uses the constructor-path ``UnitOfWork(session)`` where ``session`` is
+    Uses ``UnitOfWork.from_session(session)`` where ``session`` is
     provided by the FastAPI ``get_db_session`` dependency.  That dependency
     owns the session lifecycle and rolls back on unhandled exceptions.
     Every write path in this service calls ``await self._uow.commit()`` or
@@ -172,7 +172,7 @@ class AuthenticationService:
     """
 
     def __init__(self, session: AsyncSession) -> None:
-        self._uow = UnitOfWork(session)
+        self._uow = UnitOfWork.from_session(session)
 
     async def login(
         self, request: LoginRequest, user_agent: str | None = None, ip_address: str | None = None

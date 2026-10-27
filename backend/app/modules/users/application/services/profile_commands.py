@@ -28,14 +28,14 @@ from app.shared.security import hash_password, verify_password
 class ProfileCommandService:
     """Updates the authenticated user's own profile, password and photo.
 
-    Uses the constructor-path ``UnitOfWork(session)`` where ``session`` is
+    Uses ``UnitOfWork.from_session(session)`` where ``session`` is
     owned by the FastAPI ``get_db_session`` dependency (auto-rollback on
     unhandled exceptions). Every write path calls ``await self._uow.commit()``
     or ``await self._uow.rollback()`` explicitly before returning.
     """
 
     def __init__(self, session: AsyncSession) -> None:
-        self._uow = UnitOfWork(session)
+        self._uow = UnitOfWork.from_session(session)
 
     async def update_profile(self, user: User, request: UpdateProfileRequest) -> User:
         changes = request.model_dump(exclude_unset=True)

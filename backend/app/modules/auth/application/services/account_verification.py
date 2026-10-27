@@ -94,14 +94,14 @@ def _issue_token(
 class EmailVerificationService:
     """Keeps dummy sign-ups out: no verified address → no usable account.
 
-    Uses the constructor-path ``UnitOfWork(session)`` where ``session`` is
+    Uses ``UnitOfWork.from_session(session)`` where ``session`` is
     owned by the FastAPI ``get_db_session`` dependency (auto-rollback on
     unhandled exceptions). Every write path calls ``await self._uow.commit()``
     explicitly before returning.
     """
 
     def __init__(self, session: AsyncSession) -> None:
-        self._uow = UnitOfWork(session)
+        self._uow = UnitOfWork.from_session(session)
         self._email = EmailService()
 
     async def send_verification_email(self, user: User) -> None:
@@ -161,14 +161,14 @@ class EmailVerificationService:
 class PasswordResetService:
     """Email a reset link and consume it to update the password.
 
-    Uses the constructor-path ``UnitOfWork(session)`` where ``session`` is
+    Uses ``UnitOfWork.from_session(session)`` where ``session`` is
     owned by the FastAPI ``get_db_session`` dependency (auto-rollback on
     unhandled exceptions). Every write path calls ``await self._uow.commit()``
     explicitly before returning.
     """
 
     def __init__(self, session: AsyncSession) -> None:
-        self._uow = UnitOfWork(session)
+        self._uow = UnitOfWork.from_session(session)
         self._email = EmailService()
 
     async def request_reset(self, request: ForgotPasswordRequest | str) -> None:
