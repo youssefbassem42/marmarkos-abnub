@@ -1,27 +1,29 @@
 # Runtime dependencies for the Vercel Python deployment.
-# Mirrors pyproject.toml [project.dependencies] — keep both in sync.
+#
+# GENERATED FILE - do not edit it by hand.
+# The source of truth is pyproject.toml ([project.dependencies]);
+# regenerate with: python scripts/sync_requirements.py
+#
+# The pins that are not obvious:
+#   PyJWT       replaces python-jose (PYSEC-2026-4298); the app only
+#               signs and verifies HS256 tokens.
+#   certifi     transitive of httpx; the floor is past PYSEC-2026-4320.
+#   tzdata      the serverless runtimes ship no OS zoneinfo database;
+#               without it ZoneInfo("Africa/Cairo") raises and every
+#               attendance route answers 500.
 fastapi>=0.115
 uvicorn[standard]>=0.34
 pydantic>=2.10
 pydantic-settings>=2.7
-
 sqlalchemy>=2.0
 greenlet>=3.0
 asyncpg>=0.30
 alembic>=1.14
-
-# PyJWT replaces python-jose (PYSEC-2026-4298); passlib was never imported.
 PyJWT>=2.9
 bcrypt>=4.2
 python-multipart>=0.0.20
-
 httpx>=0.28
-# Transitive of httpx; floor raised past PYSEC-2026-4320.
 certifi>=2026.10.19
 segno>=1.6
-
 email-validator>=2.2
-
-# Serverless runtimes (Vercel) ship no OS zoneinfo database; without this
-# wheel ZoneInfo("Africa/Cairo") raises and every attendance route 500s.
 tzdata>=2024.1
