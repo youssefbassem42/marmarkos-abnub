@@ -9,11 +9,7 @@ export function ForbiddenPage() {
   const { t } = useTranslation("common");
 
   return (
-    <div
-      dir="rtl"
-      lang="ar"
-      className="flex min-h-screen flex-col items-center justify-center bg-soft px-5 text-center"
-    >
+    <div className="flex min-h-screen flex-col items-center justify-center bg-soft px-5 text-center">
       <span className="grid h-20 w-20 place-items-center rounded-full bg-brand-red/10">
         <ShieldAlert className="h-10 w-10 text-brand-red" aria-hidden="true" />
       </span>

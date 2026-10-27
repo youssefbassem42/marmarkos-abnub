@@ -39,17 +39,11 @@ export function VerseHeroCard({ verse }: VerseHeroCardProps) {
           {verse.title}
         </h2>
 
-        <p
-          dir="rtl"
-          className="mt-1 font-verse text-sm italic text-muted-foreground not-italic font-arabic text-base"
-        >
+        <p className="mt-1 font-verse text-sm italic text-muted-foreground not-italic font-arabic text-base">
           {verse.verse_reference}
         </p>
 
-        <p
-          dir="rtl"
-          className="mt-3 line-clamp-3 font-verse text-[15px] leading-7 text-ink not-italic font-arabic text-base leading-8"
-        >
+        <p className="mt-3 line-clamp-3 font-verse text-[15px] leading-7 text-ink not-italic font-arabic text-base leading-8">
           {verse.excerpt}
         </p>
 

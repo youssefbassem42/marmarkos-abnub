@@ -168,7 +168,7 @@ export function AttendancePinCard() {
                 {t("pin.delete")}
               </Button>
             </AlertDialogTrigger>
-            <AlertDialogContent dir="rtl">
+            <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle className="font-arabic">
                   {t("pin.deleteTitle")}

@@ -5,24 +5,17 @@ import hero from "@/assets/hero-worship.jpg";
 import { cn } from "@/lib/utils";
 
 interface BrandPanelProps {
-  lang: "ar" | "en";
   /** Auth pages use the navy panel; the attendance layout uses light. */
   variant?: "navy" | "light";
   className?: string;
 }
 
-export function BrandPanel({
-  lang,
-  variant = "navy",
-  className,
-}: BrandPanelProps) {
+export function BrandPanel({ variant = "navy", className }: BrandPanelProps) {
   const { t } = useTranslation("common");
   const isLight = variant === "light";
 
   return (
     <aside
-      dir="rtl"
-      lang="ar"
       className={cn(
         "relative flex w-full flex-col justify-center overflow-hidden px-6 py-12 lg:px-12 lg:py-16",
         isLight ? "bg-background" : "bg-navy text-white",
@@ -73,13 +66,9 @@ export function BrandPanel({
           {t("brand.name")}
         </p>
 
-        <BrandMessageHeading
-          lang={lang}
-          className={isLight ? "text-ink" : "text-white"}
-        />
+        <BrandMessageHeading className={isLight ? "text-ink" : "text-white"} />
 
         <BrandSupportingLine
-          lang={lang}
           className={isLight ? "text-ink/75" : "text-white/85"}
         />
 
@@ -90,22 +79,18 @@ export function BrandPanel({
           className="brush-mask mt-8 w-full max-w-md rounded-lg object-cover"
         />
 
-        <BrandVerseBlock
-          lang={lang}
-          className="-mx-6 mt-10 max-w-md lg:-ms-12"
-        />
+        <BrandVerseBlock className="-mx-6 mt-10 max-w-md lg:-ms-12" />
       </div>
     </aside>
   );
 }
 
 interface BrandPieceProps {
-  lang: "ar" | "en";
   className?: string;
 }
 
 /** FAITH. / FRIENDS. / PURPOSE. — shared by the auth panel and sidebar. */
-export function BrandMessageHeading({ lang, className }: BrandPieceProps) {
+export function BrandMessageHeading({ className }: BrandPieceProps) {
   const { t } = useTranslation("common");
   const message = t("brand.message", {
     returnObjects: true,
@@ -128,7 +113,7 @@ export function BrandMessageHeading({ lang, className }: BrandPieceProps) {
 }
 
 /** The one-line mission statement under the message heading. */
-export function BrandSupportingLine({ lang, className }: BrandPieceProps) {
+export function BrandSupportingLine({ className }: BrandPieceProps) {
   const { t } = useTranslation("common");
 
   return (
@@ -144,7 +129,7 @@ export function BrandSupportingLine({ lang, className }: BrandPieceProps) {
 }
 
 /** Scripture quotation in Amiri with the mint reference. */
-export function BrandVerseBlock({ lang, className }: BrandPieceProps) {
+export function BrandVerseBlock({ className }: BrandPieceProps) {
   const { t } = useTranslation("common");
 
   return (

@@ -3,11 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface AuthProgressProps {
-  lang: "ar" | "en";
-}
-
-export function AuthProgress({ lang }: AuthProgressProps) {
+export function AuthProgress() {
   const { t } = useTranslation("resetPassword");
   const steps = t("progress.steps", {
     returnObjects: true,
@@ -16,8 +12,6 @@ export function AuthProgress({ lang }: AuthProgressProps) {
 
   return (
     <ol
-      dir="rtl"
-      lang="ar"
       className="flex w-full items-start gap-1 sm:gap-2"
       aria-label={t("progress.ariaLabel")}
     >

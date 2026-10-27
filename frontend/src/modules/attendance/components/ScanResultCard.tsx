@@ -49,8 +49,7 @@ export function ScanResultCard({
   return (
     <div
       role={variant === "success" ? "status" : "alert"}
-      dir="rtl"
-      lang="ar"
+
       className={cn("rounded-2xl border p-5", boxClass)}
     >
       <div className="flex items-start gap-4">

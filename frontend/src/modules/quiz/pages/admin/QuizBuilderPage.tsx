@@ -351,7 +351,7 @@ export default function QuizBuilderPage() {
   );
 
   return (
-    <div dir="rtl" lang="ar">
+    <div>
       <AdminTopbar
         title={
           isEdit ? t("admin.builder.editTitle") : t("admin.builder.newTitle")

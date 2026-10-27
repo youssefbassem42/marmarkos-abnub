@@ -120,7 +120,7 @@ export default function VerseSchedulePage() {
   }
 
   return (
-    <div dir="rtl" lang="ar">
+    <div>
       <AdminTopbar
         title={t("admin.schedule.title")}
         subtitle={t("admin.schedule.subtitle")}

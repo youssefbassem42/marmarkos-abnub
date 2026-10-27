@@ -70,7 +70,7 @@ export function GoogleCallbackPage() {
   }, [location.hash, navigate]);
 
   return (
-    <div dir="rtl" lang="ar" className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Navbar variant="auth" />
 
       <main className="flex min-h-[calc(100vh-61px)] flex-col items-center justify-center gap-4 px-5 text-center">

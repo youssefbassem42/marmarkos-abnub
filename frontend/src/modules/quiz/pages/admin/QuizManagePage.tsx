@@ -157,7 +157,7 @@ export default function QuizManagePage() {
   );
 
   return (
-    <div dir="rtl" lang="ar">
+    <div>
       <AdminTopbar
         title={t("admin.manage.title")}
         subtitle={t("admin.manage.subtitle")}

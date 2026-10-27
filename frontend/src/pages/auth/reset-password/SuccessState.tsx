@@ -4,11 +4,7 @@ import { CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface SuccessStateProps {
-  lang: "ar" | "en";
-}
-
-export function SuccessState({ lang }: SuccessStateProps) {
+export function SuccessState() {
   const { t } = useTranslation("resetPassword");
 
   return (

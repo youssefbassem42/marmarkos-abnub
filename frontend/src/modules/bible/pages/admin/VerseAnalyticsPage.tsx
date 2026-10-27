@@ -148,7 +148,7 @@ export default function VerseAnalyticsPage() {
   ];
 
   return (
-    <div dir="rtl" lang="ar">
+    <div>
       <AdminTopbar
         title={t("admin.analytics.title")}
         subtitle={t("admin.analytics.subtitle")}

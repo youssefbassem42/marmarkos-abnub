@@ -21,7 +21,7 @@ export function Footer() {
   }) as readonly string[];
 
   return (
-    <footer id="contact" dir="rtl" lang="ar" className="bg-navy text-white">
+    <footer id="contact" className="bg-navy text-white">
       <div className="mx-auto grid max-w-7xl gap-10 px-5 py-14 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.2fr)_repeat(3,minmax(0,1fr))] lg:px-8">
         <div>
           <img
@@ -32,11 +32,7 @@ export function Footer() {
             loading="lazy"
             className="h-[100px] w-[150px] object-contain brightness-0 invert"
           />
-          <p
-            dir="rtl"
-            lang="ar"
-            className="font-arabic mt-3 w-fit text-lg font-bold"
-          >
+          <p className="font-arabic mt-3 w-fit text-lg font-bold">
             {tCommon("brand.name")}
           </p>
         </div>

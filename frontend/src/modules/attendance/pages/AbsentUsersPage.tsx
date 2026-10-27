@@ -49,7 +49,7 @@ export function AbsentUsersPage() {
   }, [meetingDate, t, locale]);
 
   return (
-    <div dir="rtl" lang="ar">
+    <div>
       <AdminTopbar
         title={t("dashboard.absent.pageTitle")}
         subtitle={t("dashboard.absent.subtitle")}

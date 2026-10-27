@@ -66,14 +66,14 @@ export default function QuizListPage() {
   };
 
   return (
-    <div dir="rtl" lang="ar">
+    <div>
       <AdminTopbar
         title={t("admin.list.title")}
         subtitle={t("admin.manage.subtitle")}
       />
 
       <main className="mx-auto w-full max-w-7xl px-5 py-8 lg:px-8">
-        <div dir="rtl" lang="ar" className="space-y-5">
+        <div className="space-y-5">
           {/* Filter bar */}
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-3">

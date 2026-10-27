@@ -31,11 +31,7 @@ export function AdminTopbar({ title, subtitle, backHref }: AdminTopbarProps) {
 
   return (
     <header className="sticky top-0 z-20 border-b border-border/60 bg-background">
-      <div
-        dir="rtl"
-        lang="ar"
-        className="flex items-center gap-3 px-5 py-3 lg:px-8"
-      >
+      <div className="flex items-center gap-3 px-5 py-3 lg:px-8">
         {backHref ? (
           <Link
             to={backHref}

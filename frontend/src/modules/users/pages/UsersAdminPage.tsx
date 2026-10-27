@@ -110,7 +110,7 @@ export function UsersAdminPage() {
   ];
 
   return (
-    <div dir="rtl" lang="ar">
+    <div>
       <AdminTopbar title={t("title")} subtitle={t("subtitle")} />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
         <div className="flex items-center gap-3">

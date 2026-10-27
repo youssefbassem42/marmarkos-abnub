@@ -141,7 +141,7 @@ export default function QuestionFormPage() {
   );
 
   return (
-    <div dir="rtl" lang="ar">
+    <div>
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
         <Breadcrumb>
           <BreadcrumbList>

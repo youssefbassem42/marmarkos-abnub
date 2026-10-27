@@ -210,7 +210,7 @@ export function ProfilePage() {
     `${(user.first_name ?? "?")[0]}${(user.last_name ?? "")[0] ?? ""}`.toUpperCase();
 
   return (
-    <div dir="rtl" lang="ar" className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Navbar />
 
       <main className="mx-auto max-w-3xl px-5 pb-16 pt-28 lg:px-8">

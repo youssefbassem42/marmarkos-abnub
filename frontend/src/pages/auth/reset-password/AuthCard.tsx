@@ -7,25 +7,20 @@ import { ResetPasswordForm } from "./ResetPasswordForm";
 import { SuccessState } from "./SuccessState";
 
 interface AuthCardProps {
-  lang: "ar" | "en";
   token: string;
   stage: "form" | "success";
   onSuccess: () => void;
 }
 
-export function AuthCard({ lang, token, stage, onSuccess }: AuthCardProps) {
+export function AuthCard({ token, stage, onSuccess }: AuthCardProps) {
   const { t } = useTranslation("resetPassword");
 
   return (
-    <section
-      dir="rtl"
-      lang="ar"
-      className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14"
-    >
+    <section className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14">
       <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 card-elevated sm:p-10">
         {token ? (
           stage === "success" ? (
-            <SuccessState lang={lang} />
+            <SuccessState />
           ) : (
             <>
               <div className="mb-8 flex flex-col items-center text-center">
@@ -47,19 +42,15 @@ export function AuthCard({ lang, token, stage, onSuccess }: AuthCardProps) {
                 </p>
               </div>
 
-              <AuthProgress lang={lang} />
+              <AuthProgress />
 
               <div className="mt-8">
-                <ResetPasswordForm
-                  lang={lang}
-                  token={token}
-                  onSuccess={onSuccess}
-                />
+                <ResetPasswordForm token={token} onSuccess={onSuccess} />
               </div>
             </>
           )
         ) : (
-          <ErrorState lang={lang} />
+          <ErrorState />
         )}
       </div>
     </section>

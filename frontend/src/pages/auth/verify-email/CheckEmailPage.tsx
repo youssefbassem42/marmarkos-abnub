@@ -22,19 +22,14 @@ export function CheckEmailPage() {
   }, [t]);
 
   return (
-    <div dir="rtl" lang="ar" className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Navbar variant="auth" />
 
       <main className="flex min-h-[calc(100vh-61px)] flex-col lg:flex-row">
-        <BrandPanel lang="ar" />
-        <section
-          dir="rtl"
-          lang="ar"
-          className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14"
-        >
+        <BrandPanel />
+        <section className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14">
           <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 card-elevated sm:p-10">
             <CheckEmailCard
-              lang="ar"
               email={email}
               title={t("checkEmail.heading")}
               description={
@@ -55,7 +50,7 @@ export function CheckEmailPage() {
         </section>
       </main>
 
-      <AuthFooter lang="ar" />
+      <AuthFooter />
     </div>
   );
 }

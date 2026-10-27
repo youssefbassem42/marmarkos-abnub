@@ -117,7 +117,7 @@ export function PushNotificationForm() {
           <Label htmlFor="push-title-ar">{t("admin.composer.titleAr")}</Label>
           <Input
             id="push-title-ar"
-            dir="rtl"
+
             className={cn("font-arabic", fieldError(Boolean(errors.title_ar)))}
             {...register("title_ar")}
           />
@@ -132,7 +132,7 @@ export function PushNotificationForm() {
           </Label>
           <Textarea
             id="push-message-ar"
-            dir="rtl"
+
             rows={4}
             className={cn(
               "font-arabic",

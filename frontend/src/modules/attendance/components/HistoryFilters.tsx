@@ -152,7 +152,7 @@ export function HistoryFilters({ values, onChange }: HistoryFiltersProps) {
                 />
               </Button>
             </PopoverTrigger>
-            <PopoverContent className="w-72 p-0" dir="rtl">
+            <PopoverContent className="w-72 p-0">
               <Command>
                 <CommandInput placeholder={t("history.filters.member")} />
                 <CommandList>

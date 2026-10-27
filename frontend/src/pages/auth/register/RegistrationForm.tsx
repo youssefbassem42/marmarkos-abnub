@@ -16,10 +16,9 @@ import { registerSchema, type RegisterFormValues } from "./registerSchema";
 
 type RegisterFormProps = {
   onSuccess: (email: string) => void;
-  lang: "ar" | "en";
 };
 
-export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
+export function RegistrationForm({ onSuccess }: RegisterFormProps) {
   const { t } = useTranslation("register");
   const inputClass = cn(
     "h-11 rounded-xl border-border bg-background px-3 focus-ring font-arabic text-lg placeholder:text-base",
@@ -165,7 +164,6 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
             }
             placeholder={t("form.passwordPlaceholder")}
             invalid={Boolean(errors.password)}
-            lang={lang}
             showPasswordLabel={t("form.showPassword")}
             hidePasswordLabel={t("form.hidePassword")}
           />
@@ -185,7 +183,6 @@ export function RegistrationForm({ onSuccess, lang }: RegisterFormProps) {
             }
             placeholder={t("form.confirmPasswordPlaceholder")}
             invalid={Boolean(errors.confirmPassword)}
-            lang={lang}
             showPasswordLabel={t("form.showPassword")}
             hidePasswordLabel={t("form.hidePassword")}
           />

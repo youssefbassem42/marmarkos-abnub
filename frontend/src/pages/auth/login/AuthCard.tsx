@@ -3,19 +3,11 @@ import { LogIn, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LoginForm } from "./LoginForm";
 
-interface AuthCardProps {
-  lang: "ar" | "en";
-}
-
-export function AuthCard({ lang }: AuthCardProps) {
+export function AuthCard() {
   const { t } = useTranslation("login");
 
   return (
-    <section
-      dir="rtl"
-      lang="ar"
-      className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14"
-    >
+    <section className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14">
       <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 card-elevated sm:p-10">
         <div className="mb-8 flex flex-col items-center text-center">
           <span className="grid h-14 w-14 place-items-center rounded-full bg-mint/15">
@@ -33,7 +25,7 @@ export function AuthCard({ lang }: AuthCardProps) {
           </p>
         </div>
 
-        <LoginForm lang={lang} />
+        <LoginForm />
 
         <div className="mt-8 flex items-center justify-center gap-2 text-sm text-muted-foreground">
           <ShieldCheck

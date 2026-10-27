@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 const DEFAULT_COOLDOWN_SECONDS = 60;
 
 interface CheckEmailCardProps {
-  lang: "ar" | "en";
   /** Address the mail was sent to; rendered in bold when provided. */
   email?: string;
   title: string;
@@ -30,7 +29,6 @@ interface CheckEmailCardProps {
  * its cooldown so callers only provide copy + an async send callback.
  */
 export function CheckEmailCard({
-  lang,
   email,
   title,
   description,

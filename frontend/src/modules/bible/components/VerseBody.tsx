@@ -25,16 +25,10 @@ export function VerseBody({
           className="mx-auto h-6 w-6 fill-brand-blue text-brand-blue opacity-60"
           aria-hidden="true"
         />
-        <blockquote
-          dir="rtl"
-          className="mt-3 font-verse text-lg italic leading-8 text-brand-blue md:text-xl md:leading-9 not-italic font-arabic text-xl md:text-2xl md:leading-10"
-        >
+        <blockquote className="mt-3 font-verse text-lg italic leading-8 text-brand-blue md:text-xl md:leading-9 not-italic font-arabic text-xl md:text-2xl md:leading-10">
           {text}
         </blockquote>
-        <p
-          dir="rtl"
-          className="mt-3 text-xs font-bold uppercase tracking-[0.14em] text-brand-blue font-arabic normal-case tracking-normal"
-        >
+        <p className="mt-3 text-xs font-bold uppercase tracking-[0.14em] text-brand-blue font-arabic normal-case tracking-normal">
           {verseReference}
         </p>
       </section>

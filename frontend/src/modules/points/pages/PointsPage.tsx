@@ -44,7 +44,7 @@ export default function PointsPage() {
 
   if (pointsQuery.isPending) {
     return (
-      <div dir="rtl" lang="ar" className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <main className="mx-auto w-full max-w-7xl px-5 pt-28 pb-16 lg:px-8">
           <BackArrow />
@@ -62,7 +62,7 @@ export default function PointsPage() {
 
   if (!hasAnyPoints) {
     return (
-      <div dir="rtl" lang="ar" className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background">
         <Navbar />
         <main className="mx-auto w-full max-w-7xl px-5 pt-28 pb-16 lg:px-8">
           <BackArrow />
@@ -91,7 +91,7 @@ export default function PointsPage() {
   }
 
   return (
-    <div dir="rtl" lang="ar" className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <main className="mx-auto w-full max-w-7xl px-5 pt-28 pb-16 lg:px-8">
         <BackArrow />

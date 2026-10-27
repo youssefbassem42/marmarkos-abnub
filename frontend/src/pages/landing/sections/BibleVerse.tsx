@@ -16,7 +16,6 @@ export function BibleVerse() {
           />
           <div>
             <blockquote
-              dir="rtl"
               className={cn(
                 "font-verse text-[15px] font-medium italic leading-7 text-brand-blue not-italic text-lg leading-8",
               )}
@@ -35,7 +34,7 @@ export function BibleVerse() {
           </span>
         </div>
 
-        <div dir="rtl" className={cn("reveal")}>
+        <div className={cn("reveal")}>
           <h2
             className={cn(
               "text-xl font-extrabold tracking-tight text-ink font-arabic text-2xl",

@@ -65,7 +65,7 @@ export function NotificationsPage() {
   const pages = feed.data?.pages ?? 0;
 
   return (
-    <div className="min-h-screen bg-background" dir="rtl" lang="ar">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <main className="mx-auto w-full max-w-4xl px-5 pb-16 pt-28 lg:px-8">
         <header className="text-center">

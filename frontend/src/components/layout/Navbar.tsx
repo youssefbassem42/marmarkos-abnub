@@ -101,8 +101,6 @@ export function Navbar({
       )}
     >
       <nav
-        dir="rtl"
-        lang="ar"
         className={cn(
           "mx-auto grid max-w-7xl grid-cols-[minmax(0,1fr)_auto] items-center gap-4 px-5 lg:px-8",
           isAuth ? "py-2.5" : "py-3",
@@ -266,7 +264,7 @@ export function Navbar({
 
       {open && !isAuth && (
         <div className="border-t border-border bg-background lg:hidden">
-          <ul dir="rtl" className="mx-auto max-w-7xl px-5 py-3">
+          <ul className="mx-auto max-w-7xl px-5 py-3">
             {NAV_ITEMS.map((item) => (
               <li key={item.key}>
                 <Link

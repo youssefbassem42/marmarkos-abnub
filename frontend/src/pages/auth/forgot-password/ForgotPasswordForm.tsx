@@ -15,14 +15,10 @@ import {
 } from "./forgotPasswordSchema";
 
 interface ForgotPasswordFormProps {
-  lang: "ar" | "en";
   onSuccess: (email: string) => void;
 }
 
-export function ForgotPasswordForm({
-  lang,
-  onSuccess,
-}: ForgotPasswordFormProps) {
+export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
   const { t } = useTranslation("forgotPassword");
   const [submitError, setSubmitError] = useState<string | null>(null);
 

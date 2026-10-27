@@ -14,16 +14,12 @@ const footerIcons = [
   { Icon: Flame, accent: "bg-brand-red/15 text-brand-red" },
 ] as const;
 
-interface AuthFooterProps {
-  lang: "ar" | "en";
-}
-
-export function AuthFooter({ lang }: AuthFooterProps) {
+export function AuthFooter() {
   const { t } = useTranslation("common");
   const items = t("footer", { returnObjects: true }) as readonly FooterItem[];
 
   return (
-    <section dir="rtl" lang="ar" className="bg-navy py-14">
+    <section className="bg-navy py-14">
       <div className="mx-auto grid max-w-7xl gap-8 px-5 sm:grid-cols-2 lg:grid-cols-4 lg:px-8">
         {items.map(({ title, description }, index) => {
           const { Icon, accent } = footerIcons[index];

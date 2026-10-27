@@ -20,11 +20,7 @@ export function MeetingStatsCard() {
   const { data, isPending, isError, refetch } = useMeetingStatistics();
 
   return (
-    <section
-      dir="rtl"
-      lang="ar"
-      className="rounded-2xl border border-border bg-card p-5 card-elevated"
-    >
+    <section className="rounded-2xl border border-border bg-card p-5 card-elevated">
       <header className="flex items-baseline justify-between gap-3">
         <div className="min-w-0">
           <h2

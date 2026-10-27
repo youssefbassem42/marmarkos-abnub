@@ -4,13 +4,9 @@ import { cn } from "@/lib/utils";
 
 interface PasswordRequirementsProps {
   password: string;
-  lang: "ar" | "en";
 }
 
-export function PasswordRequirements({
-  password,
-  lang,
-}: PasswordRequirementsProps) {
+export function PasswordRequirements({ password }: PasswordRequirementsProps) {
   const { t } = useTranslation("resetPassword");
   const requirements = t("form.requirements", {
     returnObjects: true,

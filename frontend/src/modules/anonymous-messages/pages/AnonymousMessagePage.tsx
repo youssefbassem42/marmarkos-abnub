@@ -24,16 +24,11 @@ export function AnonymousMessagePage() {
   );
 
   return (
-    <div
-      dir="rtl"
-      lang="ar"
-      className="flex min-h-screen flex-col bg-background"
-    >
+    <div className="flex min-h-screen flex-col bg-background">
       <Navbar variant="auth" />
 
       <main className="flex w-full flex-1 flex-col lg:flex-row">
         <BrandPanel
-          lang="ar"
           variant="light"
           className="hidden w-full md:flex lg:w-[30%]"
         />

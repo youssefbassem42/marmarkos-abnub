@@ -15,11 +15,7 @@ import { PasswordField } from "../components/PasswordField";
 import { SocialAuthButtons } from "../components/SocialAuthButtons";
 import { loginSchema, type LoginFormValues } from "./loginSchema";
 
-interface LoginFormProps {
-  lang: "ar" | "en";
-}
-
-export function LoginForm({ lang }: LoginFormProps) {
+export function LoginForm() {
   const { t } = useTranslation("login");
   const navigate = useNavigate();
   const location = useLocation();
@@ -136,7 +132,6 @@ export function LoginForm({ lang }: LoginFormProps) {
           placeholder={t("form.passwordPlaceholder")}
           invalid={Boolean(errors.password)}
           autoComplete="current-password"
-          lang={lang}
           showPasswordLabel={t("form.showPassword")}
           hidePasswordLabel={t("form.hidePassword")}
         />

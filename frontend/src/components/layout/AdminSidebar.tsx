@@ -159,14 +159,8 @@ export function AdminSidebar() {
         </div>
         {/* DR-10 brand block: hidden entirely in the icon-rail state. */}
         <div className="px-4 pb-2 group-data-[collapsible=icon]:hidden">
-          <BrandMessageHeading
-            lang="ar"
-            className="!mt-1 !text-xl !leading-snug lg:!text-xl font-arabic"
-          />
-          <BrandSupportingLine
-            lang="ar"
-            className="!mt-2 !max-w-none !text-xs !leading-relaxed text-muted-foreground"
-          />
+          <BrandMessageHeading className="!mt-1 !text-xl !leading-snug lg:!text-xl font-arabic" />
+          <BrandSupportingLine className="!mt-2 !max-w-none !text-xs !leading-relaxed text-muted-foreground" />
         </div>
       </SidebarHeader>
       <SidebarContent>

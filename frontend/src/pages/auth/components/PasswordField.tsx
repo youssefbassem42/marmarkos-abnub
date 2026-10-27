@@ -10,7 +10,6 @@ interface PasswordFieldProps {
   placeholder: string;
   invalid?: boolean;
   autoComplete?: string;
-  lang: "ar" | "en";
   showPasswordLabel: string;
   hidePasswordLabel: string;
 }
@@ -22,7 +21,6 @@ export function PasswordField({
   placeholder,
   invalid = false,
   autoComplete = "new-password",
-  lang,
   showPasswordLabel,
   hidePasswordLabel,
 }: PasswordFieldProps) {

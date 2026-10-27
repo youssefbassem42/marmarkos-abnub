@@ -144,7 +144,7 @@ export function AttendanceHistoryPage() {
             </Link>
           </Button>
         </div>
-        <div dir="rtl" lang="ar" className="space-y-5">
+        <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <HistoryFilters
               values={values}

@@ -96,7 +96,7 @@ export default function BibleVersesPage() {
     page === 1;
 
   return (
-    <div dir="rtl" lang="ar" className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <main className="mx-auto w-full max-w-7xl px-5 pt-28 pb-16 lg:px-8">
         <Button

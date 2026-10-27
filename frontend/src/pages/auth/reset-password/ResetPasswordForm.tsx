@@ -16,13 +16,11 @@ import {
 } from "./resetPasswordSchema";
 
 interface ResetPasswordFormProps {
-  lang: "ar" | "en";
   token: string;
   onSuccess: () => void;
 }
 
 export function ResetPasswordForm({
-  lang,
   token,
   onSuccess,
 }: ResetPasswordFormProps) {
@@ -91,7 +89,6 @@ export function ResetPasswordForm({
           }
           placeholder={t("form.newPasswordPlaceholder")}
           invalid={Boolean(errors.password)}
-          lang={lang}
           showPasswordLabel={t("form.showPassword")}
           hidePasswordLabel={t("form.hidePassword")}
         />
@@ -106,7 +103,7 @@ export function ResetPasswordForm({
         ) : null}
       </div>
 
-      <PasswordRequirements password={password} lang={lang} />
+      <PasswordRequirements password={password} />
 
       <div className="space-y-1.5">
         <Label htmlFor="confirmPassword">
@@ -123,7 +120,6 @@ export function ResetPasswordForm({
           }
           placeholder={t("form.confirmPasswordPlaceholder")}
           invalid={Boolean(errors.confirmPassword)}
-          lang={lang}
           showPasswordLabel={t("form.showPassword")}
           hidePasswordLabel={t("form.hidePassword")}
         />

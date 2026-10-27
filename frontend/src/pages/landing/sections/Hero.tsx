@@ -18,7 +18,6 @@ export function Hero() {
             {t("hero.eyebrow")}
           </p>
           <h1
-            dir="rtl"
             className={`mt-3 text-[clamp(2.6rem,9vw,4.6rem)] font-extrabold leading-[0.98] tracking-tight text-ink font-arabic`}
           >
             {titleLines.map((line, i) =>
@@ -34,11 +33,7 @@ export function Hero() {
               ),
             )}
           </h1>
-          <p
-            dir="rtl"
-            lang="ar"
-            className="font-arabic mt-4 w-fit text-2xl font-bold text-ink lg:text-3xl"
-          >
+          <p className="font-arabic mt-4 w-fit text-2xl font-bold text-ink lg:text-3xl">
             إجتماع الشباب بأبنوب
           </p>
           <p

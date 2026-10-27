@@ -245,7 +245,7 @@ export function CheckInPage() {
         : ("error" as const);
 
   return (
-    <div dir="rtl" lang="ar" className="space-y-6">
+    <div className="space-y-6">
       {/* Scanner card */}
       <section className="rounded-2xl border border-border bg-card p-5 card-elevated">
         {/* Mode tabs: camera QR vs typed PIN (offline fallback) */}

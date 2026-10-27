@@ -4,11 +4,7 @@ import { ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-interface ErrorStateProps {
-  lang: "ar" | "en";
-}
-
-export function ErrorState({ lang }: ErrorStateProps) {
+export function ErrorState() {
   const { t } = useTranslation("resetPassword");
 
   return (

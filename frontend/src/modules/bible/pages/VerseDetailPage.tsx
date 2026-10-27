@@ -24,7 +24,7 @@ export default function VerseDetailPage() {
 
   if (verse.isError) {
     return (
-      <div dir="rtl" lang="ar" className="space-y-6">
+      <div className="space-y-6">
         <ErrorRetry onRetry={verse.refetch} />
       </div>
     );
@@ -32,7 +32,7 @@ export default function VerseDetailPage() {
 
   if (verse.isLoading) {
     return (
-      <div dir="rtl" lang="ar" className="space-y-6">
+      <div className="space-y-6">
         <Skeleton className="h-5 w-40" />
         <Skeleton className="h-72 w-full rounded-2xl" />
         <Skeleton className="h-48 w-full rounded-2xl" />
@@ -44,7 +44,7 @@ export default function VerseDetailPage() {
   const data = verse.data!;
 
   return (
-    <div dir="rtl" lang="ar" className="space-y-6">
+    <div className="space-y-6">
       <Button asChild variant="ghost" size="sm" className="gap-1 font-arabic">
         <Link to="/bible-verses">
           <ArrowLeft className="h-4 w-4 rtl:hidden" aria-hidden="true" />

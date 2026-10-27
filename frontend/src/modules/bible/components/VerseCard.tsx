@@ -28,16 +28,10 @@ export function VerseCard({ verse }: VerseCardProps) {
         <h3 className="text-base font-bold text-ink line-clamp-1 font-arabic">
           {verse.title}
         </h3>
-        <p
-          dir="rtl"
-          className="mt-1 font-verse text-xs italic text-muted-foreground not-italic font-arabic text-sm"
-        >
+        <p className="mt-1 font-verse text-xs italic text-muted-foreground not-italic font-arabic text-sm">
           {verse.verse_reference}
         </p>
-        <p
-          dir="rtl"
-          className="mt-2 line-clamp-2 font-verse text-sm leading-6 text-ink/80 not-italic font-arabic text-base leading-7"
-        >
+        <p className="mt-2 line-clamp-2 font-verse text-sm leading-6 text-ink/80 not-italic font-arabic text-base leading-7">
           {verse.excerpt}
         </p>
         <div className="mt-3 flex items-center justify-between">

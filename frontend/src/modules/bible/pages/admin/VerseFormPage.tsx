@@ -180,7 +180,7 @@ export default function VerseFormPage() {
   }
 
   return (
-    <div dir="rtl" lang="ar">
+    <div>
       <AdminTopbar
         title={isEdit ? t("admin.form.edit") : t("admin.form.create")}
         subtitle={t("admin.form.title")}

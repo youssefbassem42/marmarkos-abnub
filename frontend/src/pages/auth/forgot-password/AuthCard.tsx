@@ -5,24 +5,19 @@ import { ForgotPasswordForm } from "./ForgotPasswordForm";
 import { SuccessState } from "./SuccessState";
 
 interface AuthCardProps {
-  lang: "ar" | "en";
   stage: "form" | "success";
   sentEmail?: string;
   onSuccess: (email: string) => void;
 }
 
-export function AuthCard({ lang, stage, sentEmail, onSuccess }: AuthCardProps) {
+export function AuthCard({ stage, sentEmail, onSuccess }: AuthCardProps) {
   const { t } = useTranslation("forgotPassword");
 
   return (
-    <section
-      dir="rtl"
-      lang="ar"
-      className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14"
-    >
+    <section className="flex w-full items-center bg-background px-5 py-10 sm:px-10 lg:w-1/2 lg:px-14">
       <div className="mx-auto w-full max-w-lg rounded-2xl border border-border bg-card p-6 card-elevated sm:p-10">
         {stage === "success" ? (
-          <SuccessState lang={lang} email={sentEmail} />
+          <SuccessState email={sentEmail} />
         ) : (
           <>
             <div className="mb-8 flex flex-col items-center text-center">
@@ -44,7 +39,7 @@ export function AuthCard({ lang, stage, sentEmail, onSuccess }: AuthCardProps) {
               </p>
             </div>
 
-            <ForgotPasswordForm lang={lang} onSuccess={onSuccess} />
+            <ForgotPasswordForm onSuccess={onSuccess} />
           </>
         )}
       </div>

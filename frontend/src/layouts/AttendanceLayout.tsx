@@ -13,10 +13,9 @@ export function AttendanceLayout() {
   const { t } = useTranslation("attendance");
 
   return (
-    <div dir="rtl" lang="ar" className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background">
       <main className="flex min-h-screen flex-col lg:flex-row">
         <BrandPanel
-          lang="ar"
           variant="light"
           className="hidden w-full md:flex lg:w-[26%]"
         />
@@ -31,7 +30,7 @@ export function AttendanceLayout() {
           </div>
         </section>
       </main>
-      <AuthFooter lang="ar" />
+      <AuthFooter />
     </div>
   );
 }

@@ -431,7 +431,7 @@ export function AttendanceDashboardPage() {
               open={excuseTarget !== null}
               onOpenChange={(open) => !open && setExcuseTarget(null)}
             >
-              <AlertDialogContent dir="rtl">
+              <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle className={cn("font-arabic")}>
                     {t("status.EXCUSED")}
