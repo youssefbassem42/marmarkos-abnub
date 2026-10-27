@@ -1,0 +1,10 @@
+title = "Marmarkos ABNUB — gitleaks configuration"
+
+# The default rules are used unchanged; only one exception is added below.
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "The test suite uses hard-coded fake secrets on purpose (RFC 7518 needs 32+ bytes, so the values look like keys)."
+paths = ['''^backend/tests/''']
+regexes = ['''test-jwt-(secret|refresh-secret)-[0-9-]+''']

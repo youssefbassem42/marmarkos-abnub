@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, develop]
 
+# The workflow only needs to read the repository.
+permissions:
+  contents: read
+
 jobs:
   frontend:
     runs-on: ubuntu-latest
@@ -26,11 +30,29 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
 
       - name: Install dependencies
-        run: npm install
+        # `npm ci` installs exactly the locked tree and fails when the
+        # lockfile and the manifest disagree - `npm install` would
+        # silently update the lockfile and hide a broken dependency.
+        run: npm ci
+
+      - name: Formatting check
+        run: npm run format:check
+
+      - name: Lint
+        # CI-002: warnings are failures too - a warning nobody fixes is
+        # a warning the next change makes worse.
+        run: npm run lint -- --max-warnings 0
+
+      - name: Types
+        run: npx tsc -b
+
+      - name: Dependency audit
+        # CI-002: a vulnerable dependency must fail the build.
+        run: npm audit --audit-level=high
+
+      - name: Tests
+        # The gate is real now: the tests used to be allowed to fail.
+        run: npm run test:run -- --coverage
 
       - name: Build
         run: npm run build
-
-      - name: Tests
-        run: npm test -- --run
-        continue-on-error: true

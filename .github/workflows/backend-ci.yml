@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, develop]
 
+# The workflow only needs to read the repository.
+permissions:
+  contents: read
+
 jobs:
   backend:
     runs-on: ubuntu-latest
@@ -13,6 +17,15 @@ jobs:
     defaults:
       run:
         working-directory: backend
+
+    env:
+      # The application settings require these; the values are throw-away
+      # test secrets (32+ bytes, as RFC 7518 asks for HS256).
+      APP_ENV: test
+      DEBUG: "true"
+      DATABASE_URL: postgresql+asyncpg://marmarkos:marmarkos@localhost:55432/marmarkos_test
+      JWT_SECRET: ci-jwt-secret-0123456789-0123456789-0123456789
+      JWT_REFRESH_SECRET: ci-jwt-refresh-secret-0123456789-0123456789-0123
 
     services:
       postgres:
@@ -37,6 +50,8 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+          cache: pip
+          cache-dependency-path: backend/pyproject.toml
 
       - name: Install dependencies
         run: |
@@ -50,7 +65,22 @@ jobs:
         run: ruff format --check .
 
       - name: MyPy
-        run: DEBUG=true mypy app
+        run: mypy app
+
+      - name: Dependency audit
+        # CI-003: a vulnerable dependency must fail the build, not a
+        # weekly report. The project itself is installed as an editable
+        # package and is not on PyPI, so it is skipped; every resolved
+        # dependency is audited.
+        run: pip-audit --skip-editable
+
+      - name: Apply the migrations
+        run: alembic upgrade head
+
+      - name: Migration drift check
+        # CI-004: the models and the migrations must describe the same
+        # schema - otherwise a deployment silently drifts from the code.
+        run: alembic check
 
       - name: Tests
-        run: pytest
+        run: pytest --cov=app --cov-report=term-missing

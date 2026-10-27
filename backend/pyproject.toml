@@ -45,7 +45,11 @@ dev = [
     "pytest-cov>=6.0",
     "ruff>=0.9",
     "mypy>=1.14",
-    "httpx>=0.28"
+    "httpx>=0.28",
+    # CI-003: the dependency scanner is part of the pipeline, not a
+    # manual step. It audits the resolved environment against the
+    # PyPI advisory database.
+    "pip-audit>=2.7"
 ]
 
 [tool.setuptools.packages.find]
@@ -64,6 +68,24 @@ select = ["E", "F", "I", "B", "UP"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+
+[tool.coverage.run]
+source = ["app"]
+branch = true
+
+[tool.coverage.report]
+# The floor is the current measured coverage (77.12 % with branch
+# coverage at the time of writing). It may only ever be raised - never
+# lowered (CI-005).
+fail_under = 77
+show_missing = true
+skip_covered = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+    "\\.\\.\\.",
+]
 
 [tool.mypy]
 python_version = "3.12"
