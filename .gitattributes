@@ -1,0 +1,4 @@
+# The design references are binary: no diffs, no text conversion.
+docs/designs/*.webp binary
+docs/designs/*.png binary
+docs/designs/*.jpg binary
