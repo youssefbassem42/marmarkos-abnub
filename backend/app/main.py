@@ -8,10 +8,33 @@ from fastapi.responses import JSONResponse
 from app.api.router import api_router
 from app.config import settings
 from app.core.exceptions import register_exception_handlers
-from app.core.middleware import CacheControlMiddleware, SecurityHeadersMiddleware
+from app.core.middleware import (
+    AllowHeaderMiddleware,
+    CacheControlMiddleware,
+    SecurityHeadersMiddleware,
+)
 from app.core.observability import RequestContextMiddleware, install_request_id_filter
+from app.core.openapi import install_openapi
 
 logger = logging.getLogger(__name__)
+
+
+_HTTP_METHODS = frozenset({"get", "post", "put", "patch", "delete"})
+
+
+def _allowed_methods(application: FastAPI) -> dict[str, set[str]]:
+    """The methods every path of the API answers (for the Allow header).
+
+    The list is taken from the OpenAPI schema - the contract of the API -
+    instead of from the internal routing table, whose shape changes with
+    the FastAPI version.
+    """
+    schema = application.openapi()
+    return {
+        path: {method.upper() for method in item if method in _HTTP_METHODS}
+        for path, item in schema.get("paths", {}).items()
+        if isinstance(item, dict)
+    }
 
 
 def create_app() -> FastAPI:
@@ -77,6 +100,15 @@ def create_app() -> FastAPI:
     register_exception_handlers(application)
 
     application.include_router(api_router)
+
+    # The schema of the API with the standard error answers (401, 403,
+    # 400, 429) - SEC-010.
+    install_openapi(application)
+
+    # The Allow header of a 405 answer names every method of the path,
+    # not only the first one Starlette finds (QA-005). It is registered
+    # last so the routing table is complete.
+    application.add_middleware(AllowHeaderMiddleware, allowed_methods=_allowed_methods(application))
 
     return application
 

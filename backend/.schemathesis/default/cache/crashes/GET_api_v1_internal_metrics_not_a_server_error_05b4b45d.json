@@ -1,0 +1,96 @@
+{
+  "operation": "GET /api/v1/internal/metrics",
+  "method": "GET",
+  "path_template": "/api/v1/internal/metrics",
+  "fingerprint": "05b4b45d",
+  "case_id": "oomOTg",
+  "code_sample": "curl -X GET -H 'X-Cron-Secret: [Filtered]' -H 'x-schemathesis-unknown-property: 42' http://127.0.0.1:18001/api/v1/internal/metrics",
+  "sequence": [
+    {
+      "method": "GET",
+      "url": "http://127.0.0.1:18001/api/v1/internal/metrics",
+      "url_template": "http://127.0.0.1:18001/api/v1/internal/metrics",
+      "headers": {
+        "User-Agent": "schemathesis/4.32.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+        "X-Cron-Secret": "[Filtered]",
+        "x-schemathesis-unknown-property": "42",
+        "X-Schemathesis-TestCaseId": "oomOTg"
+      },
+      "response": {
+        "status_code": 503,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 09:01:20 GMT",
+          "server": "uvicorn",
+          "content-length": "87",
+          "content-type": "application/json",
+          "x-request-id": "90c90f1a5b4948fdb62e79243018d8b6",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "permissions-policy": "camera=(self), geolocation=(), microphone=(), payment=(), usb=(), interest-cohort=()",
+          "cross-origin-opener-policy": "same-origin",
+          "cross-origin-resource-policy": "same-origin",
+          "content-security-policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+        },
+        "body": "{\"detail\":{\"code\":\"scheduler_disabled\",\"message\":\"The scheduler endpoint is disabled\"}}"
+      },
+      "link": null,
+      "checks": [
+        {
+          "name": "not_a_server_error",
+          "status": "failure",
+          "message": "Server error"
+        }
+      ],
+      "meta": {
+        "generation": {
+          "time": 0.00014969600306358188,
+          "mode": "negative"
+        },
+        "components": {
+          "HEADER": "negative"
+        },
+        "phase": {
+          "name": "coverage",
+          "data": {
+            "type": "CoveragePhaseData",
+            "description": "Object with unexpected properties",
+            "location": null,
+            "parameter": null,
+            "parameter_location": "HEADER",
+            "scenario": "object_unexpected_properties"
+          }
+        },
+        "pool_draws": [],
+        "pool_misses": [],
+        "semantic_draws": [],
+        "dictionary_draws": [],
+        "constants_draws": [],
+        "raw_containers": {
+          "HEADER": {
+            "X-Cron-Secret": "",
+            "x-schemathesis-unknown-property": 42
+          }
+        }
+      },
+      "path": "/api/v1/internal/metrics",
+      "path_parameters": {},
+      "query": {},
+      "case_headers": {
+        "X-Cron-Secret": "[Filtered]",
+        "x-schemathesis-unknown-property": "42"
+      },
+      "cookies": {},
+      "case_body": {
+        "encoding": "none"
+      },
+      "media_type": null,
+      "parent_index": null,
+      "auth_identity": null,
+      "operation": "GET /api/v1/internal/metrics"
+    }
+  ]
+}

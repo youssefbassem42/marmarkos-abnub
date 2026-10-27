@@ -49,7 +49,10 @@ dev = [
     # CI-003: the dependency scanner is part of the pipeline, not a
     # manual step. It audits the resolved environment against the
     # PyPI advisory database.
-    "pip-audit>=2.7"
+    "pip-audit>=2.7",
+    # QA-005: the contract test - the answers of the running API are
+    # compared with the OpenAPI schema.
+    "schemathesis>=4.32"
 ]
 
 [tool.setuptools.packages.find]

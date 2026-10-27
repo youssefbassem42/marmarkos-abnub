@@ -22,8 +22,9 @@ import os
 import sys
 from urllib.parse import urlsplit, urlunsplit
 
-from alembic import command
 from alembic.config import Config
+
+from alembic import command
 
 #: "MARM" in ASCII - the key of the advisory lock of this application.
 LOCK_ID = 0x4D41524D

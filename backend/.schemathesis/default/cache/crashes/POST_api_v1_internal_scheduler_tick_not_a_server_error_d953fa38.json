@@ -1,0 +1,97 @@
+{
+  "operation": "POST /api/v1/internal/scheduler/tick",
+  "method": "POST",
+  "path_template": "/api/v1/internal/scheduler/tick",
+  "fingerprint": "d953fa38",
+  "case_id": "OvNazo",
+  "code_sample": "curl -X POST -H 'X-Cron-Secret: [Filtered]' -H 'x-schemathesis-unknown-property: 42' http://127.0.0.1:18001/api/v1/internal/scheduler/tick",
+  "sequence": [
+    {
+      "method": "POST",
+      "url": "http://127.0.0.1:18001/api/v1/internal/scheduler/tick",
+      "url_template": "http://127.0.0.1:18001/api/v1/internal/scheduler/tick",
+      "headers": {
+        "User-Agent": "schemathesis/4.32.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "*/*",
+        "Connection": "keep-alive",
+        "X-Cron-Secret": "[Filtered]",
+        "x-schemathesis-unknown-property": "42",
+        "X-Schemathesis-TestCaseId": "OvNazo",
+        "Content-Length": "0"
+      },
+      "response": {
+        "status_code": 503,
+        "headers": {
+          "date": "Tue, 27 Oct 2026 09:01:16 GMT",
+          "server": "uvicorn",
+          "content-length": "87",
+          "content-type": "application/json",
+          "x-request-id": "780f39aa51934010b67e97c92d9df4d2",
+          "x-content-type-options": "nosniff",
+          "x-frame-options": "DENY",
+          "referrer-policy": "strict-origin-when-cross-origin",
+          "permissions-policy": "camera=(self), geolocation=(), microphone=(), payment=(), usb=(), interest-cohort=()",
+          "cross-origin-opener-policy": "same-origin",
+          "cross-origin-resource-policy": "same-origin",
+          "content-security-policy": "default-src 'none'; frame-ancestors 'none'; base-uri 'none'; form-action 'none'"
+        },
+        "body": "{\"detail\":{\"code\":\"scheduler_disabled\",\"message\":\"The scheduler endpoint is disabled\"}}"
+      },
+      "link": null,
+      "checks": [
+        {
+          "name": "not_a_server_error",
+          "status": "failure",
+          "message": "Server error"
+        }
+      ],
+      "meta": {
+        "generation": {
+          "time": 0.002560698994784616,
+          "mode": "negative"
+        },
+        "components": {
+          "HEADER": "negative"
+        },
+        "phase": {
+          "name": "coverage",
+          "data": {
+            "type": "CoveragePhaseData",
+            "description": "Object with unexpected properties",
+            "location": null,
+            "parameter": null,
+            "parameter_location": "HEADER",
+            "scenario": "object_unexpected_properties"
+          }
+        },
+        "pool_draws": [],
+        "pool_misses": [],
+        "semantic_draws": [],
+        "dictionary_draws": [],
+        "constants_draws": [],
+        "raw_containers": {
+          "HEADER": {
+            "X-Cron-Secret": "",
+            "x-schemathesis-unknown-property": 42
+          }
+        }
+      },
+      "path": "/api/v1/internal/scheduler/tick",
+      "path_parameters": {},
+      "query": {},
+      "case_headers": {
+        "X-Cron-Secret": "[Filtered]",
+        "x-schemathesis-unknown-property": "42"
+      },
+      "cookies": {},
+      "case_body": {
+        "encoding": "none"
+      },
+      "media_type": null,
+      "parent_index": null,
+      "auth_identity": null,
+      "operation": "POST /api/v1/internal/scheduler/tick"
+    }
+  ]
+}

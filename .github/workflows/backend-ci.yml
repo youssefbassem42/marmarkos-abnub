@@ -82,5 +82,19 @@ jobs:
         # schema - otherwise a deployment silently drifts from the code.
         run: alembic check
 
+      - name: OpenAPI contract test
+        # QA-005: the answers of the running API are compared with the
+        # schema. A route that answers something the schema does not
+        # mention fails the build.
+        run: |
+          uvicorn app.main:app --host 127.0.0.1 --port 8000 &
+          APP_PID=$!
+          for _ in $(seq 1 30); do
+            if curl -sf http://127.0.0.1:8000/openapi.json > /dev/null; then break; fi
+            sleep 1
+          done
+          schemathesis run http://127.0.0.1:8000/openapi.json
+          kill "$APP_PID" || true
+
       - name: Tests
         run: pytest --cov=app --cov-report=term-missing

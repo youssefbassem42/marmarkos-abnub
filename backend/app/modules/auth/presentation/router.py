@@ -67,7 +67,12 @@ def _google_redirect_uri(request: Request) -> str:
     return f"{base}/api/v1/auth/google/callback"
 
 
-@router.get("/google/login")
+@router.get(
+    "/google/login",
+    # The endpoint answers with a redirect to Google (or back to the
+    # frontend when Google is not configured) - never with a body.
+    responses={303: {"description": "Redirect to the Google sign-in page"}},
+)
 async def google_login_start(request: Request) -> RedirectResponse:
     """Kick off the OAuth redirect flow: send the browser to Google."""
     frontend = _frontend_url()
@@ -91,7 +96,12 @@ async def google_login_start(request: Request) -> RedirectResponse:
     return response
 
 
-@router.get("/google/callback")
+@router.get(
+    "/google/callback",
+    # The endpoint answers with a redirect to the frontend (the access
+    # token travels in the URL fragment) - never with a body.
+    responses={303: {"description": "Redirect to the frontend with the access token"}},
+)
 async def google_login_callback(
     request: Request,
     session: SessionDependency,
@@ -137,7 +147,13 @@ async def google_login_callback(
     return success
 
 
-@router.post("/register", response_model=MessageResponse, status_code=202)
+@router.post(
+    "/register",
+    response_model=MessageResponse,
+    status_code=202,
+    # The rate limiter of the registration (SEC-007).
+    openapi_extra={"x-rate-limited": True},
+)
 async def register(
     payload: RegisterRequest,
     request: Request,
@@ -166,14 +182,24 @@ async def register(
     )
 
 
-@router.post("/verify-email", response_model=MessageResponse)
+@router.post(
+    "/verify-email",
+    response_model=MessageResponse,
+    responses={401: {"description": "The token is invalid or has expired"}},
+)
 async def verify_email(payload: VerifyEmailRequest, session: SessionDependency) -> MessageResponse:
     """Consume the emailed token and activate the account."""
     await EmailVerificationService(session).confirm(payload.token)
     return MessageResponse(message="Email verified successfully")
 
 
-@router.post("/resend-verification", response_model=MessageResponse, status_code=202)
+@router.post(
+    "/resend-verification",
+    response_model=MessageResponse,
+    status_code=202,
+    # The rate limiter of the resend (SEC-007).
+    openapi_extra={"x-rate-limited": True},
+)
 async def resend_verification(
     payload: ResendVerificationRequest,
     request: Request,
@@ -190,7 +216,13 @@ async def resend_verification(
     return MessageResponse(message="If the account exists, a verification email has been sent")
 
 
-@router.post("/password/forgot", response_model=MessageResponse, status_code=202)
+@router.post(
+    "/password/forgot",
+    response_model=MessageResponse,
+    status_code=202,
+    # The rate limiter of the password reset (SEC-007).
+    openapi_extra={"x-rate-limited": True},
+)
 async def forgot_password(
     payload: ForgotPasswordRequest,
     request: Request,
@@ -209,7 +241,11 @@ async def forgot_password(
     )
 
 
-@router.post("/password/reset", response_model=MessageResponse)
+@router.post(
+    "/password/reset",
+    response_model=MessageResponse,
+    responses={401: {"description": "The token is invalid or has expired"}},
+)
 async def reset_password(
     payload: ResetPasswordRequest, session: SessionDependency
 ) -> MessageResponse:
@@ -218,7 +254,13 @@ async def reset_password(
     return MessageResponse(message="Password has been reset successfully")
 
 
-@router.post("/login", response_model=AuthResponse)
+@router.post(
+    "/login",
+    response_model=AuthResponse,
+    responses={401: {"description": "Invalid credentials"}},
+    # The rate limiter of the sign-in (SEC-007).
+    openapi_extra={"x-rate-limited": True},
+)
 async def login(
     payload: LoginRequest, request: Request, response: Response, session: SessionDependency
 ) -> AuthResponse:
@@ -244,7 +286,13 @@ async def login(
     )
 
 
-@router.post("/refresh", response_model=TokenResponse)
+@router.post(
+    "/refresh",
+    response_model=TokenResponse,
+    responses={401: {"description": "The refresh cookie is missing or invalid"}},
+    # The rate limiter of the silent refresh (SEC-007).
+    openapi_extra={"x-rate-limited": True},
+)
 async def refresh(
     request: Request, response: Response, session: SessionDependency
 ) -> TokenResponse:
