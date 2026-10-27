@@ -73,6 +73,7 @@ from app.modules.quiz.infrastructure.persistence.question_repository import (
     QuizOptionRepository,
     QuizQuestionRepository,
 )
+from app.modules.quiz.infrastructure.persistence.quiz_read_repository import QuizReadRepository
 from app.modules.quiz.infrastructure.persistence.quiz_repository import QuizRepository
 from app.modules.users.infrastructure.persistence.qr_code_repository import (
     UserQrCodeRepository,
@@ -142,6 +143,11 @@ class UnitOfWork:
         await self._session.rollback()
 
     # -- repositories ----------------------------------------------------
+
+    @property
+    def quiz_reads(self) -> QuizReadRepository:
+        """The read model of the quizzes (the contract of ARCH-001)."""
+        return QuizReadRepository(self._session)
 
     @property
     def users(self) -> UserRepository:

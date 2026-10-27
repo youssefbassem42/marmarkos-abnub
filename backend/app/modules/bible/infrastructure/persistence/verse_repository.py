@@ -72,9 +72,14 @@ def _apply_admin_filters(
     if filters.date_to is not None:
         stmt = stmt.where(func.date(BibleVerse.created_at) <= filters.date_to)
     if filters.has_quiz is not None:
-        from app.modules.quiz.infrastructure.persistence.models import Quiz
+        # The condition is built by the quiz module (the owner of the
+        # table); the import stays inside the function so the modules do
+        # not depend on each other at import time (ARCH-001).
+        from app.modules.quiz.infrastructure.persistence.quiz_read_repository import (
+            any_quiz_for_verse,
+        )
 
-        quiz_join = select(Quiz.id).where(Quiz.verse_id == BibleVerse.id).exists()
+        quiz_join = any_quiz_for_verse(BibleVerse.id)
         stmt = stmt.where(quiz_join if filters.has_quiz else ~quiz_join)
     return stmt
 
@@ -91,15 +96,13 @@ def _apply_published_filters(
             or_(BibleVerse.title.ilike(pattern), BibleVerse.verse_reference.ilike(pattern))
         )
     if filters.has_quiz is not None:
-        from app.modules.quiz.domain.enums import QuizStatus
-        from app.modules.quiz.infrastructure.persistence.models import Quiz
-
-        any_quiz = select(Quiz.id).where(Quiz.verse_id == BibleVerse.id).exists()
-        published_quiz = (
-            select(Quiz.id)
-            .where(Quiz.verse_id == BibleVerse.id, Quiz.status == QuizStatus.PUBLISHED)
-            .exists()
+        from app.modules.quiz.infrastructure.persistence.quiz_read_repository import (
+            any_quiz_for_verse,
+            published_quiz_for_verse,
         )
+
+        any_quiz = any_quiz_for_verse(BibleVerse.id)
+        published_quiz = published_quiz_for_verse(BibleVerse.id)
         # True filters on a *published* quiz (member-facing availability);
         # False excludes verses that have any quiz at all.
         stmt = stmt.where(published_quiz if filters.has_quiz else ~any_quiz)

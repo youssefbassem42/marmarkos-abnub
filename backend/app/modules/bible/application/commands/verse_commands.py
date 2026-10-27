@@ -136,7 +136,7 @@ async def archive_verse(uow: UnitOfWork, actor: User, verse_id: uuid.UUID) -> Bi
 
     quiz = await uow.quizzes.get_by_verse(verse.id)
     if quiz is not None:
-        from app.modules.quiz.domain.enums import QuizStatus
+        from app.shared.contracts.quiz import QuizStatus
 
         quiz.status = QuizStatus.ARCHIVED
     await _audit(uow, actor, "bible_verse.archive", verse)

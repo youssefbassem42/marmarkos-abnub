@@ -29,20 +29,10 @@ from app.modules.bible.infrastructure.persistence.verse_repository import (
     PublishedFilters,
     VerseAdminFilters,
 )
-from app.modules.quiz.domain.enums import AttemptStatus, QuizStatus
-from app.modules.quiz.infrastructure.persistence.models import Quiz, QuizAttempt
 from app.modules.users.infrastructure.persistence.models import User
+from app.shared.contracts.quiz import AttemptStatus, QuizStatus
+from app.shared.contracts.quiz_read import AttemptState, QuizState
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
-
-
-class _QuizRef:
-    """Typed quiz reference per verse (id + status) for card projections."""
-
-    __slots__ = ("quiz_id", "status")
-
-    def __init__(self, quiz_id: uuid.UUID, status: QuizStatus) -> None:
-        self.quiz_id = quiz_id
-        self.status = status
 
 
 async def verse_stats_query(uow: UnitOfWork) -> VerseStatsResponse:
@@ -58,16 +48,15 @@ async def verse_stats_query(uow: UnitOfWork) -> VerseStatsResponse:
     )
 
 
-async def _quiz_state_map(uow: UnitOfWork, verse_ids: list[uuid.UUID]) -> dict[uuid.UUID, _QuizRef]:
-    """One grouped lookup of quiz presence/status per page of verses."""
-    from sqlalchemy import select
+async def _quiz_state_map(
+    uow: UnitOfWork, verse_ids: list[uuid.UUID]
+) -> dict[uuid.UUID, QuizState]:
+    """The quiz of every verse of the page (one grouped query).
 
-    if not verse_ids:
-        return {}
-    rows = await uow.session.execute(
-        select(Quiz.verse_id, Quiz.id, Quiz.status).where(Quiz.verse_id.in_(verse_ids))
-    )
-    return {row[0]: _QuizRef(row[1], row[2]) for row in rows.all()}
+    The quizzes are read through the read model of the quiz module
+    (ARCH-001): the bible module does not know the quiz tables.
+    """
+    return await uow.quiz_reads.quiz_states_by_verse(verse_ids)
 
 
 async def _schedule_map(
@@ -177,9 +166,9 @@ async def published_feed_query(
 
 
 def _card_quiz_state(
-    quiz: _QuizRef | None,
+    quiz: QuizState | None,
     read_map: Mapping[uuid.UUID, datetime],
-    attempts: Mapping[uuid.UUID, QuizAttempt],
+    attempts: Mapping[uuid.UUID, AttemptState],
     verse_id: uuid.UUID,
 ) -> str | None:
     """Card badge state for the related quiz (member projection)."""
@@ -195,21 +184,15 @@ def _card_quiz_state(
 
 async def _viewer_attempt_map(
     uow: UnitOfWork, viewer: User, verse_ids: list[uuid.UUID]
-) -> dict[uuid.UUID, QuizAttempt]:
-    """The viewer's attempt (if any) per verse id — one joined query."""
-    from sqlalchemy import select
-    from sqlalchemy.orm import aliased
+) -> dict[uuid.UUID, AttemptState]:
+    """The viewer's attempt (if any) per quiz id - one joined query.
 
-    if not verse_ids:
-        return {}
-    quiz_alias = aliased(Quiz)
-    stmt = (
-        select(QuizAttempt, quiz_alias.verse_id)
-        .join(quiz_alias, QuizAttempt.quiz_id == quiz_alias.id)
-        .where(quiz_alias.verse_id.in_(verse_ids), QuizAttempt.user_id == viewer.id)
-    )
-    result = await uow.session.execute(stmt)
-    return {verse_id: attempt for attempt, verse_id in result.all()}
+    The result is keyed by the **quiz** id: that is the key the badge
+    below looks it up with. (It used to be keyed by the verse id while
+    the badge asked for the quiz id - so the badge never saw the attempt
+    and the member feed never showed "in progress" or "completed".)
+    """
+    return await uow.quiz_reads.viewer_attempts_by_quiz(viewer.id, verse_ids)
 
 
 async def current_verse_query(uow: UnitOfWork, viewer: User) -> VerseCard | None:
