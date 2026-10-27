@@ -6,15 +6,30 @@ services:
     container_name: marmarkos-abnub-backend
     env_file:
       - ./backend/.env
+    environment:
+      APP_ENV: development
     ports:
       - "8000:8000"
     volumes:
       - ./backend:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health', timeout=4).status == 200 else 1)
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
 
   frontend:
     build:
       context: ./frontend
+      # The development image (the one with node_modules); the production
+      # image serves the compiled files with nginx.
+      target: build
     container_name: marmarkos-abnub-frontend
     ports:
       - "5173:5173"
@@ -22,3 +37,6 @@ services:
       - ./frontend:/app
       - /app/node_modules
     command: npm run dev -- --host 0.0.0.0
+    depends_on:
+      backend:
+        condition: service_healthy
