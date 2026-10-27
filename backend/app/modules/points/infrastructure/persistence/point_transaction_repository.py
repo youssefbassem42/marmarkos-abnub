@@ -106,7 +106,8 @@ class PointTransactionRepository:
         inserted = result.scalar_one_or_none()
         if inserted is not None:
             row = await self._session.get(PointTransaction, inserted)
-            assert row is not None
+            if row is None:  # the row was inserted in this very transaction
+                raise RuntimeError("The point transaction disappeared right after the insert")
             return row, True
         existing = await self._session.execute(
             select(PointTransaction).where(PointTransaction.quiz_attempt_id == quiz_attempt_id)

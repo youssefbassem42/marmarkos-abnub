@@ -98,7 +98,8 @@ async def duplicate_question(uow: UnitOfWork, actor: User, question_id: uuid.UUI
     assert_manager(actor)
     question = await _get_quiz_question(uow, question_id)
     source = await uow.quiz_questions.get_with_options(question_id)
-    assert source is not None
+    if source is None:
+        raise NotFoundError("Question not found")
     position = await uow.quiz_questions.next_position(question.quiz_id)
     clone = QuizQuestion(
         quiz_id=question.quiz_id,

@@ -12,6 +12,7 @@ from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.config import settings
 from app.core.database import get_unit_of_work
+from app.core.exceptions import NotFoundError
 from app.core.pagination import Page, PageParams
 from app.modules.bible.presentation.dependencies import BibleManager
 from app.modules.quiz.application.commands.attempt_commands import (
@@ -170,7 +171,8 @@ async def add_question_endpoint(
     question = await create_question(uow, actor, quiz_id, payload)
     await uow.commit()
     loaded = await uow.quiz_questions.get_with_options(question.id)
-    assert loaded is not None
+    if loaded is None:  # the row was written in this very transaction
+        raise NotFoundError("Question not found")
     return question_to_response(loaded)
 
 
@@ -190,7 +192,8 @@ async def patch_question(
     question = await update_question(uow, actor, question_id, payload)
     await uow.commit()
     loaded = await uow.quiz_questions.get_with_options(question.id)
-    assert loaded is not None
+    if loaded is None:  # the row was written in this very transaction
+        raise NotFoundError("Question not found")
     return question_to_response(loaded)
 
 
@@ -208,7 +211,8 @@ async def duplicate_question_endpoint(
     clone = await duplicate_question(uow, actor, question_id)
     await uow.commit()
     loaded = await uow.quiz_questions.get_with_options(clone.id)
-    assert loaded is not None
+    if loaded is None:  # the row was written in this very transaction
+        raise NotFoundError("Question not found")
     return question_to_response(loaded)
 
 
