@@ -1,0 +1,70 @@
+# The nginx configuration of the production frontend.
+#
+# Two rules decide the whole file:
+#
+# 1. The browser only ever talks to its own origin. The API lives under
+#    /api and is proxied to the backend, so the HttpOnly refresh cookie
+#    (SameSite=Lax, path=/api/v1/auth) is never dropped - a separate API
+#    domain would silently kill every session after 30 minutes.
+# 2. A single-page application: every unknown path is answered with
+#    index.html, so a deep link or a refresh keeps working.
+
+server {
+    listen 80;
+    server_name _;
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    # The Docker resolver. The API upstream is resolved per request (see
+    # below), so this container starts even when the API is not up yet -
+    # the static files are served either way.
+    resolver 127.0.0.11 valid=10s ipv6=off;
+    set $api_upstream ${API_UPSTREAM};
+
+    # The security headers of the API (SEC-009).
+    include /etc/nginx/snippets/security-headers.conf;
+
+    # The API is never cached by an intermediary.
+    location /api/ {
+        # A variable in proxy_pass makes nginx resolve the name per
+        # request instead of once at startup; $request_uri carries the
+        # path and the query string.
+        proxy_pass $api_upstream$request_uri;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_read_timeout 120s;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-store" always;
+    }
+
+    # The compiled assets carry a hash in their name: they can be cached
+    # for a year.
+    location /assets/ {
+        expires 1y;
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "public, immutable" always;
+        try_files $uri =404;
+    }
+
+    # index.html must never be cached, or a release would keep serving the
+    # old bundle to the browsers that already have it.
+    location = /index.html {
+        include /etc/nginx/snippets/security-headers.conf;
+        add_header Cache-Control "no-store" always;
+    }
+
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # A compressed response for the text assets.
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+    gzip_min_length 1024;
+}
