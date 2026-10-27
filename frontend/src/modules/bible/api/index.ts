@@ -37,20 +37,14 @@ export const bibleApi = {
 
   /** Newest PUBLISHED verse for the current member (204 if none) */
   getCurrent: async (): Promise<VerseCard | null> => {
-    try {
-      const response = await apiClient.get("/bible-verses/current");
-      return response.data;
-    } catch (error: unknown) {
-      if (
-        typeof error === "object" &&
-        error !== null &&
-        "status" in error &&
-        (error as { status: number }).status === 204
-      ) {
-        return null;
-      }
-      throw error;
+    const response = await apiClient.get("/bible-verses/current");
+    // The server answers 204 when there is no published verse. Axios
+    // resolves such a response with an empty body - it is not an error,
+    // so there is nothing to catch.
+    if (response.status === 204) {
+      return null;
     }
+    return (response.data ?? null) as VerseCard | null;
   },
 
   /** Member feed of published verses */
