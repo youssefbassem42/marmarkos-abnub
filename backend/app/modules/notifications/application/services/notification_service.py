@@ -141,8 +141,11 @@ class NotificationService:
             copy=attendance_recorded_copy(meeting_date=meeting_date, status=status),
         )
 
-    # TODO(phase-blog): wire this consumer into the blog publish command
-    # when the blog phase lands (D-13). It ships dormant and tested only.
+    # This consumer ships dormant on purpose: the blog module has only
+    # its data layer so far (D-13), there is no publish command to call
+    # it yet. The behaviour itself is finished and covered by a test
+    # (tests/unit/notifications/test_notification_service.py); it is
+    # wired the day the publish command lands - not a forgotten task.
     async def notify_blog_post_published(
         self, *, post_id: uuid.UUID, slug: str, title_ar: str, title_en: str
     ) -> None:
