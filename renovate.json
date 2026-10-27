@@ -1,0 +1,60 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": ["config:recommended", ":semanticCommits", ":dependencyDashboard"],
+  "timezone": "Africa/Cairo",
+  "prConcurrentLimit": 5,
+  "prHourlyLimit": 2,
+  "labels": ["dependencies"],
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 5am on monday"]
+  },
+  "packageRules": [
+    {
+      "description": "The backend dependencies move together - they are installed and audited as one set.",
+      "matchManagers": ["pip_requirements", "pep621", "poetry"],
+      "groupName": "backend dependencies"
+    },
+    {
+      "description": "The frontend dependencies move together - one lockfile, one audit, one build.",
+      "matchManagers": ["npm", "npx"],
+      "groupName": "frontend dependencies"
+    },
+    {
+      "description": "Patch updates of the runtime dependencies are merged automatically: the pipeline (lint, types, tests, audits) is the gate.",
+      "matchManagers": ["pip_requirements", "pep621", "npm"],
+      "matchUpdateTypes": ["patch"],
+      "automerge": true,
+      "platformAutomerge": true,
+      "minimumReleaseAge": "3 days"
+    },
+    {
+      "description": "Minor updates are proposed, never merged automatically - they can change a behaviour.",
+      "matchUpdateTypes": ["minor"],
+      "automerge": false
+    },
+    {
+      "description": "Major updates always need a human.",
+      "matchUpdateTypes": ["major"],
+      "automerge": false,
+      "addLabels": ["breaking-change"]
+    },
+    {
+      "description": "A security advisory is always a pull request of its own, whatever its version.",
+      "matchJsonata": ["isVulnerabilityAlert = true"],
+      "groupName": null,
+      "automerge": false,
+      "addLabels": ["security"],
+      "schedule": ["at any time"]
+    },
+    {
+      "description": "The CI images are pinned to a major version; the digest is not followed (the platform owns it).",
+      "matchManagers": ["dockerfile", "github-actions"],
+      "pinDigests": false
+    }
+  ],
+  "vulnerabilityAlerts": {
+    "labels": ["security"],
+    "schedule": ["at any time"]
+  }
+}
