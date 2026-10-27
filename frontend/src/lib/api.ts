@@ -3,8 +3,18 @@ import type { InternalAxiosRequestConfig } from "axios";
 import { clearAuth, getAccessToken, updateAccessToken } from "@/lib/auth";
 
 function resolveApiBaseUrl(): string {
-  const raw =
-    import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8000/api/v1";
+  // The default is the relative path on purpose: the browser must only ever
+  // talk to its own origin, or the HttpOnly refresh cookie (SameSite=Lax,
+  // path=/api/v1/auth) is dropped and the session dies after 30 minutes with
+  // no way to recover. The relative path is served by the Vite proxy in the
+  // development, by the rewrite in vercel.json and by the nginx proxy in the
+  // container image.
+  //
+  // The old default was the absolute "http://localhost:8000/api/v1": without
+  // VITE_API_BASE_URL in the environment (the Docker image, a fresh clone),
+  // the browser of the member then called *its own* localhost - the API was
+  // unreachable and the refresh cookie never came back.
+  const raw = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
   if (raw.startsWith("/")) {
     const trimmed = raw.replace(/\/+$/, "");

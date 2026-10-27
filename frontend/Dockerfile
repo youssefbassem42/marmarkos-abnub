@@ -11,6 +11,12 @@ RUN npm ci
 
 COPY . .
 
+# The API is served by nginx under the same origin (the /api/ location of
+# nginx/templates/default.conf.template). The bundle must ask for the
+# relative path, never for "http://localhost:8000" - the browser of the
+# member would then call its own machine and every call would fail.
+ENV VITE_API_BASE_URL=/api/v1
+
 # `npm run build` runs `tsc -b` first: a type error fails the image build
 # instead of the deployment.
 RUN npm run build
