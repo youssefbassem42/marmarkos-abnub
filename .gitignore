@@ -39,3 +39,6 @@ frontend/coverage/
 
 # Docker
 docker-compose.override.yml
+
+# The cache of the contract test (the crash reports of the last run).
+.schemathesis/
