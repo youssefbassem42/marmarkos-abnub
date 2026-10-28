@@ -1,16 +1,25 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
 import { ApiError, toApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useStartAttempt } from "../hooks/useStartAttempt";
+import { useStartAttempt, attemptIdFromError } from "../hooks/useStartAttempt";
 import { useAttempt } from "../hooks/useAttempt";
 import { useQuizForTake } from "../hooks/useQuizForTake";
 import { useSaveAnswer } from "../hooks/useSaveAnswer";
 import { useSubmitAttempt } from "../hooks/useSubmitAttempt";
 import { useHeartbeat } from "../hooks/useHeartbeat";
 import { useQuizTimer } from "../hooks/useQuizTimer";
+import {
+  clearQuizDraft,
+  knownAttempt,
+  readQuizDraft,
+  rememberAttempt,
+  resumeIndex,
+  writeQuizDraft,
+  type QuizAttemptDraft,
+} from "../lib/attemptDraft";
 import { QuizTimer } from "../components/QuizTimer";
 import { QuestionCard } from "../components/QuestionCard";
 import { QuizProgressDots } from "../components/QuizProgressDots";
@@ -27,9 +36,27 @@ export default function QuizAttemptPage() {
   const { t: tCommon } = useTranslation("common");
   const navigate = useNavigate();
 
-  const [attemptId, setAttemptId] = useState<string | null>(null);
+  // The draft of the attempt in progress (the resume of the quiz). It is
+  // read **during the first render**, not in an effect: the page can be
+  // mounted again right after (a lazy route that resolves, StrictMode)
+  // and an effect would run too late - the start request would go out
+  // before the draft was known, and the state of the first instance
+  // would be lost with it.
+  //
+  // The draft holds the attempt, the answers that were chosen and the
+  // question the member was on.
+  const [draft] = useState<QuizAttemptDraft | null>(() =>
+    quizId ? readQuizDraft(quizId) : null,
+  );
+  const draftRef = useRef<QuizAttemptDraft | null>(draft);
+
+  const [attemptId, setAttemptId] = useState<string | null>(
+    draft?.attemptId ?? (quizId ? knownAttempt(quizId) : null),
+  );
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedMap, setSelectedMap] = useState<Record<string, string>>({});
+  const [selectedMap, setSelectedMap] = useState<Record<string, string>>(
+    draft?.answers ?? {},
+  );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
   const [hasSubmitted, setHasSubmitted] = useState(false);
   // Server-anchored active-time budget from heartbeat/save responses (V2).
@@ -41,10 +68,11 @@ export default function QuizAttemptPage() {
   const startAttemptTriggeredRef = useRef(false);
 
   const startAttempt = useStartAttempt();
-  const { data: attempt, isLoading: attemptLoading } = useAttempt(
-    attemptId ?? "",
-    { enabled: !!attemptId },
-  );
+  const {
+    data: attempt,
+    isLoading: attemptLoading,
+    isError: attemptError,
+  } = useAttempt(attemptId ?? "", { enabled: !!attemptId });
   const { data: takeData, isLoading: takeLoading } = useQuizForTake(
     quizId ?? "",
     { enabled: !!quizId },
@@ -52,7 +80,7 @@ export default function QuizAttemptPage() {
   const saveAnswer = useSaveAnswer();
   const submitAttempt = useSubmitAttempt();
 
-  const questions = takeData?.questions ?? [];
+  const questions = useMemo(() => takeData?.questions ?? [], [takeData]);
 
   const timerRemaining =
     budgetAnchor?.remainingSeconds ?? attempt?.remaining_seconds ?? 0;
@@ -83,11 +111,35 @@ export default function QuizAttemptPage() {
     setBudgetAnchor(null);
   }, [attempt?.id]);
 
+  // The server knows the attempt of the member (D-4): the take payload
+  // carries it. The page uses it instead of starting a second attempt -
+  // which the server would answer with `409 attempt_exists`, and whose
+  // callback never arrives when React has already unmounted the page.
+  useEffect(() => {
+    const existing = takeData?.attempt_id;
+    if (!existing || !quizId) return;
+    rememberAttempt(quizId, existing);
+    setAttemptId((current) => current ?? existing);
+  }, [takeData?.attempt_id, quizId]);
+
   // Start attempt on mount if we have quizId but no attemptId
   useEffect(() => {
     if (!quizId) return;
     if (attemptId) return;
     if (startAttemptTriggeredRef.current) return;
+    // The take payload has not arrived yet: it may carry the attempt of
+    // the member, and starting one now would be a second attempt.
+    if (takeData === undefined) return;
+    // A draft of this quiz already holds the attempt: the page resumes
+    // it instead of starting a second one.
+    if (draftRef.current) return;
+    // The server says there is already an attempt for this member and
+    // this quiz: it is the one to continue.
+    if (takeData.attempt_id) {
+      rememberAttempt(quizId, takeData.attempt_id);
+      setAttemptId(takeData.attempt_id);
+      return;
+    }
 
     startAttemptTriggeredRef.current = true;
     startAttempt.mutate(quizId, {
@@ -98,9 +150,41 @@ export default function QuizAttemptPage() {
           if (q.selected_option_id) initial[q.id] = q.selected_option_id;
         });
         setSelectedMap(initial);
+        // The draft is written **here** and not in an effect: React can
+        // mount a new instance of this page right after (a lazy route
+        // that resolves, StrictMode), and the state of the old instance
+        // is lost with it. The draft is the only thing that survives.
+        writeQuizDraft({
+          attemptId: data.id,
+          quizId,
+          answers: initial,
+          currentIndex: 0,
+          savedAt: Date.now(),
+        });
+      },
+      onError: (error) => {
+        // D-4: one attempt per member and quiz. The server answers a
+        // second start with the id of the existing attempt; the member
+        // continues that attempt instead of seeing an error (React
+        // remounts the route, and the answer of the first start is lost
+        // with the unmounted component).
+        const existingAttemptId = attemptIdFromError(error);
+        if (existingAttemptId) {
+          setAttemptId(existingAttemptId);
+          writeQuizDraft({
+            attemptId: existingAttemptId,
+            quizId,
+            answers: {},
+            currentIndex: 0,
+            savedAt: Date.now(),
+          });
+          return;
+        }
+        // Any other failure: the error panel of the page takes over
+        // (it reads `startAttempt.isError`).
       },
     });
-  }, [quizId, attemptId, startAttempt]);
+  }, [quizId, attemptId, startAttempt, takeData]);
 
   // Redirect if attempt already completed
   useEffect(() => {
@@ -121,6 +205,18 @@ export default function QuizAttemptPage() {
       });
     }
   }, [attempt, quizId, navigate]);
+
+  // A draft that points at an attempt the server does not know (the
+  // database was reset, the member used another browser): the draft is
+  // dropped and the quiz starts from the beginning.
+  useEffect(() => {
+    if (!attemptError || !attemptId) return;
+    if (quizId) clearQuizDraft(quizId);
+    setAttemptId(null);
+    setSelectedMap({});
+    setCurrentIndex(0);
+    startAttemptTriggeredRef.current = false;
+  }, [attemptError, attemptId, quizId]);
 
   // A user who has already started/done this quiz gets the existing attempt
   // back via 409 attempt_exists. Load its id so the page resumes (in-progress)
@@ -166,6 +262,43 @@ export default function QuizAttemptPage() {
   const currentQuestion = questions[currentIndex];
   const isLastQuestion = currentIndex === questions.length - 1;
 
+  // Keep the draft of the attempt in step with the page: the answers
+  // that were chosen and the question the member is on. The draft is
+  // what a refresh of the page restores.
+  useEffect(() => {
+    if (!quizId || !attemptId) return;
+    writeQuizDraft({
+      attemptId,
+      quizId,
+      answers: selectedMap,
+      currentIndex,
+      savedAt: Date.now(),
+    });
+  }, [quizId, attemptId, selectedMap, currentIndex]);
+
+  // Open on the last question the member solved. The questions arrive
+  // from the API, so the index can only be computed once they are
+  // known; the answers of the server win over the ones of the draft.
+  useEffect(() => {
+    if (questions.length === 0) return;
+    const draft = draftRef.current;
+    if (!draft) return;
+    const merged = { ...draft.answers };
+    for (const question of attempt?.questions ?? []) {
+      if (question.selected_option_id) {
+        merged[question.id] = question.selected_option_id;
+      }
+    }
+    setCurrentIndex(
+      resumeIndex(
+        questions.map((question) => question.id),
+        merged,
+      ),
+    );
+    // Once the index is computed, the draft has done its job.
+    draftRef.current = null;
+  }, [questions, attempt?.questions]);
+
   const handleSelect = useCallback(
     (optionId: string) => {
       if (!currentQuestion || !attemptId) return;
@@ -198,6 +331,9 @@ export default function QuizAttemptPage() {
     setHasSubmitted(true);
     submitAttempt.mutate(attemptId, {
       onSuccess: () => {
+        // The attempt is over: the result belongs to the server from now
+        // on, the draft has nothing left to resume.
+        if (quizId) clearQuizDraft(quizId);
         navigate(`/quizzes/${quizId}/result?attemptId=${attemptId}`);
       },
       onError: () => setHasSubmitted(false),

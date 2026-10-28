@@ -76,6 +76,8 @@ export interface QuizTakeResponse {
   duration_seconds: number;
   total_points: number;
   question_count: number;
+  /** The attempt of the member for this quiz, when there is one (D-4). */
+  attempt_id?: string | null;
   questions: QuizTakeQuestion[];
 }
 

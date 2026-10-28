@@ -20,6 +20,7 @@ import type {
   UpdateQuestionPayload,
   UpdateQuizPayload,
 } from "../types";
+import { rememberAttempt } from "../lib/attemptDraft";
 
 export const quizApi = {
   /** Manager list of quizzes with filters */
@@ -140,7 +141,10 @@ export const quizApi = {
 
   /** Get quiz content for taking (no correct answers) */
   getQuizForTake: async (quizId: string): Promise<QuizTakeResponse> => {
-    const response = await apiClient.get(`/quizzes/${quizId}`);
+    // The take path, not the manager endpoint: the manager detail carries
+    // the correctness of every option and is reserved for the servants
+    // (a member received a 403 and could not answer the quiz at all).
+    const response = await apiClient.get(`/quizzes/${quizId}/take`);
     return response.data;
   },
 
@@ -151,6 +155,12 @@ export const quizApi = {
     const response = await apiClient.post("/quiz-attempts", {
       quiz_id: quizId,
     });
+    // The attempt is remembered **here**, inside the request, and not in
+    // the callback of the caller: React drops the state of an unmounted
+    // component, and a mutation does not call its callbacks when nobody
+    // is listening any more. The next page that opens the quiz finds the
+    // attempt instead of starting a second one.
+    rememberAttempt(quizId, response.data.id);
     return response.data;
   },
 
