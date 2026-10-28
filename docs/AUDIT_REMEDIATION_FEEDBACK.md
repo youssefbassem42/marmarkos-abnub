@@ -34,7 +34,7 @@ While doing that, the work uncovered **twelve genuine production defects** that 
 | `backend: pytest` | 373 passed / **8 failed** (381) | **484 passed / 0 failed** | ✅ |
 | `backend: test warnings` | 4 (Starlette 422 + httpx cookies) | **0** | ✅ |
 | `frontend: npm run lint` | 820 problems (808 errors, 12 warnings) | **0** (also with `--max-warnings 0`) | ✅ |
-| `frontend: npm run test:run` | 48 passed (with React key warning + jsdom CORS noise) | **307 passed** | ✅ |
+| `frontend: npm run test:run` | 48 passed (with React key warning + jsdom CORS noise) | **310 passed** | ✅ |
 | `frontend: npm run build` | pass | **pass** | ✅ |
 | `frontend: tsc -b` | pass (the cache hid nothing this time) | **pass** (`--force` as well) | ✅ |
 | Test-suite hermeticity | ❌ real Cloudinary API call observed | ✅ **no outbound socket is possible** | ✅ |
@@ -44,7 +44,7 @@ While doing that, the work uncovered **twelve genuine production defects** that 
 | Backend tests | 373 passed / 8 failed | **484 passed / 0 failed** | ✅ |
 | Frontend tests | 48 passed | **277 passed** | ✅ |
 | End-to-end tests | **0** (no browser ever drove the product) | **5 passed** (3 journeys) | ✅ |
-| Frontend coverage | 17.97 % statements (no branch coverage) | **70.39 %** statements · 59.71 % branches · 64.86 % functions · 72.32 % lines | ✅ |
+| Frontend coverage | 17.97 % statements (no branch coverage) | **70.52 %** statements · 59.92 % branches · 64.89 % functions · 72.47 % lines | ✅ |
 | SQL statements for a page of 10 quizzes | 21 (2N+1) | **3** | ✅ |
 | Access token location | `localStorage` / `sessionStorage` | **memory** (flag-controlled) | ✅ |
 | Import cycles between the modules | 5 (two of them reported) | **1** (documented, in the plan) | ✅ |
@@ -171,7 +171,7 @@ The 100 errors were 90 % "repository returns `dict[str, object]`" noise. The fix
 |---|---|---|---|
 | 5.1 | **A strict frontend pipeline** | `npm ci` (the lockfile decides, a drift fails the build), the format check, `lint --max-warnings 0`, `tsc -b`, `npm audit --audit-level=high`, the tests **with** the coverage, the build. `continue-on-error` is gone — the pipeline used to be allowed to be red. | CI-002 |
 | 5.2 | **A strict backend pipeline** | `pip-audit --skip-editable` (the project itself is an editable, non-PyPI distribution), gitleaks 8.28.0 pinned by digest with an allowlist for the fake test secret, `alembic upgrade head` + `alembic check` (no drift), the coverage floor at 77 %. The permissions are down to `contents: read`. | CI-003/004/005/007 |
-| 5.4 | **The frontend coverage** | **Done — the target of the plan (70 %) is reached.** The first half covered the logic (the API clients, the hooks, the shared library): 17.97 % → **27.97 %**. The second half covered the **markup**: one render test per screen (the entrance, the profile, the verses, the verse, the quiz, the attempt, the result, the attendance, the history, the check-in, the analytics, the administration of the verses and of the quizzes, the router). The third half covered the **shell**, the forms of the administration, the board of the attendance and the table of the questions. Result: **70.39 % statements, 59.71 % branches, 64.86 % functions, 72.32 % lines** — 307 unit tests in 51 files. The floor followed the measurement at every step and **only ever went up** (27 → 61 → 64 → 65 → 66 → 68 → 69 → 70). The render tests found **eleven real defects** (see §4, bugs 13–23). | QA-001 |
+| 5.4 | **The frontend coverage** | **Done — the target of the plan (70 %) is reached.** The first half covered the logic (the API clients, the hooks, the shared library): 17.97 % → **27.97 %**. The second half covered the **markup**: one render test per screen (the entrance, the profile, the verses, the verse, the quiz, the attempt, the result, the attendance, the history, the check-in, the analytics, the administration of the verses and of the quizzes, the router). The third half covered the **shell**, the forms of the administration, the board of the attendance and the table of the questions. Result: **70.39 % statements, 59.71 % branches, 64.86 % functions, 72.32 % lines** — 307 unit tests in 51 files. The floor followed the measurement at every step and **only ever went up** (27 → 61 → 64 → 65 → 66 → 68 → 69 → 70). The render tests found **thirteen real defects** (see §4, bugs 13–25). | QA-001 |
 | 5.5 | **The E2E golden paths** | **Done.** Three journeys, five tests, **all green**: signing in (3), taking a quiz (1), the check-in of a member with the PIN (1). The run is hermetic: the database `marmarkos_e2e` is **rebuilt from the migrations** before every run (only a database whose name says "e2e" is ever dropped; the unit-test database is never touched), the seed refuses any other database, and the stack (API on 18010, Vite on 4173) is started by Playwright itself. The step runs in the pipeline (`.github/workflows/e2e-ci.yml`). It found **five real bugs** in the first run. | QA-001 |
 | 5.6 | **The OpenAPI contract** | The schema now describes the real answers: the operations with a security declare 401/403, the ones with a body declare 400, the rate-limited ones declare 429, the `Allow` header completes the 405 answers, and the internal routes are excluded from the scan. The baseline was **87 failures**; the result is **3 466 cases, 0 failures** (the step runs in the backend pipeline). | QA-005 / SEC-010 |
 | 5.7 | **The production frontend image** | A multi-stage image: node builds the application, nginx 1.27 serves it (SPA fallback, the assets immutable for a year, `index.html` never cached, gzip, the security headers in a snippet — nginx drops the inherited `add_header` in a location that sets its own). The API upstream is resolved per request, so the container starts even when the API is down. | OPS-001 / SEC-009 |
@@ -206,7 +206,7 @@ They were found by the three journeys of the end-to-end tests — a member signs
 | 11 | The page of the attempt asked the manager endpoint `GET /quizzes/{id}` (ADMIN/SERVANT) | **403 — a member could not answer a quiz at all** | A member path `GET /quizzes/{id}/take`: the questions and the options, **never the correctness**; the manager endpoint keeps it |
 | 12 | The remount of the route lost the id of the attempt (a mutation does not call its callbacks when nobody listens), the page started a second attempt, the server answered 409 and the page **swallowed the conflict** | The page of the attempt waited for ever: no radio button, no answer | The attempt is remembered outside React (the request remembers it, the server names it in the take payload), the 409 is read as a **resume signal** (D-4: `data.attempt_id`), and the answers live in a draft: after a refresh the page opens on **the last question the member solved** |
 
-### The eleven that the render tests found (Phase 5.4)
+### The thirteen that the render tests found (Phase 5.4)
 
 Rendering a screen is worth more than a line of coverage: the first
 render of every page **crashed** or lied. These are the defects the
@@ -227,6 +227,8 @@ without a name is invisible to a screen reader.
 | 21 | The combobox of the member and the select of the status in the filters of the history had **no accessible name** | Two unnamed comboboxes in the same bar | `aria-label` on both, in the Arabic of the product |
 | 22 | The tiles of the dashboard read `read_rate.toFixed(1)` and `average_score.toFixed(1)` without a guard | A number missing from the answer **crashed the whole board** of the attendance — the first page a servant opens | `?? 0`, like the other pages |
 | 23 | The list of the absentees read `absent_users.length` without a guard | The same crash, from the same page | `?? []` |
+| 24 | The page of the check-in formatted the date of the meeting without a guard (`Intl` throws a `RangeError` on a date it cannot read) | **The whole page of the check-in of the member crashed** | The new `formatDateOrEmpty` in the shared library: a date that cannot be read is simply not shown |
+| 25 | A wrong PIN (the member mistypes his five digits — the most common case) was answered with "رمز QR غير صالح" ("the QR code is invalid") | On a page that has **no QR code at all**: the member was told the wrong thing | The PIN mode says "الرمز غير صحيح — لا يوجد عضو بهذا الرمز" |
 
 ---
 
@@ -249,7 +251,7 @@ cd frontend
 npm run format:check                        # All matched files use Prettier code style!
 npm run lint -- --max-warnings 0            # clean
 npx tsc -b --force                          # clean
-npm run test:run                            # 307 passed
+npm run test:run                            # 310 passed
 npm run build                               # built successfully
 npm audit --audit-level=high                # found 0 vulnerabilities
 
