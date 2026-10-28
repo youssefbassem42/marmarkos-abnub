@@ -341,7 +341,7 @@ export function QuestionOverviewList({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel className="font-arabic">
-              {tCommon("back")}
+              {tCommon("cancel")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}

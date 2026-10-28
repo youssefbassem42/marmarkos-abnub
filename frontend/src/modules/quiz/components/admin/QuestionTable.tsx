@@ -272,6 +272,7 @@ export function QuestionTable({
                   >
                     <Link
                       to={`/admin/quizzes/${quizId}/questions/${q.id}/edit`}
+                      aria-label={t("admin.manage.editQuestion")}
                     >
                       <Pencil className="h-3.5 w-3.5" />
                     </Link>
@@ -282,6 +283,7 @@ export function QuestionTable({
                     className="h-7 w-7"
                     onClick={() => handleDuplicate(q.id)}
                     disabled={duplicateQuestion.isPending}
+                    aria-label={t("admin.manage.duplicateQuestion")}
                   >
                     <Copy className="h-3.5 w-3.5" />
                   </Button>
@@ -290,6 +292,7 @@ export function QuestionTable({
                     size="icon"
                     className="h-7 w-7 text-destructive"
                     onClick={() => setDeleteId(q.id)}
+                    aria-label={t("admin.manage.deleteQuestion")}
                   >
                     <Trash2 className="h-3.5 w-3.5" />
                   </Button>
@@ -311,13 +314,15 @@ export function QuestionTable({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>{tCommon("back")}</AlertDialogCancel>
+            <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
               disabled={deleteQuestion.isPending}
             >
-              {deleteQuestion.isPending ? "..." : tCommon("back")}
+              {deleteQuestion.isPending
+                ? "..."
+                : t("admin.manage.deleteQuestion")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

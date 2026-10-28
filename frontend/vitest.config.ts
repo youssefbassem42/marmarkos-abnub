@@ -37,8 +37,8 @@ export default defineConfig({
         "src/components/ui/**",
       ],
       reporter: ["text", "json-summary"],
-      // The floors are the current measured values (68.46 % statements,
-      // 57.36 % branches, 62.52 % functions, 70.44 % lines). They may
+      // The floors are the current measured values (69.61 % statements,
+      // 58.64 % branches, 63.81 % functions, 71.51 % lines). They may
       // only ever be raised - never lowered (CI-005).
       //
       // Phase 5.4 brought the logic of the frontend to a good level:
@@ -52,10 +52,10 @@ export default defineConfig({
       // quizzes): covering them is one render test per screen, and the
       // floor goes up with every one of them.
       thresholds: {
-        statements: 68,
-        branches: 57,
-        functions: 62,
-        lines: 70,
+        statements: 69,
+        branches: 58,
+        functions: 63,
+        lines: 71,
       },
     },
   },
