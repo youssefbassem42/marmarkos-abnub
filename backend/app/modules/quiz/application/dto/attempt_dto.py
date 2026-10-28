@@ -130,4 +130,11 @@ class QuizTakeResponse(BaseModel):
     duration_seconds: int = Field(description="Time limit")
     total_points: int = Field(description="Total points")
     question_count: int = Field(description="Number of questions")
+    attempt_id: uuid.UUID | None = Field(
+        default=None,
+        description=(
+            "The attempt of the member for this quiz, when there is one (D-4). "
+            "The member continues that attempt instead of starting a second one."
+        ),
+    )
     questions: list[TakeQuestionItem] = Field(description="Questions without correctness")

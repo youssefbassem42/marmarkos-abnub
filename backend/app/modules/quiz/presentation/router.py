@@ -46,6 +46,7 @@ from app.modules.quiz.application.dto.attempt_dto import (
     AttemptResultResponse,
     AttemptResumeResponse,
     AttemptStartResponse,
+    QuizTakeResponse,
     SaveAnswerRequest,
     StartAttemptRequest,
 )
@@ -78,6 +79,7 @@ from app.modules.quiz.application.queries.quiz_queries import (
     quiz_list_query,
     quiz_validation_query,
 )
+from app.modules.quiz.application.queries.quiz_take_query import quiz_take_query
 from app.modules.quiz.presentation.dependencies import CurrentUser
 from app.modules.quiz.presentation.mappers import question_to_response
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
@@ -126,6 +128,22 @@ async def get_quiz_by_verse(verse_id: UUID, actor: BibleManager, uow: _UoW) -> Q
 @quiz_router.get("/{quiz_id}", responses={404: {"description": "Quiz not found"}})
 async def get_quiz(quiz_id: UUID, actor: BibleManager, uow: _UoW) -> QuizDetailResponse:
     return await quiz_detail_query(uow, actor, quiz_id)
+
+
+@quiz_router.get(
+    "/{quiz_id}/take",
+    responses={404: {"description": "Quiz not found"}},
+    summary="The quiz as a member may see it (no correctness)",
+)
+async def get_quiz_for_take(quiz_id: UUID, viewer: CurrentUser, uow: _UoW) -> QuizTakeResponse:
+    """The take path of a quiz.
+
+    The manager endpoint (``GET /quizzes/{id}``) carries the correctness of
+    every option; a member must never receive it. This endpoint gives the
+    member the questions and the options - and the own state, so a member
+    can resume an attempt.
+    """
+    return await quiz_take_query(uow, viewer, quiz_id)
 
 
 @quiz_router.patch("/{quiz_id}", responses={404: {"description": "Quiz not found"}})
