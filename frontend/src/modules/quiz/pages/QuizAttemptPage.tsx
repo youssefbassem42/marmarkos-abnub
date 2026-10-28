@@ -73,23 +73,37 @@ export default function QuizAttemptPage() {
     isLoading: attemptLoading,
     isError: attemptError,
   } = useAttempt(attemptId ?? "", { enabled: !!attemptId });
-  const { data: takeData, isLoading: takeLoading } = useQuizForTake(
-    quizId ?? "",
-    { enabled: !!quizId },
-  );
+  const {
+    data: takeData,
+    isLoading: takeLoading,
+    isError: takeError,
+  } = useQuizForTake(quizId ?? "", { enabled: !!quizId });
   const saveAnswer = useSaveAnswer();
   const submitAttempt = useSubmitAttempt();
 
   const questions = useMemo(() => takeData?.questions ?? [], [takeData]);
 
+  // The timer is the server's truth, but the server needs a moment to
+  // answer. Until it does, the duration of the quiz is the best
+  // estimate - showing "00:00" (the time is over) while the attempt is
+  // still loading alarmed the member and locked the answers.
   const timerRemaining =
-    budgetAnchor?.remainingSeconds ?? attempt?.remaining_seconds ?? 0;
+    budgetAnchor?.remainingSeconds ??
+    attempt?.remaining_seconds ??
+    takeData?.duration_seconds ??
+    0;
   const timerServerTime =
     budgetAnchor?.serverTime ??
     attempt?.server_time ??
     new Date().toISOString();
+  // The answers can be given when the attempt exists (the save needs its
+  // id) and when the server does not say that the attempt is over. An
+  // attempt that is still on its way does not lock the answers: the
+  // member can answer as soon as the id is known.
   const answersLocked =
-    hasSubmitted || (attemptId != null && attempt?.status !== "IN_PROGRESS");
+    attemptId == null ||
+    hasSubmitted ||
+    (attempt !== undefined && attempt.status !== "IN_PROGRESS");
 
   const timer = useQuizTimer({
     remainingSeconds: timerRemaining,
@@ -341,7 +355,17 @@ export default function QuizAttemptPage() {
   }, [attemptId, hasSubmitted, quizId, navigate, submitAttempt]);
 
   // Loading skeleton
-  if (startAttempt.isPending || (attemptId && attemptLoading) || takeLoading) {
+  //
+  // The skeleton stands for "there is nothing to show yet". Once the
+  // questions are known, the page shows them - the request of the
+  // attempt may still be on its way, and the page used to flash the
+  // skeleton twice (once for the start, once for the attempt) before
+  // the member could answer.
+  const hasQuestions = questions.length > 0;
+  if (
+    takeLoading ||
+    (!hasQuestions && (startAttempt.isPending || attemptLoading))
+  ) {
     return (
       <div className="mx-auto max-w-2xl space-y-6 p-4">
         <Skeleton className="h-10 w-32" />
@@ -360,7 +384,7 @@ export default function QuizAttemptPage() {
     );
   }
 
-  if (startAttempt.isError && !attemptId) {
+  if ((startAttempt.isError && !attemptId) || (takeError && !hasQuestions)) {
     return (
       <div
         className="flex flex-col items-center justify-center gap-4 p-8"

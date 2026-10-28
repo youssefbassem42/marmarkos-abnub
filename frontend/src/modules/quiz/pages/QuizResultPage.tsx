@@ -1,5 +1,10 @@
 import { useTranslation } from "react-i18next";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import {
+  Link,
+  useNavigate,
+  useParams,
+  useSearchParams,
+} from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, BarChart3 } from "lucide-react";
@@ -15,7 +20,11 @@ export default function QuizResultPage() {
   const { t: tCommon } = useTranslation("common");
   const navigate = useNavigate();
 
-  const searchParams = new URLSearchParams(window.location.search);
+  // The id of the attempt comes from the router, not from
+  // `window.location`: the router owns the URL, and reading the address
+  // of the browser behind its back breaks under a basename (and in the
+  // tests).
+  const [searchParams] = useSearchParams();
   const attemptId = searchParams.get("attemptId") ?? "";
 
   const {
