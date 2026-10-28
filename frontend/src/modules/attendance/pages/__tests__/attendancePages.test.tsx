@@ -11,43 +11,29 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
+import {
+  CHECK_IN_RESPONSE,
+  MEETING_ATTENDANCE,
+  MEETING_STATISTICS,
+} from "@/test/fixtures/attendance";
 import { CheckInPage } from "@/modules/attendance/pages/CheckInPage";
 import { AttendanceDashboardPage } from "@/modules/attendance/pages/AttendanceDashboardPage";
 
 /** The answers every page of the attendance needs. */
 const MEETING_ANSWERS = {
   "/attendance/statistics/meeting": {
-    meeting_date: "2026-10-22",
-    meeting_index_in_month: 4,
+    ...MEETING_STATISTICS,
     summary: {
+      ...MEETING_STATISTICS.summary,
       total_present: 8,
       total_late: 1,
       total_attended: 9,
       total_absent: 3,
-      total_excused: 0,
+      excused_count: 0,
       attendance_rate: 75,
     },
   },
-  "/attendance/meeting": {
-    meeting_date: "2026-10-22",
-    meeting_index_in_month: 4,
-    is_open: true,
-    total_present: 8,
-    attendance_records: [],
-  },
-};
-
-const CHECK_IN = {
-  id: "record-1",
-  user_id: "u1",
-  user_name: "محمود",
-  meeting_date: "2026-10-22",
-  meeting_index_in_month: 4,
-  check_in_at: "2026-10-22T19:03:00Z",
-  status: "PRESENT" as const,
-  method: "PIN" as const,
-  recorded_by: "u2",
-  recorded_by_name: "الخادم",
+  "/attendance/meeting": MEETING_ATTENDANCE,
 };
 
 describe("the page of the check-in", () => {
@@ -75,7 +61,10 @@ describe("the page of the check-in", () => {
 
   it("records the presence of the member with the PIN", async () => {
     const { calls } = renderPage(<CheckInPage />, {
-      answers: { ...MEETING_ANSWERS, "/attendance/check-in": CHECK_IN },
+      answers: {
+        ...MEETING_ANSWERS,
+        "/attendance/check-in": CHECK_IN_RESPONSE,
+      },
     });
 
     await waitFor(() =>

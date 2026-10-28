@@ -3,30 +3,39 @@
  *
  * Attendance is recorded per weekly meeting (Thursday), never per day.
  * A month therefore holds 4 meetings (5 when it has five Thursdays).
+ *
+ * The answers of the API are described by the **schemas** of
+ * `@/lib/schemas/attendance` (they mirror the DTOs of the backend), and
+ * the types below are their aliases: a shape is written once, and the
+ * schema that checks the answer is the same one that types it.
  */
 
-/** Attendance is recorded per weekly meeting (Thursday), never per day.
- *  A month therefore holds 4 meetings (5 when it has five Thursdays).
- */
+import type { z } from "zod";
 
-export type AttendanceStatusValue = "PRESENT" | "LATE" | "ABSENT" | "EXCUSED";
+import type {
+  absentUserSchema,
+  absentUsersSchema,
+  attendanceHistorySchema,
+  attendanceRecordSchema,
+  attendanceStatusSchema,
+  attendanceMethodSchema,
+  attendanceSummarySchema,
+  checkInResponseSchema,
+  excuseResponseSchema,
+  meetingAttendanceSchema,
+  meetingScheduleSchema,
+  meetingStatSchema,
+  meetingStatisticsSchema,
+  monthlyStatisticsSchema,
+  myAttendanceRecordSchema,
+  myAttendanceSchema,
+} from "@/lib/schemas/attendance";
 
-export type AttendanceMethodValue = "QR_SCAN" | "MANUAL" | "PIN";
+export type AttendanceStatusValue = z.infer<typeof attendanceStatusSchema>;
 
-export interface AttendanceRecord {
-  id: string;
-  user_id: string;
-  user_name: string;
-  /** ISO date of the Thursday meeting the record belongs to */
-  meeting_date: string;
-  /** 1-based position of the meeting within its month (1..5) */
-  meeting_index_in_month: number;
-  check_in_at: string;
-  status: AttendanceStatusValue;
-  method: AttendanceMethodValue;
-  recorded_by: string;
-  recorded_by_name: string;
-}
+export type AttendanceMethodValue = z.infer<typeof attendanceMethodSchema>;
+
+export type AttendanceRecord = z.infer<typeof attendanceRecordSchema>;
 
 export interface CheckInRequest {
   /** QR token from camera scan or manual typing */
@@ -43,92 +52,23 @@ export interface CheckInRequest {
   method?: AttendanceMethodValue;
 }
 
-export interface CheckInResponse {
-  success: boolean;
-  message: string;
-  attendance: AttendanceRecord;
-}
+export type CheckInResponse = z.infer<typeof checkInResponseSchema>;
 
-export interface MeetingAttendanceResponse {
-  meeting_date: string;
-  meeting_index_in_month: number;
-  /** True when this meeting is the one currently open for check-in */
-  is_open: boolean;
-  total_present: number;
-  attendance_records: AttendanceRecord[];
-}
+export type MeetingAttendanceResponse = z.infer<typeof meetingAttendanceSchema>;
 
-export interface AbsentUser {
-  user_id: string;
-  name: string;
-  email: string;
-  role: string;
-}
+export type AbsentUser = z.infer<typeof absentUserSchema>;
 
-export interface AbsentUsersResponse {
-  meeting_date: string;
-  absent_count: number;
-  absent_users: AbsentUser[];
-  /** False before the absence cutoff: the list is provisional (BR-5) */
-  is_final: boolean;
-  page?: number;
-  size?: number;
-}
+export type AbsentUsersResponse = z.infer<typeof absentUsersSchema>;
 
-export interface AttendanceSummary {
-  total_present: number;
-  total_late: number;
-  /** PRESENT + LATE: late members count as attended (BR-3) */
-  total_attended: number;
-  excused_count: number;
-  total_absent: number;
-  total_expected: number;
-  attendance_rate: number;
-  /** True once the absence cutoff has passed (BR-5) */
-  is_final: boolean;
-}
+export type AttendanceSummary = z.infer<typeof attendanceSummarySchema>;
 
-export interface MeetingStatisticsResponse {
-  meeting_date: string;
-  meeting_index_in_month: number;
-  summary: AttendanceSummary;
-}
+export type MeetingStatisticsResponse = z.infer<typeof meetingStatisticsSchema>;
 
-export interface MeetingStat {
-  meeting_date: string;
-  meeting_index_in_month: number;
-  present_count: number;
-  late_count: number;
-  absent_count: number;
-  attendance_rate: number;
-  /** False for meetings still in the future */
-  is_held: boolean;
-}
+export type MeetingStat = z.infer<typeof meetingStatSchema>;
 
-export interface MonthlyStatisticsResponse {
-  year: number;
-  month: number;
-  /** Meetings scheduled in the month (4 or 5) */
-  total_meetings: number;
-  meetings_held: number;
-  expected_per_meeting: number;
-  meetings: MeetingStat[];
-  total_attendance: number;
-  average_attendance: number;
-  attendance_rate: number;
-  distinct_attendees: number;
-  full_attendance_count: number;
-  no_attendance_count: number;
-}
+export type MonthlyStatisticsResponse = z.infer<typeof monthlyStatisticsSchema>;
 
-export interface MeetingScheduleResponse {
-  year: number;
-  month: number;
-  meeting_day: string;
-  total_meetings: number;
-  meetings: string[];
-  open_meeting_date: string;
-}
+export type MeetingScheduleResponse = z.infer<typeof meetingScheduleSchema>;
 
 export interface AttendanceHistoryFilters {
   start_date?: string;
@@ -141,35 +81,11 @@ export interface AttendanceHistoryFilters {
   order?: "asc" | "desc";
 }
 
-export interface AttendanceHistoryResponse {
-  total_count: number;
-  attendance_records: AttendanceRecord[];
-  page: number;
-  size: number;
-  pages: number;
-  has_next: boolean;
-}
+export type AttendanceHistoryResponse = z.infer<typeof attendanceHistorySchema>;
 
 /** Reduced record for member self-service; no admin identity fields. */
-export interface MyAttendanceRecord {
-  meeting_date: string;
-  meeting_index_in_month: number;
-  check_in_at: string;
-  status: AttendanceStatusValue;
-}
+export type MyAttendanceRecord = z.infer<typeof myAttendanceRecordSchema>;
 
-export interface MyAttendanceResponse {
-  year: number;
-  month: number;
-  total_meetings: number;
-  meetings_held: number;
-  attended_count: number;
-  attendance_rate: number;
-  records: MyAttendanceRecord[];
-}
+export type MyAttendanceResponse = z.infer<typeof myAttendanceSchema>;
 
-export interface ExcuseResponse {
-  success: boolean;
-  message: string;
-  attendance: AttendanceRecord;
-}
+export type ExcuseResponse = z.infer<typeof excuseResponseSchema>;

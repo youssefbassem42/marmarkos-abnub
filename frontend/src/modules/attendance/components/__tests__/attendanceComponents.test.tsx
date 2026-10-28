@@ -16,7 +16,11 @@ import { AttendanceStatusBadge } from "@/modules/attendance/components/Attendanc
 import { MeetingStatsCard } from "@/modules/attendance/components/MeetingStatsCard";
 import { ScanResultCard } from "@/modules/attendance/components/ScanResultCard";
 import { StatTile } from "@/modules/attendance/components/StatTile";
-import { recordApiCalls, type RecordingAdapter } from "@/test/recordingAdapter";
+import {
+  recordApiCallsFor,
+  type RecordingAdapter,
+} from "@/test/recordingAdapter";
+import { MEETING_STATISTICS } from "@/test/fixtures/attendance";
 
 let recorder: RecordingAdapter | undefined;
 
@@ -114,16 +118,19 @@ describe("StatTile", () => {
 
 describe("MeetingStatsCard", () => {
   it("shows the numbers of the meeting", async () => {
-    recorder = recordApiCalls({
-      meeting_date: "2026-09-24",
-      summary: {
-        total_present: 10,
-        total_late: 2,
-        total_absent: 3,
-        total_excused: 1,
-        total_expected: 16,
-        attendance_rate: 75,
-        is_final: true,
+    recorder = recordApiCallsFor({
+      "/attendance/statistics/meeting": {
+        ...MEETING_STATISTICS,
+        summary: {
+          ...MEETING_STATISTICS.summary,
+          total_present: 10,
+          total_late: 2,
+          total_absent: 3,
+          excused_count: 1,
+          total_expected: 16,
+          attendance_rate: 75,
+          is_final: true,
+        },
       },
     });
 

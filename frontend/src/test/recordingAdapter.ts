@@ -37,16 +37,42 @@ export function recordApiCalls(
   body: unknown = {},
   status = 200,
 ): RecordingAdapter {
+  return recordApiCallsFor({ "*": body }, status);
+}
+
+/**
+ * Install the recording adapter with **one body per URL**.
+ *
+ * The longest matching key wins ("/attendance/meeting" before
+ * "/attendance"). A URL that no key matches is answered with an empty
+ * object — the test then says what it needs.
+ *
+ * The bodies must have the shape the endpoint promises: an endpoint
+ * with a schema **rejects** an answer that does not have it, and the
+ * test says so instead of passing on a body the server never sends.
+ */
+export function recordApiCallsFor(
+  answers: Record<string, unknown>,
+  status = 200,
+): RecordingAdapter {
   const originalAdapter = apiClient.defaults.adapter;
   const calls: RecordedCall[] = [];
+  const keys = Object.keys(answers).sort((a, b) => b.length - a.length);
 
   apiClient.defaults.adapter = async (config: InternalAxiosRequestConfig) => {
+    const url = config.url ?? "";
     calls.push({
       method: (config.method ?? "get").toLowerCase(),
-      url: config.url ?? "",
+      url,
       params: config.params,
       data: config.data,
     });
+
+    const key = keys.find(
+      (candidate) => candidate === "*" || url.includes(candidate),
+    );
+    const body = key ? answers[key] : {};
+
     if (status >= 400) {
       const error = new Error(`Request failed with status code ${status}`);
       Object.assign(error, {

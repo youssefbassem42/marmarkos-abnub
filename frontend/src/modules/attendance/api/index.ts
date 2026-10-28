@@ -2,7 +2,18 @@
  * Attendance API client (weekly Thursday meetings)
  */
 
-import { apiClient } from "@/lib/api";
+import { apiClient, apiGet, apiPost } from "@/lib/api";
+import {
+  absentUsersSchema,
+  attendanceHistorySchema,
+  checkInResponseSchema,
+  excuseResponseSchema,
+  meetingAttendanceSchema,
+  meetingScheduleSchema,
+  meetingStatisticsSchema,
+  monthlyStatisticsSchema,
+  myAttendanceSchema,
+} from "@/lib/schemas/attendance";
 import type {
   AbsentUsersResponse,
   AttendanceHistoryResponse,
@@ -22,7 +33,9 @@ export { getApiErrorMessage } from "@/lib/api";
 export const attendanceApi = {
   /** Record attendance for the current meeting via QR code */
   checkIn: async (data: CheckInRequest): Promise<CheckInResponse> => {
-    const response = await apiClient.post("/attendance/check-in", data);
+    const response = await apiClient.post("/attendance/check-in", data, {
+      schema: checkInResponseSchema,
+    });
     return response.data;
   },
 
@@ -31,8 +44,7 @@ export const attendanceApi = {
     meetingDate?: string,
   ): Promise<MeetingAttendanceResponse> => {
     const params = meetingDate ? { meeting_date: meetingDate } : {};
-    const response = await apiClient.get("/attendance/meeting", { params });
-    return response.data;
+    return apiGet("/attendance/meeting", meetingAttendanceSchema, { params });
   },
 
   /** Get the meeting calendar of a month (4 meetings, 5 in long months) */
@@ -41,8 +53,7 @@ export const attendanceApi = {
     month?: number,
   ): Promise<MeetingScheduleResponse> => {
     const params = { ...(year ? { year } : {}), ...(month ? { month } : {}) };
-    const response = await apiClient.get("/attendance/meetings", { params });
-    return response.data;
+    return apiGet("/attendance/meetings", meetingScheduleSchema, { params });
   },
 
   /** Get users who missed a meeting */
@@ -53,8 +64,7 @@ export const attendanceApi = {
     const params = meetingDate
       ? { meeting_date: meetingDate, ...options }
       : options;
-    const response = await apiClient.get("/attendance/absent", { params });
-    return response.data;
+    return apiGet("/attendance/absent", absentUsersSchema, { params });
   },
 
   /** Get statistics for one meeting */
@@ -62,10 +72,9 @@ export const attendanceApi = {
     meetingDate?: string,
   ): Promise<MeetingStatisticsResponse> => {
     const params = meetingDate ? { meeting_date: meetingDate } : {};
-    const response = await apiClient.get("/attendance/statistics/meeting", {
+    return apiGet("/attendance/statistics/meeting", meetingStatisticsSchema, {
       params,
     });
-    return response.data;
   },
 
   /** Get the monthly analysis across the month's meetings */
@@ -74,10 +83,9 @@ export const attendanceApi = {
     month?: number,
   ): Promise<MonthlyStatisticsResponse> => {
     const params = { ...(year ? { year } : {}), ...(month ? { month } : {}) };
-    const response = await apiClient.get("/attendance/statistics/monthly", {
+    return apiGet("/attendance/statistics/monthly", monthlyStatisticsSchema, {
       params,
     });
-    return response.data;
   },
 
   /** Get paginated meeting attendance history with filters */
@@ -91,8 +99,7 @@ export const attendanceApi = {
     sort?: "meeting_date" | "check_in_at";
     order?: "asc" | "desc";
   }): Promise<AttendanceHistoryResponse> => {
-    const response = await apiClient.get("/attendance", { params });
-    return response.data;
+    return apiGet("/attendance", attendanceHistorySchema, { params });
   },
 
   /** The calling member's own attendance for one calendar month */
@@ -101,8 +108,7 @@ export const attendanceApi = {
     month?: number,
   ): Promise<MyAttendanceResponse> => {
     const params = { ...(year ? { year } : {}), ...(month ? { month } : {}) };
-    const response = await apiClient.get("/attendance/me", { params });
-    return response.data;
+    return apiGet("/attendance/me", myAttendanceSchema, { params });
   },
 
   /** ADMIN-only correction: mark a record of the open meeting EXCUSED */
@@ -115,6 +121,7 @@ export const attendanceApi = {
       {
         reason: reason ?? null,
       },
+      { schema: excuseResponseSchema },
     );
     return response.data;
   },

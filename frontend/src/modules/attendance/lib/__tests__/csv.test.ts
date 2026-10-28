@@ -10,7 +10,11 @@
 import { describe, expect, it, vi } from "vitest";
 
 import { buildAttendanceCsv } from "@/modules/attendance/lib/csv";
-import { recordApiCalls, type RecordingAdapter } from "@/test/recordingAdapter";
+import {
+  recordApiCallsFor,
+  type RecordingAdapter,
+} from "@/test/recordingAdapter";
+import { ATTENDANCE_HISTORY } from "@/test/fixtures/attendance";
 
 let recorder: RecordingAdapter | undefined;
 
@@ -46,13 +50,13 @@ const RECORD = {
 
 describe("the export of the attendance", () => {
   it("writes the header and the records", async () => {
-    recorder = recordApiCalls({
-      attendance_records: [RECORD],
-      total_count: 1,
-      page: 1,
-      size: 100,
-      pages: 1,
-      has_next: false,
+    recorder = recordApiCallsFor({
+      "/attendance": {
+        ...ATTENDANCE_HISTORY,
+        total_count: 1,
+        pages: 1,
+        has_next: false,
+      },
     });
     recorder.install();
 
@@ -67,13 +71,13 @@ describe("the export of the attendance", () => {
   });
 
   it("starts with the BOM, so Excel reads the Arabic", async () => {
-    recorder = recordApiCalls({
-      attendance_records: [RECORD],
-      total_count: 1,
-      page: 1,
-      size: 100,
-      pages: 1,
-      has_next: false,
+    recorder = recordApiCallsFor({
+      "/attendance": {
+        ...ATTENDANCE_HISTORY,
+        total_count: 1,
+        pages: 1,
+        has_next: false,
+      },
     });
     recorder.install();
 
@@ -87,13 +91,13 @@ describe("the export of the attendance", () => {
   });
 
   it("escapes the commas and the quotes of a cell", async () => {
-    recorder = recordApiCalls({
-      attendance_records: [RECORD],
-      total_count: 1,
-      page: 1,
-      size: 100,
-      pages: 1,
-      has_next: false,
+    recorder = recordApiCallsFor({
+      "/attendance": {
+        ...ATTENDANCE_HISTORY,
+        total_count: 1,
+        pages: 1,
+        has_next: false,
+      },
     });
     recorder.install();
 
@@ -107,13 +111,13 @@ describe("the export of the attendance", () => {
   });
 
   it("walks every page of the filtered set", async () => {
-    recorder = recordApiCalls({
-      attendance_records: [RECORD],
-      total_count: 2,
-      page: 1,
-      size: 100,
-      pages: 2,
-      has_next: true,
+    recorder = recordApiCallsFor({
+      "/attendance": {
+        ...ATTENDANCE_HISTORY,
+        total_count: 2,
+        pages: 2,
+        has_next: true,
+      },
     });
     recorder.install();
 
@@ -129,13 +133,13 @@ describe("the export of the attendance", () => {
   });
 
   it("stops when the server has no more pages", async () => {
-    recorder = recordApiCalls({
-      attendance_records: [RECORD],
-      total_count: 1,
-      page: 1,
-      size: 100,
-      pages: 1,
-      has_next: false,
+    recorder = recordApiCallsFor({
+      "/attendance": {
+        ...ATTENDANCE_HISTORY,
+        total_count: 1,
+        pages: 1,
+        has_next: false,
+      },
     });
     recorder.install();
 

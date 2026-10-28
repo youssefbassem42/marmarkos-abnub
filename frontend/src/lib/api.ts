@@ -1,5 +1,6 @@
 import axios from "axios";
-import type { InternalAxiosRequestConfig } from "axios";
+import type { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
+import { z } from "zod";
 import { clearAuth, getAccessToken, updateAccessToken } from "@/lib/auth";
 
 function resolveApiBaseUrl(): string {
@@ -42,6 +43,16 @@ export const apiClient = axios.create({
   baseURL: resolveApiBaseUrl(),
   withCredentials: true,
 });
+
+declare module "axios" {
+  /** The schema of the answer: the answer is checked against it. */
+  export interface AxiosRequestConfig {
+    schema?: z.ZodType;
+  }
+  export interface InternalAxiosRequestConfig {
+    schema?: z.ZodType;
+  }
+}
 
 /** Paths that must never carry the bearer token. */
 const AUTH_FREE_PREFIXES = [
@@ -163,7 +174,30 @@ function abandonSession(): void {
 }
 
 apiClient.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    // The answer is checked against its schema (when the endpoint has
+    // one). An answer that does not have the expected shape becomes an
+    // `ApiError`: the page shows its error state instead of crashing on
+    // `undefined.toFixed()`.
+    const schema = response.config?.schema;
+    if (schema) {
+      const parsed = schema.safeParse(response.data);
+      if (!parsed.success) {
+        const detail = parsed.error.issues
+          .map(
+            (issue) => `${issue.path.join(".") || "answer"}: ${issue.message}`,
+          )
+          .join(", ");
+        throw new ApiError(
+          0,
+          `The answer of ${response.config?.url ?? "the server"} does not have the expected shape (${detail})`,
+          "invalid_response",
+        );
+      }
+      response.data = parsed.data;
+    }
+    return response;
+  },
   async (error: unknown) => {
     if (!axios.isAxiosError(error)) {
       return Promise.reject(toApiError(error));
@@ -209,6 +243,38 @@ export class ApiError extends Error {
     super(message);
     this.name = "ApiError";
   }
+}
+
+/**
+ * A GET whose answer is checked against a schema.
+ *
+ * The answer that does not have the expected shape becomes an
+ * `ApiError` (code `invalid_response`): the page shows its error state
+ * instead of reading `undefined`.
+ */
+export async function apiGet<S extends z.ZodType>(
+  url: string,
+  schema: S,
+  config?: AxiosRequestConfig,
+): Promise<z.infer<S>> {
+  const response = await apiClient.get(url, { ...config, schema });
+  return response.data as z.infer<S>;
+}
+
+/**
+ * A POST whose answer is checked against a schema.
+ *
+ * A POST without an answer (`204`, or a 202 that carries nothing) does
+ * not need a schema: pass `undefined`.
+ */
+export async function apiPost<S extends z.ZodType>(
+  url: string,
+  schema: S | undefined,
+  data?: unknown,
+  config?: AxiosRequestConfig,
+): Promise<z.infer<S> | undefined> {
+  const response = await apiClient.post(url, data, { ...config, schema });
+  return response.data as z.infer<S> | undefined;
 }
 
 /**

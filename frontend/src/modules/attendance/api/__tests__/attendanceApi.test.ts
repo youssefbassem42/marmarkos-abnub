@@ -10,16 +10,38 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   onlyCall,
-  recordApiCalls,
+  recordApiCallsFor,
   type RecordingAdapter,
 } from "@/test/recordingAdapter";
+import {
+  ABSENT_USERS,
+  ATTENDANCE_HISTORY,
+  CHECK_IN_RESPONSE,
+  MEETING_ATTENDANCE,
+  MEETING_SCHEDULE,
+  MEETING_STATISTICS,
+  MONTHLY_STATISTICS,
+  MY_ATTENDANCE,
+} from "@/test/fixtures/attendance";
 
 import { attendanceApi, attendancePinApi } from "../index";
 
 let recorder: RecordingAdapter;
 
 beforeEach(() => {
-  recorder = recordApiCalls({});
+  // The answers have the shape the backend sends: an endpoint with a
+  // schema rejects an incomplete answer.
+  recorder = recordApiCallsFor({
+    "/attendance/check-in": CHECK_IN_RESPONSE,
+    "/attendance/meeting": MEETING_ATTENDANCE,
+    "/attendance/meetings": MEETING_SCHEDULE,
+    "/attendance/absent": ABSENT_USERS,
+    "/attendance/statistics/meeting": MEETING_STATISTICS,
+    "/attendance/statistics/monthly": MONTHLY_STATISTICS,
+    "/attendance/me": MY_ATTENDANCE,
+    "/attendance": ATTENDANCE_HISTORY,
+    "/attendance/a1/excuse": CHECK_IN_RESPONSE,
+  });
 });
 
 afterEach(() => {

@@ -14,8 +14,18 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { attendanceKeys } from "@/modules/attendance/api/queryKeys";
 import {
+  ABSENT_USERS,
+  ATTENDANCE_HISTORY,
+  CHECK_IN_RESPONSE,
+  MEETING_ATTENDANCE,
+  MEETING_SCHEDULE,
+  MEETING_STATISTICS,
+  MONTHLY_STATISTICS,
+  MY_ATTENDANCE,
+} from "@/test/fixtures/attendance";
+import {
   onlyCall,
-  recordApiCalls,
+  recordApiCallsFor,
   type RecordingAdapter,
 } from "@/test/recordingAdapter";
 
@@ -39,7 +49,17 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 beforeEach(() => {
-  recorder = recordApiCalls({});
+  recorder = recordApiCallsFor({
+    "/attendance/check-in": CHECK_IN_RESPONSE,
+    "/attendance/meeting": MEETING_ATTENDANCE,
+    "/attendance/meetings": MEETING_SCHEDULE,
+    "/attendance/absent": ABSENT_USERS,
+    "/attendance/statistics/meeting": MEETING_STATISTICS,
+    "/attendance/statistics/monthly": MONTHLY_STATISTICS,
+    "/attendance/me": MY_ATTENDANCE,
+    "/attendance": ATTENDANCE_HISTORY,
+    "/attendance/a1/excuse": CHECK_IN_RESPONSE,
+  });
   queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });
