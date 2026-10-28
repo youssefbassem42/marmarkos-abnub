@@ -56,7 +56,10 @@ export function QuizReadinessPanel({ quizId }: QuizReadinessPanelProps) {
 
   if (!validation) return null;
 
-  const rules: QuizValidationRule[] = validation.rules;
+  // The server always sends the rules; a payload without them must not
+  // take the whole builder down (the page of the servant would crash
+  // with a white screen).
+  const rules: QuizValidationRule[] = validation.rules ?? [];
 
   return (
     <div className="space-y-4">
