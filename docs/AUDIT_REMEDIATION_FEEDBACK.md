@@ -34,7 +34,7 @@ While doing that, the work uncovered **twelve genuine production defects** that 
 | `backend: pytest` | 373 passed / **8 failed** (381) | **484 passed / 0 failed** | ✅ |
 | `backend: test warnings` | 4 (Starlette 422 + httpx cookies) | **0** | ✅ |
 | `frontend: npm run lint` | 820 problems (808 errors, 12 warnings) | **0** (also with `--max-warnings 0`) | ✅ |
-| `frontend: npm run test:run` | 48 passed (with React key warning + jsdom CORS noise) | **210 passed** | ✅ |
+| `frontend: npm run test:run` | 48 passed (with React key warning + jsdom CORS noise) | **277 passed** | ✅ |
 | `frontend: npm run build` | pass | **pass** | ✅ |
 | `frontend: tsc -b` | pass (the cache hid nothing this time) | **pass** (`--force` as well) | ✅ |
 | Test-suite hermeticity | ❌ real Cloudinary API call observed | ✅ **no outbound socket is possible** | ✅ |
@@ -42,8 +42,9 @@ While doing that, the work uncovered **twelve genuine production defects** that 
 | `npm audit` | 3 high (+ 8 more) | **0** | ✅ |
 | `pip-audit` | 3 vulnerabilities / 2 packages | **0** | ✅ |
 | Backend tests | 373 passed / 8 failed | **484 passed / 0 failed** | ✅ |
-| Frontend tests | 48 passed | **210 passed** | ✅ |
+| Frontend tests | 48 passed | **277 passed** | ✅ |
 | End-to-end tests | **0** (no browser ever drove the product) | **5 passed** (3 journeys) | ✅ |
+| Frontend coverage | 17.97 % statements (no branch coverage) | **65.11 %** statements · 54.93 % branches · 59.77 % functions · 67.05 % lines | ✅ |
 | SQL statements for a page of 10 quizzes | 21 (2N+1) | **3** | ✅ |
 | Access token location | `localStorage` / `sessionStorage` | **memory** (flag-controlled) | ✅ |
 | Import cycles between the modules | 5 (two of them reported) | **1** (documented, in the plan) | ✅ |
@@ -170,8 +171,8 @@ The 100 errors were 90 % "repository returns `dict[str, object]`" noise. The fix
 |---|---|---|---|
 | 5.1 | **A strict frontend pipeline** | `npm ci` (the lockfile decides, a drift fails the build), the format check, `lint --max-warnings 0`, `tsc -b`, `npm audit --audit-level=high`, the tests **with** the coverage, the build. `continue-on-error` is gone — the pipeline used to be allowed to be red. | CI-002 |
 | 5.2 | **A strict backend pipeline** | `pip-audit --skip-editable` (the project itself is an editable, non-PyPI distribution), gitleaks 8.28.0 pinned by digest with an allowlist for the fake test secret, `alembic upgrade head` + `alembic check` (no drift), the coverage floor at 77 %. The permissions are down to `contents: read`. | CI-003/004/005/007 |
-| 5.4 | **The frontend coverage** | Still open: the floor is the measured value (17.97 % statements / 12.07 % branches / 14.2 % functions / 18.26 % lines). **The audit's 21.92 % was measured without the branch coverage** — with it, the real number is lower. The floor may only go up. | QA-001 |
-| 5.5 | **The E2E golden paths** | Still open (sign-in, take a quiz, check in). | QA-001 |
+| 5.4 | **The frontend coverage** | **Done, in two halves.** The first half covered the logic (the API clients, the hooks, the shared library): 17.97 % → **27.97 %**. The second half covered the **markup**: one render test per screen (the entrance, the profile, the verses, the verse, the quiz, the attempt, the result, the attendance, the history, the check-in, the analytics, the administration of the verses and of the quizzes, the router). Result: **65.11 % statements, 54.93 % branches, 59.77 % functions, 67.05 % lines** — 277 unit tests. The floor followed the measurement at every step and **only ever went up** (27 → 61 → 64 → 65). The render tests found **six real defects** (see §4, bugs 13–18). | QA-001 |
+| 5.5 | **The E2E golden paths** | **Done.** Three journeys, five tests, **all green**: signing in (3), taking a quiz (1), the check-in of a member with the PIN (1). The run is hermetic: the database `marmarkos_e2e` is **rebuilt from the migrations** before every run (only a database whose name says "e2e" is ever dropped; the unit-test database is never touched), the seed refuses any other database, and the stack (API on 18010, Vite on 4173) is started by Playwright itself. The step runs in the pipeline (`.github/workflows/e2e-ci.yml`). It found **five real bugs** in the first run. | QA-001 |
 | 5.6 | **The OpenAPI contract** | The schema now describes the real answers: the operations with a security declare 401/403, the ones with a body declare 400, the rate-limited ones declare 429, the `Allow` header completes the 405 answers, and the internal routes are excluded from the scan. The baseline was **87 failures**; the result is **3 466 cases, 0 failures** (the step runs in the backend pipeline). | QA-005 / SEC-010 |
 | 5.7 | **The production frontend image** | A multi-stage image: node builds the application, nginx 1.27 serves it (SPA fallback, the assets immutable for a year, `index.html` never cached, gzip, the security headers in a snippet — nginx drops the inherited `add_header` in a location that sets its own). The API upstream is resolved per request, so the container starts even when the API is down. | OPS-001 / SEC-009 |
 | 5.8 | **The containers** | The backend runs as **uid 10001**, both images have a healthcheck, the frontend waits for a healthy backend, and the migrations run behind a **PostgreSQL advisory lock** — two replicas would otherwise run the same migration at the same time (Alembic has no lock of its own). | OPS-002/003/005 |
@@ -205,6 +206,22 @@ They were found by the three journeys of the end-to-end tests — a member signs
 | 11 | The page of the attempt asked the manager endpoint `GET /quizzes/{id}` (ADMIN/SERVANT) | **403 — a member could not answer a quiz at all** | A member path `GET /quizzes/{id}/take`: the questions and the options, **never the correctness**; the manager endpoint keeps it |
 | 12 | The remount of the route lost the id of the attempt (a mutation does not call its callbacks when nobody listens), the page started a second attempt, the server answered 409 and the page **swallowed the conflict** | The page of the attempt waited for ever: no radio button, no answer | The attempt is remembered outside React (the request remembers it, the server names it in the take payload), the 409 is read as a **resume signal** (D-4: `data.attempt_id`), and the answers live in a draft: after a refresh the page opens on **the last question the member solved** |
 
+### The six that the render tests found (Phase 5.4, second half)
+
+Rendering a screen is worth more than a line of coverage: the first
+render of every page **crashed** or lied. These are the defects the
+audit could not see, because they live in the markup and not in the
+logic.
+
+| # | Bug | Impact | Fix |
+|---|---|---|---|
+| 13 | The page "not found" was written in **English** | The only page of the product in another language | The Arabic text of `common.notFound`, with the keys in `ar.ts` (the product is Arabic only) |
+| 14 | The entrance called `IntersectionObserver` without checking it | The page **crashed** in every browser that does not implement it (and in every test) | The guard in `use-scroll-reveal`, and the stub in the test setup |
+| 15 | The page of the attempt showed `00:00` and **locked the answers** while the questions were still loading | The member saw a stopped timer and a form he could not touch, then the real timer | The duration of the payload (`takeData.duration_seconds`) is the fallback of the timer; the answers unlock when there are questions |
+| 16 | The page of the attempt flashed the skeleton **twice** | The page jumped | One decision for the skeleton (the questions are there or they are not) |
+| 17 | The page of the result read `window.location.search` | The result page **crashed** under the router (and could not be tested) | `useSearchParams()` — the router owns the query string |
+| 18 | The panel of the readiness of a quiz read `validation.rules` without a guard | The administration of a quiz **crashed** when the payload had no rules | `validation.rules ?? []` |
+
 ---
 
 ## 5. How it was verified
@@ -226,20 +243,23 @@ cd frontend
 npm run format:check                        # All matched files use Prettier code style!
 npm run lint -- --max-warnings 0            # clean
 npx tsc -b --force                          # clean
-npm run test:run                            # 210 passed
+npm run test:run                            # 277 passed
 npm run build                               # built successfully
 npm audit --audit-level=high                # found 0 vulnerabilities
 
 # End-to-end — the three journeys of a member (Phase 5.5)
 cd frontend
-npx playwright test --reporter=list         # 5 passed (16s)
+npx playwright test --reporter=list         # 5 passed (17s)
 ```
 
-The end-to-end run is hermetic: it creates its own database
-(`marmarkos_e2e`), applies the migrations, seeds what it needs, and refuses
-any database whose name does not say "test" or "e2e". The seed removes the
-accounts of the previous run first — the attendance PIN of a member is unique
-in the database, so a second run would collide.
+The end-to-end run is hermetic: it **rebuilds its own database**
+(`marmarkos_e2e`) from the migrations before every run — only a database
+whose name says "e2e" is ever dropped, the database of the unit tests is
+never touched — seeds what it needs, and refuses any database whose name
+does not say "test" or "e2e". The rebuild replaced the cleanup of the
+previous run: that cleanup could not delete a servant who had recorded an
+attendance (the schema protects that record), so the run died before the
+first test.
 
 The OpenAPI contract (Phase 5.6) runs against the real application:
 
@@ -284,7 +304,7 @@ Additional checks performed:
 | Phase | Content | Size |
 |---|---|---|
 | **Phase 4.4** | The domain ports speak domain objects. The last import cycle (`auth ↔ users`) runs through the layers: the route guard returns the ORM model of the users module. The fix is a shared "current member" contract that the guard returns instead of the ORM row — a type-level change that touches every route that uses the guard. | ~2 days |
-| **Phase 5.4** | The frontend coverage from 17.97 % → the measured 27 % (the floor only goes up). What is left is the markup of the ~30 pages (1 506 statements, 5.6 %): one render test per screen. The logic is already covered (the API clients at 99 %, the hooks at 64 %, the shared library at 70 %). | ~4 days |
+| **Phase 5.4 (the last 5 %)** | The coverage of the frontend is at **65.11 % statements** (277 unit tests). What is left: the scanner of the QR code (the camera cannot be simulated in jsdom), the schedule of the verses, the shell of the application (`App.tsx`, `main.tsx`, `router.tsx`) and the panels of the administration. The target of the plan is 70 %; the floor only goes up. | ~1 day |
 | ~~**Phase 5.5**~~ | ~~The E2E golden paths with Playwright~~ — **done**: three journeys, five tests, all green, and they run in the pipeline (`.github/workflows/e2e-ci.yml`). | — |
 
 ### 6.3 Deliberately deferred (with reasons)
@@ -304,10 +324,10 @@ Additional checks performed:
 ## 7. Recommended next session
 
 1. **Phase 4.4** — the domain ports speak domain objects: the guard returns a shared contract instead of the ORM row, and the last import cycle disappears.
-2. **Phase 5.4 (continued)** — the coverage of the markup of the pages: one render test per screen. The floor only goes up (27 % → 28 % → …).
+2. **Phase 5.4 (the last 5 %)** — the shell of the application, the schedule of the verses and the panels of the administration. The floor only goes up (65 % → …).
 3. **Phase 3.1 (completion)** — remove the legacy `?year=&month=` branch of the analytics endpoints **one release after** the deprecation (not before: the server still accepts it today).
 4. **Deployment watch** — after the memory-first token ships, watch the sign-in rate and the 401 rate for a week; `VITE_AUTH_PERSISTENCE=local` is the one-line rollback.
 5. **The secret rotation** — the only item that cannot be done from the repository; it needs the console of every provider.
-6. **The lessons of Phase 5.5** — the end-to-end tests found five defects that 462 unit tests never saw. The next journeys (the verse of the day, the points, the blog, the profile, the notifications) would find more. The stack is ready; each journey is half a day.
+6. **The lessons of Phase 5.5 and 5.4** — the end-to-end tests found five defects that 462 unit tests never saw, and the render tests found six more. The next journeys (the verse of the day, the points, the blog, the profile, the notifications) would find more. The stack is ready; each journey is half a day.
 
 > Rule for every follow-up PR: **one concern per PR**, behaviour-preserving, with the test that proves it. The pipeline is green now — the cheapest way to keep it that way is to never merge a red branch again.
