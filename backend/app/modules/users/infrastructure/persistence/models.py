@@ -143,10 +143,14 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="user", passive_deletes=True
     )
     attendance_records: Mapped[list["AttendanceRecord"]] = relationship(
-        back_populates="user", foreign_keys="AttendanceRecord.user_id"
+        back_populates="user",
+        foreign_keys="AttendanceRecord.user_id",
+        passive_deletes=True,
     )
     weekly_attendance_records: Mapped[list["WeeklyAttendanceRecord"]] = relationship(
-        back_populates="user", foreign_keys="WeeklyAttendanceRecord.user_id"
+        back_populates="user",
+        foreign_keys="WeeklyAttendanceRecord.user_id",
+        passive_deletes=True,
     )
     blog_posts: Mapped[list["BlogPost"]] = relationship(
         back_populates="author", passive_deletes=True

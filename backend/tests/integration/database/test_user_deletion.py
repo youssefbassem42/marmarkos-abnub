@@ -41,8 +41,6 @@ async def test_a_member_with_a_session_can_be_deleted(uow: UnitOfWork) -> None:
     await uow.commit()
 
     remaining = list(
-        await uow.session.scalars(
-            select(RefreshToken).where(RefreshToken.user_id == user.id)
-        )
+        await uow.session.scalars(select(RefreshToken).where(RefreshToken.user_id == user.id))
     )
     assert remaining == [], "the tokens of a deleted member must go with it"
