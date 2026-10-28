@@ -12,6 +12,11 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
+import {
+  ATTEMPT_RESUME,
+  ATTEMPT_RESULT,
+  QUIZ_TAKE,
+} from "@/test/fixtures/quiz";
 import { clearQuizDraft } from "@/modules/quiz/lib/attemptDraft";
 import QuizAttemptPage from "@/modules/quiz/pages/QuizAttemptPage";
 import QuizResultPage from "@/modules/quiz/pages/QuizResultPage";
@@ -20,6 +25,7 @@ const QUIZ_ID = "quiz-1";
 const ATTEMPT_ID = "attempt-1";
 
 const TAKE = {
+  ...QUIZ_TAKE,
   id: QUIZ_ID,
   title: "اختبار الآية",
   description: "اختبار على آية اليوم",
@@ -33,6 +39,8 @@ const TAKE = {
       question: "ما هو الكتاب؟",
       points: 5,
       position: 1,
+      answered: false,
+      selected_option_id: null,
       options: [
         { id: "o1", option_text: "إنجيل متى", position: 1 },
         { id: "o2", option_text: "إنجيل لوقا", position: 2 },
@@ -43,6 +51,8 @@ const TAKE = {
       question: "من هو الكاتب؟",
       points: 5,
       position: 2,
+      answered: false,
+      selected_option_id: null,
       options: [
         { id: "o3", option_text: "يوحنا", position: 1 },
         { id: "o4", option_text: "متّى", position: 2 },
@@ -52,14 +62,12 @@ const TAKE = {
 };
 
 const ATTEMPT = {
+  ...ATTEMPT_RESUME,
   id: ATTEMPT_ID,
   quiz_id: QUIZ_ID,
-  user_id: "u1",
   status: "IN_PROGRESS" as const,
-  score: 0,
   total_points: 10,
   started_at: "2026-10-27T10:00:00Z",
-  submitted_at: null,
   remaining_seconds: 540,
   server_time: "2026-10-27T10:01:00Z",
   questions: [],
@@ -174,14 +182,13 @@ describe("the page of the result", () => {
       route: `/quizzes/${QUIZ_ID}/result?attemptId=${ATTEMPT_ID}`,
       answers: {
         [`/quiz-attempts/${ATTEMPT_ID}/result`]: {
-          id: ATTEMPT_ID,
+          ...ATTEMPT_RESULT,
+          attempt_id: ATTEMPT_ID,
           status: "COMPLETED",
           score: 8,
           total_points: 10,
           correct_count: 1,
           incorrect_count: 1,
-          duration_seconds: 120,
-          questions: [],
         },
       },
     });

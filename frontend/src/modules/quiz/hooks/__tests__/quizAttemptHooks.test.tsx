@@ -7,6 +7,13 @@
  * and that the cache is invalidated where it has to be.
  */
 
+import {
+  ATTEMPT_HEARTBEAT,
+  ATTEMPT_RESUME,
+  ATTEMPT_RESULT,
+  ATTEMPT_REVIEW,
+  ATTEMPT_START,
+} from "@/test/fixtures/quiz";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -16,6 +23,7 @@ import { quizKeys } from "@/modules/quiz/api/queryKeys";
 import {
   onlyCall,
   recordApiCalls,
+  recordApiCallsFor,
   type RecordingAdapter,
 } from "@/test/recordingAdapter";
 
@@ -33,7 +41,15 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 beforeEach(() => {
-  recorder = recordApiCalls({ attempt_id: "a1" });
+  recorder = recordApiCallsFor({
+    "/quiz-attempts/a1/answers/question-1": ATTEMPT_HEARTBEAT,
+    "/quiz-attempts/a1/heartbeat": ATTEMPT_HEARTBEAT,
+    "/quiz-attempts/a1/submit": ATTEMPT_RESULT,
+    "/quiz-attempts/a1/result": ATTEMPT_RESULT,
+    "/quiz-attempts/a1/review": ATTEMPT_REVIEW,
+    "/quiz-attempts/a1": ATTEMPT_RESUME,
+    "/quiz-attempts": ATTEMPT_START,
+  });
   queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });

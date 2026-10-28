@@ -3,6 +3,19 @@
  */
 
 import { apiClient } from "@/lib/api";
+import { paginated } from "@/lib/schemas/common";
+import {
+  attemptHeartbeatSchema,
+  attemptResultSchema,
+  attemptResumeSchema,
+  attemptReviewSchema,
+  attemptStartSchema,
+  quizAdminItemSchema,
+  quizAnalyticsOverviewSchema,
+  quizDetailSchema,
+  quizTakeSchema,
+  quizValidationSchema,
+} from "@/lib/schemas/quiz";
 import type {
   AttemptHeartbeatResponse,
   AttemptResultResponse,
@@ -27,7 +40,10 @@ export const quizApi = {
   getQuizzes: async (
     params?: Record<string, unknown>,
   ): Promise<Paginated<QuizAdminItem>> => {
-    const response = await apiClient.get("/quizzes", { params });
+    const response = await apiClient.get("/quizzes", {
+      params,
+      schema: paginated(quizAdminItemSchema),
+    });
     return response.data;
   },
 
@@ -39,7 +55,9 @@ export const quizApi = {
 
   /** Quiz detail with questions (manager) */
   getQuiz: async (quizId: string): Promise<QuizDetailResponse> => {
-    const response = await apiClient.get(`/quizzes/${quizId}`);
+    const response = await apiClient.get(`/quizzes/${quizId}`, {
+      schema: quizDetailSchema,
+    });
     return response.data;
   },
 
@@ -54,25 +72,41 @@ export const quizApi = {
 
   /** Publish a quiz */
   publishQuiz: async (quizId: string): Promise<QuizAdminItem> => {
-    const response = await apiClient.post(`/quizzes/${quizId}/publish`);
+    const response = await apiClient.post(
+      `/quizzes/${quizId}/publish`,
+      undefined,
+      {
+        schema: quizAdminItemSchema,
+      },
+    );
     return response.data;
   },
 
   /** Archive a quiz */
   archiveQuiz: async (quizId: string): Promise<QuizAdminItem> => {
-    const response = await apiClient.post(`/quizzes/${quizId}/archive`);
+    const response = await apiClient.post(
+      `/quizzes/${quizId}/archive`,
+      undefined,
+      {
+        schema: quizAdminItemSchema,
+      },
+    );
     return response.data;
   },
 
   /** Quiz readiness checklist */
   validateQuiz: async (quizId: string): Promise<QuizValidationResponse> => {
-    const response = await apiClient.get(`/quizzes/${quizId}/validation`);
+    const response = await apiClient.get(`/quizzes/${quizId}/validation`, {
+      schema: quizValidationSchema,
+    });
     return response.data;
   },
 
   /** Get quiz by associated verse */
   getQuizByVerse: async (verseId: string): Promise<QuizDetailResponse> => {
-    const response = await apiClient.get(`/quizzes/by-verse/${verseId}`);
+    const response = await apiClient.get(`/quizzes/by-verse/${verseId}`, {
+      schema: quizDetailSchema,
+    });
     return response.data;
   },
 
@@ -93,7 +127,9 @@ export const quizApi = {
     auto_finished: number;
     average_score: number;
   }> => {
-    const response = await apiClient.get("/quizzes/analytics/overview");
+    const response = await apiClient.get("/quizzes/analytics/overview", {
+      schema: quizAnalyticsOverviewSchema,
+    });
     return response.data;
   },
 
@@ -144,7 +180,9 @@ export const quizApi = {
     // The take path, not the manager endpoint: the manager detail carries
     // the correctness of every option and is reserved for the servants
     // (a member received a 403 and could not answer the quiz at all).
-    const response = await apiClient.get(`/quizzes/${quizId}/take`);
+    const response = await apiClient.get(`/quizzes/${quizId}/take`, {
+      schema: quizTakeSchema,
+    });
     return response.data;
   },
 
@@ -152,9 +190,11 @@ export const quizApi = {
 
   /** Start a quiz attempt */
   startAttempt: async (quizId: string): Promise<AttemptStartResponse> => {
-    const response = await apiClient.post("/quiz-attempts", {
-      quiz_id: quizId,
-    });
+    const response = await apiClient.post(
+      "/quiz-attempts",
+      { quiz_id: quizId },
+      { schema: attemptStartSchema },
+    );
     // The attempt is remembered **here**, inside the request, and not in
     // the callback of the caller: React drops the state of an unmounted
     // component, and a mutation does not call its callbacks when nobody
@@ -168,7 +208,9 @@ export const quizApi = {
   getAttemptStatus: async (
     attemptId: string,
   ): Promise<AttemptStatusResponse> => {
-    const response = await apiClient.get(`/quiz-attempts/${attemptId}`);
+    const response = await apiClient.get(`/quiz-attempts/${attemptId}`, {
+      schema: attemptResumeSchema,
+    });
     return response.data;
   },
 
@@ -181,6 +223,7 @@ export const quizApi = {
     const response = await apiClient.put(
       `/quiz-attempts/${attemptId}/answers/${questionId}`,
       { selected_option_id: selectedOptionId },
+      { schema: attemptHeartbeatSchema },
     );
     return response.data;
   },
@@ -191,25 +234,35 @@ export const quizApi = {
   ): Promise<AttemptHeartbeatResponse> => {
     const response = await apiClient.post(
       `/quiz-attempts/${attemptId}/heartbeat`,
+      undefined,
+      { schema: attemptHeartbeatSchema },
     );
     return response.data;
   },
 
   /** Submit the attempt for grading */
   submitAttempt: async (attemptId: string): Promise<AttemptResultResponse> => {
-    const response = await apiClient.post(`/quiz-attempts/${attemptId}/submit`);
+    const response = await apiClient.post(
+      `/quiz-attempts/${attemptId}/submit`,
+      undefined,
+      { schema: attemptResultSchema },
+    );
     return response.data;
   },
 
   /** Get graded result */
   getResult: async (attemptId: string): Promise<AttemptResultResponse> => {
-    const response = await apiClient.get(`/quiz-attempts/${attemptId}/result`);
+    const response = await apiClient.get(`/quiz-attempts/${attemptId}/result`, {
+      schema: attemptResultSchema,
+    });
     return response.data;
   },
 
   /** Get review with correct answers */
   getReview: async (attemptId: string): Promise<AttemptReviewResponse> => {
-    const response = await apiClient.get(`/quiz-attempts/${attemptId}/review`);
+    const response = await apiClient.get(`/quiz-attempts/${attemptId}/review`, {
+      schema: attemptReviewSchema,
+    });
     return response.data;
   },
 };

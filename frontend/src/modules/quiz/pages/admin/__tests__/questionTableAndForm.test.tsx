@@ -10,6 +10,7 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
+import { QUIZ_DETAIL } from "@/test/fixtures/quiz";
 import { QuestionTable } from "@/modules/quiz/components/admin/QuestionTable";
 import QuestionFormPage from "@/modules/quiz/pages/admin/QuestionFormPage";
 
@@ -78,6 +79,7 @@ describe("the page of a question", () => {
       path: "/admin/quizzes/:quizId/questions/:questionId/edit",
       answers: {
         "/quizzes/quiz-1": {
+          ...QUIZ_DETAIL,
           id: "quiz-1",
           title: "اختبار الآية",
           questions: QUESTIONS,

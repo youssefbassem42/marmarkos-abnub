@@ -6,6 +6,18 @@
  * that list) and the endpoint they call.
  */
 
+import {
+  ATTEMPT_HEARTBEAT,
+  ATTEMPT_RESUME,
+  ATTEMPT_RESULT,
+  ATTEMPT_REVIEW,
+  ATTEMPT_START,
+  QUIZ_ADMIN_ITEM,
+  QUIZ_ANALYTICS_OVERVIEW,
+  QUIZ_DETAIL,
+  QUIZ_TAKE,
+  QUIZ_VALIDATION,
+} from "@/test/fixtures/quiz";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -50,6 +62,7 @@ import { useUsers } from "@/modules/users/hooks/useUsers";
 import {
   onlyCall,
   recordApiCalls,
+  recordApiCallsFor,
   type RecordingAdapter,
 } from "@/test/recordingAdapter";
 
@@ -63,7 +76,33 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 beforeEach(() => {
-  recorder = recordApiCalls({});
+  // The quiz endpoints answer with the complete shape: an endpoint with
+  // a schema rejects an incomplete answer.
+  recorder = recordApiCallsFor({
+    "/quizzes/analytics/overview": QUIZ_ANALYTICS_OVERVIEW,
+    "/quizzes/by-verse/v1": QUIZ_DETAIL,
+    "/quizzes/q1/take": QUIZ_TAKE,
+    "/quizzes/q1/validation": QUIZ_VALIDATION,
+    "/quizzes/q1/analytics": { total_attempts: 3 },
+    "/quizzes/q1/publish": QUIZ_ADMIN_ITEM,
+    "/quizzes/q1/archive": QUIZ_ADMIN_ITEM,
+    "/quizzes/q1": QUIZ_DETAIL,
+    "/quizzes": {
+      items: [QUIZ_ADMIN_ITEM],
+      total: 1,
+      page: 1,
+      size: 10,
+      pages: 1,
+      has_next: false,
+    },
+    "/quiz-attempts/a1/result": ATTEMPT_RESULT,
+    "/quiz-attempts/a1/review": ATTEMPT_REVIEW,
+    "/quiz-attempts/a1/heartbeat": ATTEMPT_HEARTBEAT,
+    "/quiz-attempts/a1/answers/question-1": ATTEMPT_HEARTBEAT,
+    "/quiz-attempts/a1/submit": ATTEMPT_RESULT,
+    "/quiz-attempts/a1": ATTEMPT_RESUME,
+    "/quiz-attempts": ATTEMPT_START,
+  });
   queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });

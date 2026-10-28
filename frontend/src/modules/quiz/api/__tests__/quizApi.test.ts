@@ -10,16 +10,54 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   onlyCall,
-  recordApiCalls,
+  recordApiCallsFor,
   type RecordingAdapter,
 } from "@/test/recordingAdapter";
+import {
+  ATTEMPT_HEARTBEAT,
+  ATTEMPT_RESUME,
+  ATTEMPT_RESULT,
+  ATTEMPT_REVIEW,
+  ATTEMPT_START,
+  QUIZ_ADMIN_ITEM,
+  QUIZ_ANALYTICS_OVERVIEW,
+  QUIZ_DETAIL,
+  QUIZ_TAKE,
+  QUIZ_VALIDATION,
+} from "@/test/fixtures/quiz";
 
 import { quizApi } from "../index";
 
 let recorder: RecordingAdapter;
 
 beforeEach(() => {
-  recorder = recordApiCalls({ id: "quiz-1" });
+  // The answers have the shape the backend sends: an endpoint with a
+  // schema rejects an incomplete answer.
+  recorder = recordApiCallsFor({
+    "/quizzes/analytics/overview": QUIZ_ANALYTICS_OVERVIEW,
+    "/quizzes/by-verse/v1": QUIZ_DETAIL,
+    "/quizzes/q1/take": QUIZ_TAKE,
+    "/quizzes/q1/validation": QUIZ_VALIDATION,
+    "/quizzes/q1/analytics": { total_attempts: 3 },
+    "/quizzes/q1/publish": QUIZ_ADMIN_ITEM,
+    "/quizzes/q1/archive": QUIZ_ADMIN_ITEM,
+    "/quizzes/q1": QUIZ_DETAIL,
+    "/quizzes": {
+      items: [QUIZ_ADMIN_ITEM],
+      total: 1,
+      page: 1,
+      size: 10,
+      pages: 1,
+      has_next: false,
+    },
+    "/quiz-attempts/a1/result": ATTEMPT_RESULT,
+    "/quiz-attempts/a1/review": ATTEMPT_REVIEW,
+    "/quiz-attempts/a1/heartbeat": ATTEMPT_HEARTBEAT,
+    "/quiz-attempts/a1/answers/question-1": ATTEMPT_HEARTBEAT,
+    "/quiz-attempts/a1/submit": ATTEMPT_RESULT,
+    "/quiz-attempts/a1": ATTEMPT_RESUME,
+    "/quiz-attempts": ATTEMPT_START,
+  });
 });
 
 afterEach(() => {
