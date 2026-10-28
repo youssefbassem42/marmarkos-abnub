@@ -1,19 +1,22 @@
-export type UserRole = "MEMBER" | "SERVANT" | "ADMIN";
-export type UserStatus = "ACTIVE" | "SUSPENDED" | "BANNED" | "INACTIVE";
+/**
+ * Types of the members.
+ *
+ * The type is the **inference of the schema** of the answers
+ * (`@/lib/schemas/member`): the backend is the source of truth, and a
+ * field that the server does not send cannot be read by the page.
+ */
 
-export interface UserAdminItem {
-  id: string;
-  email: string;
-  phone: string | null;
-  first_name: string | null;
-  last_name: string | null;
-  date_of_birth: string | null;
-  address: string | null;
-  avatar: string | null;
-  role: UserRole;
-  status: UserStatus;
-  public_id: string;
-  created_at: string;
-  last_login_at: string | null;
-  has_password: boolean;
-}
+import type { z } from "zod";
+
+import type {
+  roleNameSchema,
+  userSchema,
+  userStatusSchema,
+} from "@/lib/schemas/member";
+
+export type UserRole = z.infer<typeof roleNameSchema>;
+
+export type UserStatus = z.infer<typeof userStatusSchema>;
+
+/** A member of the list of the administration (`UserResponse`). */
+export type UserAdminItem = z.infer<typeof userSchema>;

@@ -86,3 +86,24 @@ export const POINT_ACTIVITY = {
   verse_reference: "١ يوئيل ٣:١",
   source: "QUIZ_COMPLETION",
 };
+
+export const ANONYMOUS_MESSAGE = {
+  id: "message-1",
+  message: "رسالة إلى الخادم",
+  sender_name: "عضو",
+  sender_phone: null,
+  status: "PENDING",
+  telegram_status: "PENDING",
+  telegram_message_id: null,
+  attempts: 0,
+  failure_reason: null,
+  created_at: "2026-10-20T10:00:00Z",
+  sent_at: null,
+  last_attempt_at: null,
+};
+
+export const ANONYMOUS_MESSAGE_CREATED = {
+  id: "message-1",
+  status: "PENDING",
+  delivered: false,
+};

@@ -2,7 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { cn } from "@/lib/utils";
 import { NotificationIcon } from "./NotificationIcon";
-import { NOTIFICATION_ACCENTS } from "./accents";
+import { resolveAccent } from "./accents";
 import { isNewNotification, relativeTime } from "./relativeTime";
 import type { NotificationItem } from "../types";
 
@@ -21,7 +21,9 @@ interface NotificationRowProps {
 export function NotificationRow({ item, onMarkRead }: NotificationRowProps) {
   const { t } = useTranslation("notifications");
   const navigate = useNavigate();
-  const accent = NOTIFICATION_ACCENTS[item.type];
+  // The accent with its fallback: a type that the frontend does not
+  // know must not make the row crash (the accent would be undefined).
+  const accent = resolveAccent(item.type);
   const title = item.title_ar;
   const message = item.message_ar;
   const isNew = isNewNotification(item);

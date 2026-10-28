@@ -19,6 +19,8 @@ import { useSubmitAnonymousMessage } from "@/modules/anonymous-messages/hooks/us
 import { bibleKeys } from "@/modules/bible/api/queryKeys";
 import { VERSE_ADMIN_ITEM, VERSE_DETAIL } from "@/test/fixtures/bible";
 import {
+  ANONYMOUS_MESSAGE,
+  ANONYMOUS_MESSAGE_CREATED,
   MARK_READ,
   MONTHLY_POINTS,
   NOTIFICATION,
@@ -74,6 +76,15 @@ beforeEach(() => {
       completion_distribution: [],
       top: [],
     },
+    "/anonymous-messages": {
+      items: [ANONYMOUS_MESSAGE],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+    "POST /anonymous-messages": ANONYMOUS_MESSAGE_CREATED,
     "/notifications/summary": NOTIFICATION_SUMMARY,
     "/notifications/read-all": MARK_READ,
     "/notifications/n1/read": MARK_READ,

@@ -3,6 +3,11 @@
  */
 
 import { apiClient, getApiErrorMessage } from "@/lib/api";
+import { paginated } from "@/lib/schemas/common";
+import {
+  anonymousMessageAdminSchema,
+  anonymousMessageCreateSchema,
+} from "@/lib/schemas/member";
 import type { Paginated } from "@/modules/notifications/types";
 import type {
   AnonymousMessageAdminItem,
@@ -18,7 +23,9 @@ export const anonymousMessagesApi = {
   submit: async (
     payload: AnonymousMessageCreateRequest,
   ): Promise<AnonymousMessageCreateResponse> => {
-    const response = await apiClient.post("/anonymous-messages", payload);
+    const response = await apiClient.post("/anonymous-messages", payload, {
+      schema: anonymousMessageCreateSchema,
+    });
     return response.data;
   },
 
@@ -26,13 +33,22 @@ export const anonymousMessagesApi = {
   list: async (
     params: AnonymousMessageListParams = {},
   ): Promise<Paginated<AnonymousMessageAdminItem>> => {
-    const response = await apiClient.get("/anonymous-messages", { params });
+    const response = await apiClient.get("/anonymous-messages", {
+      params,
+      schema: paginated(anonymousMessageAdminSchema),
+    });
     return response.data;
   },
 
   /** BR-14: ADMIN re-delivery of a FAILED forward. */
   retry: async (id: string): Promise<AnonymousMessageAdminItem> => {
-    const response = await apiClient.post(`/anonymous-messages/${id}/retry`);
+    const response = await apiClient.post(
+      `/anonymous-messages/${id}/retry`,
+      undefined,
+      {
+        schema: anonymousMessageAdminSchema,
+      },
+    );
     return response.data;
   },
 };

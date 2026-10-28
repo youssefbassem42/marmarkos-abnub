@@ -89,10 +89,15 @@ const ICON_ALLOWLIST: Record<string, LucideIcon> = {
 };
 
 export function resolveAccent(
-  type: NotificationType,
+  type: string,
   dataIcon?: string | null,
 ): { Icon: LucideIcon } & AccentEntry {
-  const entry = NOTIFICATION_ACCENTS[type] ?? FALLBACK_ACCENT;
+  // The type of the answer is a plain string (the server may add one at
+  // any time): the lookup must not fail on a type the frontend does not
+  // know.
+  const entry =
+    (NOTIFICATION_ACCENTS as Record<string, AccentEntry | undefined>)[type] ??
+    FALLBACK_ACCENT;
   const override =
     typeof dataIcon === "string" ? ICON_ALLOWLIST[dataIcon] : undefined;
   return { ...entry, Icon: override ?? entry.Icon };

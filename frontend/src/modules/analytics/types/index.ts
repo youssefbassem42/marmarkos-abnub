@@ -4,7 +4,23 @@
  * They mirror the backend DTOs one to one
  * (`backend/app/modules/points/application/dto/monthly_dto.py`); when one
  * side changes, the other must change with it.
+ *
+ * The types are the **inference of the schemas** of the answers
+ * (`@/lib/schemas/member`): the compiler says so when a field drifts.
  */
+
+import type { z } from "zod";
+
+import type {
+  completionBucketSchema,
+  monthlyAnalyticsSchema,
+  monthlyUserDetailSchema,
+  monthlyUserItemSchema,
+  monthHistoryPointSchema,
+  quizBreakdownItemSchema,
+  topUserSchema,
+  trendPointSchema,
+} from "@/lib/schemas/member";
 
 export interface Paginated<T> {
   items: T[];
@@ -15,84 +31,21 @@ export interface Paginated<T> {
   has_next: boolean;
 }
 
-export interface TrendPoint {
-  /** First day of the month, e.g. "2026-09-01". */
-  period_month: string;
-  total_points: number;
-  participants: number;
-  average_score_out_of_10: number;
-}
+export type TrendPoint = z.infer<typeof trendPointSchema>;
 
-export interface CompletionBucket {
-  /** "100%" / "75–99%" / "50–74%" / "<50%". */
-  bucket: string;
-  users: number;
-  /** Share of the users, 0–100. */
-  percentage: number;
-}
+export type CompletionBucket = z.infer<typeof completionBucketSchema>;
 
-export interface TopUser {
-  rank: number;
-  user_id: string;
-  full_name: string;
-  avatar: string | null;
-  points: number;
-}
+export type TopUser = z.infer<typeof topUserSchema>;
 
-export interface MonthlyAnalytics {
-  /** First day of the analysed month, e.g. "2026-09-01". */
-  month: string;
-  participants: number;
-  quizzes_completed: number;
-  total_points: number;
-  average_score_out_of_10: number;
-  quizzes_published: number;
-  /** The last three months, oldest first. */
-  trend: TrendPoint[];
-  completion_distribution: CompletionBucket[];
-  /** The three members with the most points. */
-  top: TopUser[];
-}
+export type MonthlyAnalytics = z.infer<typeof monthlyAnalyticsSchema>;
 
-export interface MonthlyUserItem {
-  rank: number;
-  user_id: string;
-  full_name: string;
-  avatar: string | null;
-  quizzes_completed: number;
-  average_score_out_of_10: number;
-  total_points: number;
-  /** finished / published, 0–100. */
-  completion_rate: number;
-  /** Six month point values, oldest first. */
-  sparkline: number[];
-}
+export type MonthlyUserItem = z.infer<typeof monthlyUserItemSchema>;
 
-export interface QuizBreakdownItem {
-  quiz_id: string;
-  quiz_title: string;
-  score: number;
-  total_points: number;
-  score_out_of_10: number;
-}
+export type QuizBreakdownItem = z.infer<typeof quizBreakdownItemSchema>;
 
-export interface MonthHistoryPoint {
-  period_month: string;
-  points: number;
-}
+export type MonthHistoryPoint = z.infer<typeof monthHistoryPointSchema>;
 
-export interface MonthlyUserDetail {
-  user_id: string;
-  full_name: string;
-  avatar: string | null;
-  month: string;
-  total_points: number;
-  quizzes_completed: number;
-  average_score_out_of_10: number;
-  completion_rate: number;
-  breakdown: QuizBreakdownItem[];
-  history: MonthHistoryPoint[];
-}
+export type MonthlyUserDetail = z.infer<typeof monthlyUserDetailSchema>;
 
 export interface MonthlyUsersParams {
   /** Search in the member name. */

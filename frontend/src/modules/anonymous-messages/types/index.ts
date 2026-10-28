@@ -1,9 +1,20 @@
 /**
  * Anonymous messages module types — field names mirror the backend DTOs
  * exactly (plan §3.7).
+ *
+ * The types are the **inference of the schemas** of the answers
+ * (`@/lib/schemas/member`): the backend is the source of truth.
  */
 
-export type MessageStatusValue = "PENDING" | "SENT" | "FAILED";
+import type { z } from "zod";
+
+import type {
+  anonymousMessageAdminSchema,
+  anonymousMessageCreateSchema,
+  messageStatusSchema,
+} from "@/lib/schemas/member";
+
+export type MessageStatusValue = z.infer<typeof messageStatusSchema>;
 
 export interface AnonymousMessageCreateRequest {
   message: string;
@@ -12,26 +23,13 @@ export interface AnonymousMessageCreateRequest {
 }
 
 /** BR-13: FAILED still means "safely stored"; delivered is separate. */
-export interface AnonymousMessageCreateResponse {
-  id: string;
-  status: MessageStatusValue;
-  delivered: boolean;
-}
+export type AnonymousMessageCreateResponse = z.infer<
+  typeof anonymousMessageCreateSchema
+>;
 
-export interface AnonymousMessageAdminItem {
-  id: string;
-  message: string;
-  sender_name: string | null;
-  sender_phone: string | null;
-  status: MessageStatusValue;
-  telegram_status: MessageStatusValue;
-  telegram_message_id: string | null;
-  attempts: number;
-  failure_reason: string | null;
-  created_at: string;
-  sent_at: string | null;
-  last_attempt_at: string | null;
-}
+export type AnonymousMessageAdminItem = z.infer<
+  typeof anonymousMessageAdminSchema
+>;
 
 export interface AnonymousMessageListParams {
   status?: MessageStatusValue;

@@ -79,6 +79,14 @@ export const markReadSchema = loose({
   marked: z.number(),
 });
 
+/** The answer of the push of a notification (`PushNotificationResponse`). */
+export const pushNotificationSchema = loose({
+  notification_id: z.string(),
+  recipients: z.number(),
+  emails_sent: z.number(),
+  emails_failed: z.number(),
+});
+
 /* ----------------------------------------------------------------- points */
 
 /** The points of a member (the tiles). */
@@ -120,6 +128,7 @@ export const trendPointSchema = loose({
   period_month: z.string(),
   total_points: z.number(),
   participants: z.number(),
+  average_score_out_of_10: z.number(),
 });
 
 /** One bucket of the distribution of the completions. */
@@ -144,6 +153,7 @@ export const monthlyAnalyticsSchema = loose({
   participants: z.number(),
   quizzes_completed: z.number(),
   total_points: z.number(),
+  average_score_out_of_10: z.number(),
   quizzes_published: z.number(),
   trend: z.array(trendPointSchema),
   completion_distribution: z.array(completionBucketSchema),
@@ -157,6 +167,7 @@ export const monthlyUserItemSchema = loose({
   full_name: z.string(),
   avatar: z.string().nullable(),
   quizzes_completed: z.number(),
+  average_score_out_of_10: z.number(),
   total_points: z.number(),
   completion_rate: z.number(),
   sparkline: z.array(z.number()),
@@ -189,4 +200,35 @@ export const monthlyUserDetailSchema = loose({
   completion_rate: z.number(),
   breakdown: z.array(quizBreakdownItemSchema),
   history: z.array(monthHistoryPointSchema),
+});
+
+/* ------------------------------------------------- the anonymous messages */
+
+/** The status of a message (`PENDING`, `SENT`, `FAILED`). */
+export const messageStatusSchema = z.enum(["PENDING", "SENT", "FAILED"]);
+
+/** The status of the forwarding to Telegram (the same vocabulary). */
+export const telegramStatusSchema = z.enum(["PENDING", "SENT", "FAILED"]);
+
+/** The answer of the submission of a message. */
+export const anonymousMessageCreateSchema = loose({
+  id: z.string(),
+  status: messageStatusSchema,
+  delivered: z.boolean(),
+});
+
+/** One message of the list of the administration. */
+export const anonymousMessageAdminSchema = loose({
+  id: z.string(),
+  message: z.string(),
+  sender_name: z.string().nullable(),
+  sender_phone: z.string().nullable(),
+  status: messageStatusSchema,
+  telegram_status: telegramStatusSchema,
+  telegram_message_id: z.string().nullable(),
+  attempts: z.number(),
+  failure_reason: z.string().nullable(),
+  created_at: z.string(),
+  sent_at: z.string().nullable(),
+  last_attempt_at: z.string().nullable(),
 });

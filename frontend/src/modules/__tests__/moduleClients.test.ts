@@ -20,6 +20,8 @@ import {
   VERSE_USER_ENGAGEMENT,
 } from "@/test/fixtures/bible";
 import {
+  ANONYMOUS_MESSAGE,
+  ANONYMOUS_MESSAGE_CREATED,
   MARK_READ,
   MEMBER,
   MONTHLY_POINTS,
@@ -44,6 +46,16 @@ beforeEach(() => {
   // The verses answer with the complete shape: an endpoint with a schema
   // rejects an incomplete answer.
   recorder = recordApiCallsFor({
+    "/anonymous-messages": {
+      items: [ANONYMOUS_MESSAGE],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+    "POST /anonymous-messages": ANONYMOUS_MESSAGE_CREATED,
+    "/anonymous-messages/m1/retry": ANONYMOUS_MESSAGE,
     "/notifications/summary": NOTIFICATION_SUMMARY,
     "/notifications/read-all": MARK_READ,
     "/notifications/n1/read": MARK_READ,

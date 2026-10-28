@@ -7,6 +7,16 @@
  * but the platform renders Arabic only.
  */
 
+import type { z } from "zod";
+
+import type {
+  markReadSchema,
+  notificationSchema,
+  notificationSummarySchema,
+  notificationTabCountsSchema,
+  pushNotificationSchema,
+} from "@/lib/schemas/member";
+
 /**
  * The types of a notification (`NotificationType` of the backend).
  *
@@ -31,18 +41,8 @@ export interface NotificationData {
   meeting_date?: string;
 }
 
-export interface NotificationItem {
-  id: string;
-  type: NotificationType;
-  title_ar: string;
-  title_en: string;
-  message_ar: string;
-  message_en: string;
-  data: NotificationData | null;
-  is_read: boolean;
-  is_broadcast: boolean;
-  created_at: string;
-}
+/** One notification (`NotificationResponse`). */
+export type NotificationItem = z.infer<typeof notificationSchema>;
 
 /** Standard backend pagination envelope (`app/core/pagination`). */
 export interface Paginated<T> {
@@ -62,22 +62,11 @@ export interface NotificationListParams {
   since?: string;
 }
 
-export interface NotificationTabCounts {
-  all: number;
-  unread: number;
-  announcements: number;
-  reminders: number;
-  system: number;
-}
+export type NotificationTabCounts = z.infer<typeof notificationTabCountsSchema>;
 
-export interface NotificationSummary {
-  unread_count: number;
-  tab_counts: NotificationTabCounts;
-}
+export type NotificationSummary = z.infer<typeof notificationSummarySchema>;
 
-export interface MarkReadResponse {
-  marked: number;
-}
+export type MarkReadResponse = z.infer<typeof markReadSchema>;
 
 export interface PushNotificationRequest {
   title_ar: string;
@@ -88,9 +77,4 @@ export interface PushNotificationRequest {
   send_email: boolean;
 }
 
-export interface PushNotificationResponse {
-  notification_id: string;
-  recipients: number;
-  emails_sent: number;
-  emails_failed: number;
-}
+export type PushNotificationResponse = z.infer<typeof pushNotificationSchema>;

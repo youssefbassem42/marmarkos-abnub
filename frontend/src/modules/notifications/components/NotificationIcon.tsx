@@ -1,9 +1,10 @@
 import { cn } from "@/lib/utils";
 import { resolveAccent } from "./accents";
-import type { NotificationData, NotificationType } from "../types";
+import type { NotificationData } from "../types";
 
 interface NotificationIconProps {
-  type: NotificationType;
+  /** The type of the notification (the server may add one at any time). */
+  type: string;
   data?: NotificationData | null;
   className?: string;
 }
