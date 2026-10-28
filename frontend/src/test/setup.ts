@@ -34,3 +34,21 @@ if (typeof window !== "undefined" && !window.ResizeObserver) {
   window.ResizeObserver =
     ResizeObserverStub as unknown as typeof ResizeObserver;
 }
+
+// IntersectionObserver stub: the landing page reveals its sections when
+// they scroll into view. jsdom does not implement it.
+class IntersectionObserverStub implements IntersectionObserver {
+  readonly root: Element | null = null;
+  readonly rootMargin: string = "";
+  readonly thresholds: ReadonlyArray<number> = [];
+  observe(): void {}
+  unobserve(): void {}
+  disconnect(): void {}
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+}
+if (typeof window !== "undefined" && !window.IntersectionObserver) {
+  window.IntersectionObserver =
+    IntersectionObserverStub as unknown as typeof window.IntersectionObserver;
+}
