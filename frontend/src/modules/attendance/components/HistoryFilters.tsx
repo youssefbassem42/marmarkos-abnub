@@ -141,6 +141,7 @@ export function HistoryFilters({ values, onChange }: HistoryFiltersProps) {
                 variant="outline"
                 role="combobox"
                 aria-expanded={memberOpen}
+                aria-label={t("history.filters.member")}
                 className="h-11 w-full justify-between rounded-xl border-border font-normal focus-ring"
               >
                 <span className="truncate">
@@ -216,7 +217,10 @@ export function HistoryFilters({ values, onChange }: HistoryFiltersProps) {
             }))
           }
         >
-          <SelectTrigger className="h-11 rounded-xl border-border focus-ring">
+          <SelectTrigger
+            aria-label={t("history.filters.status")}
+            className="h-11 rounded-xl border-border focus-ring"
+          >
             <SelectValue />
           </SelectTrigger>
           <SelectContent>

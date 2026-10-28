@@ -114,6 +114,33 @@ describe("the table of the routes", () => {
     );
   });
 
+  it("lets a servant into the administration", async () => {
+    await renderRouterAt("/admin/dashboard", {
+      ...MEMBER,
+      role: "ADMIN",
+    });
+
+    await waitFor(
+      () =>
+        expect(
+          screen.queryByRole("heading", { name: "لا تملك صلاحية الوصول" }),
+        ).not.toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
+  });
+
+  it("lets a member into his notifications", async () => {
+    await renderRouterAt("/notifications", MEMBER);
+
+    await waitFor(
+      () =>
+        expect(
+          screen.queryByRole("heading", { name: "لا تملك صلاحية الوصول" }),
+        ).not.toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
+  });
+
   it("sends an anonymous visitor to the login page", async () => {
     await renderRouterAt("/profile");
 

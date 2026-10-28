@@ -52,3 +52,9 @@ if (typeof window !== "undefined" && !window.IntersectionObserver) {
   window.IntersectionObserver =
     IntersectionObserverStub as unknown as typeof window.IntersectionObserver;
 }
+
+// scrollIntoView stub: Radix (the select, the combobox) scrolls the
+// chosen item into view. jsdom does not implement it.
+if (typeof Element !== "undefined" && !Element.prototype.scrollIntoView) {
+  Element.prototype.scrollIntoView = function scrollIntoView(): void {};
+}
