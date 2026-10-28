@@ -10,28 +10,20 @@ import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
+import { VERSE_DETAIL as VERSE_DETAIL_FIXTURE } from "@/test/fixtures/bible";
 import VerseFormPage from "@/modules/bible/pages/admin/VerseFormPage";
 import VerseAnalyticsPage from "@/modules/bible/pages/admin/VerseAnalyticsPage";
 
 const VERSE = {
+  ...VERSE_DETAIL_FIXTURE,
   id: "verse-1",
   title: "آية الاختبار",
-  subtitle: null,
-  verse_reference: "١ يوئيل ٣:١",
-  book: "يوئيل",
-  chapter: 3,
-  verse_start: 1,
   verse_end: null,
-  status: "PUBLISHED" as const,
-  published_at: "2026-10-20T00:00:00Z",
-  week_start_date: "2026-10-19",
   created_by_user: null,
-  created_at: "2026-10-01T00:00:00Z",
   text: "اقرؤوا لي يا سيدي...",
   reflection: "تأمل في الآية",
   image: null,
   translation: "الترجمة",
-  opens: 12,
   is_read: true,
   quiz_summary: null,
   schedule: null,

@@ -10,20 +10,16 @@ import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
+import {
+  VERSE_CARD as VERSE_CARD_FIXTURE,
+  VERSE_DETAIL as VERSE_DETAIL_FIXTURE,
+} from "@/test/fixtures/bible";
 import BibleVersesPage from "@/modules/bible/pages/BibleVersesPage";
 import VerseDetailPage from "@/modules/bible/pages/VerseDetailPage";
 
 const VERSE_CARD = {
-  id: "verse-1",
-  title: "آية الاختبار",
-  verse_reference: "١ يوئيل ٣:١",
+  ...VERSE_CARD_FIXTURE,
   excerpt: "اقرؤوا لي يا سيدي...",
-  image: null,
-  published_at: "2026-10-20T00:00:00Z",
-  week_start_date: "2026-10-19",
-  is_read: false,
-  has_quiz: true,
-  quiz_state: null,
 };
 
 const FEED = {
@@ -36,33 +32,13 @@ const FEED = {
 };
 
 const DETAIL = {
-  id: "verse-1",
-  title: "آية الاختبار",
-  subtitle: null,
-  verse_reference: "١ يوئيل ٣:١",
-  book: "يوئيل",
-  chapter: 3,
-  verse_start: 1,
-  verse_end: null,
-  status: "PUBLISHED" as const,
-  published_at: "2026-10-20T00:00:00Z",
-  week_start_date: "2026-10-19",
-  created_by_user: null,
-  created_at: "2026-10-01T00:00:00Z",
+  ...VERSE_DETAIL_FIXTURE,
   text: "اقرؤوا لي يا سيدي...",
   reflection: "تأمل في الآية",
   image: null,
   translation: "الترجمة",
-  opens: 12,
-  is_read: false,
-  quiz_summary: {
-    quiz_id: "quiz-1",
-    status: "PUBLISHED",
-    question_count: 2,
-    total_points: 10,
-    duration_seconds: 600,
-  },
-  schedule: null,
+  verse_end: null,
+  created_by_user: null,
 };
 
 describe("the feed of the verses", () => {

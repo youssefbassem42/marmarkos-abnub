@@ -10,19 +10,66 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import { anonymousMessagesApi } from "@/modules/anonymous-messages/api";
 import { bibleApi } from "@/modules/bible/api";
+import {
+  VERSE_ADMIN_ITEM,
+  VERSE_ANALYTICS,
+  VERSE_ANALYTICS_OVERVIEW,
+  VERSE_CARD,
+  VERSE_QUICK_STATS,
+  VERSE_STATS,
+  VERSE_USER_ENGAGEMENT,
+} from "@/test/fixtures/bible";
 import { notificationsApi } from "@/modules/notifications/api";
 import { pointsApi } from "@/modules/points/api";
 import { usersApi } from "@/modules/users/api";
 import {
   onlyCall,
   recordApiCalls,
+  recordApiCallsFor,
   type RecordingAdapter,
 } from "@/test/recordingAdapter";
 
 let recorder: RecordingAdapter;
 
 beforeEach(() => {
-  recorder = recordApiCalls({});
+  // The verses answer with the complete shape: an endpoint with a schema
+  // rejects an incomplete answer.
+  recorder = recordApiCallsFor({
+    "/bible-verses/analytics/overview": VERSE_ANALYTICS_OVERVIEW,
+    "/bible-verses/analytics/quick-stats": VERSE_QUICK_STATS,
+    "/bible-verses/published": {
+      items: [VERSE_CARD],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+    "/bible-verses/current": VERSE_CARD,
+    "/bible-verses/stats": VERSE_STATS,
+    "POST /bible-verses": VERSE_ADMIN_ITEM,
+    "/bible-verses/v1/schedule": VERSE_ADMIN_ITEM,
+    "/bible-verses/v1/publish": VERSE_ADMIN_ITEM,
+    "/bible-verses/v1/restore": VERSE_ADMIN_ITEM,
+    "/bible-verses/v1/analytics/users": {
+      items: [VERSE_USER_ENGAGEMENT],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+    "/bible-verses/v1/analytics": VERSE_ANALYTICS,
+    "/bible-verses/v1": VERSE_ADMIN_ITEM,
+    "/bible-verses": {
+      items: [VERSE_ADMIN_ITEM],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+  });
 });
 
 afterEach(() => {
@@ -50,9 +97,11 @@ describe("bibleApi", () => {
 
   it("answers the verse when there is one", async () => {
     recorder.restore();
-    const withVerse = recordApiCalls({ id: "v1", title: "A verse" });
+    const withVerse = recordApiCallsFor({
+      "/bible-verses/current": { ...VERSE_CARD, id: "v1", title: "A verse" },
+    });
 
-    await expect(bibleApi.getCurrent()).resolves.toEqual({
+    await expect(bibleApi.getCurrent()).resolves.toMatchObject({
       id: "v1",
       title: "A verse",
     });

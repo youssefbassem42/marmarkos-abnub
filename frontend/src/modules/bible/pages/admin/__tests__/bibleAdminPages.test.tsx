@@ -10,23 +10,16 @@ import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
+import { VERSE_ADMIN_ITEM as VERSE_ADMIN_ITEM_FIXTURE } from "@/test/fixtures/bible";
 import BibleManagementPage from "@/modules/bible/pages/admin/BibleManagementPage";
 import QuizManagePage from "@/modules/quiz/pages/admin/QuizManagePage";
 
 const VERSE = {
+  ...VERSE_ADMIN_ITEM_FIXTURE,
   id: "verse-1",
   title: "آية الاختبار",
-  subtitle: null,
-  verse_reference: "١ يوئيل ٣:١",
-  book: "يوئيل",
-  chapter: 3,
-  verse_start: 1,
-  verse_end: null,
   status: "PUBLISHED" as const,
-  published_at: "2026-10-20T00:00:00Z",
-  week_start_date: "2026-10-19",
   created_by_user: null,
-  created_at: "2026-10-01T00:00:00Z",
 };
 
 const QUIZ_DETAIL = {

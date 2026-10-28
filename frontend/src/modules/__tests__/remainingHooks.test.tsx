@@ -18,6 +18,15 @@ import {
   QUIZ_TAKE,
   QUIZ_VALIDATION,
 } from "@/test/fixtures/quiz";
+import {
+  VERSE_ADMIN_ITEM,
+  VERSE_ANALYTICS,
+  VERSE_ANALYTICS_OVERVIEW,
+  VERSE_CARD,
+  VERSE_QUICK_STATS,
+  VERSE_STATS,
+  VERSE_USER_ENGAGEMENT,
+} from "@/test/fixtures/bible";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -79,6 +88,38 @@ beforeEach(() => {
   // The quiz endpoints answer with the complete shape: an endpoint with
   // a schema rejects an incomplete answer.
   recorder = recordApiCallsFor({
+    "/bible-verses/analytics/overview": VERSE_ANALYTICS_OVERVIEW,
+    "/bible-verses/analytics/quick-stats": VERSE_QUICK_STATS,
+    "/bible-verses/published": {
+      items: [VERSE_CARD],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+    "/bible-verses/current": VERSE_CARD,
+    "/bible-verses/stats": VERSE_STATS,
+    "POST /bible-verses": VERSE_ADMIN_ITEM,
+    "/bible-verses/v1/schedule": VERSE_ADMIN_ITEM,
+    "/bible-verses/v1/analytics/users": {
+      items: [VERSE_USER_ENGAGEMENT],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+    "/bible-verses/v1/analytics": VERSE_ANALYTICS,
+    "/bible-verses/v1": VERSE_ADMIN_ITEM,
+    "/bible-verses": {
+      items: [VERSE_ADMIN_ITEM],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
     "/quizzes/analytics/overview": QUIZ_ANALYTICS_OVERVIEW,
     "/quizzes/by-verse/v1": QUIZ_DETAIL,
     "/quizzes/q1/take": QUIZ_TAKE,

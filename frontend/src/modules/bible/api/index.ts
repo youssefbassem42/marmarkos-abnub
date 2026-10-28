@@ -3,6 +3,17 @@
  */
 
 import { apiClient } from "@/lib/api";
+import { paginated } from "@/lib/schemas/common";
+import {
+  verseAdminItemSchema,
+  verseAnalyticsOverviewSchema,
+  verseAnalyticsSchema,
+  verseCardSchema,
+  verseDetailSchema,
+  verseQuickStatsSchema,
+  verseStatsSchema,
+  verseUserEngagementSchema,
+} from "@/lib/schemas/bible";
 import type {
   BibleVersesListParams,
   CreateVersePayload,
@@ -25,19 +36,26 @@ export const bibleApi = {
   getVerses: async (
     params?: BibleVersesListParams,
   ): Promise<Paginated<VerseAdminItem>> => {
-    const response = await apiClient.get("/bible-verses", { params });
+    const response = await apiClient.get("/bible-verses", {
+      params,
+      schema: paginated(verseAdminItemSchema),
+    });
     return response.data;
   },
 
   /** KPI counts for the verse dashboard */
   getStats: async (): Promise<VerseStatsResponse> => {
-    const response = await apiClient.get("/bible-verses/stats");
+    const response = await apiClient.get("/bible-verses/stats", {
+      schema: verseStatsSchema,
+    });
     return response.data;
   },
 
   /** Newest PUBLISHED verse for the current member (204 if none) */
   getCurrent: async (): Promise<VerseCard | null> => {
-    const response = await apiClient.get("/bible-verses/current");
+    const response = await apiClient.get("/bible-verses/current", {
+      schema: verseCardSchema,
+    });
     // The server answers 204 when there is no published verse. Axios
     // resolves such a response with an empty body - it is not an error,
     // so there is nothing to catch.
@@ -51,19 +69,26 @@ export const bibleApi = {
   getPublished: async (
     params?: PublishedVersesParams,
   ): Promise<Paginated<VerseCard>> => {
-    const response = await apiClient.get("/bible-verses/published", { params });
+    const response = await apiClient.get("/bible-verses/published", {
+      params,
+      schema: paginated(verseCardSchema),
+    });
     return response.data;
   },
 
   /** Verse detail (admin: full, member: 404 unless PUBLISHED) */
   getVerse: async (verseId: string): Promise<VerseDetailResponse> => {
-    const response = await apiClient.get(`/bible-verses/${verseId}`);
+    const response = await apiClient.get(`/bible-verses/${verseId}`, {
+      schema: verseDetailSchema,
+    });
     return response.data;
   },
 
   /** Create a new verse */
   createVerse: async (data: CreateVersePayload): Promise<VerseAdminItem> => {
-    const response = await apiClient.post("/bible-verses", data);
+    const response = await apiClient.post("/bible-verses", data, {
+      schema: verseAdminItemSchema,
+    });
     return response.data;
   },
 
@@ -72,25 +97,41 @@ export const bibleApi = {
     verseId: string,
     data: UpdateVersePayload,
   ): Promise<VerseAdminItem> => {
-    const response = await apiClient.patch(`/bible-verses/${verseId}`, data);
+    const response = await apiClient.patch(`/bible-verses/${verseId}`, data, {
+      schema: verseAdminItemSchema,
+    });
     return response.data;
   },
 
   /** Archive a verse (soft-delete) */
   archiveVerse: async (verseId: string): Promise<VerseAdminItem> => {
-    const response = await apiClient.delete(`/bible-verses/${verseId}`);
+    const response = await apiClient.delete(`/bible-verses/${verseId}`, {
+      schema: verseAdminItemSchema,
+    });
     return response.data;
   },
 
   /** Restore an archived verse */
   restoreVerse: async (verseId: string): Promise<VerseAdminItem> => {
-    const response = await apiClient.post(`/bible-verses/${verseId}/restore`);
+    const response = await apiClient.post(
+      `/bible-verses/${verseId}/restore`,
+      undefined,
+      {
+        schema: verseAdminItemSchema,
+      },
+    );
     return response.data;
   },
 
   /** Publish a verse immediately */
   publishVerse: async (verseId: string): Promise<VerseAdminItem> => {
-    const response = await apiClient.post(`/bible-verses/${verseId}/publish`);
+    const response = await apiClient.post(
+      `/bible-verses/${verseId}/publish`,
+      undefined,
+      {
+        schema: verseAdminItemSchema,
+      },
+    );
     return response.data;
   },
 
@@ -102,6 +143,7 @@ export const bibleApi = {
     const response = await apiClient.post(
       `/bible-verses/${verseId}/schedule`,
       data,
+      { schema: verseAdminItemSchema },
     );
     return response.data;
   },
@@ -114,6 +156,7 @@ export const bibleApi = {
     const response = await apiClient.patch(
       `/bible-verses/${verseId}/schedule`,
       data,
+      { schema: verseAdminItemSchema },
     );
     return response.data;
   },
@@ -122,6 +165,9 @@ export const bibleApi = {
   cancelSchedule: async (verseId: string): Promise<VerseAdminItem> => {
     const response = await apiClient.delete(
       `/bible-verses/${verseId}/schedule`,
+      {
+        schema: verseAdminItemSchema,
+      },
     );
     return response.data;
   },
@@ -144,13 +190,20 @@ export const bibleApi = {
     total_reads: number;
     read_rate: number;
   }> => {
-    const response = await apiClient.get("/bible-verses/analytics/overview");
+    const response = await apiClient.get("/bible-verses/analytics/overview", {
+      schema: verseAnalyticsOverviewSchema,
+    });
     return response.data;
   },
 
   /** Admin Quick-Stat card: weekly/monthly opens, averages, top verse */
   getQuickStats: async (): Promise<VerseQuickStats> => {
-    const response = await apiClient.get("/bible-verses/analytics/quick-stats");
+    const response = await apiClient.get(
+      "/bible-verses/analytics/quick-stats",
+      {
+        schema: verseQuickStatsSchema,
+      },
+    );
     return response.data;
   },
 
@@ -165,6 +218,7 @@ export const bibleApi = {
   ): Promise<VerseAnalyticsDetail> => {
     const response = await apiClient.get(`/bible-verses/${verseId}/analytics`, {
       params,
+      schema: verseAnalyticsSchema,
     });
     return response.data;
   },
@@ -181,7 +235,7 @@ export const bibleApi = {
   ): Promise<Paginated<VerseUserEngagementItem>> => {
     const response = await apiClient.get(
       `/bible-verses/${verseId}/analytics/users`,
-      { params },
+      { params, schema: paginated(verseUserEngagementSchema) },
     );
     return response.data;
   },

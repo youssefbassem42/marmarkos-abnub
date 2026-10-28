@@ -17,6 +17,7 @@ import { useMonthlyUsers } from "@/modules/analytics/hooks/useMonthlyUsers";
 import { useAnonymousMessages } from "@/modules/anonymous-messages/hooks/useAnonymousMessages";
 import { useSubmitAnonymousMessage } from "@/modules/anonymous-messages/hooks/useSubmitAnonymousMessage";
 import { bibleKeys } from "@/modules/bible/api/queryKeys";
+import { VERSE_ADMIN_ITEM, VERSE_DETAIL } from "@/test/fixtures/bible";
 import { useMarkAsRead } from "@/modules/bible/hooks/useMarkAsRead";
 import { usePublishVerse } from "@/modules/bible/hooks/usePublishVerse";
 import { useVerse } from "@/modules/bible/hooks/useVerse";
@@ -29,6 +30,7 @@ import { usePointsHistory } from "@/modules/points/hooks/usePointsHistory";
 import {
   onlyCall,
   recordApiCalls,
+  recordApiCallsFor,
   type RecordingAdapter,
 } from "@/test/recordingAdapter";
 
@@ -42,7 +44,12 @@ function wrapper({ children }: { children: ReactNode }) {
 }
 
 beforeEach(() => {
-  recorder = recordApiCalls({});
+  // The verses answer with the complete shape: an endpoint with a schema
+  // rejects an incomplete answer.
+  recorder = recordApiCallsFor({
+    "/bible-verses/v1/publish": VERSE_ADMIN_ITEM,
+    "/bible-verses/v1": VERSE_DETAIL,
+  });
   queryClient = new QueryClient({
     defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
   });

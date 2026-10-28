@@ -40,12 +40,26 @@ export function recordApiCalls(
   return recordApiCallsFor({ "*": body }, status);
 }
 
+/** A key may name the method first ("PUT /users/me/attendance-pin"). */
+const METHOD_KEY = /^(get|post|put|patch|delete)\s+(.+)$/i;
+
+/** Whether the key answers this call. */
+function matches(key: string, url: string, method: string): boolean {
+  const named = METHOD_KEY.exec(key);
+  if (!named) return url.includes(key);
+  return named[1].toLowerCase() === method && url.includes(named[2]!.trim());
+}
+
 /**
  * Install the recording adapter with **one body per URL**.
  *
  * The longest matching key wins ("/attendance/meeting" before
  * "/attendance"). A URL that no key matches is answered with an empty
  * object — the test then says what it needs.
+ *
+ * A key may name the **method** first ("POST /bible-verses"): it is the
+ * only way to tell two calls on the same URL apart (the list and the
+ * creation, the status and the saving).
  *
  * The bodies must have the shape the endpoint promises: an endpoint
  * with a schema **rejects** an answer that does not have it, and the
@@ -68,8 +82,9 @@ export function recordApiCallsFor(
       data: config.data,
     });
 
+    const method = (config.method ?? "get").toLowerCase();
     const key = keys.find(
-      (candidate) => candidate === "*" || url.includes(candidate),
+      (candidate) => candidate === "*" || matches(candidate, url, method),
     );
     const body = key ? answers[key] : {};
 

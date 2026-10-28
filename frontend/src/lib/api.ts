@@ -180,7 +180,10 @@ apiClient.interceptors.response.use(
     // `ApiError`: the page shows its error state instead of crashing on
     // `undefined.toFixed()`.
     const schema = response.config?.schema;
-    if (schema) {
+    // A 204 carries no body: there is nothing to check (the endpoint
+    // `/bible-verses/current` answers 204 when there is no published
+    // verse, and the client reads the status, not the body).
+    if (schema && response.status !== 204) {
       const parsed = schema.safeParse(response.data);
       if (!parsed.success) {
         const detail = parsed.error.issues

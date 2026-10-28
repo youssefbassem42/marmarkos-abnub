@@ -12,40 +12,36 @@ import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
+import { VERSE_DETAIL as VERSE_DETAIL_FIXTURE } from "@/test/fixtures/bible";
 import VerseSchedulePage from "@/modules/bible/pages/admin/VerseSchedulePage";
 
 const VERSE = {
+  ...VERSE_DETAIL_FIXTURE,
   id: "verse-1",
   title: "آية الاختبار",
-  subtitle: null,
-  verse_reference: "١ يوئيل ٣:١",
-  book: "يوئيل",
-  chapter: 3,
-  verse_start: 1,
-  verse_end: null,
   status: "DRAFT" as const,
   published_at: null,
   week_start_date: null,
   created_by_user: null,
-  created_at: "2026-10-01T00:00:00Z",
   text: "اقرؤوا لي يا سيدي...",
   reflection: null,
   image: null,
   translation: null,
   opens: 0,
+  reads: 0,
+  has_quiz: false,
   is_read: false,
   quiz_summary: null,
   schedule: null,
 };
 
+// The brief of the schedule that the detail of a verse carries
+// (`VerseScheduleBrief` of the backend).
 const SCHEDULE = {
   id: "schedule-1",
-  verse_id: "verse-1",
   scheduled_at: "2026-12-01T18:00:00Z",
   status: "SCHEDULED" as const,
-  published_at: null,
-  created_by_user: "admin-1",
-  created_at: "2026-10-20T00:00:00Z",
+  notification_status: "PENDING",
 };
 
 describe("the schedule of a verse", () => {
