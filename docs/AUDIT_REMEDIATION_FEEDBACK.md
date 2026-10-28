@@ -31,27 +31,28 @@ While doing that, the work uncovered **twelve genuine production defects** that 
 | `backend: ruff check .` | 35 errors (17 F401, 9 E501, 8 I001, **1 F821**) | **0** | ✅ |
 | `backend: ruff format --check .` | 39 files to reformat | **0** | ✅ |
 | `backend: mypy app` (strict) | 100 errors in 10 files | **0** | ✅ |
-| `backend: pytest` | 373 passed / **8 failed** (381) | **484 passed / 0 failed** | ✅ |
+| `backend: pytest` | 373 passed / **8 failed** (381) | **588 passed / 0 failed** | ✅ |
 | `backend: test warnings` | 4 (Starlette 422 + httpx cookies) | **0** | ✅ |
 | `frontend: npm run lint` | 820 problems (808 errors, 12 warnings) | **0** (also with `--max-warnings 0`) | ✅ |
-| `frontend: npm run test:run` | 48 passed (with React key warning + jsdom CORS noise) | **310 passed** | ✅ |
+| `frontend: npm run test:run` | 48 passed (with React key warning + jsdom CORS noise) | **328 passed** | ✅ |
 | `frontend: npm run build` | pass | **pass** | ✅ |
 | `frontend: tsc -b` | pass (the cache hid nothing this time) | **pass** (`--force` as well) | ✅ |
 | Test-suite hermeticity | ❌ real Cloudinary API call observed | ✅ **no outbound socket is possible** | ✅ |
 | Test-DB safety | ❌ `drop_all` on any `DATABASE_URL` | ✅ refuses non-`test` databases | ✅ |
 | `npm audit` | 3 high (+ 8 more) | **0** | ✅ |
 | `pip-audit` | 3 vulnerabilities / 2 packages | **0** | ✅ |
-| Backend tests | 373 passed / 8 failed | **484 passed / 0 failed** | ✅ |
-| Frontend tests | 48 passed | **277 passed** | ✅ |
+| Backend tests | 373 passed / 8 failed | **588 passed / 0 failed** | ✅ |
+| Frontend tests | 48 passed | **328 passed** | ✅ |
 | End-to-end tests | **0** (no browser ever drove the product) | **5 passed** (3 journeys) | ✅ |
-| Frontend coverage | 17.97 % statements (no branch coverage) | **70.52 %** statements · 59.92 % branches · 64.89 % functions · 72.47 % lines | ✅ |
+| Frontend coverage | 17.97 % statements (no branch coverage) | **72.10 %** statements · 61.36 % branches · 65.54 % functions · 74.10 % lines | ✅ |
 | SQL statements for a page of 10 quizzes | 21 (2N+1) | **3** | ✅ |
 | Access token location | `localStorage` / `sessionStorage` | **memory** (flag-controlled) | ✅ |
-| Import cycles between the modules | 5 (two of them reported) | **1** (documented, in the plan) | ✅ |
+| Import cycles between the modules | 5 (two of them reported) | **0** | ✅ |
 | The direction of the platform | 66 `dir="rtl"` + 72 `lang="ar"` in 51 files | **1 place** (the document root) | ✅ |
 | The lists of dependencies | 2 (hand-written, drifting) | **1** (generated + guarded) | ✅ |
 | The design references in the repository | 52 MB | **4.5 MB** | ✅ |
 | The OpenAPI schema vs. the real answers | never checked | **3 466 contract cases, 0 failures** | ✅ |
+| The answers of the API checked at the edge | **0** (the frontend trusted the server) | **every module**, and **three guard tests** on the contract | ✅ |
 | The CI pipeline | always red (the tests were allowed to fail) | **strict and green** | ✅ |
 | The containers | root, no healthcheck | **uid 10001, healthchecked, locked migrations** | ✅ |
 
@@ -230,6 +231,32 @@ without a name is invisible to a screen reader.
 | 24 | The page of the check-in formatted the date of the meeting without a guard (`Intl` throws a `RangeError` on a date it cannot read) | **The whole page of the check-in of the member crashed** | The new `formatDateOrEmpty` in the shared library: a date that cannot be read is simply not shown |
 | 25 | A wrong PIN (the member mistypes his five digits — the most common case) was answered with "رمز QR غير صالح" ("the QR code is invalid") | On a page that has **no QR code at all**: the member was told the wrong thing | The PIN mode says "الرمز غير صحيح — لا يوجد عضو بهذا الرمز" |
 
+### 4.1 The defects of the contract (Phase 5.11 — 2026-10-29)
+
+The frontend trusted the answers of the server. A field that was renamed,
+removed or never existed reached the page as `undefined`, and the page read
+it as a number. The **check at the edge** (a schema for every answer) and
+the **types that come from the schema** turned this family into a
+compile error. Nine real defects:
+
+| # | The defect | The consequence | The fix |
+|---|---|---|---|
+| 26 | The client of the points called `/points/me`, `/points/me/monthly` and `/points/me/history` — the backend mounts the router under **`/users/me/points`** — and read `total_points`, `this_month_points`, `this_week_points` and `month_label`, four names the server never sends | **The page of the points was dead**: every member saw "you have no points", even with five hundred points. The chart would have crashed (`data.slice is not a function`) if the URL had been fixed alone | The real URLs, the real names (`lifetime`, `this_month`, `this_week`), and the envelope of the monthly series (`{ items: [...] }`) |
+| 27 | The client of the points expected a **list** of months; the server sends an **envelope** | The chart and the history of the page read `data.slice` on an object | The chart and the history read `data.items` and build the label of the month from the date of the server |
+| 28 | The archive of a quiz called `POST /quizzes/{id}/archive` — a route that does not exist (the backend archives with a **DELETE**) | The answer was a 404 and the quiz stayed published | `DELETE /quizzes/{id}` (a soft delete, 204 with no body) |
+| 29 | The page of the result read `result.questions`; the server sends the review under **`review`** | The member **never saw the review of his attempt** — his score, and nothing else | The page reads `result.review`; a test opens a question of the review |
+| 30 | The list of the review keyed the questions with `q.id`; the server sends `question_id` | The questions of the review **could never open** | `question_id` |
+| 31 | The bars of the points of the result showed the **score of the attempt** three times | The progress of the member was wrong | The snapshot of the server (`week_after`, `month_after`, `lifetime_after`) |
+| 32 | The picker of the verse of the quiz builder read `book`, `chapter` and `verse_start` from the list of the manager, which does not carry them | Every verse showed "**undefined · undefined:undefined**" | The backend sends the three fields in the row of the manager (the answer only grows) |
+| 33 | The type `BIBLE_VERSE` (the notification of a published verse, a type of Phase 5) had **no accent** in the frontend | The icon was `undefined` and React refused to render it: the **list of the notifications crashed** for the manager who created the verse | The accent of a reading, and a fallback for a type of the future |
+| 34 | The row of a notification read the accent of its type directly from the table of the accents | A type the frontend does not know made the accent `undefined` and the row **crashed** | The row uses the resolver, which has a fallback |
+
+Two more were found by the same work and are not in the list above because
+they were already visible in the first run: the date of the publication may
+be absent (the card of the feed showed a date of 1970) and the radio group
+of a question switched from uncontrolled to controlled (React complained
+every time a member answered).
+
 ---
 
 ## 5. How it was verified
@@ -311,9 +338,10 @@ Additional checks performed:
 
 | Phase | Content | Size |
 |---|---|---|
-| **Phase 4.4** | The domain ports speak domain objects. The last import cycle (`auth ↔ users`) runs through the layers: the route guard returns the ORM model of the users module. The fix is a shared "current member" contract that the guard returns instead of the ORM row — a type-level change that touches every route that uses the guard. | ~2 days |
-| ~~**Phase 5.4**~~ | ~~The frontend coverage~~ — **done**: **70.39 % statements** (307 unit tests in 51 files), the target of the plan. What is left is the scanner of the QR code (the camera cannot be simulated in jsdom) and a few panels of the administration — the floor only goes up, one step at a time. | — |
+| ~~**Phase 4.4**~~ | ~~The guard of the current member~~ — **done**: the guard lives with the member (`users/presentation/dependencies.py`), the old path re-exports the very same objects, and the graph of the modules is **acyclic** (the guard test fails on any new cycle). | — |
+| ~~**Phase 5.4**~~ | ~~The frontend coverage~~ — **done**: **72.10 % statements** (328 unit tests in 56 files), the target of the plan, and then the contract (Phase 5.11). What is left is the scanner of the QR code (the camera cannot be simulated in jsdom) and a few panels of the administration — the floor only goes up, one step at a time. | — |
 | ~~**Phase 5.5**~~ | ~~The E2E golden paths with Playwright~~ — **done**: three journeys, five tests, all green, and they run in the pipeline (`.github/workflows/e2e-ci.yml`). | — |
+| ~~**Phase 3.1**~~ | ~~The end of the deprecation window of the analytics~~ — **done**: the history shows that the legacy `?year=&month=` never left this machine (it was a local commit that was never pushed), so it was removed without a window. The frontend only ever sends `month=YYYY-MM`. | — |
 
 ### 6.3 Deliberately deferred (with reasons)
 
@@ -321,7 +349,7 @@ Additional checks performed:
 |---|---|
 | Memory-first access token (SEC-004) | **Done in Phase 3** behind `VITE_AUTH_PERSISTENCE`. The staged rollout is still open: watch the sign-in rate after the deployment; `VITE_AUTH_PERSISTENCE=local` rolls it back without a code change |
 | Domain-port rework (ARCH-005) | Large, type-level refactor; the shared kernel and the read-model port are done, the rest is item 4.4 above |
-| Removing the legacy `?year=&month=` of the analytics (3.1) | The deprecation window is **one release**: the branch is removed when the next version ships, not before |
+| ~~Removing the legacy `?year=&month=` of the analytics (3.1)~~ | **Done**: the git history proved the shape was never published (a local commit, 72 commits ahead of `origin/main`), so the legacy branch was removed without a window. The endpoints answer 422 for it now. |
 | `/metrics` as a Prometheus scrape target | The endpoint exists and speaks the exposition format; the scrape config and the alerting rules belong with the deployment |
 | Re-hashing the legacy token rows in bulk | Not needed: every legacy token is single-use and is replaced by a v2 one when it is redeemed, so the old format disappears on its own |
 | Rewriting the history to drop the 52 MB of PNG | It touches every clone of the repository and has to be done by everybody at the same time. The working tree is already 4.5 MB; the decision belongs to the team |
@@ -331,11 +359,10 @@ Additional checks performed:
 
 ## 7. Recommended next session
 
-1. **Phase 4.4** — the domain ports speak domain objects: the guard returns a shared contract instead of the ORM row, and the last import cycle disappears.
-2. **Phase 5.4 (the last inches)** — the scanner of the QR code, the panels of the administration, the mobile lists. The floor only goes up (70 % → …).
-3. **Phase 3.1 (completion)** — remove the legacy `?year=&month=` branch of the analytics endpoints **one release after** the deprecation (not before: the server still accepts it today).
-4. **Deployment watch** — after the memory-first token ships, watch the sign-in rate and the 401 rate for a week; `VITE_AUTH_PERSISTENCE=local` is the one-line rollback.
-5. **The secret rotation** — the only item that cannot be done from the repository; it needs the console of every provider.
-6. **The lessons of Phase 5.5 and 5.4** — the end-to-end tests found five defects that 462 unit tests never saw, and the render tests found six more. The next journeys (the verse of the day, the points, the blog, the profile, the notifications) would find more. The stack is ready; each journey is half a day.
+1. **Phase 5.4 (the last inches)** — the scanner of the QR code, the panels of the administration, the mobile lists. The floor only goes up (72 % → …).
+2. **The next journeys of the end-to-end run** — the verse of the day, the points of a member, the blog, the profile, the notifications. The three journeys that exist found **five** defects that 588 unit tests never saw, and the render tests found **thirteen** more. The stack is ready; each journey is half a day.
+3. **Deployment watch** — after the memory-first token ships, watch the sign-in rate and the 401 rate for a week; `VITE_AUTH_PERSISTENCE=local` is the one-line rollback.
+4. **The secret rotation** — the only item that cannot be done from the repository; it needs the console of every provider. The owner decides **when**; the recipe R-01 says in which order.
+5. **The history of the repository** — 52 MB of PNGs are still in the history; the working tree is 4.5 MB. The decision belongs to the team.
 
 > Rule for every follow-up PR: **one concern per PR**, behaviour-preserving, with the test that proves it. The pipeline is green now — the cheapest way to keep it that way is to never merge a red branch again.
