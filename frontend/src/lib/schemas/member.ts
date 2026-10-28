@@ -16,11 +16,12 @@ import { loose } from "./common";
 /** The role of a member. */
 export const roleNameSchema = z.enum(["ADMIN", "SERVANT", "MEMBER"]);
 
-/** The status of a member. */
+/** The status of a member (`UserStatus` of the backend). */
 export const userStatusSchema = z.enum([
-  "PENDING_VERIFICATION",
   "ACTIVE",
   "SUSPENDED",
+  "BANNED",
+  "INACTIVE",
 ]);
 
 /** A member (`UserResponse`). */

@@ -7,8 +7,16 @@
  * but the platform renders Arabic only.
  */
 
+/**
+ * The types of a notification (`NotificationType` of the backend).
+ *
+ * `BIBLE_VERSE` was added in Phase 5 (the notification of a published
+ * verse): the type was missing here, so the accent of such a
+ * notification was `undefined` and the list of the notifications
+ * **crashed** for the manager who created the verse.
+ */
 export type NotificationType =
-  "BLOG_POST" | "ANNOUNCEMENT" | "ATTENDANCE" | "SYSTEM";
+  "BLOG_POST" | "ANNOUNCEMENT" | "ATTENDANCE" | "SYSTEM" | "BIBLE_VERSE";
 
 /** Presentation grouping over NotificationType (plan §3.4). */
 export type NotificationTab =

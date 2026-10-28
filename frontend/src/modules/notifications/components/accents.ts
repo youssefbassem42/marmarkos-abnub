@@ -51,6 +51,28 @@ export const NOTIFICATION_ACCENTS: Record<NotificationType, AccentEntry> = {
     accentBg: "bg-brand-red/10",
     accentBorder: "border-brand-red",
   },
+  BIBLE_VERSE: {
+    // The verse is a reading: the same family as the article of the
+    // blog, with the colour of the reading.
+    Icon: BookOpen,
+    accentText: "text-brand-blue",
+    accentBg: "bg-brand-blue/10",
+    accentBorder: "border-brand-blue",
+  },
+};
+
+/**
+ * The accent of a type the frontend does not know.
+ *
+ * The backend may add a type at any time; an unknown type must not
+ * make the list of the notifications crash (the icon would be
+ * `undefined` and React would refuse to render it).
+ */
+const FALLBACK_ACCENT: AccentEntry = {
+  Icon: Bell,
+  accentText: "text-muted-foreground",
+  accentBg: "bg-muted/10",
+  accentBorder: "border-muted",
 };
 
 const ICON_ALLOWLIST: Record<string, LucideIcon> = {
@@ -70,7 +92,7 @@ export function resolveAccent(
   type: NotificationType,
   dataIcon?: string | null,
 ): { Icon: LucideIcon } & AccentEntry {
-  const entry = NOTIFICATION_ACCENTS[type];
+  const entry = NOTIFICATION_ACCENTS[type] ?? FALLBACK_ACCENT;
   const override =
     typeof dataIcon === "string" ? ICON_ALLOWLIST[dataIcon] : undefined;
   return { ...entry, Icon: override ?? entry.Icon };
