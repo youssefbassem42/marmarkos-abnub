@@ -29,10 +29,14 @@ export function VerseHeroCard({ verse }: VerseHeroCardProps) {
           {verse.week_start_date && (
             <span>{formatWeekRange(verse.week_start_date, "ar")}</span>
           )}
-          <span aria-hidden="true">·</span>
-          <time dateTime={verse.published_at}>
-            {formatRelativeDate(verse.published_at, "ar")}
-          </time>
+          {verse.published_at && (
+            <>
+              <span aria-hidden="true">·</span>
+              <time dateTime={verse.published_at}>
+                {formatRelativeDate(verse.published_at, "ar")}
+              </time>
+            </>
+          )}
         </div>
 
         <h2 className="mt-3 text-xl font-bold text-brand-blue md:text-2xl font-arabic">

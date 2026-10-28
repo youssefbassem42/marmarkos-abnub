@@ -35,12 +35,17 @@ export function VerseCard({ verse }: VerseCardProps) {
           {verse.excerpt}
         </p>
         <div className="mt-3 flex items-center justify-between">
-          <time
-            dateTime={verse.published_at}
-            className="text-xs text-muted-foreground"
-          >
-            {formatRelativeDate(verse.published_at, "ar")}
-          </time>
+          {/* A verse that was never published has no date. */}
+          {verse.published_at ? (
+            <time
+              dateTime={verse.published_at}
+              className="text-xs text-muted-foreground"
+            >
+              {formatRelativeDate(verse.published_at, "ar")}
+            </time>
+          ) : (
+            <span />
+          )}
           <div className="flex gap-1.5">
             {verse.is_read && (
               <Badge variant="secondary" className="text-[10px]">

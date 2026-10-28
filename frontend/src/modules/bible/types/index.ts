@@ -3,130 +3,63 @@
  *
  * Manages weekly Bible verses: creation, scheduling, publishing,
  * and the member-facing reading experience.
+ *
+ * The types are the **inference of the schemas** of the answers
+ * (`@/lib/schemas/bible`): a field that the server does not send cannot
+ * be read by the page, and the compiler says so.
  */
 
-export type VerseStatus = "DRAFT" | "SCHEDULED" | "PUBLISHED" | "ARCHIVED";
+import type { z } from "zod";
 
-export type ScheduleStatus = "SCHEDULED" | "PUBLISHED" | "CANCELLED" | "FAILED";
+import type {
+  creatorBriefSchema,
+  engagementSeriesPointSchema,
+  quizSummarySchema,
+  relatedQuizSummarySchema,
+  verseAdminItemSchema,
+  verseAnalyticsOverviewSchema,
+  verseAnalyticsSchema,
+  verseCardSchema,
+  verseDetailSchema,
+  verseQuickStatsSchema,
+  verseScheduleBriefSchema,
+  verseStatsSchema,
+  verseStatusSchema,
+  verseUserEngagementSchema,
+  scheduleStatusSchema,
+} from "@/lib/schemas/bible";
 
-export interface CreatorBrief {
-  id: string;
-  full_name: string;
-  avatar_url: string | null;
-}
+export type VerseStatus = z.infer<typeof verseStatusSchema>;
 
-export interface VerseScheduleBrief {
-  id: string;
-  verse_id: string;
-  status: ScheduleStatus;
-  scheduled_at: string;
-}
+export type ScheduleStatus = z.infer<typeof scheduleStatusSchema>;
 
-export interface QuizSummary {
-  quiz_id: string;
-  status: string;
-  question_count: number;
-  total_points: number;
-  duration_seconds: number;
-}
+export type CreatorBrief = z.infer<typeof creatorBriefSchema>;
 
-export interface VerseAdminItem {
-  id: string;
-  title: string;
-  subtitle: string | null;
-  verse_reference: string;
-  book: string;
-  chapter: number;
-  verse_start: number;
-  verse_end: number | null;
-  status: VerseStatus;
-  published_at: string | null;
-  week_start_date: string | null;
-  created_by_user: CreatorBrief | null;
-  created_at: string;
-}
+export type VerseScheduleBrief = z.infer<typeof verseScheduleBriefSchema>;
 
-export interface VerseCard {
-  id: string;
-  title: string;
-  verse_reference: string;
-  excerpt: string;
-  image: string | null;
-  published_at: string;
-  week_start_date: string | null;
-  is_read: boolean;
-  has_quiz: boolean;
-  quiz_state: string | null;
-}
+export type QuizSummary = z.infer<typeof quizSummarySchema>;
 
-export interface VerseDetailResponse extends VerseAdminItem {
-  text: string;
-  reflection: string;
-  image: string | null;
-  translation: string;
-  opens: number;
-  is_read: boolean;
-  quiz_summary: QuizSummary | null;
-  schedule: VerseScheduleBrief | null;
-}
+export type VerseAdminItem = z.infer<typeof verseAdminItemSchema>;
 
-export interface VerseStatsResponse {
-  total: number;
-  drafts: number;
-  scheduled: number;
-  published: number;
-  archived: number;
-}
+export type VerseCard = z.infer<typeof verseCardSchema>;
 
-export interface VerseQuickStats {
-  this_week: number;
-  this_month: number;
-  avg_reads: number;
-  top_verse_reference: string | null;
-  top_verse_opens: number | null;
-}
+export type VerseDetailResponse = z.infer<typeof verseDetailSchema>;
 
-export interface VerseAnalyticsOverview {
-  total_posts: number;
-  published: number;
-  total_opens: number;
-  total_reads: number;
-  read_rate: number;
-}
+export type VerseStatsResponse = z.infer<typeof verseStatsSchema>;
 
-export interface EngagementSeriesPoint {
-  bucket: string;
-  opens: number;
-  reads: number;
-}
+export type VerseQuickStats = z.infer<typeof verseQuickStatsSchema>;
 
-export interface RelatedQuizSummary {
-  quiz_id: string;
-  participants: number;
-  average_score_out_of_10: number;
-}
+export type VerseAnalyticsOverview = z.infer<
+  typeof verseAnalyticsOverviewSchema
+>;
 
-export interface VerseAnalyticsDetail {
-  verse_id: string;
-  title: string;
-  verse_reference: string;
-  total_opens: number;
-  unique_opens: number;
-  total_reads: number;
-  unique_readers: number;
-  read_rate: number;
-  series: EngagementSeriesPoint[];
-  quiz: RelatedQuizSummary | null;
-}
+export type EngagementSeriesPoint = z.infer<typeof engagementSeriesPointSchema>;
 
-export interface VerseUserEngagementItem {
-  user_id: string;
-  full_name: string;
-  avatar: string | null;
-  opened_count: number;
-  has_read: boolean;
-  last_opened_at: string | null;
-}
+export type RelatedQuizSummary = z.infer<typeof relatedQuizSummarySchema>;
+
+export type VerseAnalyticsDetail = z.infer<typeof verseAnalyticsSchema>;
+
+export type VerseUserEngagementItem = z.infer<typeof verseUserEngagementSchema>;
 
 export interface BibleVersesListParams {
   status?: VerseStatus;

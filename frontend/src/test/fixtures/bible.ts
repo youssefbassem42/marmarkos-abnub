@@ -8,7 +8,12 @@
 export const VERSE_ADMIN_ITEM = {
   id: "verse-1",
   title: "آية الاختبار",
+  subtitle: "عنوان فرعي",
   verse_reference: "١ يوئيل ٣:١",
+  book: "يوئيل",
+  chapter: 3,
+  verse_start: 1,
+  verse_end: 2,
   status: "PUBLISHED",
   schedule: null,
   has_quiz: true,
@@ -92,7 +97,7 @@ export const VERSE_ANALYTICS = {
   unique_readers: 12,
   read_rate: 60,
   series: [{ bucket: "2026-10-19", opens: 10, reads: 5 }],
-  quiz: { quiz_id: "quiz-1", participants: 8 },
+  quiz: { quiz_id: "quiz-1", participants: 8, average_score_out_of_10: 7.5 },
 };
 
 export const VERSE_USER_ENGAGEMENT = {

@@ -75,7 +75,7 @@ export default function VerseFormPage() {
         verseStart: verse.verse_start,
         verseEnd: verse.verse_end ?? null,
         text: verse.text,
-        reflection: verse.reflection,
+        reflection: verse.reflection ?? "",
         image: verse.image ?? "",
         status: verse.status === "PUBLISHED" ? "PUBLISHED" : "DRAFT",
       });

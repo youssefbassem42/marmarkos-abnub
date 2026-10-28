@@ -53,7 +53,12 @@ export const verseScheduleBriefSchema = loose({
 export const verseAdminItemSchema = loose({
   id: z.string(),
   title: z.string(),
+  subtitle: z.string().nullable(),
   verse_reference: z.string(),
+  book: z.string(),
+  chapter: z.number(),
+  verse_start: z.number(),
+  verse_end: z.number().nullable(),
   status: verseStatusSchema,
   schedule: verseScheduleBriefSchema.nullable(),
   has_quiz: z.boolean(),
@@ -141,6 +146,7 @@ export const engagementSeriesPointSchema = loose({
 export const relatedQuizSummarySchema = loose({
   quiz_id: z.string(),
   participants: z.number(),
+  average_score_out_of_10: z.number(),
 });
 
 /** The analytics of one verse. */

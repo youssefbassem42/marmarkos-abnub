@@ -61,7 +61,7 @@ export default function VerseDetailPage() {
       <VerseBody
         text={data.text}
         verseReference={data.verse_reference}
-        reflection={data.reflection}
+        reflection={data.reflection ?? ""}
       />
 
       <MarkAsReadButton

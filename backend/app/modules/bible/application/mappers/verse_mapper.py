@@ -76,7 +76,12 @@ def to_admin_item(
     return VerseAdminItem(
         id=verse.id,
         title=verse.title,
+        subtitle=verse.subtitle,
         verse_reference=verse.verse_reference,
+        book=verse.book,
+        chapter=verse.chapter,
+        verse_start=verse.verse_start,
+        verse_end=verse.verse_end,
         status=verse.status,
         schedule=schedule,
         has_quiz=has_quiz,

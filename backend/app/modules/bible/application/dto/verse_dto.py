@@ -140,7 +140,12 @@ class VerseAdminItem(BaseModel):
 
     id: UUID = Field(description="Verse id")
     title: str = Field(description="Display title")
+    subtitle: str | None = Field(default=None, description="Subtitle")
     verse_reference: str = Field(description="Scripture reference")
+    book: str = Field(description="Bible book name")
+    chapter: int = Field(description="Chapter number")
+    verse_start: int = Field(description="First verse number")
+    verse_end: int | None = Field(default=None, description="Last verse number")
     status: VerseStatus = Field(description="Lifecycle status")
     schedule: VerseScheduleBrief | None = Field(
         default=None, description="Active/latest publication schedule"
