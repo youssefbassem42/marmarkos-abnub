@@ -284,6 +284,28 @@ lands on the result.
 
 ---
 
+### 4.3 The session that died by itself (2026-10-29)
+
+The owner reported an **"auto logout after some time"**. The wish was
+explicit: *the app has to recall the token so the member stays signed in
+until he clicks the sign-out, the session ends with the window, or the
+server ends it*. The cause was not one thing but three, and **none of them
+was visible in a unit test** — they only appear when the clock runs.
+
+| # | The defect | The consequence | The fix |
+|---|---|---|---|
+| 38 | The access token was **never refreshed on its own**: the session only survived because a request happened to answer 401 | The member was signed out **every time the access token expired** (15 minutes by default), even though the refresh token was there, valid, in its HttpOnly cookie | The token is now refreshed **before** it expires (at 80 % of its life), with **one request in flight at a time** (the refresh token is rotated: two parallel refreshes would kill the session). The login, the Google callback and the restore all arm it |
+| 39 | The interceptor treated **every** failure as a refusal: a network hiccup, a timeout, a 5xx, a rate limit (429) ended the session | One moment of a bad network threw the member to the login page, in the middle of a quiz | Only a **definitive** refusal (401/403) ends the session. A transient failure keeps the member signed in and the next request tries again. The test proves it with a 503 and with a network error |
+| 40 | The refresh cookie was **always persistent** (`Max-Age` of 30 days) | The session survived the closing of the window — the opposite of what the owner asked for | The cookie is a **cookie of the session** by default (it dies with the window) and it becomes persistent **only** when the member ticks "remember me". The token carries the nature (`persistent`), the refresh keeps it, the sign-out ends it |
+| 41 | The restore of the session had a **5 second timeout and one attempt** | A slow network on a reload looked like a signed-out member, and the member had to sign in again | The restore waits **15 seconds** and tries **twice**, and it keeps the session when the failure is transient |
+
+Proven with a browser against an API whose access token lives **one minute**:
+the member stays signed in past the expiry, a reload restores the session
+from the cookie, the default cookie dies with the window and the cookie of
+"remember me" carries `Max-Age=2592000`.
+
+---
+
 ## 5. How it was verified
 
 ```bash
@@ -384,6 +406,12 @@ Additional checks performed:
 
 ## 7. Recommended next session
 
+0. **The plan of `TODO.md`** — `docs/PRODUCT_PLAN_TODO.md` turns the seven
+   points of the owner into **19 phases** with their requirements, their
+   tasks and their acceptance. The work starts with the decisions of §12 of
+   that document (the nine questions that change what is built); the first
+   phase that needs no decision is the gallery (one hour) and the shared
+   header of the way back (half a day).
 1. **Phase 5.4 (the last inches)** — the scanner of the QR code, the panels of the administration, the mobile lists. The floor only goes up (72 % → …).
 2. **The next journeys of the end-to-end run** — the verse of the day, the points of a member, the blog, the profile, the notifications. The three journeys that exist found **five** defects that 588 unit tests never saw, and the render tests found **thirteen** more. The stack is ready; each journey is half a day.
 3. **Deployment watch** — after the memory-first token ships, watch the sign-in rate and the 401 rate for a week; `VITE_AUTH_PERSISTENCE=local` is the one-line rollback.
