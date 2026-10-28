@@ -3,161 +3,88 @@
  *
  * Manages quizzes tied to Bible verses: questions, options,
  * and member quiz attempts with grading.
+ *
+ * The types are the **inference of the schemas** of the answers
+ * (`@/lib/schemas/quiz`): the backend is the source of truth, and a
+ * field that the server does not send cannot be read by the page.
  */
 
-export type QuizStatus = "DRAFT" | "PUBLISHED" | "ARCHIVED";
+import type { z } from "zod";
 
-export type AttemptStatus = "IN_PROGRESS" | "COMPLETED" | "AUTO_FINISHED";
+import type {
+  attemptHeartbeatSchema,
+  attemptResultSchema,
+  attemptResumeSchema,
+  attemptReviewSchema,
+  attemptStartSchema,
+  attemptStatusSchema,
+  gradedOptionSchema,
+  questionOptionSchema,
+  questionSchema,
+  quizAdminItemSchema,
+  quizDetailSchema,
+  quizStatusSchema,
+  quizTakeSchema,
+  quizValidationSchema,
+  reviewQuestionSchema,
+  takeOptionSchema,
+  takeQuestionSchema,
+} from "@/lib/schemas/quiz";
 
-export interface QuizAdminItem {
-  id: string;
-  title: string;
-  verse_reference: string;
-  verse_id: string;
-  total_points: number;
-  duration_seconds: number;
-  question_count: number;
-  status: QuizStatus;
-  published_at: string | null;
-  created_at: string;
-}
+export type QuizStatus = z.infer<typeof quizStatusSchema>;
 
-export interface QuizOptionResponse {
-  id: string;
-  option_text: string;
-  is_correct: boolean;
-  position: number;
-}
+export type AttemptStatus = z.infer<typeof attemptStatusSchema>;
 
-export interface QuizQuestionResponse {
-  id: string;
-  question: string;
-  points: number;
-  position: number;
-  options: QuizOptionResponse[];
-}
+export type QuizAdminItem = z.infer<typeof quizAdminItemSchema>;
 
-export interface QuizDetailResponse extends QuizAdminItem {
-  description: string;
-  questions: QuizQuestionResponse[];
-}
+export type QuizOptionResponse = z.infer<typeof questionOptionSchema>;
 
-export interface QuizValidationRule {
-  code: string;
-  passed: boolean;
-  detail: string;
-}
+export type QuizQuestionResponse = z.infer<typeof questionSchema>;
 
-export interface QuizValidationResponse {
-  is_publishable: boolean;
-  rules: QuizValidationRule[];
-}
+export type QuizDetailResponse = z.infer<typeof quizDetailSchema>;
+
+export type QuizValidationRule = z.infer<
+  typeof quizValidationSchema
+>["rules"][number];
+
+export type QuizValidationResponse = z.infer<typeof quizValidationSchema>;
 
 // --- Member-facing quiz take types (no is_correct) ---
 
-export interface QuizTakeOption {
-  id: string;
-  option_text: string;
-  position: number;
-}
+export type QuizTakeOption = z.infer<typeof takeOptionSchema>;
 
-export interface QuizTakeQuestion {
-  id: string;
-  question: string;
-  points: number;
-  position: number;
-  options: QuizTakeOption[];
-}
+export type QuizTakeQuestion = z.infer<typeof takeQuestionSchema>;
 
-export interface QuizTakeResponse {
-  id: string;
-  title: string;
-  description: string;
-  duration_seconds: number;
-  total_points: number;
-  question_count: number;
-  /** The attempt of the member for this quiz, when there is one (D-4). */
-  attempt_id?: string | null;
-  questions: QuizTakeQuestion[];
-}
+export type QuizTakeResponse = z.infer<typeof quizTakeSchema>;
 
 // --- Attempt types ---
 
-export interface AttemptQuestionBrief {
-  id: string;
-  question: string;
-  position: number;
-  points: number;
-  answered: boolean;
-  selected_option_id: string | null;
-}
+export type AttemptQuestionBrief = QuizTakeQuestion;
 
-export interface AttemptStartResponse {
-  id: string;
-  quiz_id: string;
-  started_at: string;
-  remaining_seconds: number;
-  server_time: string;
-  question_count: number;
-  questions: AttemptQuestionBrief[];
-}
+export type AttemptStartResponse = z.infer<typeof attemptStartSchema>;
 
 /** Fresh active-time anchor returned by save/heartbeat/resume (V2). */
-export interface AttemptHeartbeatResponse {
-  attempt_id: string;
-  status: AttemptStatus;
-  remaining_seconds: number;
-  server_time: string;
-}
+export type AttemptHeartbeatResponse = z.infer<typeof attemptHeartbeatSchema>;
 
-export interface AttemptStatusResponse {
-  id: string;
-  quiz_id: string;
-  status: AttemptStatus;
-  started_at: string;
-  remaining_seconds: number;
-  server_time: string;
-  score: number | null;
-  question_count: number;
-  answered_count: number;
-  duration_seconds?: number;
-  total_points?: number;
-  questions?: AttemptQuestionBrief[];
-}
+export type AttemptStatusResponse = z.infer<typeof attemptResumeSchema>;
 
-export interface GradedOption {
-  id: string;
-  option_text: string;
-  position: number;
-  is_correct: boolean;
-}
+/** One graded question of the review (`ReviewQuestionItem`). */
+export type GradedQuestion = z.infer<typeof reviewQuestionSchema>;
 
-export interface GradedQuestion {
-  id: string;
-  question: string;
-  points: number;
-  position: number;
-  is_correct: boolean;
-  points_awarded: number;
-  /** The option the member chose - null when he skipped the question. */
-  selected_option_id: string | null;
-  /** The correct option - null when the question has none. */
-  correct_option_id: string | null;
-  options: GradedOption[];
-}
+/** One option of a graded question (`GradedOptionItem`). */
+export type GradedOption = z.infer<typeof gradedOptionSchema>;
 
-export interface AttemptResultResponse {
-  id: string;
-  status: AttemptStatus;
-  score: number;
-  total_points: number;
-  correct_count: number;
-  incorrect_count: number;
-  duration_seconds: number;
-  questions: GradedQuestion[];
-}
+/**
+ * The result of an attempt (`AttemptResultResponse`).
+ *
+ * The answer of the server carries **no** `questions`: the review of
+ * the questions is a different answer (the endpoint of the review, which
+ * the backend reserves for the servants).
+ */
+export type AttemptResultResponse = z.infer<typeof attemptResultSchema>;
 
-export type AttemptReviewResponse = AttemptResultResponse;
+/** The review of an attempt (the endpoint of the servants). */
+export type AttemptReviewResponse = z.infer<typeof attemptReviewSchema>;
 
 // --- Payloads ---
 

@@ -112,6 +112,7 @@ export const ATTEMPT_RESULT = {
   points_awarded: 10,
   finished_at: "2026-10-22T19:05:00Z",
   time_taken_seconds: 300,
+  score_out_of_10: 10,
   points: {
     week_before: 20,
     week_after: 30,
@@ -120,16 +121,46 @@ export const ATTEMPT_RESULT = {
     lifetime_before: 200,
     lifetime_after: 210,
   },
+  review: [
+    {
+      question_id: "q1",
+      position: 1,
+      question: "ما هو الكتاب؟",
+      points: 10,
+      selected_option_id: "o1",
+      correct_option_id: "o1",
+      is_correct: true,
+      points_awarded: 10,
+      options: [
+        { id: "o1", option_text: "إنجيل متى", position: 1, is_correct: true },
+        { id: "o2", option_text: "إنجيل لوقا", position: 2, is_correct: false },
+      ],
+    },
+  ],
 };
 
 export const ATTEMPT_REVIEW = {
   attempt_id: "attempt-1",
   quiz_id: "quiz-1",
+  verse_id: "verse-1",
   status: "COMPLETED",
   score: 10,
   total_points: 10,
+  score_out_of_10: 10,
   percentage: 100,
-  questions: [
+  correct_count: 1,
+  incorrect_count: 0,
+  question_count: 1,
+  points_awarded: 10,
+  finished_at: "2026-10-22T19:05:00Z",
+  time_taken_seconds: 300,
+  user: {
+    user_id: "user-1",
+    full_name: "العضو",
+    email: "member@example.com",
+    avatar: null,
+  },
+  review: [
     {
       question_id: "q1",
       position: 1,

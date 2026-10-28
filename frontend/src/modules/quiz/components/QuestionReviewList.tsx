@@ -35,13 +35,14 @@ export function QuestionReviewList({
   return (
     <div className="space-y-2">
       {questions.map((q, idx) => {
-        const isOpen = openIds.has(q.id);
+        // The server sends `question_id` (the review of the attempt).
+        const isOpen = openIds.has(q.question_id);
         const isTimedOut = status === "AUTO_FINISHED";
         return (
           <Collapsible
-            key={q.id}
+            key={q.question_id}
             open={isOpen}
-            onOpenChange={() => toggle(q.id)}
+            onOpenChange={() => toggle(q.question_id)}
           >
             <Card>
               <CollapsibleTrigger asChild>

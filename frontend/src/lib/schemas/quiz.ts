@@ -164,7 +164,15 @@ export const pointsSnapshotSchema = loose({
   lifetime_after: z.number(),
 });
 
-/** The result of an attempt (`AttemptResultResponse`). */
+/**
+ * The result of an attempt (`AttemptResultResponse`).
+ *
+ * The answer carries the **review** of the attempt (`review`, not
+ * `questions`): the question by question with the correctness — the
+ * owner of the attempt may read it (the DTO of the backend says
+ * "owner only"). The page of the result used to read `questions`, a
+ * field the server never sent: the review was **always empty**.
+ */
 export const attemptResultSchema = loose({
   attempt_id: z.string(),
   quiz_id: z.string(),
@@ -172,6 +180,7 @@ export const attemptResultSchema = loose({
   status: attemptStatusSchema,
   score: z.number(),
   total_points: z.number(),
+  score_out_of_10: z.number(),
   percentage: z.number(),
   correct_count: z.number(),
   incorrect_count: z.number(),
@@ -180,17 +189,35 @@ export const attemptResultSchema = loose({
   finished_at: z.string(),
   time_taken_seconds: z.number(),
   points: pointsSnapshotSchema,
+  review: z.array(reviewQuestionSchema),
 });
 
-/** The review of an attempt. */
+/** The block of the member in the review of the manager. */
+export const attemptUserBlockSchema = loose({
+  user_id: z.string(),
+  full_name: z.string(),
+  email: z.string(),
+  avatar: z.string().nullable(),
+});
+
+/** The review of an attempt (`ManagerAttemptReviewResponse`). */
 export const attemptReviewSchema = loose({
   attempt_id: z.string(),
   quiz_id: z.string(),
+  verse_id: z.string().nullable(),
   status: attemptStatusSchema,
   score: z.number(),
   total_points: z.number(),
+  score_out_of_10: z.number(),
   percentage: z.number(),
-  questions: z.array(reviewQuestionSchema),
+  correct_count: z.number(),
+  incorrect_count: z.number(),
+  question_count: z.number(),
+  points_awarded: z.number(),
+  finished_at: z.string(),
+  time_taken_seconds: z.number(),
+  user: attemptUserBlockSchema,
+  review: z.array(reviewQuestionSchema),
 });
 
 /** The summary of the quizzes (the tiles of the dashboard). */

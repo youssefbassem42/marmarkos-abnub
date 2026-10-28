@@ -90,7 +90,7 @@ describe("the card of the related verse", () => {
 describe("the list of the review of a quiz", () => {
   const questions = [
     {
-      id: "q1",
+      question_id: "q1",
       question: "ما هو الكتاب؟",
       points: 10,
       position: 1,
@@ -101,7 +101,7 @@ describe("the list of the review of a quiz", () => {
       points_awarded: 10,
     },
     {
-      id: "q2",
+      question_id: "q2",
       question: "من هو الكاتب؟",
       points: 10,
       position: 2,

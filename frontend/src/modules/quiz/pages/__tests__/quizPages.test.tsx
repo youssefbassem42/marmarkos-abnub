@@ -200,4 +200,30 @@ describe("the page of the result", () => {
     expect(screen.getByText("إجابات صحيحة")).toBeInTheDocument();
     expect(screen.getByText("إجابات خاطئة")).toBeInTheDocument();
   });
+
+  it("shows the review of the attempt", async () => {
+    renderPage(<QuizResultPage />, {
+      path: "/quizzes/:quizId/result",
+      route: `/quizzes/${QUIZ_ID}/result?attemptId=${ATTEMPT_ID}`,
+      answers: {
+        [`/quiz-attempts/${ATTEMPT_ID}/result`]: ATTEMPT_RESULT,
+      },
+    });
+
+    // The server sends the review of the attempt under `review` (the
+    // page used to read `questions`, a field the server never sent:
+    // the review was always empty).
+    await waitFor(
+      () => expect(screen.getByText("السؤال 1")).toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
+
+    // The question opens and shows the answer of the member.
+    fireEvent.click(screen.getByText("السؤال 1"));
+
+    await waitFor(
+      () => expect(screen.getByText("ما هو الكتاب؟")).toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
+  });
 });

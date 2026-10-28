@@ -94,16 +94,18 @@ export default function QuizResultPage() {
         incorrectCount={result.incorrect_count}
       />
 
+      {/* The snapshot of the points (before and after the attempt): the
+          server sends the totals of the member, not the score of the
+          attempt (the page used to show the score three times). */}
       <PointsProgressBars
-        weekPoints={result.score}
-        monthPoints={result.score}
-        lifetimePoints={result.score}
+        weekPoints={result.points.week_after}
+        monthPoints={result.points.month_after}
+        lifetimePoints={result.points.lifetime_after}
       />
 
-      <QuestionReviewList
-        questions={result.questions ?? []}
-        status={result.status}
-      />
+      {/* The server sends the review of the attempt under `review`
+          (the owner of the attempt may read it). */}
+      <QuestionReviewList questions={result.review} status={result.status} />
 
       {/* Bottom navigation */}
       <div className="flex flex-col gap-2 pt-2 sm:flex-row">
