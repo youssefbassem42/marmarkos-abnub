@@ -37,21 +37,25 @@ export default defineConfig({
         "src/components/ui/**",
       ],
       reporter: ["text", "json-summary"],
-      // The floors are the current measured values (27.51 % statements,
-      // 15.80 % branches, 32.62 % functions, 28.33 % lines). They may
+      // The floors are the current measured values (47.63 % statements,
+      // 35.67 % branches, 49.27 % functions, 48.66 % lines). They may
       // only ever be raised - never lowered (CI-005).
       //
       // Phase 5.4 brought the logic of the frontend to a good level:
       // the API clients are at 99 %, the hooks at 64 %, the shared
-      // library at 70 %. What is left is the markup of the 30 pages
-      // (1506 statements, 5.6 %): covering every page is a project of
-      // its own (one render test per screen), not a remediation. The
-      // floor is therefore the measured value, and it only goes up.
+      // library at 70 %. The second half of the phase rendered the
+      // **pages** themselves (the entrance, the profile, the quiz, the
+      // attendance, the analytics): the floor went from 27 % to 47 %.
+      //
+      // What is left is the markup of the ~30 pages that are still
+      // unrendered (the administration, the blog, the notifications):
+      // covering them is one render test per screen, and the floor goes
+      // up with every one of them.
       thresholds: {
-        statements: 27,
-        branches: 15,
-        functions: 32,
-        lines: 28,
+        statements: 47,
+        branches: 35,
+        functions: 49,
+        lines: 48,
       },
     },
   },

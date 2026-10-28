@@ -24,6 +24,7 @@ import { MemoryRouter, Route, Routes } from "react-router-dom";
 import { vi } from "vitest";
 
 import { LanguageProvider } from "@/i18n/LanguageProvider";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { apiClient } from "@/lib/api";
 
 /** The answers of the API: a URL (or a part of it) -> the body. */
@@ -108,7 +109,8 @@ function installApi(answers: ApiAnswers): PageHarness["calls"] {
  *   parameters of the URL (the attempt of a quiz, for instance) needs
  *   it.
  * @param options.answers the answers of the API, per URL.
- * @param options.user the member the page believes it has.
+ * @param options.admin the page lives in the shell of the
+ *   administration (the sidebar).
  */
 export function renderPage(
   page: ReactElement,
@@ -116,9 +118,10 @@ export function renderPage(
     route?: string;
     path?: string;
     answers?: ApiAnswers;
+    admin?: boolean;
   } = {},
 ): PageHarness {
-  const { route = "/", path, answers = {} } = options;
+  const { route = "/", path, answers = {}, admin = false } = options;
 
   const calls = installApi(answers);
 
@@ -140,10 +143,12 @@ export function renderPage(
     page
   );
 
+  const shell = admin ? <SidebarProvider>{tree}</SidebarProvider> : tree;
+
   const result = render(
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
-        <MemoryRouter initialEntries={[route]}>{tree}</MemoryRouter>
+        <MemoryRouter initialEntries={[route]}>{shell}</MemoryRouter>
       </LanguageProvider>
     </QueryClientProvider>,
   );
