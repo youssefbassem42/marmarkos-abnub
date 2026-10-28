@@ -1,6 +1,9 @@
 title = "Marmarkos ABNUB — gitleaks configuration"
 
-# The default rules are used unchanged; only one exception is added below.
+# The default rules are used unchanged; only the exceptions below are
+# added. Every exception is a **fake** secret of the test suite, the CI
+# or the end-to-end run: the values are recognisable by their prefix
+# (`ci-`, `e2e-`, `test-`) and they never reach a provider.
 [extend]
 useDefault = true
 
@@ -8,3 +11,11 @@ useDefault = true
 description = "The test suite uses hard-coded fake secrets on purpose (RFC 7518 needs 32+ bytes, so the values look like keys)."
 paths = ['''^backend/tests/''']
 regexes = ['''test-jwt-(secret|refresh-secret)-[0-9-]+''']
+
+[[allowlists]]
+description = "The pipelines and the end-to-end run use fake secrets of their own. The rule matches the **value** of the secret (not the path), so a real secret anywhere else is still reported."
+regexTarget = "secret"
+regexes = [
+  '''^(ci|e2e)-(jwt|test)-(secret|refresh-secret)-[0-9-]+$''',
+  '''^e2e-pepper-[0-9-]+$''',
+]
