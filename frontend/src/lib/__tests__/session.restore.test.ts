@@ -138,4 +138,35 @@ describe("restoreSession", () => {
 
     expect(localStorage.getItem("marmarkos.access_token")).toBeNull();
   });
+
+  it("refreshes once when two restores run at the same time", async () => {
+    // The refresh token is rotated: a second refresh with the same (now
+    // revoked) token answers 401 and the session is cleared. The E2E of
+    // Phase 5.5 found exactly that - React mounts the providers twice in
+    // the development and the member was logged out by a reload.
+    installAdapter({});
+
+    const [first, second] = await Promise.all([
+      restoreSession(),
+      restoreSession(),
+    ]);
+
+    expect(first).toBe(true);
+    expect(second).toBe(true);
+    expect(calls.filter((url) => url === "/auth/refresh")).toHaveLength(1);
+    expect(getAccessToken()).toBe("fresh-token");
+  });
+
+  it("shares the answer of a failed restore", async () => {
+    installAdapter({ refreshFails: true });
+
+    const [first, second] = await Promise.all([
+      restoreSession(),
+      restoreSession(),
+    ]);
+
+    expect(first).toBe(false);
+    expect(second).toBe(false);
+    expect(calls.filter((url) => url === "/auth/refresh")).toHaveLength(1);
+  });
 });

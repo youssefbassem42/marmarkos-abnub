@@ -24,7 +24,21 @@ import {
 /** The start-up restore must never hold the app hostage. */
 const RESTORE_TIMEOUT_MS = 5000;
 
-export async function restoreSession(): Promise<boolean> {
+/**
+ * One restore at a time.
+ *
+ * The refresh token is **rotated**: the backend hands out a new one and
+ * revokes the old. Two parallel restores therefore send the same (now
+ * revoked) token twice: the second answer is a 401, and the session is
+ * cleared - the member is logged out by a reload.
+ *
+ * React mounts the providers twice in the development (StrictMode), and
+ * any remount of the shell does it again. The callers share one promise
+ * instead, exactly like the silent refresh of the interceptor does.
+ */
+let restoreInFlight: Promise<boolean> | null = null;
+
+async function doRestore(): Promise<boolean> {
   // A token in memory (a sign-in that just happened) needs no restore.
   if (getAccessToken()) return true;
 
@@ -47,4 +61,11 @@ export async function restoreSession(): Promise<boolean> {
     clearAuth();
     return false;
   }
+}
+
+export function restoreSession(): Promise<boolean> {
+  restoreInFlight ??= doRestore().finally(() => {
+    restoreInFlight = null;
+  });
+  return restoreInFlight;
 }
