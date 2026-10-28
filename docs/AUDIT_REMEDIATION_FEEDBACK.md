@@ -257,6 +257,31 @@ be absent (the card of the feed showed a date of 1970) and the radio group
 of a question switched from uncontrolled to controlled (React complained
 every time a member answered).
 
+### 4.2 The defects of the quiz reported by the member (2026-10-29)
+
+The member reported two symptoms: "the quiz completes by itself and
+finishes with every question empty" and "the button that leads to the
+verse does not work". Both were reproduced in a browser, and both had
+a cause that no unit test could see.
+
+| # | The defect | The consequence | The fix |
+|---|---|---|---|
+| 35 | The countdown compared the **clock of the device** with the **clock of the server** (`Date.now() - server_time`) | A laptop whose clock is a few minutes off — or a browser that was asleep — made the quiz expire **the moment it opened**. The panel of the time being up appeared by itself, and its only button (mislabelled "view the points") **submits the attempt**: the quiz was graded with **every answer empty**, without the member ever answering | The countdown is anchored on the answer of the server **when it arrives** (the heartbeat every 15 s, and every saved answer) and counts down on the browser's own timer. The two clocks are never compared. Reproduced with a browser whose clock was one hour ahead: before the fix the timer read `00:00` and the panel was there, after the fix it reads the real budget |
+| 36 | The button of the result built the address with the id of the **quiz** (`/bible-verses/<quiz id>`) | The route of the verse expects the id of the verse: the button led to a page that does not exist (404) | The answer of the attempt carries the `verse_id`; the page uses it, and falls back to the feed when the quiz has no verse. The end-to-end test walks the way back and finds the verse |
+| 37 | The button of the panel of the time being up said **"عرض النقاط"** ("view the points") while it **submits the attempt** | The member clicked a button that said something else entirely — and the click was the only way out of the panel | It says "تسليم الإجابات" ("submit the answers"), and the button of the result says "العودة إلى الآية" ("back to the verse") like the one of the administration |
+
+The decision of the product (2026-10-29): **the quiz ends by itself when
+the time is up**. The server refuses every answer once the budget of
+the attempt is exhausted, so an attempt that is not submitted would
+stay in progress for ever; the server says it explicitly — the submit
+is the only way an attempt ends, and it is always allowed, even after
+the budget ran out. The member is warned **in the last ten seconds**
+with a toast: *"باقي 10 ثانية فقط — سيُسلَّم الاختبار تلقائيًا."*
+
+Proven in a browser with a quiz of 30 seconds: the toast appears at the
+ten seconds, the attempt is submitted by itself at zero, and the member
+lands on the result.
+
 ---
 
 ## 5. How it was verified

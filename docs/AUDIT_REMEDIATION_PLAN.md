@@ -132,6 +132,16 @@ Companion to `docs/CODEBASE_AUDIT_REPORT.md` (report ID `AUDIT-2026-10-26-FULL`,
 
 Newest first. Full detail in `docs/AUDIT_REMEDIATION_FEEDBACK.md`.
 
+### 2026-10-29 — The quiz of the member: the clock, the way back to the verse, the toast
+
+| Item | Result |
+|---|---|
+| The countdown | The timer compared the **clock of the device** with the **clock of the server**: a wrong clock expired the quiz the moment it opened, the panel of the time being up appeared by itself, and the attempt was submitted with **every answer empty**. The countdown is now anchored on the answer of the server when it arrives, and the two clocks are never compared. Reproduced with a browser whose clock was an hour ahead (before: `00:00` and the panel, after: the real budget) |
+| The way back to the verse | The button of the result built the address with the id of the **quiz**: the page of the verse expects the id of the verse, so the button led to a 404. The answer of the attempt carries the `verse_id` |
+| The buttons that say what they do | The button of the panel of the time being up said "عرض النقاط" ("view the points") while it **submits** the attempt: it says "تسليم الإجابات" now. The button of the result says "العودة إلى الآية" ("back to the verse") |
+| The end of the quiz (decision of the product) | When the time is up, the attempt is submitted **by itself** — the server refuses every answer once the budget is exhausted, so an attempt that is not submitted would stay in progress for ever. The member is warned **in the last ten seconds** with a toast |
+| The gate of the secrets | The scan of the history found the **fake** secrets of the pipeline and of the end-to-end run: the gate would have been red on every run. The exception now matches the **value** of the secret and not a path (an allowlist of a path hides every secret under it) |
+
 ### 2026-10-29 — The contract of the API is checked at the edge (Phase 5.11)
 
 | Item | Result |
