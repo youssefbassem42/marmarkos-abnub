@@ -4,10 +4,10 @@ from typing import Annotated
 
 from fastapi import Depends, Header
 
-from app.modules.auth.presentation.dependencies import SessionDependency, require_role
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.infrastructure.persistence.models import User
 from app.modules.users.infrastructure.persistence.user_repository import UserRepository
+from app.modules.users.presentation.dependencies import SessionDependency, require_role
 from app.shared.security import jwt_service
 
 

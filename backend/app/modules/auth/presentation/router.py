@@ -35,7 +35,6 @@ from app.modules.auth.presentation.cookies import (
     clear_refresh_token_cookie,
     set_refresh_token_cookie,
 )
-from app.modules.auth.presentation.dependencies import SessionDependency
 from app.modules.auth.presentation.rate_limit import (
     check_login_attempt,
     check_password_reset_attempt,
@@ -45,6 +44,7 @@ from app.modules.auth.presentation.rate_limit import (
     clear_login_failures,
 )
 from app.modules.users.application.mappers.user_mapper import map_user_to_response
+from app.modules.users.presentation.dependencies import SessionDependency
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 

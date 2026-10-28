@@ -105,26 +105,18 @@ def _cycles(graph: dict[str, set[str]]) -> list[list[str]]:
 #: fails the build; a cycle that is fixed may stay in the list (the
 #: test only checks that nothing was added).
 KNOWN_CYCLES: tuple[frozenset[str], ...] = (
-    # auth <-> users: the users module hashes the passwords of the
-    # members and guards its routes with the auth module's
-    # "current user" dependency, and the auth module needs the member
-    # itself. The cycle runs through the layers (users.presentation ->
-    # auth.presentation -> users.infrastructure), so it is not an import
-    # loop at runtime - but it is still a cycle in the module graph.
-    # Phase 4.4 (the domain ports speak domain objects) is the fix:
-    # the guard will return a shared contract object instead of the ORM
-    # model, and the member will be loaded through a port.
-    frozenset({"auth", "users"}),
+    # No cycle is left: the guard of the current member moved to the
+    # users module (the owner of the member) in Phase 4.4, and the
+    # dependency now flows one way - auth knows users, users does not
+    # know auth.
 )
 
 
-def test_the_module_graph_has_no_new_cycle() -> None:
+def test_the_module_graph_has_no_cycle() -> None:
     """The modules must not import each other in a circle."""
     cycles = _cycles(_edges())
-    known = set(KNOWN_CYCLES)
-    new_cycles = [cycle for cycle in cycles if frozenset(cycle) not in known]
 
-    assert new_cycles == [], f"new import cycles: {new_cycles}"
+    assert cycles == [], f"import cycles: {cycles}"
 
 
 @pytest.mark.parametrize(
@@ -133,15 +125,34 @@ def test_the_module_graph_has_no_new_cycle() -> None:
         # The shared vocabulary is the only way out of a cycle.
         ("notifications", {"attendance"}),
         ("bible", {"quiz"}),
+        # The members own the guard of the current member (Phase 4.4):
+        # the users module must not import the auth module.
+        ("users", {"auth"}),
     ],
 )
 def test_a_module_does_not_import_its_former_partner(module: str, forbidden: set[str]) -> None:
-    """The two cycles of the audit must stay broken."""
+    """The cycles of the audit must stay broken."""
     edges = _edges()
 
     assert not (edges.get(module, set()) & forbidden), (
         f"{module} imports {edges.get(module, set()) & forbidden} at module level"
     )
+
+
+def test_the_guard_of_the_current_member_has_one_home() -> None:
+    """The guard lives in the users module; the old path re-exports it.
+
+    The shim keeps the old import path working (one release), but it
+    must be the **same objects**, not copies: a copy would create two
+    guards, and the dependency overrides of one would not apply to the
+    other.
+    """
+    from app.modules.auth.presentation.dependencies import get_current_user as old
+    from app.modules.auth.presentation.dependencies import require_role as old_role
+    from app.modules.users.presentation.dependencies import get_current_user, require_role
+
+    assert old is get_current_user
+    assert old_role is require_role
 
 
 def test_the_shared_contracts_are_the_home_of_the_vocabulary() -> None:

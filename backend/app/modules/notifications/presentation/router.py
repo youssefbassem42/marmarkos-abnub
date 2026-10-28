@@ -15,7 +15,6 @@ from app.config import settings
 from app.core.database import get_unit_of_work
 from app.core.exceptions.errors import NotFoundError
 from app.core.pagination import Page, PageParams
-from app.modules.auth.presentation.dependencies import get_current_user, require_role
 from app.modules.notifications.application.dto.notification_dto import (
     MarkReadResponse,
     NotificationResponse,
@@ -33,6 +32,7 @@ from app.modules.notifications.application.services.notification_service import 
 from app.modules.notifications.domain.enums.notification_tab import NotificationTab
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.infrastructure.persistence.models import User
+from app.modules.users.presentation.dependencies import get_current_user, require_role
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 router = APIRouter(prefix="/notifications", tags=["Notifications"])

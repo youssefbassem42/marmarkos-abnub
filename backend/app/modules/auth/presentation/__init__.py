@@ -3,7 +3,7 @@ from app.modules.auth.presentation.cookies import (
     clear_refresh_token_cookie,
     set_refresh_token_cookie,
 )
-from app.modules.auth.presentation.dependencies import (
+from app.modules.users.presentation.dependencies import (
     SessionDependency,
     get_current_user,
     require_role,

@@ -3,11 +3,6 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, File, Response, UploadFile
 
 from app.core.exceptions import ValidationError
-from app.modules.auth.presentation.dependencies import (
-    SessionDependency,
-    get_current_user,
-    require_role,
-)
 from app.modules.users.application.dto import UserResponse
 from app.modules.users.application.dto.profile_update import (
     AttendancePinRequest,
@@ -19,6 +14,11 @@ from app.modules.users.application.mappers.user_mapper import map_user_to_respon
 from app.modules.users.application.services import ProfileCommandService, ProfileQueryService
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.infrastructure.persistence.models import User
+from app.modules.users.presentation.dependencies import (
+    SessionDependency,
+    get_current_user,
+    require_role,
+)
 from app.shared.infrastructure.services.image_upload import upload_image
 
 router = APIRouter(prefix="/users", tags=["Users"])

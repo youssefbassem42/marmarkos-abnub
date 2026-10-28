@@ -49,9 +49,9 @@ from app.modules.attendance.domain.meeting_schedule import (
     meeting_index_in_month,
     meetings_in_month,
 )
-from app.modules.auth.presentation.dependencies import get_current_user, require_role
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.infrastructure.persistence.models import User
+from app.modules.users.presentation.dependencies import get_current_user, require_role
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 router = APIRouter(prefix="/attendance", tags=["attendance"])

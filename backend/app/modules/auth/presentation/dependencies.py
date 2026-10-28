@@ -1,42 +1,20 @@
-from collections.abc import Awaitable, Callable
-from typing import Annotated
+"""The guard of the current member — **moved** to the users module.
 
-from fastapi import Depends
-from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from sqlalchemy.ext.asyncio import AsyncSession
+The guard answers "who is calling?" and returns the member, so it
+belongs to the module that owns the member (ARCH-001, Phase 4.4). The
+implementation now lives in
+:mod:`app.modules.users.presentation.dependencies`.
 
-from app.core.database import get_db_session
-from app.core.exceptions import ForbiddenError, UnauthorizedError
-from app.modules.users.domain.enums.role_name import RoleName
-from app.modules.users.domain.enums.user_status import UserStatus
-from app.modules.users.infrastructure.persistence.models import User
-from app.modules.users.infrastructure.persistence.user_repository import UserRepository
-from app.shared.security import jwt_service
+This file re-exports **the very same objects** (not copies): the
+identity of the guard is unchanged, so every caller - inside this
+repository and outside it - keeps working. The shim will be removed
+one release after the move.
+"""
 
-_bearer_scheme = HTTPBearer(auto_error=False)
+from app.modules.users.presentation.dependencies import (
+    SessionDependency,
+    get_current_user,
+    require_role,
+)
 
-SessionDependency = Annotated[AsyncSession, Depends(get_db_session)]
-
-
-async def get_current_user(
-    credentials: Annotated[HTTPAuthorizationCredentials | None, Depends(_bearer_scheme)],
-    session: SessionDependency,
-) -> User:
-    if credentials is None:
-        raise UnauthorizedError("Not authenticated")
-    user_id = jwt_service.decode_access_token(credentials.credentials)
-    user = await UserRepository(session).get_by_id(user_id)
-    if user is None:
-        raise UnauthorizedError("Invalid or expired token")
-    if user.status is not UserStatus.ACTIVE:
-        raise ForbiddenError("Account is not active")
-    return user
-
-
-def require_role(*roles: RoleName) -> Callable[..., Awaitable[User]]:
-    async def dependency(user: Annotated[User, Depends(get_current_user)]) -> User:
-        if user.role.name not in roles:
-            raise ForbiddenError("Insufficient permissions")
-        return user
-
-    return dependency
+__all__ = ["SessionDependency", "get_current_user", "require_role"]
