@@ -60,7 +60,7 @@ export interface PageHarness {
  * matches is answered with an empty object - the test then says what
  * it needs.
  */
-function installApi(answers: ApiAnswers): PageHarness["calls"] {
+export function installApi(answers: ApiAnswers): PageHarness["calls"] {
   const calls: PageHarness["calls"] = [];
   const keys = Object.keys(answers).sort((a, b) => b.length - a.length);
 
@@ -100,6 +100,19 @@ function installApi(answers: ApiAnswers): PageHarness["calls"] {
   return calls;
 }
 
+/** A query client with the defaults of the application. */
+export function makeQueryClient(): QueryClient {
+  return new QueryClient({
+    defaultOptions: {
+      // The same defaults as the application (AppProviders): a query
+      // that succeeded is not refetched on the next render. A test that
+      // changes them measures a client that no member ever sees.
+      queries: { retry: false, staleTime: 60_000 },
+      mutations: { retry: false },
+    },
+  });
+}
+
 /**
  * Render a page.
  *
@@ -125,15 +138,7 @@ export function renderPage(
 
   const calls = installApi(answers);
 
-  const queryClient = new QueryClient({
-    defaultOptions: {
-      // The same defaults as the application (AppProviders): a query
-      // that succeeded is not refetched on the next render. A test that
-      // changes them measures a client that no member ever sees.
-      queries: { retry: false, staleTime: 60_000 },
-      mutations: { retry: false },
-    },
-  });
+  const queryClient = makeQueryClient();
 
   const tree = path ? (
     <Routes>
