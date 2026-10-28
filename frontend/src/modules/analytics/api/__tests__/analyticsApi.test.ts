@@ -1,9 +1,9 @@
 /**
  * The analytics client (`/quiz-analytics/*`).
  *
- * The month is always sent in the canonical `YYYY-MM` shape: the server
- * still accepts the legacy `?year=&month=` pair for one release, but the
- * frontend must not use it - it is deprecated and disappears with it.
+ * The month is always sent in the canonical `YYYY-MM` shape: it is the
+ * only shape the server accepts (the legacy `?year=&month=` pair was
+ * removed in Phase 3.1 - it was never published).
  */
 
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";

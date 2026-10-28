@@ -76,22 +76,26 @@ async def test_monthly_analytics_query_count(
 
 
 @pytest.mark.asyncio
-async def test_monthly_analytics_accepts_legacy_year_month_shape(
+async def test_monthly_analytics_rejects_the_legacy_year_month_shape(
     client: AsyncClient, admin_auth_headers: dict[str, str]
 ):
-    """The deprecated `?year=2026&month=9` shape still resolves (one release)."""
+    """The legacy `?year=2026&month=9` shape is gone (Phase 3.1).
+
+    The shape was never published: the endpoint only ever accepted
+    `month=YYYY-MM`, so no client can depend on it.
+    """
     resp = await client.get(
         "/api/v1/quiz-analytics/monthly?year=2026&month=9",
         headers=admin_auth_headers,
     )
-    assert resp.status_code == 200
+    assert resp.status_code == 422
 
 
 @pytest.mark.asyncio
 async def test_monthly_analytics_rejects_an_unparsable_month(
     client: AsyncClient, admin_auth_headers: dict[str, str]
 ):
-    """A month that is neither YYYY-MM nor a legacy number is a 422."""
+    """A month that is not YYYY-MM is a 422."""
     resp = await client.get(
         "/api/v1/quiz-analytics/monthly?month=not-a-month",
         headers=admin_auth_headers,

@@ -115,8 +115,8 @@ describe("the analytics of the month", () => {
     );
 
     const call = calls.find((entry) => entry.url === "/quiz-analytics/monthly");
-    // The month is sent as "month=YYYY-MM" - the deprecated pair of
-    // "year" and "month" is never sent again.
+    // The month is sent as "month=YYYY-MM" - the only shape the server
+    // accepts.
     expect(call?.params).toMatchObject({
       month: expect.stringMatching(/^\d{4}-\d{2}$/),
     });
