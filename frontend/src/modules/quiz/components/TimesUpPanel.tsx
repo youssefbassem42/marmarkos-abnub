@@ -22,8 +22,11 @@ export function TimesUpPanel({ onSubmit, isSubmitting }: TimesUpPanelProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <p className="text-sm text-muted-foreground">{t("take.expired")}</p>
+          {/* The button **submits** the attempt: it used to say "عرض
+              النقاط" ("view the points"), so the member clicked a
+              button that said something else entirely. */}
           <Button onClick={onSubmit} disabled={isSubmitting} className="w-full">
-            {isSubmitting ? t("take.submitting") : t("result.viewPoints")}
+            {isSubmitting ? t("take.submitting") : t("take.submitAnswers")}
           </Button>
         </CardContent>
       </Card>

@@ -113,5 +113,16 @@ test.describe("taking a quiz", () => {
     await expect(page.getByText(/نتيجتك|نتيجة|result/i).first()).toBeVisible({
       timeout: 30_000,
     });
+
+    // The button that sends the member back to the verse of the quiz
+    // leads to the **verse** (the page used to build the address with
+    // the id of the quiz: the page did not exist).
+    const backToVerse = page.getByRole("link", { name: /العودة إلى/ }).first();
+    await expect(backToVerse).toBeVisible({ timeout: 20_000 });
+    await backToVerse.click();
+    await expect(page).toHaveURL(/\/bible-verses\/.+/, { timeout: 20_000 });
+    await expect(
+      page.getByRole("heading", { name: /آية الاختبار/ }).first(),
+    ).toBeVisible({ timeout: 20_000 });
   });
 });

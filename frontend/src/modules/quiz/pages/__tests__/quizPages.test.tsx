@@ -201,6 +201,29 @@ describe("the page of the result", () => {
     expect(screen.getByText("إجابات خاطئة")).toBeInTheDocument();
   });
 
+  it("sends the member back to the verse of the quiz", async () => {
+    // The button used to build the address with the id of the **quiz**
+    // (`/bible-verses/<quiz id>`): the route of the verse expects the
+    // id of the verse, so the button led to a page that does not exist.
+    renderPage(<QuizResultPage />, {
+      path: "/quizzes/:quizId/result",
+      route: `/quizzes/${QUIZ_ID}/result?attemptId=${ATTEMPT_ID}`,
+      answers: {
+        [`/quiz-attempts/${ATTEMPT_ID}/result`]: {
+          ...ATTEMPT_RESULT,
+          attempt_id: ATTEMPT_ID,
+          quiz_id: QUIZ_ID,
+          verse_id: "verse-42",
+        },
+      },
+    });
+
+    const back = await screen.findByRole("link", {
+      name: /العودة إلى الآية/,
+    });
+    expect(back).toHaveAttribute("href", "/bible-verses/verse-42");
+  });
+
   it("shows the review of the attempt", async () => {
     renderPage(<QuizResultPage />, {
       path: "/quizzes/:quizId/result",

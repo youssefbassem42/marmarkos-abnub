@@ -110,7 +110,17 @@ export default function QuizResultPage() {
       {/* Bottom navigation */}
       <div className="flex flex-col gap-2 pt-2 sm:flex-row">
         <Button variant="outline" asChild className="flex-1">
-          <Link to={quizId ? `/bible-verses/${quizId}` : "/"}>
+          {/* The verse of the quiz - **not** the quiz: the route of the
+              verse expects the id of the verse, and the page used to
+              build it with the id of the quiz (`/bible-verses/<quiz>`),
+              which is a page that does not exist. */}
+          <Link
+            to={
+              result.verse_id
+                ? `/bible-verses/${result.verse_id}`
+                : "/bible-verses"
+            }
+          >
             <ArrowLeft className="h-4 w-4" />
             {t("result.backToVerse")}
           </Link>

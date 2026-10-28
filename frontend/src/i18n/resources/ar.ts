@@ -1319,6 +1319,7 @@ export const ar = {
       autosaveNote: "تُحفظ إجاباتك تلقائيًا",
       warning: "اقترب انتهاء الوقت!",
       expired: "انتهى وقت الاختبار! ستُرسل إجاباتك تلقائيًا.",
+      submitAnswers: "تسليم الإجابات",
       submitting: "جارٍ تسجيل إجاباتك...",
       leaveConfirm: {
         title: "هل تريد المغادرة؟",
@@ -1345,7 +1346,7 @@ export const ar = {
         correctAnswer: "الإجابة الصحيحة",
         explanation: "التوضيح",
       },
-      backToVerse: "العودة إلى القسم",
+      backToVerse: "العودة إلى الآية",
       viewPoints: "عرض النقاط",
     },
   },
