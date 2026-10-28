@@ -62,7 +62,6 @@ export default function QuizAttemptPage() {
   // Server-anchored active-time budget from heartbeat/save responses (V2).
   const [budgetAnchor, setBudgetAnchor] = useState<{
     remainingSeconds: number;
-    serverTime: string;
   } | null>(null);
   const announcedRef = useRef(new Set<number>());
   const startAttemptTriggeredRef = useRef(false);
@@ -87,15 +86,15 @@ export default function QuizAttemptPage() {
   // answer. Until it does, the duration of the quiz is the best
   // estimate - showing "00:00" (the time is over) while the attempt is
   // still loading alarmed the member and locked the answers.
+  // The budget of the server, and nothing else: the countdown is
+  // anchored on the answer of the server when it arrives (the clock of
+  // the member's device is never compared with the clock of the
+  // server - a wrong clock expired the quiz the moment it opened).
   const timerRemaining =
     budgetAnchor?.remainingSeconds ??
     attempt?.remaining_seconds ??
     takeData?.duration_seconds ??
     0;
-  const timerServerTime =
-    budgetAnchor?.serverTime ??
-    attempt?.server_time ??
-    new Date().toISOString();
   // The answers can be given when the attempt exists (the save needs its
   // id) and when the server does not say that the attempt is over. An
   // attempt that is still on its way does not lock the answers: the
@@ -105,19 +104,13 @@ export default function QuizAttemptPage() {
     hasSubmitted ||
     (attempt !== undefined && attempt.status !== "IN_PROGRESS");
 
-  const timer = useQuizTimer({
-    remainingSeconds: timerRemaining,
-    serverTime: timerServerTime,
-  });
+  const timer = useQuizTimer({ remainingSeconds: timerRemaining });
 
   useHeartbeat({
     attemptId: attemptId ?? "",
     enabled: !!attemptId && attempt?.status === "IN_PROGRESS",
     onAnchor: (body) =>
-      setBudgetAnchor({
-        remainingSeconds: body.remaining_seconds,
-        serverTime: body.server_time,
-      }),
+      setBudgetAnchor({ remainingSeconds: body.remaining_seconds }),
   });
 
   // A fresh resume payload is already server-anchored; drop any older anchor.
@@ -328,10 +321,7 @@ export default function QuizAttemptPage() {
         {
           onSuccess: (body) => {
             setSaveStatus("saved");
-            setBudgetAnchor({
-              remainingSeconds: body.remaining_seconds,
-              serverTime: body.server_time,
-            });
+            setBudgetAnchor({ remainingSeconds: body.remaining_seconds });
           },
           onError: () => setSaveStatus("failed"),
         },

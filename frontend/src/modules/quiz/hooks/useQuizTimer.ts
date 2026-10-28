@@ -1,40 +1,45 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { formatClock } from "@/lib/datetime";
 
 interface UseQuizTimerOptions {
+  /**
+   * The remaining budget of the attempt **as the server saw it when it
+   * answered** (the heartbeat, the resume or the save).
+   */
   remainingSeconds: number;
-  serverTime: string;
 }
 
 const WARNING_THRESHOLD = 30;
 
-function computeRemaining(
-  remainingSeconds: number,
-  serverTime: string,
-): number {
-  const serverTs = new Date(serverTime).getTime();
-  const elapsed = Math.floor((Date.now() - serverTs) / 1000);
-  return Math.max(0, remainingSeconds - elapsed);
-}
-
-export function useQuizTimer({
-  remainingSeconds,
-  serverTime,
-}: UseQuizTimerOptions) {
-  const [secondsLeft, setSecondsLeft] = useState(() =>
-    computeRemaining(remainingSeconds, serverTime),
-  );
+/**
+ * The countdown of a quiz.
+ *
+ * The server owns the budget; the browser only counts it down. The
+ * countdown is therefore anchored on the answer of the server **when it
+ * arrives** — the clock of the member's device is never compared with
+ * the clock of the server.
+ *
+ * The old version did compare them (`Date.now() - server_time`): a
+ * laptop whose clock is a few minutes off (or a browser that has been
+ * asleep) made the quiz expire **the moment it opened**, the panel of
+ * the time being up appeared by itself, and the member submitted an
+ * attempt with every answer empty.
+ */
+export function useQuizTimer({ remainingSeconds }: UseQuizTimerOptions) {
+  const [secondsLeft, setSecondsLeft] = useState(remainingSeconds);
 
   const isExpired = secondsLeft <= 0;
   const isWarning = secondsLeft > 0 && secondsLeft <= WARNING_THRESHOLD;
 
-  // Reset on prop change (e.g. re-sync from server heartbeat/save)
+  // Every answer of the server re-anchors the countdown (the heartbeat
+  // every 15 seconds, and every answer the member gives).
   useEffect(() => {
-    setSecondsLeft(computeRemaining(remainingSeconds, serverTime));
-  }, [remainingSeconds, serverTime]);
+    setSecondsLeft(remainingSeconds);
+  }, [remainingSeconds]);
 
-  // Paused countdown: only runs while the tab is visible. Away time is not
-  // charged, which matches the server's active-time budget (V2).
+  // The countdown runs on the browser's own timer, and only while the
+  // tab is visible: the server does not charge the time the member is
+  // away either (the clock is paused).
   useEffect(() => {
     if (isExpired) return;
 
@@ -47,18 +52,6 @@ export function useQuizTimer({
     const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, [isExpired]);
-
-  // Re-sync when the tab becomes visible again; server is authoritative.
-  const resync = useCallback(() => {
-    if (document.visibilityState === "visible") {
-      setSecondsLeft(computeRemaining(remainingSeconds, serverTime));
-    }
-  }, [remainingSeconds, serverTime]);
-
-  useEffect(() => {
-    document.addEventListener("visibilitychange", resync);
-    return () => document.removeEventListener("visibilitychange", resync);
-  }, [resync]);
 
   return {
     secondsLeft,
