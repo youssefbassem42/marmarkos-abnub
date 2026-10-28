@@ -139,8 +139,10 @@ export interface GradedQuestion {
   position: number;
   is_correct: boolean;
   points_awarded: number;
-  selected_option_id: string;
-  correct_option_id: string;
+  /** The option the member chose - null when he skipped the question. */
+  selected_option_id: string | null;
+  /** The correct option - null when the question has none. */
+  correct_option_id: string | null;
   options: GradedOption[];
 }
 

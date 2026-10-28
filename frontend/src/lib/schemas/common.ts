@@ -52,3 +52,22 @@ export const nullableCount = z.number().nullable();
 
 /** A string that the API may send as null. */
 export const nullableText = z.string().nullable();
+
+/**
+ * The envelope of a paginated answer (`Page[T]` of the backend).
+ *
+ * The backend sends `has_next`; the first versions of the frontend
+ * types did not carry it, so it is optional here: a missing field is
+ * not a broken answer, and the pages that do not read it are not
+ * affected.
+ */
+export function paginated<T extends z.ZodType>(item: T) {
+  return z.looseObject({
+    items: z.array(item),
+    total: z.number(),
+    page: z.number(),
+    size: z.number(),
+    pages: z.number(),
+    has_next: z.boolean().optional(),
+  });
+}

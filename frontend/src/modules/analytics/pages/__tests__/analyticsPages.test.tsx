@@ -10,6 +10,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
+import { MEMBER } from "@/test/fixtures/member";
 import MonthlyAnalyticsPage from "@/modules/analytics/pages/MonthlyAnalyticsPage";
 import { UsersAdminPage } from "@/modules/users/pages/UsersAdminPage";
 
@@ -129,19 +130,15 @@ describe("the list of the members", () => {
     renderPage(<UsersAdminPage />, {
       admin: true,
       answers: {
+        // The answer of the backend (`UserResponse`): the names of the
+        // fields are the ones the server sends.
         "/users": [
           {
+            ...MEMBER,
             id: "u1",
             email: "member@example.com",
-            full_name: "محمود",
-            role: "MEMBER",
-            status: "ACTIVE",
-            phone: "+201000000000",
-            avatar_url: null,
-            attendance_pin_set: true,
-            public_id: "M-0001",
-            created_at: "2026-01-01T00:00:00Z",
-            updated_at: "2026-01-01T00:00:00Z",
+            first_name: "محمود",
+            last_name: null,
           },
         ],
       },

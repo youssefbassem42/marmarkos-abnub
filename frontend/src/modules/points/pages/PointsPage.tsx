@@ -20,9 +20,9 @@ export default function PointsPage() {
 
   const hasAnyPoints =
     pointsQuery.data &&
-    (pointsQuery.data.total_points > 0 ||
-      pointsQuery.data.this_month_points > 0 ||
-      pointsQuery.data.this_week_points > 0);
+    (pointsQuery.data.lifetime > 0 ||
+      pointsQuery.data.this_month > 0 ||
+      pointsQuery.data.this_week > 0);
 
   const BackArrow = () => (
     <Button

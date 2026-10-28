@@ -27,6 +27,12 @@ import {
   VERSE_STATS,
   VERSE_USER_ENGAGEMENT,
 } from "@/test/fixtures/bible";
+import {
+  MEMBER,
+  MONTHLY_POINTS,
+  POINT_ACTIVITY,
+  POINTS,
+} from "@/test/fixtures/member";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import type { ReactNode } from "react";
@@ -88,6 +94,17 @@ beforeEach(() => {
   // The quiz endpoints answer with the complete shape: an endpoint with
   // a schema rejects an incomplete answer.
   recorder = recordApiCallsFor({
+    "/users/me/points/history": {
+      items: [POINT_ACTIVITY],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+    "/users/me/points/monthly": MONTHLY_POINTS,
+    "/users/me/points": POINTS,
+    "/users": [MEMBER],
     "/bible-verses/analytics/overview": VERSE_ANALYTICS_OVERVIEW,
     "/bible-verses/analytics/quick-stats": VERSE_QUICK_STATS,
     "/bible-verses/published": {
@@ -439,7 +456,7 @@ describe("the other modules", () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
 
-    expect(onlyCall(recorder.calls).url).toBe("/points/me/monthly");
+    expect(onlyCall(recorder.calls).url).toBe("/users/me/points/monthly");
   });
 
   it("reads the list of the members", async () => {

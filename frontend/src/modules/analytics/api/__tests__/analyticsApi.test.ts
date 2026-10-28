@@ -28,15 +28,45 @@ beforeEach(() => {
       params: config.params,
       responseType: config.responseType,
     });
+    // The answers have the shape the backend sends: an endpoint with a
+    // schema rejects an incomplete answer.
+    const data = config.url?.includes("/users/")
+      ? {
+          user_id: "user-1",
+          full_name: "العضو",
+          avatar: null,
+          month: "2026-09-01",
+          total_points: 0,
+          quizzes_completed: 0,
+          average_score_out_of_10: 0,
+          completion_rate: 0,
+          breakdown: [],
+          history: [],
+        }
+      : config.url?.includes("/monthly/users")
+        ? {
+            items: [],
+            total: 0,
+            page: 1,
+            size: 20,
+            pages: 0,
+            has_next: false,
+          }
+        : config.url?.includes("/monthly/export")
+          ? new Blob(["a,b\n1,2"], { type: "text/csv" })
+          : {
+              month: "2026-09-01",
+              participants: 0,
+              quizzes_completed: 0,
+              total_points: 0,
+              average_score_out_of_10: 0,
+              quizzes_published: 0,
+              trend: [],
+              completion_distribution: [],
+              top: [],
+            };
     return {
-      data: {
-        items: [],
-        total: 0,
-        page: 1,
-        size: 20,
-        pages: 0,
-        has_next: false,
-      },
+      data,
       status: 200,
       statusText: "OK",
       headers: {},

@@ -19,6 +19,15 @@ import {
   VERSE_STATS,
   VERSE_USER_ENGAGEMENT,
 } from "@/test/fixtures/bible";
+import {
+  MARK_READ,
+  MEMBER,
+  MONTHLY_POINTS,
+  NOTIFICATION,
+  NOTIFICATION_SUMMARY,
+  POINT_ACTIVITY,
+  POINTS,
+} from "@/test/fixtures/member";
 import { notificationsApi } from "@/modules/notifications/api";
 import { pointsApi } from "@/modules/points/api";
 import { usersApi } from "@/modules/users/api";
@@ -35,6 +44,28 @@ beforeEach(() => {
   // The verses answer with the complete shape: an endpoint with a schema
   // rejects an incomplete answer.
   recorder = recordApiCallsFor({
+    "/notifications/summary": NOTIFICATION_SUMMARY,
+    "/notifications/read-all": MARK_READ,
+    "/notifications/n1/read": MARK_READ,
+    "/notifications": {
+      items: [NOTIFICATION],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+    "/users/me/points/history": {
+      items: [POINT_ACTIVITY],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+    "/users/me/points/monthly": MONTHLY_POINTS,
+    "/users/me/points": POINTS,
+    "/users": [MEMBER],
     "/bible-verses/analytics/overview": VERSE_ANALYTICS_OVERVIEW,
     "/bible-verses/analytics/quick-stats": VERSE_QUICK_STATS,
     "/bible-verses/published": {
@@ -208,9 +239,9 @@ describe("pointsApi", () => {
     await pointsApi.getMyHistory({ page: 1 });
 
     expect(recorder.calls.map((call) => call.url)).toEqual([
-      "/points/me",
-      "/points/me/monthly",
-      "/points/me/history",
+      "/users/me/points",
+      "/users/me/points/monthly",
+      "/users/me/points/history",
     ]);
   });
 });

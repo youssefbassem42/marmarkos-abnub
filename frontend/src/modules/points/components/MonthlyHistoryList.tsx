@@ -15,7 +15,7 @@ import {
 import type { MonthlyPointsResponse } from "../types";
 
 interface MonthlyHistoryListProps {
-  data: MonthlyPointsResponse[] | undefined;
+  data: MonthlyPointsResponse | undefined;
   isPending: boolean;
 }
 
@@ -42,7 +42,7 @@ export function MonthlyHistoryList({
     );
   }
 
-  const months = data ?? [];
+  const months = data?.items ?? [];
   const visibleMonths = expanded ? months : months.slice(0, INITIAL_COUNT);
 
   return (
@@ -66,9 +66,9 @@ export function MonthlyHistoryList({
             </TableHeader>
             <TableBody>
               {visibleMonths.map((row) => (
-                <TableRow key={row.month}>
+                <TableRow key={row.period_month}>
                   <TableCell className="font-medium text-ink font-arabic">
-                    {formatMonthYear(row.month + "-01", locale)}
+                    {formatMonthYear(row.period_month, locale)}
                   </TableCell>
                   <TableCell className="text-end" dir="ltr" tabular-nums>
                     {new Intl.NumberFormat(locale).format(row.points)}

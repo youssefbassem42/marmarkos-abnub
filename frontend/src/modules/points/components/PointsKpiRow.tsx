@@ -28,19 +28,19 @@ export function PointsKpiRow({ data, isPending }: PointsKpiRowProps) {
         icon={Award}
         iconClassName="text-amber-600"
         label={t("page.lifetime")}
-        value={data?.total_points ?? 0}
+        value={data?.lifetime ?? 0}
       />
       <StatCard
         icon={CalendarDays}
         iconClassName="text-emerald-600"
         label={t("page.thisMonth")}
-        value={data?.this_month_points ?? 0}
+        value={data?.this_month ?? 0}
       />
       <StatCard
         icon={CalendarRange}
         iconClassName="text-sky-600"
         label={t("page.thisWeek")}
-        value={data?.this_week_points ?? 0}
+        value={data?.this_week ?? 0}
       />
     </div>
   );

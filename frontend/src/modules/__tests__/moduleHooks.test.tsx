@@ -18,6 +18,14 @@ import { useAnonymousMessages } from "@/modules/anonymous-messages/hooks/useAnon
 import { useSubmitAnonymousMessage } from "@/modules/anonymous-messages/hooks/useSubmitAnonymousMessage";
 import { bibleKeys } from "@/modules/bible/api/queryKeys";
 import { VERSE_ADMIN_ITEM, VERSE_DETAIL } from "@/test/fixtures/bible";
+import {
+  MARK_READ,
+  MONTHLY_POINTS,
+  NOTIFICATION,
+  NOTIFICATION_SUMMARY,
+  POINT_ACTIVITY,
+  POINTS,
+} from "@/test/fixtures/member";
 import { useMarkAsRead } from "@/modules/bible/hooks/useMarkAsRead";
 import { usePublishVerse } from "@/modules/bible/hooks/usePublishVerse";
 import { useVerse } from "@/modules/bible/hooks/useVerse";
@@ -47,6 +55,46 @@ beforeEach(() => {
   // The verses answer with the complete shape: an endpoint with a schema
   // rejects an incomplete answer.
   recorder = recordApiCallsFor({
+    "/quiz-analytics/monthly/users": {
+      items: [],
+      total: 0,
+      page: 1,
+      size: 20,
+      pages: 0,
+      has_next: false,
+    },
+    "/quiz-analytics/monthly": {
+      month: "2026-10-01",
+      participants: 0,
+      quizzes_completed: 0,
+      total_points: 0,
+      average_score_out_of_10: 0,
+      quizzes_published: 0,
+      trend: [],
+      completion_distribution: [],
+      top: [],
+    },
+    "/notifications/summary": NOTIFICATION_SUMMARY,
+    "/notifications/read-all": MARK_READ,
+    "/notifications/n1/read": MARK_READ,
+    "/notifications": {
+      items: [NOTIFICATION],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+    "/users/me/points/history": {
+      items: [POINT_ACTIVITY],
+      total: 1,
+      page: 1,
+      size: 20,
+      pages: 1,
+      has_next: false,
+    },
+    "/users/me/points/monthly": MONTHLY_POINTS,
+    "/users/me/points": POINTS,
     "/bible-verses/v1/publish": VERSE_ADMIN_ITEM,
     "/bible-verses/v1": VERSE_DETAIL,
   });
@@ -111,8 +159,8 @@ describe("the points hooks", () => {
     await waitFor(() => expect(history.result.current.isSuccess).toBe(true));
 
     expect(recorder.calls.map((call) => call.url)).toEqual([
-      "/points/me",
-      "/points/me/history",
+      "/users/me/points",
+      "/users/me/points/history",
     ]);
   });
 });

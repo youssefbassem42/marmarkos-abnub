@@ -4,6 +4,12 @@
  */
 
 import { apiClient } from "@/lib/api";
+import { paginated } from "@/lib/schemas/common";
+import {
+  markReadSchema,
+  notificationSchema,
+  notificationSummarySchema,
+} from "@/lib/schemas/member";
 import type {
   MarkReadResponse,
   NotificationListParams,
@@ -19,13 +25,18 @@ export const notificationsApi = {
   list: async (
     params: NotificationListParams = {},
   ): Promise<Paginated<NotificationItem>> => {
-    const response = await apiClient.get("/notifications", { params });
+    const response = await apiClient.get("/notifications", {
+      params,
+      schema: paginated(notificationSchema),
+    });
     return response.data;
   },
 
   /** D-4: unread badge + per-tab counts; polled by the bell. */
   summary: async (): Promise<NotificationSummary> => {
-    const response = await apiClient.get("/notifications/summary");
+    const response = await apiClient.get("/notifications/summary", {
+      schema: notificationSummarySchema,
+    });
     return response.data;
   },
 
@@ -33,13 +44,21 @@ export const notificationsApi = {
   markRead: async (notificationId: string): Promise<MarkReadResponse> => {
     const response = await apiClient.post(
       `/notifications/${notificationId}/read`,
+      undefined,
+      { schema: markReadSchema },
     );
     return response.data;
   },
 
   /** BR-4: mark every currently visible unread notification. */
   markAllRead: async (): Promise<MarkReadResponse> => {
-    const response = await apiClient.post("/notifications/read-all");
+    const response = await apiClient.post(
+      "/notifications/read-all",
+      undefined,
+      {
+        schema: markReadSchema,
+      },
+    );
     return response.data;
   },
 

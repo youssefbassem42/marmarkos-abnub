@@ -7,6 +7,12 @@
  */
 
 import { apiClient } from "@/lib/api";
+import { paginated } from "@/lib/schemas/common";
+import {
+  monthlyAnalyticsSchema,
+  monthlyUserDetailSchema,
+  monthlyUserItemSchema,
+} from "@/lib/schemas/member";
 import type {
   MonthlyAnalytics,
   MonthlyUserDetail,
@@ -26,6 +32,7 @@ export const analyticsApi = {
   getMonthly: async (month: string): Promise<MonthlyAnalytics> => {
     const response = await apiClient.get("/quiz-analytics/monthly", {
       params: { month },
+      schema: monthlyAnalyticsSchema,
     });
     return response.data;
   },
@@ -37,6 +44,7 @@ export const analyticsApi = {
   ): Promise<Paginated<MonthlyUserItem>> => {
     const response = await apiClient.get("/quiz-analytics/monthly/users", {
       params: { month, ...params },
+      schema: paginated(monthlyUserItemSchema),
     });
     return response.data;
   },
@@ -48,6 +56,7 @@ export const analyticsApi = {
   ): Promise<MonthlyUserDetail> => {
     const response = await apiClient.get(`/quiz-analytics/users/${userId}`, {
       params: { month },
+      schema: monthlyUserDetailSchema,
     });
     return response.data;
   },

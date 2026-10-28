@@ -12,16 +12,24 @@ import { renderPage } from "@/test/pageHarness";
 import PointsPage from "@/modules/points/pages/PointsPage";
 import { NotificationsPage } from "@/modules/notifications/pages/NotificationsPage";
 
+// The answers of the backend (`PointsResponse` and
+// `MonthlyPointsResponse`): the names of the fields are the ones the
+// server sends.
 const POINTS = {
-  total_points: 120,
-  this_month_points: 40,
-  this_week_points: 15,
+  lifetime: 120,
+  this_week: 15,
+  this_month: 40,
+  quizzes_completed: 3,
 };
 
 const MONTHLY = {
-  month: "2026-10",
-  points: 40,
-  month_label: "أكتوبر ٢٠٢٦",
+  items: [
+    {
+      period_month: "2026-10-01",
+      points: 40,
+      quizzes_completed: 3,
+    },
+  ],
 };
 
 const NOTIFICATION = {
@@ -41,8 +49,8 @@ describe("the points of the member", () => {
   it("shows the points of the member", async () => {
     renderPage(<PointsPage />, {
       answers: {
-        "/points/me/monthly": [MONTHLY],
-        "/points/me": POINTS,
+        "/users/me/points/monthly": MONTHLY,
+        "/users/me/points": POINTS,
       },
     });
 
@@ -57,7 +65,16 @@ describe("the notifications of the member", () => {
   it("shows the notifications", async () => {
     renderPage(<NotificationsPage />, {
       answers: {
-        "/notifications/summary": { unread_count: 1, total_count: 1 },
+        "/notifications/summary": {
+          unread_count: 1,
+          tab_counts: {
+            all: 1,
+            unread: 1,
+            announcements: 1,
+            reminders: 0,
+            system: 0,
+          },
+        },
         "/notifications": {
           items: [NOTIFICATION],
           total: 1,

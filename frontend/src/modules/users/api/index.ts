@@ -1,10 +1,13 @@
 import { apiClient } from "@/lib/api";
+import { userSchema } from "@/lib/schemas/member";
 import type { UserAdminItem } from "../types";
 
 export const usersApi = {
   /** ADMIN-only full user list (roles, status, last login). */
   getUsers: async (): Promise<UserAdminItem[]> => {
-    const response = await apiClient.get("/users");
+    const response = await apiClient.get("/users", {
+      schema: userSchema.array(),
+    });
     return response.data;
   },
 };

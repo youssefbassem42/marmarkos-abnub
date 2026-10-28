@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatMonthYear } from "@/lib/datetime";
 import type { MonthlyPointsResponse } from "../types";
 
 type Range = 3 | 6 | 12;
@@ -17,7 +18,7 @@ type Range = 3 | 6 | 12;
 const RANGE_OPTIONS: Range[] = [3, 6, 12];
 
 interface PointsOverTimeChartProps {
-  data: MonthlyPointsResponse[] | undefined;
+  data: MonthlyPointsResponse | undefined;
   isPending: boolean;
 }
 
@@ -31,9 +32,15 @@ export function PointsOverTimeChart({
   const [range, setRange] = useState<Range>(6);
 
   const chartData = useMemo(() => {
+    // The answer of the backend is an envelope (`{ items: [...] }`); the
+    // label of the month is built here (the server sends the date of the
+    // first day of the month, not a label).
     if (!data) return [];
-    const sliced = data.slice(-range);
-    return [...sliced].reverse();
+    const sliced = data.items.slice(-range);
+    return [...sliced].reverse().map((item) => ({
+      ...item,
+      month_label: formatMonthYear(item.period_month, locale),
+    }));
   }, [data, range]);
 
   const rangeLabels: Record<Range, string> = {
