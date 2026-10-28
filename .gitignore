@@ -42,3 +42,8 @@ docker-compose.override.yml
 
 # The cache of the contract test (the crash reports of the last run).
 .schemathesis/
+
+# The end-to-end tests (Phase 5.5): the artefacts of a run are never in git.
+frontend/test-results/
+frontend/playwright-report/
+frontend/.playwright/

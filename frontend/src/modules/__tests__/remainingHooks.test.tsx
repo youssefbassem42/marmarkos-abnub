@@ -236,7 +236,10 @@ describe("the quiz queries", () => {
     await waitFor(() => expect(overview.result.current.isSuccess).toBe(true));
 
     expect(recorder.calls.map((call) => call.url)).toEqual([
-      "/quizzes/q1",
+      // The take path, not the manager endpoint: the manager detail
+      // carries the correctness of every option and is reserved for the
+      // servants (a member received a 403 and could not answer).
+      "/quizzes/q1/take",
       "/quizzes/analytics/overview",
     ]);
   });

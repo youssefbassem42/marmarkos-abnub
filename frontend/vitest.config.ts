@@ -12,6 +12,11 @@ export default defineConfig({
     setupFiles: ["src/test/setup.ts"],
     globals: true,
     css: false,
+    // The unit tests live in src/; the end-to-end tests live in e2e/
+    // and are driven by Playwright (QA-001), not by vitest. Without this
+    // line vitest picks the Playwright specs up and fails on them.
+    include: ["src/**/*.{test,spec}.{ts,tsx}"],
+    exclude: ["e2e/**", "node_modules/**", "dist/**"],
     coverage: {
       // The whole source tree is measured - a coverage number that only
       // counts the files a test happens to import says nothing about the
