@@ -249,13 +249,13 @@ cd frontend
 npm run format:check                        # All matched files use Prettier code style!
 npm run lint -- --max-warnings 0            # clean
 npx tsc -b --force                          # clean
-npm run test:run                            # 277 passed
+npm run test:run                            # 307 passed
 npm run build                               # built successfully
 npm audit --audit-level=high                # found 0 vulnerabilities
 
 # End-to-end — the three journeys of a member (Phase 5.5)
 cd frontend
-npx playwright test --reporter=list         # 5 passed (17s)
+npx playwright test --reporter=list         # 5 passed (18s)
 ```
 
 The end-to-end run is hermetic: it **rebuilds its own database**
@@ -310,7 +310,7 @@ Additional checks performed:
 | Phase | Content | Size |
 |---|---|---|
 | **Phase 4.4** | The domain ports speak domain objects. The last import cycle (`auth ↔ users`) runs through the layers: the route guard returns the ORM model of the users module. The fix is a shared "current member" contract that the guard returns instead of the ORM row — a type-level change that touches every route that uses the guard. | ~2 days |
-| **Phase 5.4 (the last 5 %)** | The coverage of the frontend is at **65.11 % statements** (277 unit tests). What is left: the scanner of the QR code (the camera cannot be simulated in jsdom), the schedule of the verses, the shell of the application (`App.tsx`, `main.tsx`, `router.tsx`) and the panels of the administration. The target of the plan is 70 %; the floor only goes up. | ~1 day |
+| ~~**Phase 5.4**~~ | ~~The frontend coverage~~ — **done**: **70.39 % statements** (307 unit tests in 51 files), the target of the plan. What is left is the scanner of the QR code (the camera cannot be simulated in jsdom) and a few panels of the administration — the floor only goes up, one step at a time. | — |
 | ~~**Phase 5.5**~~ | ~~The E2E golden paths with Playwright~~ — **done**: three journeys, five tests, all green, and they run in the pipeline (`.github/workflows/e2e-ci.yml`). | — |
 
 ### 6.3 Deliberately deferred (with reasons)
@@ -330,7 +330,7 @@ Additional checks performed:
 ## 7. Recommended next session
 
 1. **Phase 4.4** — the domain ports speak domain objects: the guard returns a shared contract instead of the ORM row, and the last import cycle disappears.
-2. **Phase 5.4 (the last 5 %)** — the shell of the application, the schedule of the verses and the panels of the administration. The floor only goes up (65 % → …).
+2. **Phase 5.4 (the last inches)** — the scanner of the QR code, the panels of the administration, the mobile lists. The floor only goes up (70 % → …).
 3. **Phase 3.1 (completion)** — remove the legacy `?year=&month=` branch of the analytics endpoints **one release after** the deprecation (not before: the server still accepts it today).
 4. **Deployment watch** — after the memory-first token ships, watch the sign-in rate and the 401 rate for a week; `VITE_AUTH_PERSISTENCE=local` is the one-line rollback.
 5. **The secret rotation** — the only item that cannot be done from the repository; it needs the console of every provider.
