@@ -11,6 +11,7 @@ from app.modules.points.application.dto.monthly_dto import (
     MonthHistoryPoint,
     MonthlyAnalyticsResponse,
     MonthlyUserDetailResponse,
+    MonthlyUserItem,
     QuizBreakdownItem,
     TopUser,
     TrendPoint,
@@ -74,31 +75,6 @@ async def _completion_distribution(uow: UnitOfWork, month: date) -> list[Complet
     ]
 
 
-class MonthlyUserItem:
-    def __init__(  # noqa: PLR0913 - explicit keyword-only constructor
-        self,
-        *,
-        rank: int,
-        user_id: uuid.UUID,
-        full_name: str,
-        avatar: str | None,
-        total_points: int,
-        quizzes_completed: int,
-        average_score_out_of_10: float,
-        sparkline: list[int],
-        completion_rate: float,
-    ) -> None:
-        self.rank = rank
-        self.user_id = user_id
-        self.full_name = full_name
-        self.avatar = avatar
-        self.total_points = total_points
-        self.quizzes_completed = quizzes_completed
-        self.average_score_out_of_10 = average_score_out_of_10
-        self.sparkline = sparkline
-        self.completion_rate = completion_rate
-
-
 async def monthly_users_query(
     uow: UnitOfWork,
     actor: User,
@@ -110,7 +86,7 @@ async def monthly_users_query(
     score_range: str | None = None,
     completion_rate: str | None = None,
     min_quizzes: int | None = None,
-) -> Page[dict[str, object]]:
+) -> Page[MonthlyUserItem]:
     """Paginated user results page for a month with sparkline."""
     assert_manager(actor)
     months = last_n_months(month, 6)
@@ -126,7 +102,7 @@ async def monthly_users_query(
         sparkline_months=months,
     )
     published = max(await uow.quizzes.count_published_in_month(month), 1)
-    items = []
+    items: list[MonthlyUserItem] = []
     rank = 0
     prev_points: int | None = None
     for i, row in enumerate(rows):
@@ -135,17 +111,17 @@ async def monthly_users_query(
             rank = i + 1 + page.offset
         prev_points = pts
         items.append(
-            {
-                "rank": rank,
-                "user_id": row["user_id"],
-                "full_name": row["full_name"],
-                "avatar": row["avatar"],
-                "total_points": pts,
-                "quizzes_completed": row["quizzes_completed"],
-                "average_score_out_of_10": row["average_score_out_of_10"],
-                "completion_rate": round(row["quizzes_completed"] / published * 100, 1),
-                "sparkline": row["sparkline"],
-            }
+            MonthlyUserItem(
+                rank=rank,
+                user_id=row["user_id"],
+                full_name=row["full_name"],
+                avatar=row["avatar"],
+                total_points=pts,
+                quizzes_completed=row["quizzes_completed"],
+                average_score_out_of_10=row["average_score_out_of_10"],
+                completion_rate=round(row["quizzes_completed"] / published * 100, 1),
+                sparkline=row["sparkline"],
+            )
         )
     return Page.build(items, total, page)
 

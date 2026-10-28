@@ -51,12 +51,9 @@ export const QUIZ_TAKE = {
   id: "quiz-1",
   title: "اختبار الآية",
   description: "اختبار على آية اليوم",
-  verse_id: "verse-1",
-  verse_reference: "١ يوئيل ٣:١",
   duration_seconds: 600,
   total_points: 10,
   question_count: 1,
-  status: "PUBLISHED",
   attempt_id: null,
   questions: [
     {

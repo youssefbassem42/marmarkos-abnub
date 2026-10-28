@@ -12,6 +12,7 @@ from app.core.pagination import Page, PageParams
 from app.modules.points.application.dto.monthly_dto import (
     MonthlyAnalyticsResponse,
     MonthlyUserDetailResponse,
+    MonthlyUserItem,
 )
 from app.modules.points.application.queries.monthly_analytics_query import (
     monthly_analytics_query,
@@ -79,7 +80,7 @@ async def monthly_users(
     min_quizzes: int | None = None,
     page: _Page = 1,
     size: _Size = settings.QUIZ_ANALYTICS_PAGE_SIZE,
-) -> Page[dict[str, object]]:
+) -> Page[MonthlyUserItem]:
     """Paginated user results page with sparkline."""
     return await monthly_users_query(
         uow,

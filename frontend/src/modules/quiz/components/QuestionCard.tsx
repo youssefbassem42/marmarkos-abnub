@@ -45,7 +45,12 @@ export function QuestionCard({
       </CardHeader>
       <CardContent>
         <RadioGroup
-          value={selectedOptionId}
+          // The value is always a string: an unanswered question would
+          // make the group **uncontrolled**, and React complains when
+          // the member answers ("changing from uncontrolled to
+          // controlled") - and the selection of the next question may
+          // not be shown.
+          value={selectedOptionId ?? ""}
           onValueChange={onSelect}
           disabled={disabled}
           className="gap-3"

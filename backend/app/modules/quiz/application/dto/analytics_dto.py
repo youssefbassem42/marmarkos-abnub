@@ -19,6 +19,17 @@ class CompletionStatusBucket(BaseModel):
     percentage: float = Field(description="Share of finished attempts (0–100)")
 
 
+class QuizAnalyticsOverview(BaseModel):
+    """GET /quizzes/analytics/overview — the tiles of the dashboard."""
+
+    total_quizzes: int = Field(ge=0, description="All quizzes")
+    published_quizzes: int = Field(ge=0, description="PUBLISHED quizzes")
+    participants: int = Field(ge=0, description="Distinct members with an attempt")
+    completed: int = Field(ge=0, description="COMPLETED attempts")
+    auto_finished: int = Field(ge=0, description="AUTO_FINISHED attempts")
+    average_score: float = Field(description="Average raw score")
+
+
 class QuizAnalyticsResponse(BaseModel):
     """GET /quizzes/{id}/analytics."""
 

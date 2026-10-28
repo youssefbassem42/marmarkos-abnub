@@ -38,6 +38,7 @@ from app.modules.quiz.application.commands.quiz_commands import (
 )
 from app.modules.quiz.application.dto.analytics_dto import (
     ManagerAttemptReviewResponse,
+    QuizAnalyticsOverview,
     QuizAnalyticsResponse,
     QuizUserResultItem,
 )
@@ -304,7 +305,7 @@ async def get_attempt_result(
 
 
 @quiz_router.get("/analytics/overview")
-async def quiz_analytics_overview(actor: BibleManager, uow: _UoW) -> dict[str, object]:
+async def quiz_analytics_overview(actor: BibleManager, uow: _UoW) -> QuizAnalyticsOverview:
     """Aggregate quiz stats for the admin dashboard (P5-057)."""
     assert_manager(actor)
     return await quiz_analytics_overview_query(uow)

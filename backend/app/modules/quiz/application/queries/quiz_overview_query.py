@@ -2,6 +2,7 @@
 
 from sqlalchemy import func, select
 
+from app.modules.quiz.application.dto.analytics_dto import QuizAnalyticsOverview
 from app.modules.quiz.infrastructure.persistence.models import (
     Quiz,
     QuizAttempt,
@@ -9,7 +10,7 @@ from app.modules.quiz.infrastructure.persistence.models import (
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 
-async def quiz_analytics_overview_query(uow: UnitOfWork) -> dict[str, object]:
+async def quiz_analytics_overview_query(uow: UnitOfWork) -> QuizAnalyticsOverview:
     """Aggregate quiz stats across all quizzes for the admin dashboard."""
     total_quizzes = int((await uow.session.execute(select(func.count(Quiz.id)))).scalar_one())
     published_quizzes = int(
@@ -48,11 +49,11 @@ async def quiz_analytics_overview_query(uow: UnitOfWork) -> dict[str, object]:
     avg_score = float(
         (await uow.session.execute(select(func.avg(QuizAttempt.score)))).scalar_one() or 0
     )
-    return {
-        "total_quizzes": total_quizzes,
-        "published_quizzes": published_quizzes,
-        "participants": participants,
-        "completed": completed,
-        "auto_finished": auto_finished,
-        "average_score": round(avg_score, 1),
-    }
+    return QuizAnalyticsOverview(
+        total_quizzes=total_quizzes,
+        published_quizzes=published_quizzes,
+        participants=participants,
+        completed=completed,
+        auto_finished=auto_finished,
+        average_score=round(avg_score, 1),
+    )

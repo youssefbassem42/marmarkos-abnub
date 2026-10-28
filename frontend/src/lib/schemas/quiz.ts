@@ -93,16 +93,21 @@ export const takeQuestionSchema = loose({
 });
 
 /** The payload of the member path (`GET /quizzes/{id}/take`). */
+/**
+ * The payload of the member path (`GET /quizzes/{id}/take`).
+ *
+ * The fields are exactly the ones of `QuizTakeResponse` of the backend:
+ * no `verse_id`, no `verse_reference` and no `status` — the page must
+ * not wait for fields the server does not send (the schema rejected
+ * the answer and the page showed its error state).
+ */
 export const quizTakeSchema = loose({
   id: z.string(),
   title: z.string(),
   description: z.string().nullable(),
-  verse_id: z.string(),
-  verse_reference: z.string(),
   duration_seconds: z.number(),
   total_points: z.number(),
   question_count: z.number(),
-  status: quizStatusSchema,
   attempt_id: z.string().nullable(),
   questions: z.array(takeQuestionSchema),
 });
