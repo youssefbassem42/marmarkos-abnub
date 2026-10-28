@@ -49,6 +49,35 @@ test.describe("signing in", () => {
     });
   });
 
+  test("the sign-out ends the session", async ({ page }) => {
+    // The session of a member ends when the member signs out - and only
+    // then (the refresh token keeps the session alive otherwise).
+    await page.goto("/login");
+    await page.locator("#email").fill(MEMBER.email);
+    await page.locator("#password").fill(MEMBER.password);
+    await page
+      .getByRole("button", { name: /تسجيل الدخول|دخول|sign in/i })
+      .click();
+    await page.waitForURL(/\/profile|\/$/, { timeout: 20_000 });
+
+    // The menu of the account (the avatar in the bar of the platform).
+    await page
+      .getByRole("button", { name: /ملفي الشخصي|حسابي|profile/i })
+      .first()
+      .click();
+    const signOut = page
+      .getByRole("menuitem", { name: /تسجيل الخروج|خروج|sign out|log ?out/i })
+      .first();
+    await expect(signOut).toBeVisible({ timeout: 20_000 });
+    await signOut.click();
+
+    // The member is back on the landing page, and the private pages are
+    // closed to them again.
+    await expect(page).not.toHaveURL(/\/profile/, { timeout: 20_000 });
+    await page.goto("/profile");
+    await expect(page).toHaveURL(/\/login/, { timeout: 20_000 });
+  });
+
   test("an anonymous visitor is sent to the login page", async ({ page }) => {
     await page.goto("/profile");
 
