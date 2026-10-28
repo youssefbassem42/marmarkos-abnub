@@ -25,6 +25,7 @@ import { vi } from "vitest";
 
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
 import { apiClient } from "@/lib/api";
 
 /** The answers of the API: a URL (or a part of it) -> the body. */
@@ -165,6 +166,9 @@ export function renderPage(
   const result = render(
     <QueryClientProvider client={queryClient}>
       <LanguageProvider>
+        {/* The toaster of the application: a page that warns the
+            member with a toast is tested the way the member sees it. */}
+        <Toaster position="top-center" />
         <MemoryRouter initialEntries={[route]}>{shell}</MemoryRouter>
       </LanguageProvider>
     </QueryClientProvider>,

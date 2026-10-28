@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "react-router-dom";
+import { toast } from "sonner";
 import { ApiError, toApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,6 +30,9 @@ import { TimesUpPanel } from "../components/TimesUpPanel";
 type SaveStatus = "idle" | "saving" | "saved" | "failed";
 
 const ANNOUNCE_SECONDS = [60, 30, 10];
+
+/** The toast of the last seconds appears when the budget is this low. */
+const TIME_WARNING_SECONDS = 10;
 
 export default function QuizAttemptPage() {
   const { quizId } = useParams<{ quizId: string }>();
@@ -64,6 +68,7 @@ export default function QuizAttemptPage() {
     remainingSeconds: number;
   } | null>(null);
   const announcedRef = useRef(new Set<number>());
+  const timeWarningShownRef = useRef(false);
   const startAttemptTriggeredRef = useRef(false);
 
   const startAttempt = useStartAttempt();
@@ -255,6 +260,20 @@ export default function QuizAttemptPage() {
     }
   }, [timer.secondsLeft]);
 
+  // The last ten seconds: a toast tells the member that the time is
+  // about to be over - the attempt is submitted by itself when the
+  // time is up, and an answer that is not given in time is lost.
+  useEffect(() => {
+    const seconds = timer.secondsLeft;
+    if (seconds <= 0 || seconds > TIME_WARNING_SECONDS) return;
+    if (timeWarningShownRef.current) return;
+    timeWarningShownRef.current = true;
+    toast.warning(t("take.timeAlmostUp", { seconds }), {
+      id: "quiz-time-almost-up",
+      duration: 10_000,
+    });
+  }, [timer.secondsLeft, t]);
+
   // beforeunload warning
   useEffect(() => {
     const handler = (e: BeforeUnloadEvent) => {
@@ -343,6 +362,21 @@ export default function QuizAttemptPage() {
       onError: () => setHasSubmitted(false),
     });
   }, [attemptId, hasSubmitted, quizId, navigate, submitAttempt]);
+
+  // The time is up: the attempt is submitted **by itself**.
+  //
+  // The server refuses every answer once the budget of the attempt is
+  // exhausted (`AttemptBudgetExhaustedError`), so an attempt that is
+  // not submitted would stay in progress for ever - the member could
+  // never finish it and the result would never be graded. The member
+  // is warned in the last seconds (the toast below), and the panel of
+  // the time being up keeps the button that submits the answers, in
+  // case the request itself fails.
+  useEffect(() => {
+    if (!timer.isExpired) return;
+    if (!attemptId || hasSubmitted) return;
+    handleSubmit();
+  }, [timer.isExpired, attemptId, hasSubmitted, handleSubmit]);
 
   // Loading skeleton
   //

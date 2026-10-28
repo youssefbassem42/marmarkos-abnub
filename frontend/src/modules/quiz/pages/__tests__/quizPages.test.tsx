@@ -8,8 +8,8 @@
  * does not reach the members.
  */
 
-import { fireEvent, screen, waitFor } from "@testing-library/react";
-import { beforeEach, describe, expect, it } from "vitest";
+import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
 import {
@@ -99,6 +99,91 @@ describe("the page of the attempt", () => {
       { timeout: 5_000 },
     );
     expect(screen.getByText("إنجيل متى")).toBeInTheDocument();
+  });
+
+  it("submits the attempt by itself when the time is up", async () => {
+    // The server refuses every answer once the budget of the attempt is
+    // exhausted: an attempt that is not submitted would stay in progress
+    // for ever. The page submits it by itself (the decision of the
+    // product: the quiz ends when the time is up).
+    const { calls } = renderPage(<QuizAttemptPage />, {
+      path: "/quizzes/:quizId/attempt",
+      route: `/quizzes/${QUIZ_ID}/attempt`,
+      answers: {
+        [`/quizzes/${QUIZ_ID}/take`]: TAKE,
+        "/quiz-attempts": {
+          ...ATTEMPT,
+          id: ATTEMPT_ID,
+          questions: TAKE.questions,
+        },
+        [`/quiz-attempts/${ATTEMPT_ID}`]: {
+          ...ATTEMPT,
+          // The budget is over: the countdown starts at zero.
+          remaining_seconds: 0,
+          questions: TAKE.questions,
+        },
+        [`/quiz-attempts/${ATTEMPT_ID}/submit`]: {
+          ...ATTEMPT_RESULT,
+          attempt_id: ATTEMPT_ID,
+          quiz_id: QUIZ_ID,
+        },
+      },
+    });
+
+    await waitFor(
+      () =>
+        expect(
+          calls.some(
+            (call) =>
+              call.method === "post" &&
+              call.url.includes(`/quiz-attempts/${ATTEMPT_ID}/submit`),
+          ),
+        ).toBe(true),
+      { timeout: 5_000 },
+    );
+  });
+
+  it("warns the member in the last ten seconds", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    try {
+      renderPage(<QuizAttemptPage />, {
+        path: "/quizzes/:quizId/attempt",
+        route: `/quizzes/${QUIZ_ID}/attempt`,
+        answers: {
+          [`/quizzes/${QUIZ_ID}/take`]: TAKE,
+          "/quiz-attempts": {
+            ...ATTEMPT,
+            id: ATTEMPT_ID,
+            questions: TAKE.questions,
+          },
+          [`/quiz-attempts/${ATTEMPT_ID}`]: {
+            ...ATTEMPT,
+            // Twelve seconds of budget: the toast appears at ten.
+            remaining_seconds: 12,
+            questions: TAKE.questions,
+          },
+        },
+      });
+
+      await waitFor(
+        () => expect(screen.getByText("ما هو الكتاب؟")).toBeInTheDocument(),
+        { timeout: 5_000 },
+      );
+
+      await act(async () => {
+        vi.advanceTimersByTime(3000);
+      });
+
+      await waitFor(
+        () =>
+          expect(
+            screen.getByText(/باقي 10 ثانية فقط|سيُسلَّم الاختبار تلقائيًا/),
+          ).toBeInTheDocument(),
+        { timeout: 5_000 },
+      );
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("never shows the correctness of an option to the member", async () => {
