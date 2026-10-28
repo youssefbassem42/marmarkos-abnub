@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
-import { ApiError, getMe } from "@/lib/api";
+import { ApiError, getMe, scheduleTokenRefresh } from "@/lib/api";
 import { saveAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +26,7 @@ export function GoogleCallbackPage() {
     const hash = new URLSearchParams(location.hash.replace(/^#/, ""));
     const error = hash.get("error");
     const accessToken = hash.get("access_token");
+    const expiresIn = Number(hash.get("expires_in") ?? 0);
 
     if (error || !accessToken) {
       setErrorMessage(
@@ -48,6 +49,11 @@ export function GoogleCallbackPage() {
         if (cancelled) return;
         // The refresh cookie was set by the backend on the API domain.
         saveAuth({ accessToken, user }, true);
+        // The session must outlive the access token (the proactive
+        // refresh).
+        if (Number.isFinite(expiresIn) && expiresIn > 0) {
+          scheduleTokenRefresh(expiresIn);
+        }
         if (!user.date_of_birth || !user.address) {
           navigate("/profile", { replace: true });
         } else {

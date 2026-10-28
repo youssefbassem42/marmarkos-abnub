@@ -24,13 +24,54 @@ const USER = {
 const originalAdapter = apiClient.defaults.adapter;
 const calls: string[] = [];
 
-function installAdapter(options: { refreshFails?: boolean }): void {
+function installAdapter(options: {
+  refreshFails?: boolean;
+  /** The refresh fails with a transient failure (the network blinked). */
+  refreshIsTransient?: boolean;
+  /** The first attempt fails, the second one works. */
+  firstAttemptFails?: boolean;
+}): void {
   calls.length = 0;
   apiClient.defaults.adapter = async (config: InternalAxiosRequestConfig) => {
     const url = config.url ?? "";
     calls.push(url);
 
     if (url === "/auth/refresh") {
+      if (
+        options.firstAttemptFails &&
+        calls.filter((c) => c === url).length === 1
+      ) {
+        const response = {
+          data: { detail: "Service unavailable" },
+          status: 503,
+          statusText: "Service Unavailable",
+          headers: {},
+          config,
+        } as AxiosResponse;
+        throw new AxiosError(
+          "Service Unavailable",
+          "503",
+          config,
+          undefined,
+          response,
+        );
+      }
+      if (options.refreshIsTransient) {
+        const response = {
+          data: { detail: "Service unavailable" },
+          status: 503,
+          statusText: "Service Unavailable",
+          headers: {},
+          config,
+        } as AxiosResponse;
+        throw new AxiosError(
+          "Service Unavailable",
+          "503",
+          config,
+          undefined,
+          response,
+        );
+      }
       if (options.refreshFails) {
         // A custom adapter bypasses axios' own status validation, so the
         // failure is raised the way the http adapter raises it.
@@ -115,6 +156,8 @@ describe("restoreSession", () => {
 
     expect(restored).toBe(false);
     expect(getAccessToken()).toBeNull();
+    // The server refused the refresh: there is nothing to retry.
+    expect(calls.filter((url) => url === "/auth/refresh")).toHaveLength(1);
   });
 
   it("does nothing when a token is already in memory", async () => {
@@ -154,6 +197,32 @@ describe("restoreSession", () => {
     expect(first).toBe(true);
     expect(second).toBe(true);
     expect(calls.filter((url) => url === "/auth/refresh")).toHaveLength(1);
+    expect(getAccessToken()).toBe("fresh-token");
+  });
+
+  it("does not throw the member out when the refresh fails transiently", async () => {
+    // The network blinked (a cold start, a 5xx). The session of the
+    // browser is still valid: signing the member out was the "auto
+    // logout" the members reported. The restore tries a second time and
+    // leaves the session alone.
+    installAdapter({ refreshIsTransient: true });
+
+    const restored = await restoreSession();
+
+    expect(restored).toBe(false);
+    // Two attempts: a cold start is worth a second try.
+    expect(calls.filter((url) => url === "/auth/refresh")).toHaveLength(2);
+    // The profile was never asked for (there is no token).
+    expect(calls).not.toContain("/users/me");
+  });
+
+  it("tries a second time when the first attempt fails", async () => {
+    installAdapter({ firstAttemptFails: true });
+
+    const restored = await restoreSession();
+
+    expect(restored).toBe(true);
+    expect(calls.filter((url) => url === "/auth/refresh")).toHaveLength(2);
     expect(getAccessToken()).toBe("fresh-token");
   });
 

@@ -153,24 +153,115 @@ type RetriableConfig = InternalAxiosRequestConfig & { _retried?: boolean };
 /** Shared so a burst of parallel 401s triggers exactly one refresh. */
 let refreshInFlight: Promise<string> | null = null;
 
-async function requestFreshAccessToken(): Promise<string> {
-  const { data } = await apiClient.post<TokenResponse>(REFRESH_URL);
+/**
+ * The proactive refresh.
+ *
+ * The token is refreshed at 80 % of its life: the member never meets an
+ * expired token, and the session does not depend on a request that has to
+ * fail first.
+ *
+ * Without it the session only survived because a request happened to answer
+ * 401 - and when that refresh failed (a network hiccup, a cold start, a
+ * rate limit), the member was logged out in the middle of the platform
+ * ("the session dies after 30 minutes"). The refresh here is the same
+ * promise the interceptor uses, so a refresh that is already on its way is
+ * never started twice (the refresh token is **rotated**: the second answer
+ * would be a 401 on a token that no longer exists).
+ */
+const REFRESH_AT_RATIO = 0.8;
+/** Never refresh earlier than this (a very short token, a test). */
+const MIN_REFRESH_DELAY_MS = 30_000;
+
+let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+/** Stop the proactive refresh (the sign-out). */
+export function stopTokenRefresh(): void {
+  if (refreshTimer !== null) {
+    clearTimeout(refreshTimer);
+    refreshTimer = null;
+  }
+}
+
+/**
+ * Schedule the next proactive refresh.
+ *
+ * @param expiresInSeconds the life of the access token that was just
+ * handed out.
+ */
+export function scheduleTokenRefresh(expiresInSeconds: number): void {
+  stopTokenRefresh();
+  const lifetime = Number.isFinite(expiresInSeconds)
+    ? expiresInSeconds * 1000
+    : 0;
+  if (lifetime <= 0) return;
+  const delay = Math.max(MIN_REFRESH_DELAY_MS, lifetime * REFRESH_AT_RATIO);
+  refreshTimer = setTimeout(() => {
+    refreshTimer = null;
+    void refreshAccessToken().catch(() => {
+      // A failure here is not fatal: the next request tries again (the
+      // interceptor refreshes on a 401) and the session stays alive. The
+      // member is only signed out when the server definitively refuses
+      // the refresh (401/403).
+    });
+  }, delay);
+}
+
+async function requestFreshAccessToken(timeoutMs?: number): Promise<string> {
+  const { data } = await apiClient.post<TokenResponse>(
+    REFRESH_URL,
+    undefined,
+    timeoutMs ? { timeout: timeoutMs } : undefined,
+  );
   updateAccessToken(data.access_token);
+  scheduleTokenRefresh(data.expires_in);
   return data.access_token;
 }
 
-function refreshAccessToken(): Promise<string> {
-  refreshInFlight ??= requestFreshAccessToken().finally(() => {
-    refreshInFlight = null;
-  });
+/**
+ * The one refresh of the platform.
+ *
+ * The restore at start-up and the interceptor of a 401 share this promise:
+ * the refresh token is rotated by the server, so two parallel refreshes
+ * send the same (now revoked) token and the second one is a 401 - which
+ * used to sign the member out.
+ */
+export function refreshAccessToken(options?: {
+  timeoutMs?: number;
+}): Promise<string> {
+  refreshInFlight ??= requestFreshAccessToken(options?.timeoutMs).finally(
+    () => {
+      refreshInFlight = null;
+    },
+  );
   return refreshInFlight;
 }
 
 function abandonSession(): void {
+  stopTokenRefresh();
   clearAuth();
   if (typeof window === "undefined") return;
   if (window.location.pathname === "/login") return;
   window.location.assign("/login");
+}
+
+/**
+ * True when the failure of a refresh is definitive: the cookie is gone, the
+ * session was revoked, or the account is not usable any more.
+ *
+ * A network error, a timeout, a rate limit or a 5xx of the server are **not**
+ * definitive: the session is still valid, the network is not. Signing the
+ * member out because the network blinked was the "auto logout after some
+ * time" the members reported.
+ *
+ * The failure arrives in two shapes: the interceptor of the platform turns it
+ * into an `ApiError` (with its own `status`) before the caller sees it, and a
+ * raw `AxiosError` can arrive from a request that never reached the server.
+ */
+export function isDefinitiveAuthFailure(error: unknown): boolean {
+  const candidate = error as
+    { status?: number; response?: { status?: number } } | null | undefined;
+  const status = candidate?.status ?? candidate?.response?.status ?? 0;
+  return status === 401 || status === 403;
 }
 
 apiClient.interceptors.response.use(
@@ -228,9 +319,13 @@ apiClient.interceptors.response.use(
       // Authorization header are holding the token that just expired.
       config.headers.Authorization = `Bearer ${accessToken}`;
       return await apiClient.request(config);
-    } catch {
-      // The refresh cookie is gone or revoked: this session is finished.
-      abandonSession();
+    } catch (refreshError) {
+      // Only a definitive refusal ends the session. A network error, a
+      // timeout, a rate limit or a 5xx leave the session alive: the
+      // member stays signed in and the next request tries again.
+      if (isDefinitiveAuthFailure(refreshError)) {
+        abandonSession();
+      }
       return Promise.reject(toApiError(error));
     }
   },
@@ -399,6 +494,10 @@ export interface TokenResponse {
 /** Sign in with email and password. The refresh token is set as an HttpOnly cookie by the API. */
 export async function loginUser(payload: LoginPayload): Promise<LoginResponse> {
   const { data } = await apiClient.post<LoginResponse>("/auth/login", payload);
+  // The session must outlive the access token: the proactive refresh is
+  // scheduled here, so the member is never logged out when the token
+  // expires (the interceptor's refresh is only the safety net).
+  scheduleTokenRefresh(data.expires_in);
   return data;
 }
 
@@ -494,6 +593,9 @@ export async function uploadVerseCover(
 /** Sign out: revokes the refresh session server-side (best effort) and is
  * always paired with clearing the local session in the UI. */
 export async function logoutUser(): Promise<void> {
+  // The proactive refresh must not fire after the sign-out (it would
+  // resurrect the session with the cookie that is about to be revoked).
+  stopTokenRefresh();
   try {
     await apiClient.post("/auth/logout");
   } catch {

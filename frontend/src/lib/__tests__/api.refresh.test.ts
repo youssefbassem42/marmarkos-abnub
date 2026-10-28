@@ -9,7 +9,7 @@
 import { AxiosError } from "axios";
 import type { AxiosResponse, InternalAxiosRequestConfig } from "axios";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { apiClient } from "@/lib/api";
+import { apiClient, scheduleTokenRefresh, stopTokenRefresh } from "@/lib/api";
 import { clearAuth, getAccessToken, saveAuth } from "@/lib/auth";
 import type { RegisteredUser } from "@/lib/api";
 
@@ -81,9 +81,11 @@ describe("apiClient silent refresh", () => {
   });
 
   afterEach(() => {
+    stopTokenRefresh();
     apiClient.defaults.adapter = originalAdapter;
     clearAuth();
     vi.restoreAllMocks();
+    vi.useRealTimers();
   });
 
   it("refreshes once and retries the original request", async () => {
@@ -145,6 +147,69 @@ describe("apiClient silent refresh", () => {
     );
 
     expect(calls.map((call) => call.url)).toEqual(["/notifications/summary"]);
+  });
+
+  it("does not sign the member out when the refresh fails for a transient reason", async () => {
+    // The network blinked (a 5xx, a timeout, a rate limit). The session
+    // is still valid: signing the member out was the "auto logout after
+    // some time" the members reported.
+    apiClient.defaults.adapter = async (config) => {
+      if ((config.url ?? "") === "/auth/refresh") {
+        const response = {
+          data: { detail: "Service unavailable" },
+          status: 503,
+          statusText: "Service Unavailable",
+          headers: {},
+          config,
+        } as AxiosResponse;
+        throw new AxiosError(
+          "Service Unavailable",
+          "503",
+          config,
+          undefined,
+          response,
+        );
+      }
+      throw unauthorized(config);
+    };
+
+    await expect(apiClient.get("/notifications/summary")).rejects.toMatchObject(
+      { status: 401 },
+    );
+
+    // The session is untouched: the member stays signed in and the next
+    // request tries again.
+    expect(getAccessToken()).toBe("stale-token");
+  });
+
+  it("refreshes the token before it expires", async () => {
+    // The proactive refresh: the token is renewed at 80 % of its life, so
+    // the member never meets an expired token.
+    vi.useFakeTimers();
+    const calls = installAdapter({ refreshSucceeds: true });
+
+    scheduleTokenRefresh(1800); // 30 minutes
+    expect(calls).toHaveLength(0);
+
+    await vi.advanceTimersByTimeAsync(24 * 60 * 1000);
+
+    expect(calls.filter((call) => call.url === "/auth/refresh")).toHaveLength(
+      1,
+    );
+    expect(getAccessToken()).toBe("fresh-token");
+  });
+
+  it("stops the proactive refresh when the member signs out", async () => {
+    vi.useFakeTimers();
+    const calls = installAdapter({ refreshSucceeds: true });
+
+    scheduleTokenRefresh(1800);
+    stopTokenRefresh();
+    await vi.advanceTimersByTimeAsync(30 * 60 * 1000);
+
+    expect(calls.filter((call) => call.url === "/auth/refresh")).toHaveLength(
+      0,
+    );
   });
 
   it("never recurses through a failed login", async () => {
