@@ -6,8 +6,8 @@ holds the accounts and the data of the golden paths.
 
 The script:
 
-1. creates the database when it does not exist (the name must contain
-   "e2e" - a production database is never touched),
+1. rebuilds the database (the name must contain "e2e" - a production
+   database is never touched),
 2. applies the migrations with Alembic,
 3. seeds the member, the admin, the verse and the quiz.
 
@@ -15,7 +15,7 @@ It is idempotent: it can run before every E2E execution.
 
 Usage::
 
-    python scripts/e2e_prepare.py
+    python scripts/e2e_prepare.py [--keep]
 """
 
 from __future__ import annotations
@@ -42,23 +42,43 @@ def _e2e_database_url() -> str:
     return raw
 
 
-async def _create_database_if_missing(url: str) -> None:
-    """Create the database when it does not exist yet."""
+def _database_name(url: str) -> str:
+    """The name of the database in the URL."""
+    dsn = url.replace("postgresql+asyncpg://", "postgresql://")
+    return dsn.rsplit("/", 1)[-1].split("?")[0]
+
+
+async def _rebuild_database(url: str, *, keep: bool) -> None:
+    """Drop the database of the E2E and create it again.
+
+    The database of a test run is **rebuilt from the migrations** on
+    every run: the run is then hermetic, and it cannot inherit a row
+    (or a constraint of the schema) from the previous one - the
+    attendance of the last run, for instance, refers to the servant of
+    the last run, and the schema refuses to delete that servant.
+
+    Only a database whose name contains "e2e" is ever dropped. The
+    database of the unit tests ("marmarkos_test") is **never** touched
+    by this script.
+    """
     import asyncpg
 
-    # "postgresql+asyncpg://..." -> "postgresql://..."
     dsn = url.replace("postgresql+asyncpg://", "postgresql://")
-    name = dsn.rsplit("/", 1)[-1].split("?")[0]
+    name = _database_name(url)
     admin_dsn = dsn.rsplit("/", 1)[0] + "/postgres"
+
+    if "e2e" not in name.lower():
+        print(f"the database {name} is kept (only an 'e2e' database is rebuilt)")
+        return
 
     connection = await asyncpg.connect(admin_dsn)
     try:
-        exists = await connection.fetchval("SELECT 1 FROM pg_database WHERE datname = $1", name)
-        if not exists:
-            await connection.execute(f'CREATE DATABASE "{name}"')
-            print(f"created the database {name}")
-        else:
-            print(f"the database {name} exists")
+        if keep:
+            print(f"the database {name} is kept (--keep)")
+            return
+        await connection.execute(f'DROP DATABASE IF EXISTS "{name}" WITH (FORCE)')
+        await connection.execute(f'CREATE DATABASE "{name}"')
+        print(f"rebuilt the database {name}")
     finally:
         await connection.close()
 
@@ -99,7 +119,8 @@ def _seed(url: str) -> None:
 
 async def main() -> None:
     url = _e2e_database_url()
-    await _create_database_if_missing(url)
+    keep = "--keep" in sys.argv[1:]
+    await _rebuild_database(url, keep=keep)
     _run_migrations(url)
     _seed(url)
 
