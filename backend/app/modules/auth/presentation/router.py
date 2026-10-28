@@ -141,7 +141,10 @@ async def google_login_callback(
 
     success = back(f"#access_token={result.access_token}&expires_in={result.expires_in}")
     set_refresh_token_cookie(
-        success, result.refresh_token, _REFRESH_COOKIE_MAX_AGE, request=request
+        success,
+        result.refresh_token,
+        _REFRESH_COOKIE_MAX_AGE if result.persistent else None,
+        request=request,
     )
     success.delete_cookie(_OAUTH_STATE_COOKIE, path="/api/v1/auth/google")
     return success
@@ -277,7 +280,10 @@ async def login(
         raise
     clear_login_failures(payload.email)
     set_refresh_token_cookie(
-        response, result.refresh_token, _REFRESH_COOKIE_MAX_AGE, request=request
+        response,
+        result.refresh_token,
+        _REFRESH_COOKIE_MAX_AGE if result.persistent else None,
+        request=request,
     )
     return AuthResponse(
         access_token=result.access_token,
@@ -306,7 +312,10 @@ async def refresh(
         ip_address=request.client.host if request.client else None,
     )
     set_refresh_token_cookie(
-        response, result.refresh_token, _REFRESH_COOKIE_MAX_AGE, request=request
+        response,
+        result.refresh_token,
+        _REFRESH_COOKIE_MAX_AGE if result.persistent else None,
+        request=request,
     )
     return TokenResponse(
         access_token=result.access_token,

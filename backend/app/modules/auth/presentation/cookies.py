@@ -22,8 +22,18 @@ def _is_secure(request: Request | None) -> bool:
 
 
 def set_refresh_token_cookie(
-    response: Response, token: str, max_age: int, *, request: Request | None = None
+    response: Response,
+    token: str,
+    max_age: int | None,
+    *,
+    request: Request | None = None,
 ) -> None:
+    """Set the HttpOnly cookie of the refresh token.
+
+    ``max_age=None`` makes it a **session cookie**: it dies with the
+    browser, so the session ends when the window is closed. A number
+    makes it outlive the browser (the member ticked "remember me").
+    """
     response.set_cookie(
         key=REFRESH_TOKEN_COOKIE_NAME,
         value=token,

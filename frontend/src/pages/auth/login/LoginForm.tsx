@@ -49,6 +49,9 @@ export function LoginForm() {
       const { access_token: accessToken, user } = await loginUser({
         email: values.email,
         password: values.password,
+        // The server decides the life of the refresh cookie: a session
+        // cookie (the session ends with the window) or a long-lived one.
+        remember_me: rememberMe,
       });
       saveAuth({ accessToken, user }, rememberMe);
       // Private pages bounce here with a `from` location; honor it.

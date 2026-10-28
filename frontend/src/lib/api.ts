@@ -475,6 +475,12 @@ export async function resendVerificationEmail(email: string): Promise<void> {
 export interface LoginPayload {
   email: string;
   password: string;
+  /**
+   * The member ticked "تذكرني": the session then outlives the browser.
+   * Without it the refresh cookie is a **session cookie** and the
+   * session ends when the window is closed.
+   */
+  remember_me?: boolean;
 }
 
 export interface LoginResponse {

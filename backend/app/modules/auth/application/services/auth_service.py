@@ -43,6 +43,10 @@ class AuthResult:
     refresh_token: str
     expires_in: int
     user: User
+    #: True when the member asked to be remembered: the cookie then
+    #: outlives the browser. False = a session cookie that dies with the
+    #: window.
+    persistent: bool = False
 
 
 class RegistrationService:
@@ -185,7 +189,9 @@ class AuthenticationService:
         if user.status is not UserStatus.ACTIVE:
             raise ForbiddenError("Account is not active")
         await self._uow.users.set_last_login(user, datetime.now(UTC))
-        return await self._issue_tokens(user, user_agent, ip_address)
+        return await self._issue_tokens(
+            user, user_agent, ip_address, persistent=request.remember_me
+        )
 
     async def google_login(
         self,
@@ -269,7 +275,10 @@ class AuthenticationService:
             raise UnauthorizedError("Invalid or expired refresh token")
 
         await self._uow.refresh_tokens.revoke(stored, datetime.now(UTC))
-        return await self._issue_tokens(user, user_agent, ip_address)
+        # The renewed session keeps the nature of the old one: a member who
+        # did **not** ask to be remembered does not get a cookie that
+        # outlives the browser because the token was rotated.
+        return await self._issue_tokens(user, user_agent, ip_address, persistent=stored.persistent)
 
     async def logout(self, refresh_token: str) -> None:
         stored = await self._find_refresh_token(refresh_token)
@@ -282,6 +291,8 @@ class AuthenticationService:
         user: User,
         user_agent: str | None,
         ip_address: str | None,
+        *,
+        persistent: bool = False,
     ) -> AuthResult:
         refresh_token = generate_refresh_token()
         await self._uow.refresh_tokens.add(
@@ -292,6 +303,7 @@ class AuthenticationService:
                 + timedelta(days=settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS),
                 user_agent=user_agent,
                 ip_address=ip_address,
+                persistent=persistent,
             )
         )
         await self._uow.commit()
@@ -300,4 +312,5 @@ class AuthenticationService:
             refresh_token=refresh_token,
             expires_in=settings.JWT_ACCESS_TOKEN_EXPIRE_MINUTES * 60,
             user=user,
+            persistent=persistent,
         )

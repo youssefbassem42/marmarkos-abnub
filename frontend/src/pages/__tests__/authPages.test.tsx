@@ -114,6 +114,44 @@ describe("the login page", () => {
     );
   });
 
+  it("tells the server that the member wants to be remembered", async () => {
+    // The nature of the session is decided by the server: without the
+    // flag the refresh cookie is a session cookie and the session ends
+    // when the window is closed.
+    const user = userEvent.setup();
+    const { calls } = renderPage(<LoginPage />, {
+      answers: {
+        "POST /auth/login": {
+          access_token: "token",
+          token_type: "bearer",
+          expires_in: 1800,
+          user: { id: "u-1", email: "member@example.com", role: "MEMBER" },
+        },
+      },
+    });
+
+    await waitFor(() =>
+      expect(screen.getByLabelText("البريد الإلكتروني*")).toBeVisible(),
+    );
+    await user.type(
+      screen.getByLabelText("البريد الإلكتروني*"),
+      "member@example.com",
+    );
+    await user.type(screen.getByLabelText("كلمة المرور*"), "secret-1234");
+    await user.click(screen.getByLabelText("تذكرني"));
+    await user.click(screen.getByRole("button", { name: "تسجيل الدخول" }));
+
+    await waitFor(() => {
+      const login = calls.find(
+        (call) => call.method === "post" && call.url.includes("/auth/login"),
+      );
+      // The body of the request reaches the adapter as a string.
+      const body =
+        typeof login?.data === "string" ? JSON.parse(login.data) : login?.data;
+      expect(body).toMatchObject({ remember_me: true });
+    });
+  });
+
   it("opens the door when the form is complete", async () => {
     const user = userEvent.setup();
     renderPage(<LoginPage />);
