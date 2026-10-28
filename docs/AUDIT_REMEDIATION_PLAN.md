@@ -117,13 +117,13 @@ Companion to `docs/CODEBASE_AUDIT_REPORT.md` (report ID `AUDIT-2026-10-26-FULL`,
 | 5.1 | `npm ci` + lint + `npm audit` + real test gate in frontend CI | CI-002 | `[x]` | `npm ci` (the lockfile decides), format check, `lint --max-warnings 0`, `tsc -b`, `npm audit --audit-level=high`, the tests with coverage, the build. `continue-on-error` is gone: the pipeline can no longer be red and green. |
 | 5.2 | `pip-audit` + `gitleaks` + `alembic check` + coverage gates in backend CI | CI-003/004/005/007 | `[x]` | `pip-audit --skip-editable`, gitleaks 8.28.0 (pinned by digest) with an allowlist for the fake test secret, `alembic upgrade head` + `alembic check`, the coverage floor at 77 %. |
 | 5.3 | Frontend formatting + the `exhaustive-deps` warnings + `--max-warnings 0` | CODE-005 | `[x]` | Prettier over the whole frontend; the thresholds only ever go up. |
-| 5.4 | Frontend coverage 17.97 % → ≥ 70 % (quiz/attendance hooks first) | QA-001 | `[ ]` | The measured coverage was 21.92 % **without** branch coverage; with the branch coverage that vitest counts the real number is **17.97 %**. The floor is the measured value. |
-| 5.5 | E2E golden paths (Playwright) | QA-001 | `[ ]` | Sign-in, take a quiz, check in. |
+| 5.4 | Frontend coverage 17.97 % → ≥ 70 % (quiz/attendance hooks first) | QA-001 | `[~]` | The floor is the measured value and **only goes up**: 27 % statements / 15 % branches / 32 % functions / 28 % lines (210 unit tests + 5 E2E). The API clients are at 99 %, the hooks at 64 %, the shared library at 70 %. What is left is the markup of the ~30 pages (1 506 statements, 5.6 %): one render test per screen is a project of its own. The end-to-end tests now cover the three golden journeys of the markup. |
+| 5.5 | E2E golden paths (Playwright) | QA-001 | `[x]` | Three journeys, five tests, **all green**: signing in (3), taking a quiz (1), the check-in of a member with the PIN (1). The run is hermetic (its own database `marmarkos_e2e`, its own migrations, an idempotent seed that refuses any other database) and it runs in the pipeline (`.github/workflows/e2e-ci.yml`). It found **five real bugs** in the first run. |
 | 5.6 | OpenAPI contract test (`schemathesis`) | QA-005 | `[x]` | The schema now describes the real answers (401/403/400/429 added, `Allow` header on 405, the rate-limited routes marked). **3 466 cases, 0 failures**; the step runs in the backend pipeline. |
 | 5.7 | Multi-stage production frontend image (nginx) | OPS-001 | `[x]` | node build → nginx 1.27 runtime, SPA fallback, the API upstream resolved per request, a healthcheck, the security headers in a snippet. |
 | 5.8 | Non-root containers, healthchecks, advisory-locked migrations | OPS-002/003/005 | `[x]` | uid 10001 for the backend, healthchecks on both images, the migrations behind a PostgreSQL advisory lock (two replicas → one migration). |
 | 5.9 | Dependency-update policy (Renovate, patches auto-merge) | DEP-001 | `[x]` | Patches auto-merge after three days, minors and majors need a human, a security advisory is always its own PR. |
-| 5.10 | `docs/business-rules.md` mapping every `BR-xx` / `D-xx` identifier | REUSE-005 | `[ ]` | The rule identifiers live today only in the docstrings. |
+| 5.10 | `docs/business-rules.md` mapping every `BR-xx` / `D-xx` identifier | REUSE-005 | `[x]` | The catalogue lists every rule of every module; four guard tests keep it in step with the code (the rule exists, the identifier is unique, the file is mentioned in the catalogue, the catalogue has no dead link). |
 
 ---
 
@@ -131,7 +131,30 @@ Companion to `docs/CODEBASE_AUDIT_REPORT.md` (report ID `AUDIT-2026-10-26-FULL`,
 
 Newest first. Full detail in `docs/AUDIT_REMEDIATION_FEEDBACK.md`.
 
-### 2026-10-27 — Phase 4 + Phase 5 (architecture, CI, operations) complete except 4.4 / 5.4 / 5.5 / 5.10
+### 2026-10-27 — The end-to-end tests: five real bugs in one afternoon
+
+The item 5.5 was the last chance to prove the golden paths of the platform. The
+three journeys were written, run against a real browser — and they failed
+**five times in a row**, each time on a real defect that no unit test had seen.
+
+| # | What the browser found | The fix | Commit |
+|---|---|---|---|
+| 8 | A member with a session could not be deleted: the ORM nullified the foreign key of the refresh tokens, the column is NOT NULL | `passive_deletes=True` on every cascading relationship of the member | `7854887` + `49f6928` |
+| 9 | The API was always the same origin: the built bundle asked `http://localhost:8000/api/v1` — the member's own machine — and the HttpOnly cookie never came back | The base URL is relative by default (`/api/v1`); a test reads the built bundle | `3e6d72a` |
+| 10 | A reload logged the member out: two parallel restores used the same rotated refresh token, the second answer was a 401 | The restore is single-flight (one shared promise) | `060498a` |
+| 11 | A member could not answer a quiz at all: the page asked the manager endpoint, which is reserved for the servants (403) | A member path `GET /quizzes/{id}/take` — without the correctness of the options | `a552102` |
+| 12 | The page of the attempt waited for ever: the remount lost the id of the attempt, the second start answered 409, and the 409 was swallowed | The attempt is remembered outside React; the 409 is a resume signal (D-4) | `88948ad` |
+
+The answers of the member are now kept in a draft (`localStorage`) and the page
+**resumes on the last question he solved** after a refresh. The server stays the
+source of truth: the draft holds no credential and the result belongs to the
+server.
+
+The lesson of the phase: the unit tests measured the pieces, the browser
+measured the product. Every one of the five defects was invisible to a green
+pipeline of 462 tests.
+
+### 2026-10-27 — Phase 4 + Phase 5 (architecture, CI, operations) complete except 4.4 / 5.4 / 5.10
 
 | Item | Result |
 |---|---|

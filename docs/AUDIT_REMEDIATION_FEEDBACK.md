@@ -16,7 +16,9 @@ The remediation started with the two phases that unlock everything else, and the
 
 **The dependency scanners are clean**: `npm audit` reports **0 findings** (was 3 high + 8 more) and `pip-audit` reports **0 findings** (was 3 vulnerabilities in 2 packages).
 
-While doing that, the work uncovered **five genuine production defects** that no gate had ever caught (details in §4) — including two that would have returned HTTP 500 on the monthly-analytics endpoints, a race that could publish a scheduled verse **twice**, and a feed badge that could never show that a member had already finished the quiz of a verse. A sixth finding turned out to be intentional redundancy, not a defect.
+While doing that, the work uncovered **twelve genuine production defects** that no gate had ever caught (details in §4) — including two that would have returned HTTP 500 on the monthly-analytics endpoints, a race that could publish a scheduled verse **twice**, and a feed badge that could never show that a member had already finished the quiz of a verse. A sixth finding turned out to be intentional redundancy, not a defect.
+
+**The last five came from the end-to-end tests (Phase 5.5)** — and they are the most important ones of the list, because they are the only five a member would have felt: a member with a session could not be deleted, the built frontend called the API on the member's own computer, a reload logged the member out, **a member could not answer a quiz at all** (403 on the manager endpoint), and the page of the attempt waited for ever on a conflict. The unit tests measured the pieces; **the browser measured the product**. A pipeline of 462 green tests never saw them.
 
 **What still needs a human:** the actual **secret rotation** (Phase 0.1/0.2) cannot be automated from the repository — it needs access to Neon, Google Cloud, Cloudinary, Gmail/Brevo and Telegram. Until that happens, the secrets on disk remain valid.
 
@@ -29,18 +31,19 @@ While doing that, the work uncovered **five genuine production defects** that no
 | `backend: ruff check .` | 35 errors (17 F401, 9 E501, 8 I001, **1 F821**) | **0** | ✅ |
 | `backend: ruff format --check .` | 39 files to reformat | **0** | ✅ |
 | `backend: mypy app` (strict) | 100 errors in 10 files | **0** | ✅ |
-| `backend: pytest` | 373 passed / **8 failed** (381) | **461 passed / 0 failed** | ✅ |
+| `backend: pytest` | 373 passed / **8 failed** (381) | **484 passed / 0 failed** | ✅ |
 | `backend: test warnings` | 4 (Starlette 422 + httpx cookies) | **0** | ✅ |
 | `frontend: npm run lint` | 820 problems (808 errors, 12 warnings) | **0** (also with `--max-warnings 0`) | ✅ |
-| `frontend: npm run test:run` | 48 passed (with React key warning + jsdom CORS noise) | **75 passed** | ✅ |
+| `frontend: npm run test:run` | 48 passed (with React key warning + jsdom CORS noise) | **210 passed** | ✅ |
 | `frontend: npm run build` | pass | **pass** | ✅ |
 | `frontend: tsc -b` | pass (the cache hid nothing this time) | **pass** (`--force` as well) | ✅ |
 | Test-suite hermeticity | ❌ real Cloudinary API call observed | ✅ **no outbound socket is possible** | ✅ |
 | Test-DB safety | ❌ `drop_all` on any `DATABASE_URL` | ✅ refuses non-`test` databases | ✅ |
 | `npm audit` | 3 high (+ 8 more) | **0** | ✅ |
 | `pip-audit` | 3 vulnerabilities / 2 packages | **0** | ✅ |
-| Backend tests | 373 passed / 8 failed | **461 passed / 0 failed** | ✅ |
-| Frontend tests | 48 passed | **75 passed** | ✅ |
+| Backend tests | 373 passed / 8 failed | **484 passed / 0 failed** | ✅ |
+| Frontend tests | 48 passed | **210 passed** | ✅ |
+| End-to-end tests | **0** (no browser ever drove the product) | **5 passed** (3 journeys) | ✅ |
 | SQL statements for a page of 10 quizzes | 21 (2N+1) | **3** | ✅ |
 | Access token location | `localStorage` / `sessionStorage` | **memory** (flag-controlled) | ✅ |
 | Import cycles between the modules | 5 (two of them reported) | **1** (documented, in the plan) | ✅ |
@@ -190,6 +193,18 @@ These were **not** in the original report — they were exposed by the fixes the
 | 5 | The manager-results query selects `QuizAttempt.score` **and** `QuizAttempt.score.label("points_awarded")` — the same column twice | *Not a defect:* two consumers read the two keys (`row["score"]` and `row["points_awarded"]`). It is redundant, so it is now documented in the typed row instead of silently duplicated |
 | 6 | The attempt map of the member feed was keyed by the **verse id** while the badge asked for the **quiz id** — the lookup was always empty | The badge of the feed never showed "in progress" or "completed": a member who had finished the quiz of a verse saw it as available again. Found while breaking the bible ↔ quiz cycle (4.3) | The map is keyed by the quiz id (the key the caller already holds) and the states are read through the new read-model port; four new tests pin the four cases (completed, in progress, not started, draft quiz) |
 
+### The five that the browser found (Phase 5.5)
+
+They were found by the three journeys of the end-to-end tests — a member signs in, takes a quiz, a servant records a check-in — and each of them is a defect a member feels in the first minute.
+
+| # | Bug | Impact | Fix |
+|---|---|---|---|
+| 8 | Deleting a member nullified the foreign key of its children (the refresh tokens) while the column is NOT NULL — the ORM contradicted the schema (`ondelete="CASCADE"`) | `IntegrityError` → **HTTP 500** on the deletion of any member who had signed in | `passive_deletes=True` on every cascading relationship of the member; a **guard test** reads the models and fails when a new child would be nullified (the attendance records were the second victim) |
+| 9 | The built frontend asked `http://localhost:8000/api/v1` — the **member's own** computer — because the fallback of the base URL was absolute | The Docker image, a fresh clone and the CI build all called the wrong host; the HttpOnly refresh cookie (SameSite=Lax) never came back: **no member could stay signed in** | The base URL is relative by default (`/api/v1`); the Docker image sets it explicitly; a test reads the **built bundle** and fails if it mentions `localhost:8000` |
+| 10 | The start-up restore was not single-flight: two parallel restores sent the same **rotated** refresh token twice | The second answer was a 401 and the session was cleared — **every reload logged the member out** (StrictMode mounts the providers twice) | One shared promise for the restore; the same discipline the silent refresh of the interceptor already had |
+| 11 | The page of the attempt asked the manager endpoint `GET /quizzes/{id}` (ADMIN/SERVANT) | **403 — a member could not answer a quiz at all** | A member path `GET /quizzes/{id}/take`: the questions and the options, **never the correctness**; the manager endpoint keeps it |
+| 12 | The remount of the route lost the id of the attempt (a mutation does not call its callbacks when nobody listens), the page started a second attempt, the server answered 409 and the page **swallowed the conflict** | The page of the attempt waited for ever: no radio button, no answer | The attempt is remembered outside React (the request remembers it, the server names it in the take payload), the 409 is read as a **resume signal** (D-4: `data.attempt_id`), and the answers live in a draft: after a refresh the page opens on **the last question the member solved** |
+
 ---
 
 ## 5. How it was verified
@@ -202,7 +217,7 @@ cd backend
 DEBUG=true .venv/bin/mypy app               # Success: no issues found in 412 source files
 DEBUG=true APP_ENV=test \
 DATABASE_URL='postgresql+asyncpg://marmarkos:marmarkos@127.0.0.1:55432/marmarkos_test' \
-  .venv/bin/python -m pytest -q             # 461 passed
+  .venv/bin/python -m pytest -q             # 484 passed
 .venv/bin/pip-audit --skip-editable         # No known vulnerabilities found
 .venv/bin/python scripts/sync_requirements.py --check   # in sync
 
@@ -211,10 +226,20 @@ cd frontend
 npm run format:check                        # All matched files use Prettier code style!
 npm run lint -- --max-warnings 0            # clean
 npx tsc -b --force                          # clean
-npm run test:run                            # 75 passed
+npm run test:run                            # 210 passed
 npm run build                               # built successfully
 npm audit --audit-level=high                # found 0 vulnerabilities
+
+# End-to-end — the three journeys of a member (Phase 5.5)
+cd frontend
+npx playwright test --reporter=list         # 5 passed (16s)
 ```
+
+The end-to-end run is hermetic: it creates its own database
+(`marmarkos_e2e`), applies the migrations, seeds what it needs, and refuses
+any database whose name does not say "test" or "e2e". The seed removes the
+accounts of the previous run first — the attendance PIN of a member is unique
+in the database, so a second run would collide.
 
 The OpenAPI contract (Phase 5.6) runs against the real application:
 
@@ -237,6 +262,9 @@ Additional checks performed:
 * The direction guard was proven: a component with `dir="rtl"` is reported with its file and line.
 * The rule-catalogue guard was proven: a probe `BR-999` in `app/config.py` made the test fail with the list of the missing identifiers; the probe was removed afterwards.
 * The design images were compared after the conversion (the Arabic text of the reference screens stays crisp).
+* The end-to-end tests were run **three times in a row** (5/5 green every time) to prove they are not flaky, and the whole suite (484 + 210 + 5) was run together.
+* The cascade guard was proven: the attendance relationships (the second victim of bug 8) were left without `passive_deletes` on purpose, the guard failed with the exact relationship named, and the fix was applied.
+* The built-bundle guard was proven: the test reads `dist/**/*.js` and fails when the absolute URL of the development host appears in the bundle.
 
 ---
 
@@ -256,8 +284,8 @@ Additional checks performed:
 | Phase | Content | Size |
 |---|---|---|
 | **Phase 4.4** | The domain ports speak domain objects. The last import cycle (`auth ↔ users`) runs through the layers: the route guard returns the ORM model of the users module. The fix is a shared "current member" contract that the guard returns instead of the ORM row — a type-level change that touches every route that uses the guard. | ~2 days |
-| **Phase 5.4** | The frontend coverage from 17.97 % to ≥ 70 %, starting with the quiz and attendance hooks (the new analytics module is already covered). The thresholds only ever go up. | ~4 days |
-| **Phase 5.5** | The E2E golden paths with Playwright: sign-in, take a quiz, check in. The backend has a seeded test database; the E2E needs a running stack (docker compose) and a seeded member. | ~3 days |
+| **Phase 5.4** | The frontend coverage from 17.97 % → the measured 27 % (the floor only goes up). What is left is the markup of the ~30 pages (1 506 statements, 5.6 %): one render test per screen. The logic is already covered (the API clients at 99 %, the hooks at 64 %, the shared library at 70 %). | ~4 days |
+| ~~**Phase 5.5**~~ | ~~The E2E golden paths with Playwright~~ — **done**: three journeys, five tests, all green, and they run in the pipeline (`.github/workflows/e2e-ci.yml`). | — |
 
 ### 6.3 Deliberately deferred (with reasons)
 
@@ -275,11 +303,11 @@ Additional checks performed:
 
 ## 7. Recommended next session
 
-1. **Phase 5.4** — the frontend coverage (17.97 % → ≥ 70 %), starting with the quiz and attendance hooks. It is the largest remaining gap: the backend is at 77 %, the frontend at 18 %.
-2. **Phase 5.5** — the E2E golden paths with Playwright (sign-in, take a quiz, check in): the three journeys the members use every week.
-3. **Phase 4.4** — the domain ports speak domain objects: the guard returns a shared contract instead of the ORM row, and the last import cycle disappears.
-4. **Phase 3.1 (completion)** — remove the legacy `?year=&month=` branch of the analytics endpoints **one release after** the deprecation (not before: the server still accepts it today).
-5. **Deployment watch** — after the memory-first token ships, watch the sign-in rate and the 401 rate for a week; `VITE_AUTH_PERSISTENCE=local` is the one-line rollback.
-6. **The secret rotation** — the only item that cannot be done from the repository; it needs the console of every provider.
+1. **Phase 4.4** — the domain ports speak domain objects: the guard returns a shared contract instead of the ORM row, and the last import cycle disappears.
+2. **Phase 5.4 (continued)** — the coverage of the markup of the pages: one render test per screen. The floor only goes up (27 % → 28 % → …).
+3. **Phase 3.1 (completion)** — remove the legacy `?year=&month=` branch of the analytics endpoints **one release after** the deprecation (not before: the server still accepts it today).
+4. **Deployment watch** — after the memory-first token ships, watch the sign-in rate and the 401 rate for a week; `VITE_AUTH_PERSISTENCE=local` is the one-line rollback.
+5. **The secret rotation** — the only item that cannot be done from the repository; it needs the console of every provider.
+6. **The lessons of Phase 5.5** — the end-to-end tests found five defects that 462 unit tests never saw. The next journeys (the verse of the day, the points, the blog, the profile, the notifications) would find more. The stack is ready; each journey is half a day.
 
 > Rule for every follow-up PR: **one concern per PR**, behaviour-preserving, with the test that proves it. The pipeline is green now — the cheapest way to keep it that way is to never merge a red branch again.
