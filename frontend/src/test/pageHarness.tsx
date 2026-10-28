@@ -45,6 +45,15 @@ function isFailure(answer: unknown): answer is ApiFailure {
   );
 }
 
+/** A key may name the method first: "PUT /users/me/attendance-pin". */
+const METHOD_KEY = /^(get|post|put|patch|delete)\s+(.+)$/i;
+
+function matches(key: string, url: string, method: string): boolean {
+  const named = METHOD_KEY.exec(key);
+  if (!named) return url.includes(key);
+  return named[1].toLowerCase() === method && url.includes(named[2].trim());
+}
+
 export interface PageHarness {
   /** The calls the page made, in order. */
   calls: { method: string; url: string; params?: unknown; data?: unknown }[];
@@ -56,9 +65,11 @@ export interface PageHarness {
  * Install an API that answers with the bodies of the test.
  *
  * The longest matching key wins, so a test can answer "/quizzes" with
- * one body and "/quizzes/1/take" with another. A URL that no key
- * matches is answered with an empty object - the test then says what
- * it needs.
+ * one body and "/quizzes/1/take" with another. A key may name the
+ * method first ("PUT /users/me/attendance-pin"), which is the only way
+ * to tell two calls on the same URL apart (the status of the PIN and
+ * its saving). A URL that no key matches is answered with an empty
+ * object - the test then says what it needs.
  */
 export function installApi(answers: ApiAnswers): PageHarness["calls"] {
   const calls: PageHarness["calls"] = [];
@@ -66,14 +77,15 @@ export function installApi(answers: ApiAnswers): PageHarness["calls"] {
 
   apiClient.defaults.adapter = async (config) => {
     const url = config.url ?? "";
+    const method = (config.method ?? "get").toLowerCase();
     calls.push({
-      method: (config.method ?? "get").toLowerCase(),
+      method,
       url,
       params: config.params,
       data: config.data,
     });
 
-    const match = keys.find((key) => url.includes(key));
+    const match = keys.find((key) => matches(key, url, method));
     const answer = match ? answers[match] : {};
 
     if (isFailure(answer)) {
