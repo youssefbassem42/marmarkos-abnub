@@ -394,7 +394,8 @@ describe("the quiz mutations", () => {
       "post /quizzes",
       "patch /quizzes/q1",
       "post /quizzes/q1/publish",
-      "post /quizzes/q1/archive",
+      // The backend archives with a DELETE (a soft delete).
+      "delete /quizzes/q1",
     ]);
   });
 

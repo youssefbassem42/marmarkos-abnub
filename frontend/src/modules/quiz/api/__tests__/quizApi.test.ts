@@ -40,7 +40,6 @@ beforeEach(() => {
     "/quizzes/q1/validation": QUIZ_VALIDATION,
     "/quizzes/q1/analytics": { total_attempts: 3 },
     "/quizzes/q1/publish": QUIZ_ADMIN_ITEM,
-    "/quizzes/q1/archive": QUIZ_ADMIN_ITEM,
     "/quizzes/q1": QUIZ_DETAIL,
     "/quizzes": {
       items: [QUIZ_ADMIN_ITEM],
@@ -93,7 +92,8 @@ describe("quizApi - the manager endpoints", () => {
       "get /quizzes/q1",
       "patch /quizzes/q1",
       "post /quizzes/q1/publish",
-      "post /quizzes/q1/archive",
+      // The backend archives with a DELETE (a soft delete).
+      "delete /quizzes/q1",
     ]);
   });
 

@@ -82,16 +82,16 @@ export const quizApi = {
     return response.data;
   },
 
-  /** Archive a quiz */
-  archiveQuiz: async (quizId: string): Promise<QuizAdminItem> => {
-    const response = await apiClient.post(
-      `/quizzes/${quizId}/archive`,
-      undefined,
-      {
-        schema: quizAdminItemSchema,
-      },
-    );
-    return response.data;
+  /**
+   * Archive a quiz.
+   *
+   * The backend archives with a **DELETE** (`DELETE /quizzes/{id}`, a
+   * soft delete that answers 204 with no body). The client used to call
+   * `POST /quizzes/{id}/archive`, a route that does not exist: the
+   * answer was a 404 and the quiz stayed published.
+   */
+  archiveQuiz: async (quizId: string): Promise<void> => {
+    await apiClient.delete(`/quizzes/${quizId}`);
   },
 
   /** Quiz readiness checklist */
