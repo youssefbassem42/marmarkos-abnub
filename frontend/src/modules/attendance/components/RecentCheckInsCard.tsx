@@ -4,6 +4,7 @@ import { CheckCircle2, Clock, QrCode, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useMeetingAttendance } from "../hooks/useMeetingAttendance";
 import { Skeleton } from "@/components/ui/skeleton";
+import { formatDateOrEmpty } from "@/lib/datetime";
 
 /** Last five check-ins of the open meeting; secondary line is role • time. */
 export function RecentCheckInsCard() {
@@ -98,10 +99,11 @@ export function RecentCheckInsCard() {
                 <p className="truncate text-xs text-muted-foreground">
                   {t("checkIn.recent.role")}
                   {" • "}
-                  {new Intl.DateTimeFormat(locale, {
-                    hour: "numeric",
-                    minute: "2-digit",
-                  }).format(new Date(record.check_in_at))}
+                  {formatDateOrEmpty(
+                    record.check_in_at,
+                    { hour: "numeric", minute: "2-digit" },
+                    locale,
+                  )}
                 </p>
               </div>
               {record.status === "LATE" ? (

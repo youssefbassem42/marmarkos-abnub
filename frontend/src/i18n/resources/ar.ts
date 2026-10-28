@@ -114,6 +114,7 @@ export const ar = {
         successTitle: "تم تسجيل الحضور",
         duplicateTitle: "تم تسجيل الحضور لهذا الاجتماع بالفعل",
         invalidTitle: "رمز QR غير صالح",
+        invalidPinTitle: "الرمز غير صحيح — لا يوجد عضو بهذا الرمز",
         forbiddenTitle: "لا تملك صلاحية تسجيل الحضور",
         networkTitle: "مشكلة في الاتصال",
         name: "الاسم",

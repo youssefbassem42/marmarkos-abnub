@@ -195,7 +195,11 @@ export function CheckInPage() {
       case "duplicate":
         return t("checkIn.result.duplicateTitle");
       case "invalid":
-        return t("checkIn.result.invalidTitle");
+        // The member typed a PIN: the wording of the QR code would be
+        // wrong ("the QR code is invalid" on a page without a QR code).
+        return mode === "pin"
+          ? t("checkIn.result.invalidPinTitle")
+          : t("checkIn.result.invalidTitle");
       case "forbidden":
         return t("checkIn.result.forbiddenTitle");
       case "network":

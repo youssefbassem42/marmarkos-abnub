@@ -8,6 +8,7 @@ import {
   Users,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { formatDateOrEmpty } from "@/lib/datetime";
 import { StatTile } from "./StatTile";
 import { useMeetingStatistics } from "../hooks/useMeetingStatistics";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -38,11 +39,15 @@ export function MeetingStatsCard() {
                 "font-arabic",
               )}
             >
-              {new Intl.DateTimeFormat(locale, {
-                weekday: "short",
-                day: "numeric",
-                month: "short",
-              }).format(new Date(data.meeting_date))}
+              {formatDateOrEmpty(
+                data.meeting_date,
+                {
+                  weekday: "short",
+                  day: "numeric",
+                  month: "short",
+                },
+                locale,
+              )}
             </p>
           )}
         </div>

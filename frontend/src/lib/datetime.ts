@@ -93,3 +93,21 @@ export function formatMonthYear(
 export function formatTimeAgo(dateStr: string, locale: string = "en"): string {
   return formatRelativeDate(dateStr, locale);
 }
+
+/**
+ * Format a date of the API, or return an empty string.
+ *
+ * `Intl.DateTimeFormat.format()` throws a `RangeError` when the date is
+ * not valid, and a missing field of an answer is enough to crash a
+ * whole page. A date that cannot be read is simply not shown.
+ */
+export function formatDateOrEmpty(
+  value: string | null | undefined,
+  options: Intl.DateTimeFormatOptions,
+  locale: string = "ar-EG",
+): string {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(locale, options).format(date);
+}

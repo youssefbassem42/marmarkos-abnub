@@ -37,8 +37,8 @@ export default defineConfig({
         "src/components/ui/**",
       ],
       reporter: ["text", "json-summary"],
-      // The floors are the measured values (70.39 % statements, 59.71 %
-      // branches, 64.86 % functions, 72.32 % lines). They may only ever
+      // The floors are the measured values (70.52 % statements, 59.92 %
+      // branches, 64.89 % functions, 72.47 % lines). They may only ever
       // be raised - never lowered (CI-005).
       //
       // Phase 5.4 brought the logic of the frontend to a good level:
