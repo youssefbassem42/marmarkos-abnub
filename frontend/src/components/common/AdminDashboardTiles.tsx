@@ -55,7 +55,7 @@ export function AdminDashboardTiles() {
                 icon={Users}
                 label={t("dashboard.tiles.totalReaders")}
                 value={bible.data.total_reads}
-                hint={`${t("dashboard.tiles.readRate")}: ${bible.data.read_rate.toFixed(1)}%`}
+                hint={`${t("dashboard.tiles.readRate")}: ${(bible.data.read_rate ?? 0).toFixed(1)}%`}
                 tone="success"
               />
             </>
@@ -94,7 +94,7 @@ export function AdminDashboardTiles() {
               <StatCard
                 icon={Trophy}
                 label={t("dashboard.tiles.avgScore")}
-                value={`${quiz.data.average_score.toFixed(1)}%`}
+                value={`${(quiz.data.average_score ?? 0).toFixed(1)}%`}
                 hint={`${quiz.data.completed} ${t("dashboard.tiles.completed")}`}
                 tone="success"
               />

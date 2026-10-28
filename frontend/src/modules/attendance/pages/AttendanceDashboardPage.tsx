@@ -503,15 +503,15 @@ export function AttendanceDashboardPage() {
                 />
               </div>
             )}
-            {absent.data && absent.data.absent_users.length === 0 && (
+            {absent.data && (absent.data.absent_users ?? []).length === 0 && (
               <p className="mt-6 rounded-xl bg-mint/10 p-4 text-center text-sm font-medium text-ink">
                 {t("dashboard.absent.empty")}
               </p>
             )}
-            {absent.data && absent.data.absent_users.length > 0 && (
+            {absent.data && (absent.data.absent_users ?? []).length > 0 && (
               <>
                 <ul className="mt-4 divide-y divide-border">
-                  {absent.data.absent_users.map((user) => (
+                  {(absent.data.absent_users ?? []).map((user) => (
                     <li
                       key={user.user_id}
                       className="flex items-center gap-3 py-3"

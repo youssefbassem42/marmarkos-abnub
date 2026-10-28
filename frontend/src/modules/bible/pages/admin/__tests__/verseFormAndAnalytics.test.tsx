@@ -6,7 +6,7 @@
  * members read it.
  */
 
-import { screen, waitFor } from "@testing-library/react";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
@@ -54,6 +54,61 @@ describe("the form of a verse", () => {
     expect(
       screen.getByDisplayValue("اقرؤوا لي يا سيدي..."),
     ).toBeInTheDocument();
+  });
+
+  it("saves the verse as a draft", async () => {
+    const harness = renderPage(<VerseFormPage />, {
+      admin: true,
+      route: "/admin/verses/verse-1/edit",
+      path: "/admin/verses/:verseId/edit",
+      answers: { "/bible-verses/verse-1": VERSE },
+    });
+
+    await waitFor(
+      () =>
+        expect(screen.getByDisplayValue("آية الاختبار")).toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
+
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /حفظ كمسودة|save/i })[0],
+    );
+
+    await waitFor(() =>
+      expect(
+        harness.calls.filter((call) => call.method === "patch"),
+      ).toHaveLength(1),
+    );
+  });
+
+  it("refuses to save a verse without a title", async () => {
+    const harness = renderPage(<VerseFormPage />, {
+      admin: true,
+      route: "/admin/verses/verse-1/edit",
+      path: "/admin/verses/:verseId/edit",
+      answers: { "/bible-verses/verse-1": VERSE },
+    });
+
+    await waitFor(
+      () =>
+        expect(screen.getByDisplayValue("آية الاختبار")).toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
+
+    fireEvent.change(screen.getByDisplayValue("آية الاختبار"), {
+      target: { value: "" },
+    });
+    fireEvent.click(
+      screen.getAllByRole("button", { name: /حفظ كمسودة|save/i })[0],
+    );
+
+    await waitFor(() =>
+      expect(screen.getByText(/العنوان مطلوب/)).toBeInTheDocument(),
+    );
+    // Nothing was sent.
+    expect(
+      harness.calls.filter((call) => call.method === "patch"),
+    ).toHaveLength(0);
   });
 });
 
