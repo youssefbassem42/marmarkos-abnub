@@ -233,3 +233,45 @@ export const quizAnalyticsOverviewSchema = loose({
   auto_finished: z.number(),
   average_score: z.number(),
 });
+
+/** One bucket of the score distribution (GET /quizzes/{id}/analytics). */
+export const scoreDistributionSchema = loose({
+  score: z.number(),
+  users: z.number(),
+});
+
+/** One bucket of the completion status (GET /quizzes/{id}/analytics). */
+export const completionStatusSchema = loose({
+  status: attemptStatusSchema,
+  users: z.number(),
+  percentage: z.number(),
+});
+
+/** One user result row (GET /quizzes/{id}/analytics/users). */
+export const quizAnalyticsUserSchema = loose({
+  user_id: z.string(),
+  full_name: z.string(),
+  email: z.string(),
+  avatar: z.string().nullable(),
+  score: z.number(),
+  total_points: z.number(),
+  percentage: z.number(),
+  points_awarded: z.number(),
+  status: attemptStatusSchema,
+  finished_at: z.string(),
+  time_taken_seconds: z.number(),
+});
+
+/** The analysis of one quiz (GET /quizzes/{id}/analytics). */
+export const quizAnalyticsSchema = loose({
+  participants: z.number(),
+  completed: z.number(),
+  auto_finished: z.number(),
+  average_score_out_of_10: z.number(),
+  highest_score: z.number(),
+  lowest_score: z.number(),
+  total_points_awarded: z.number(),
+  max_possible_points: z.number(),
+  score_distribution: z.array(scoreDistributionSchema),
+  completion_status: z.array(completionStatusSchema),
+});

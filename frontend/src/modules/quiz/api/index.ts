@@ -10,11 +10,15 @@ import {
   attemptResumeSchema,
   attemptReviewSchema,
   attemptStartSchema,
+  completionStatusSchema,
   quizAdminItemSchema,
   quizAnalyticsOverviewSchema,
+  quizAnalyticsSchema,
+  quizAnalyticsUserSchema,
   quizDetailSchema,
   quizTakeSchema,
   quizValidationSchema,
+  scoreDistributionSchema,
 } from "@/lib/schemas/quiz";
 import type {
   AttemptHeartbeatResponse,
@@ -26,7 +30,11 @@ import type {
   CreateQuizPayload,
   Paginated,
   QuizAdminItem,
+  QuizAnalytics,
+  QuizAnalyticsExportParams,
   QuizAnalyticsOverview,
+  QuizAnalyticsUser,
+  QuizAnalyticsUsersParams,
   QuizDetailResponse,
   QuizTakeResponse,
   QuizValidationResponse,
@@ -112,11 +120,38 @@ export const quizApi = {
   },
 
   /** Get quiz analytics */
-  getQuizAnalytics: async (
-    quizId: string,
-  ): Promise<Record<string, unknown>> => {
-    const response = await apiClient.get(`/quizzes/${quizId}/analytics`);
+  getQuizAnalytics: async (quizId: string): Promise<QuizAnalytics> => {
+    const response = await apiClient.get(`/quizzes/${quizId}/analytics`, {
+      schema: quizAnalyticsSchema,
+    });
     return response.data;
+  },
+
+  /** The paginated users results of one quiz. */
+  getQuizAnalyticsUsers: async (
+    quizId: string,
+    params?: QuizAnalyticsUsersParams,
+  ): Promise<Paginated<QuizAnalyticsUser>> => {
+    const response = await apiClient.get(`/quizzes/${quizId}/analytics/users`, {
+      params,
+      schema: paginated(quizAnalyticsUserSchema),
+    });
+    return response.data;
+  },
+
+  /** The CSV export of the users results of one quiz. */
+  exportQuizAnalytics: async (
+    quizId: string,
+    params?: QuizAnalyticsExportParams,
+  ): Promise<Blob> => {
+    const response = await apiClient.get(
+      `/quizzes/${quizId}/analytics/export`,
+      {
+        params,
+        responseType: "blob",
+      },
+    );
+    return response.data as Blob;
   },
 
   /** Aggregate quiz stats for the admin dashboard */

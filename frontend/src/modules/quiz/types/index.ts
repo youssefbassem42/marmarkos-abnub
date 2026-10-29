@@ -18,16 +18,20 @@ import type {
   attemptReviewSchema,
   attemptStartSchema,
   attemptStatusSchema,
+  completionStatusSchema,
   gradedOptionSchema,
   questionOptionSchema,
   questionSchema,
   quizAdminItemSchema,
   quizAnalyticsOverviewSchema,
+  quizAnalyticsSchema,
+  quizAnalyticsUserSchema,
   quizDetailSchema,
   quizStatusSchema,
   quizTakeSchema,
   quizValidationSchema,
   reviewQuestionSchema,
+  scoreDistributionSchema,
   takeOptionSchema,
   takeQuestionSchema,
 } from "@/lib/schemas/quiz";
@@ -40,6 +44,35 @@ export type QuizAdminItem = z.infer<typeof quizAdminItemSchema>;
 
 /** The summary of the quizzes (the tiles of the dashboard). */
 export type QuizAnalyticsOverview = z.infer<typeof quizAnalyticsOverviewSchema>;
+
+/** The analysis of one quiz (GET /quizzes/{id}/analytics). */
+export type QuizAnalytics = z.infer<typeof quizAnalyticsSchema>;
+
+/** One bucket of the score distribution. */
+export type ScoreDistributionBucket = z.infer<typeof scoreDistributionSchema>;
+
+/** One bucket of the completion status. */
+export type CompletionStatusBucket = z.infer<typeof completionStatusSchema>;
+
+/** One user result row (GET /quizzes/{id}/analytics/users). */
+export type QuizAnalyticsUser = z.infer<typeof quizAnalyticsUserSchema>;
+
+export interface QuizAnalyticsUsersParams {
+  q?: string;
+  score_min?: number;
+  score_max?: number;
+  status?: AttemptStatus;
+  date_from?: string;
+  date_to?: string;
+  page?: number;
+  size?: number;
+}
+
+/** The filters accepted by the CSV export (the export has no pagination). */
+export type QuizAnalyticsExportParams = Omit<
+  QuizAnalyticsUsersParams,
+  "page" | "size"
+>;
 
 export type QuizOptionResponse = z.infer<typeof questionOptionSchema>;
 

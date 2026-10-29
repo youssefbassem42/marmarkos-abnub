@@ -20,6 +20,7 @@ import {
   ATTEMPT_REVIEW,
   ATTEMPT_START,
   QUIZ_ADMIN_ITEM,
+  QUIZ_ANALYTICS,
   QUIZ_ANALYTICS_OVERVIEW,
   QUIZ_DETAIL,
   QUIZ_TAKE,
@@ -38,7 +39,7 @@ beforeEach(() => {
     "/quizzes/by-verse/v1": QUIZ_DETAIL,
     "/quizzes/q1/take": QUIZ_TAKE,
     "/quizzes/q1/validation": QUIZ_VALIDATION,
-    "/quizzes/q1/analytics": { total_attempts: 3 },
+    "/quizzes/q1/analytics": QUIZ_ANALYTICS,
     "/quizzes/q1/publish": QUIZ_ADMIN_ITEM,
     "/quizzes/q1": QUIZ_DETAIL,
     "/quizzes": {

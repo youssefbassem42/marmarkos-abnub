@@ -183,3 +183,65 @@ export const QUIZ_ANALYTICS_OVERVIEW = {
   auto_finished: 2,
   average_score: 72.5,
 };
+
+export const QUIZ_ANALYTICS = {
+  participants: 8,
+  completed: 5,
+  auto_finished: 3,
+  average_score_out_of_10: 7.5,
+  highest_score: 10,
+  lowest_score: 4,
+  total_points_awarded: 60,
+  max_possible_points: 10,
+  score_distribution: [
+    { score: 10, users: 2 },
+    { score: 9, users: 1 },
+    { score: 8, users: 1 },
+    { score: 7, users: 1 },
+    { score: 4, users: 1 },
+    { score: 3, users: 0 },
+    { score: 2, users: 0 },
+    { score: 1, users: 0 },
+    { score: 0, users: 0 },
+  ],
+  completion_status: [
+    { status: "COMPLETED", users: 5, percentage: 62.5 },
+    { status: "AUTO_FINISHED", users: 3, percentage: 37.5 },
+  ],
+};
+
+export const QUIZ_ANALYTICS_USERS = {
+  items: [
+    {
+      user_id: "user-1",
+      full_name: "أحمد محمد",
+      email: "ahmed@example.com",
+      avatar: null,
+      score: 10,
+      total_points: 10,
+      percentage: 100,
+      points_awarded: 10,
+      status: "COMPLETED",
+      finished_at: "2026-10-22T19:05:00Z",
+      time_taken_seconds: 300,
+    },
+    {
+      user_id: "user-2",
+      full_name: "فاطمة علي",
+      email: "fatma@example.com",
+      avatar: null,
+      score: 4,
+      total_points: 10,
+      percentage: 40,
+      points_awarded: 0,
+      status: "AUTO_FINISHED",
+      finished_at: "2026-10-22T19:10:00Z",
+      time_taken_seconds: 600,
+    },
+  ],
+  total: 2,
+  page: 1,
+  size: 20,
+  pages: 1,
+  has_next: false,
+};
