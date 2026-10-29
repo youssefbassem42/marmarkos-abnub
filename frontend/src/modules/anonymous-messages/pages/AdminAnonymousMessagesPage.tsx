@@ -80,7 +80,12 @@ export function AdminAnonymousMessagesPage() {
 
   return (
     <div>
-      <AdminTopbar title={t("admin.title")} subtitle={t("admin.subtitle")} />
+      <AdminTopbar
+        title={t("admin.title")}
+        subtitle={t("admin.subtitle")}
+        backHref="/admin/dashboard"
+        showSidebarTrigger
+      />
       <main className="mx-auto w-full max-w-6xl px-5 pb-16 pt-6 lg:px-8">
         <div className="flex items-center justify-between gap-3">
           {/* R-2: failed messages are what an admin most needs to see —

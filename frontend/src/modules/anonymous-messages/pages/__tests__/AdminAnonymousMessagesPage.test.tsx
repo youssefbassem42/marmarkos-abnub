@@ -109,6 +109,15 @@ describe("AdminAnonymousMessagesPage", () => {
     );
   }
 
+  it("offers a way back to the dashboard of the administration", () => {
+    mockedList.mockResolvedValueOnce(makePage([]));
+    renderPage();
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toBeVisible();
+    expect(back).toHaveAttribute("href", "/admin/dashboard");
+  });
+
   it("renders each row with the badge matching its status", async () => {
     mockedList.mockResolvedValueOnce(
       makePage([

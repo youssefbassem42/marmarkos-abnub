@@ -64,7 +64,12 @@ export function AdminNotificationsPage() {
 
   return (
     <div>
-      <AdminTopbar title={t("admin.title")} subtitle={t("admin.subtitle")} />
+      <AdminTopbar
+        title={t("admin.title")}
+        subtitle={t("admin.subtitle")}
+        backHref="/admin/dashboard"
+        showSidebarTrigger
+      />
       <main className="mx-auto w-full max-w-5xl px-5 pb-16 pt-6 lg:px-8">
         {isAdmin && <PushNotificationForm />}
 

@@ -204,6 +204,8 @@ export function AttendanceDashboardPage() {
       <AdminTopbar
         title={t("dashboard.title")}
         subtitle={t("dashboard.subtitle")}
+        backHref="/admin/dashboard"
+        showSidebarTrigger
       />
 
       <main className="mx-auto w-full max-w-7xl px-5 py-8 lg:px-8">

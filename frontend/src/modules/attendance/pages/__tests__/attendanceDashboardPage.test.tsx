@@ -20,6 +20,14 @@ import {
 import { AttendanceDashboardPage } from "@/modules/attendance/pages/AttendanceDashboardPage";
 
 describe("the board of the attendance", () => {
+  it("offers a way back to the dashboard of the administration", () => {
+    renderPage(<AttendanceDashboardPage />, { admin: true });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toBeVisible();
+    expect(back).toHaveAttribute("href", "/admin/dashboard");
+  });
+
   it("shows the meetings of the month and the roster of the day", async () => {
     renderPage(<AttendanceDashboardPage />, {
       admin: true,
