@@ -140,28 +140,38 @@ async def test_push_with_email_targets_only_active_verified(
     assert response.recipients == 2
 
 
-async def test_blog_post_consumer_creates_broadcast_with_cta(
+async def test_blog_post_consumer_creates_a_personal_notification_with_cta(
     uow: UnitOfWork, captured_emails: list
 ) -> None:
     admin = await _make_user(uow, "blog.admin@t.com", role=RoleName.ADMIN)
-    await _make_user(uow, "reader@t.com")
+    reader = await _make_user(uow, "reader@t.com")
     await uow.commit()
 
     post_id = uuid.uuid4()
     service = NotificationService(uow)
     await service.notify_blog_post_published(
-        post_id=post_id, slug="new-hope", title_ar="رجاء جديد", title_en="New Hope"
+        post_id=post_id,
+        author_id=admin.id,
+        slug="new-hope",
+        title_ar="رجاء جديد",
     )
 
-    rows = [n for n in await _notification_rows(uow, admin.id) if n.type.value == "BLOG_POST"]
-    assert len(rows) == 1
-    assert rows[0].user_id is None
-    assert rows[0].data["slug"] == "new-hope"
-    assert rows[0].data["post_id"] == str(post_id)
-    assert rows[0].data["cta_url"].endswith("/blog/new-hope")
+    reader_rows = [
+        n for n in await _notification_rows(uow, reader.id) if n.type.value == "BLOG_POST"
+    ]
+    assert len(reader_rows) == 1
+    assert reader_rows[0].user_id == reader.id
+    assert reader_rows[0].data["slug"] == "new-hope"
+    assert reader_rows[0].data["post_id"] == str(post_id)
+    assert reader_rows[0].data["cta_url"].endswith("/blog/new-hope")
 
-    assert {content.subject for _, content in captured_emails}
+    author_rows = [
+        n for n in await _notification_rows(uow, admin.id) if n.type.value == "BLOG_POST"
+    ]
+    assert author_rows == []
+
+    assert {to for to, _ in captured_emails} == {"reader@t.com"}
     # The platform ships Arabic copy only (the English bundle was removed in
-    # the Arabic-only i18n change), so the broadcast subject is the Arabic one.
+    # the Arabic-only i18n change), so the subject is the Arabic one.
     assert all("منشور جديد" in c.subject for _, c in captured_emails)
     assert all("رجاء جديد" in c.subject for _, c in captured_emails)

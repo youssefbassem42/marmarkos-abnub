@@ -39,6 +39,13 @@ from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 logger = logging.getLogger(__name__)
 
 _ANNOUNCEMENT_CTA_LABEL = "افتح التطبيق — OPEN APP"
+_BLOG_POST_NOTIFICATION_KEY_PREFIX = "marmarkos:notifications:blog-post"
+
+
+def _blog_post_notification_id(post_id: uuid.UUID, user_id: uuid.UUID) -> uuid.UUID:
+    """The stable database key of one member's notification for one post."""
+    key = f"{_BLOG_POST_NOTIFICATION_KEY_PREFIX}:{post_id}:{user_id}"
+    return uuid.uuid5(uuid.NAMESPACE_URL, key)
 
 
 class NotificationService:
@@ -141,27 +148,68 @@ class NotificationService:
             copy=attendance_recorded_copy(meeting_date=meeting_date, status=status),
         )
 
-    # This consumer ships dormant on purpose: the blog module has only
-    # its data layer so far (D-13), there is no publish command to call
-    # it yet. The behaviour itself is finished and covered by a test
-    # (tests/unit/notifications/test_notification_service.py); it is
-    # wired the day the publish command lands - not a forgotten task.
     async def notify_blog_post_published(
-        self, *, post_id: uuid.UUID, slug: str, title_ar: str, title_en: str
+        self,
+        *,
+        post_id: uuid.UUID,
+        author_id: uuid.UUID,
+        slug: str,
+        title_ar: str,
+        title_en: str | None = None,
+        excerpt: str | None = None,
     ) -> None:
-        """BR-9/D-13: broadcast + email fan-out for a published post."""
-        copy = blog_post_published_copy(title_ar=title_ar, title_en=title_en)
-        cta_url = f"{settings.FRONTEND_URL}/blog/{slug}"
-        notification = await self.create_broadcast(
-            type=NotificationType.BLOG_POST,
-            copy=copy,
-            data={"post_id": str(post_id), "slug": slug, "cta_url": cta_url},
+        """Notify every eligible member about one published post (BR-73/BR-75).
+
+        Each member gets a personal notification. The author is excluded,
+        and only an active member with a verified address may receive the
+        mail. The notification rows are committed before delivery starts.
+        """
+        copy = blog_post_published_copy(
+            title_ar=title_ar,
+            title_en=title_en or title_ar,
+            excerpt=excerpt,
         )
+        cta_url = f"{settings.FRONTEND_URL.rstrip('/')}/blog/{slug}"
+        users = await self._uow.users.list_all()
+        recipients = sorted(
+            (user for user in users if user.status is UserStatus.ACTIVE and user.id != author_id),
+            key=lambda user: user.id,
+        )
+
+        created_users: list[User] = []
+        for user in recipients:
+            notification = await self._uow.notifications.create_idempotent_for_user(
+                notification_id=_blog_post_notification_id(post_id, user.id),
+                user_id=user.id,
+                type=NotificationType.BLOG_POST,
+                title=copy.title_ar,
+                message=copy.message_ar,
+                title_en=copy.title_en,
+                message_en=copy.message_en,
+                data={
+                    "post_id": str(post_id),
+                    "slug": slug,
+                    "cta_url": cta_url,
+                    "icon": "BookOpen",
+                },
+            )
+            if notification is not None:
+                created_users.append(user)
+
+        if not created_users:
+            # A replay of an already delivered event must not create a
+            # second audit trail or send the mail again (BR-75).
+            return
+
         await self._uow.audit.record(
             action="notification.blog_post",
-            entity_type="notification",
-            entity_id=str(notification.id),
-            metadata={"post_id": str(post_id), "slug": slug},
+            entity_type="blog_post",
+            entity_id=str(post_id),
+            metadata={
+                "post_id": str(post_id),
+                "slug": slug,
+                "notifications_created": len(created_users),
+            },
         )
         await self._uow.commit()
 
@@ -172,10 +220,11 @@ class NotificationService:
             message_en=copy.message_en,
             cta_url=cta_url,
         )
-        sent, failed = await self._fan_out_content(content)
+        sent, failed = await self._fan_out_content(content, users=created_users)
         logger.info(
-            "Blog post notification %s emailed: sent=%d failed=%d",
-            notification.id,
+            "Blog post %s notified %d members: emails sent=%d failed=%d",
+            post_id,
+            len(created_users),
             sent,
             failed,
         )
@@ -198,11 +247,13 @@ class NotificationService:
         )
         return await self._fan_out_content(content)
 
-    async def _fan_out_content(self, content: BrandEmailContent) -> tuple[int, int]:
-        users = await self._uow.users.list_all()
+    async def _fan_out_content(
+        self, content: BrandEmailContent, *, users: list[User] | None = None
+    ) -> tuple[int, int]:
+        candidates = users if users is not None else await self._uow.users.list_all()
         targets = [
             user
-            for user in users
+            for user in candidates
             if user.status is UserStatus.ACTIVE and user.email_verified and bool(user.email)
         ]
         semaphore = asyncio.Semaphore(settings.NOTIFICATION_EMAIL_CONCURRENCY)
@@ -211,6 +262,16 @@ class NotificationService:
             async with semaphore:
                 return await self._email.send(to_email=user.email, content=content)
 
-        results = await asyncio.gather(*(_send(user) for user in targets))
-        sent = sum(1 for ok in results if ok)
+        # An unexpected provider error belongs to one recipient only. The
+        # other recipients still receive their mail (BR-76).
+        results = await asyncio.gather(*(_send(user) for user in targets), return_exceptions=True)
+        sent = sum(1 for result in results if result is True)
+        for user, result in zip(targets, results, strict=True):
+            if isinstance(result, BaseException):
+                logger.exception(
+                    "The notification mail to %s failed: %s",
+                    user.email,
+                    result,
+                    exc_info=result,
+                )
         return sent, len(results) - sent

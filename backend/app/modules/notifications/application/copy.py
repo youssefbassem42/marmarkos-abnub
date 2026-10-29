@@ -41,13 +41,21 @@ def attendance_recorded_copy(*, meeting_date: date, status: AttendanceStatus) ->
     )
 
 
-def blog_post_published_copy(*, title_ar: str, title_en: str) -> NotificationCopy:
-    """BR-9: the broadcast announcing a new blog post (dormant, D-13)."""
+def blog_post_published_copy(
+    *, title_ar: str, title_en: str, excerpt: str | None = None
+) -> NotificationCopy:
+    """BR-73: the Arabic notice announcing a new blog post."""
+    if excerpt:
+        message_ar = f"تم نشر موضوع جديد: {excerpt} اقرأه الآن."
+        message_en = f"A new post has been published: {excerpt} Read it now."
+    else:
+        message_ar = "تم نشر موضوع جديد. اقرأه الآن."
+        message_en = "A new post has been published. Read it now."
     return NotificationCopy(
         title_ar=f"منشور جديد: {title_ar}",
         title_en=f"New post: {title_en}",
-        message_ar="تم نشر موضوع جديد. اقرأه الآن.",
-        message_en="A new post has been published. Read it now.",
+        message_ar=message_ar,
+        message_en=message_en,
     )
 
 

@@ -60,11 +60,11 @@ code cites an identifier that is not listed here.
 | `BR-6` | Only `ADMIN` may push a broadcast; `SERVANT` and `MEMBER` get 403 | `app/modules/notifications/presentation/router.py` |
 | `BR-7` | Reading and changing **one's own** notifications needs only an authentication | `app/modules/notifications/presentation/router.py` |
 | `BR-8` | The notification row and the audit row are committed **before** the mails go out; a failing mail never undoes the notification | `app/modules/notifications/application/services/notification_service.py` |
-| `BR-9` | A published blog post creates one broadcast of type `BLOG_POST` and fans the mails out | `app/modules/notifications/application/copy.py` |
+| `BR-9` | A published blog post creates one personal `BLOG_POST` notification for every eligible member and fans the eligible mails out | `app/modules/notifications/application/services/notification_service.py` |
 | `BR-10` | A recorded attendance creates one per-user notification of type `ATTENDANCE` | `app/modules/notifications/application/copy.py` |
 | `D-4` | The unread badge and the counters of the tabs | `app/modules/notifications/presentation/router.py` |
 | `D-6` | The creation time of a notification is the moment it was written, so the feed and the mails always agree | `app/modules/notifications/application/copy.py` |
-| `D-13` | The blog consumer waits for the publish command (the blog module has only its data layer so far) | `app/modules/notifications/application/services/notification_service.py` |
+| `D-13` | The blog consumer wakes when the shared outbox delivers a publication event | `app/modules/blog/application/handlers/blog_post_published_handler.py` |
 | `D-24` | The feed can be filtered with a lower time bound (`since`) | `app/modules/notifications/presentation/router.py` |
 
 ## Bible (the verses)
@@ -287,3 +287,13 @@ number.
 | `BR-68` | The shared scheduler tick publishes the scheduled posts of the blog whose date has come; the runner is idempotent and safe when two ticks run at the same time | `app/modules/blog/application/services/publication_service.py` |
 | `D-4` | The interface calls the blog categories "tags"; the database tables keep their names | `app/modules/blog/application/dto/post_dto.py` |
 | `D-6` | The admin and the servant may write a blog post | `app/modules/blog/application/commands/post_commands.py` |
+
+## The notification and the mail of a published blog post
+
+| Identifier | The rule | Where it lives |
+|---|---|---|
+| `BR-72` | Only a post whose current state is `PUBLISHED` and whose publication date is due can notify the members; a draft, a scheduled post that is not due, and an archived post notify nobody | `app/modules/blog/application/handlers/blog_post_published_handler.py` |
+| `BR-73` | Every active member except the author receives one personal `BLOG_POST` notification with the post id and the link to the post | `app/modules/notifications/application/services/notification_service.py` |
+| `BR-74` | Only an active member with a verified email address has opted in to the blog mail; the author never receives it | `app/modules/notifications/application/services/notification_service.py` |
+| `BR-75` | The delivery is idempotent: a repeated publication event creates neither a second notification nor a second mail for the same member and post | `app/modules/notifications/infrastructure/persistence/notification_repository.py` |
+| `BR-76` | The mails are sent with bounded concurrency and the failure of one member never stops the other members | `app/modules/notifications/application/services/notification_service.py` |

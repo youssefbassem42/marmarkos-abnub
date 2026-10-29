@@ -14,6 +14,7 @@ from sqlalchemy import func, select
 # dispatcher registry (import-time side effect by design).
 import app.modules.attendance.application.handlers.attendance_event_handlers  # noqa: F401,E402
 import app.modules.bible.application.handlers.bible_verse_published_handler  # noqa: F401,E402
+import app.modules.blog.application.handlers.blog_post_published_handler  # noqa: F401,E402
 import app.modules.users.application.handlers.user_registered_handler  # noqa: F401,E402
 from app.config import settings
 from app.core.database import async_session_factory

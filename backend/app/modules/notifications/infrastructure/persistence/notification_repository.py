@@ -10,6 +10,7 @@ import uuid
 from datetime import datetime
 
 from sqlalchemy import ColumnElement, and_, func, or_, select
+from sqlalchemy.dialects.postgresql import insert as postgresql_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.pagination import PageParams
@@ -58,6 +59,43 @@ class NotificationRepository:
         self._session.add(notification)
         await self._session.flush()
         return notification
+
+    async def create_idempotent_for_user(
+        self,
+        *,
+        notification_id: uuid.UUID,
+        user_id: uuid.UUID,
+        type: NotificationType,
+        title: str,
+        message: str,
+        title_en: str,
+        message_en: str,
+        data: dict[str, object] | None = None,
+    ) -> Notification | None:
+        """Create one per-user notification, or return ``None`` on replay.
+
+        The caller derives ``notification_id`` from the business event and
+        its recipient. The primary key therefore acts as the unique
+        delivery key: concurrent or repeated deliveries conflict on the
+        database instead of duplicating the row (BR-75).
+        """
+        statement = (
+            postgresql_insert(Notification)
+            .values(
+                id=notification_id,
+                user_id=user_id,
+                type=type,
+                title=title,
+                message=message,
+                title_en=title_en,
+                message_en=message_en,
+                data=data,
+            )
+            .on_conflict_do_nothing(index_elements=[Notification.id])
+            .returning(Notification)
+        )
+        result = await self._session.execute(statement)
+        return result.scalar_one_or_none()
 
     async def get_visible_for_user(
         self, notification_id: uuid.UUID, user_id: uuid.UUID
