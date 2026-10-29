@@ -6,6 +6,7 @@ from app.modules.attendance.presentation.router import router as attendance_rout
 from app.modules.auth.presentation.router import router as auth_router
 from app.modules.bible.presentation.router import router as bible_router
 from app.modules.internal.presentation.router import router as internal_router
+from app.modules.media.presentation.router import router as media_router
 from app.modules.notifications.presentation.router import router as notifications_router
 from app.modules.points.presentation.analytics_router import router as analytics_router
 from app.modules.points.presentation.router import router as points_router
@@ -33,3 +34,4 @@ router.include_router(quiz_attempt_router)
 router.include_router(points_router)
 router.include_router(analytics_router)
 router.include_router(internal_router)
+router.include_router(media_router)

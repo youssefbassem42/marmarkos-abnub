@@ -234,3 +234,14 @@ platform, and it deserves its own review.
 
 Until then, this catalogue is the map: read the module first, then the
 number.
+
+## The slides of the landing page (the point 4 of the plan)
+
+| Identifier | The rule | Where it lives |
+|---|---|---|
+| `BR-41` | The slides of the landing page are managed by the admin alone; the public list is open to everyone (no token) | `app/modules/media/presentation/router.py` |
+| `BR-42` | The public list answers only the active slides, ordered by their `order` | `app/modules/media/application/queries/landing_slide_queries.py` |
+| `BR-43` | A slide is created with an uploaded image, an optional title and an optional subtitle | `app/modules/media/application/commands/landing_slide_commands.py` |
+| `BR-44` | Deleting a slide removes it physically; the media module has no soft-delete pattern | `app/modules/media/application/commands/landing_slide_commands.py` |
+| `BR-45` | The image goes through the shared media upload service; slides use the 2 MB limit, like the verse covers | `app/shared/infrastructure/services/image_upload.py` |
+

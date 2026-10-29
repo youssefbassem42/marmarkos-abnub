@@ -7,7 +7,7 @@ the ``MediaStorage`` abstraction (e.g. Cloudinary/S3).
 import uuid
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, ForeignKey, Index, Integer, String
+from sqlalchemy import Boolean, ForeignKey, Index, Integer, String, text
 from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
@@ -41,3 +41,25 @@ class MediaAsset(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
 
     created_by_user: Mapped["User | None"] = relationship()
+
+
+class LandingSlide(UUIDPrimaryKeyMixin, TimestampMixin, Base):
+    """One slide of the landing-page slider.
+
+    The image is the secure URL returned by the shared media upload
+    service (Cloudinary); the binary file itself is never stored here.
+    """
+
+    __tablename__ = "landing_slides"
+    __table_args__ = (
+        Index("ix_landing_slides_active", "active"),
+        Index("ix_landing_slides_order", "order"),
+    )
+
+    image: Mapped[str] = mapped_column(String(1000), nullable=False)
+    title: Mapped[str | None] = mapped_column(String(200))
+    subtitle: Mapped[str | None] = mapped_column(String(300))
+    order: Mapped[int] = mapped_column(Integer, server_default=text("0"), default=0, nullable=False)
+    active: Mapped[bool] = mapped_column(
+        Boolean, server_default=text("true"), default=True, nullable=False
+    )
