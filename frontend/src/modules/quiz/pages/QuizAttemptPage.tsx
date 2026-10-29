@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import { ApiError, toApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/common/PageHeader";
 import { useStartAttempt, attemptIdFromError } from "../hooks/useStartAttempt";
 import { useAttempt } from "../hooks/useAttempt";
 import { useQuizForTake } from "../hooks/useQuizForTake";
@@ -427,15 +428,17 @@ export default function QuizAttemptPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-4 p-4">
-      {/* Top bar: title + timer */}
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-lg font-semibold">{t("take.header")}</h1>
-        <QuizTimer
-          secondsLeft={timer.secondsLeft}
-          isWarning={timer.isWarning}
-          isExpired={timer.isExpired}
-        />
-      </div>
+      <PageHeader
+        title={t("take.header")}
+        backTo="/"
+        actions={
+          <QuizTimer
+            secondsLeft={timer.secondsLeft}
+            isWarning={timer.isWarning}
+            isExpired={timer.isExpired}
+          />
+        }
+      />
 
       {/* Timer announcement for screen readers */}
       <div aria-live="polite" className="sr-only">

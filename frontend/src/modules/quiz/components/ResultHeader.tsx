@@ -10,8 +10,7 @@ export function ResultHeader() {
         <Trophy className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
       </div>
       <div>
-        <h1 className="text-2xl font-bold">{t("result.completed")}</h1>
-        <p className="text-sm text-muted-foreground">{t("result.subtitle")}</p>
+        <h2 className="text-2xl font-bold">{t("result.completed")}</h2>
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, BarChart3 } from "lucide-react";
+import { PageHeader } from "@/components/common/PageHeader";
 import { useAttemptResult } from "../hooks/useAttemptResult";
 import { ResultHeader } from "../components/ResultHeader";
 import { ScoreSummary } from "../components/ScoreSummary";
@@ -85,6 +86,12 @@ export default function QuizResultPage() {
 
   return (
     <div className="mx-auto max-w-2xl space-y-6 p-4">
+      <PageHeader
+        title={t("result.completed")}
+        description={t("result.subtitle")}
+        backTo="/"
+      />
+
       <ResultHeader />
 
       <ScoreSummary

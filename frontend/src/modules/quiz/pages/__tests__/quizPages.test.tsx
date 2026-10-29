@@ -101,6 +101,30 @@ describe("the page of the attempt", () => {
     expect(screen.getByText("إنجيل متى")).toBeInTheDocument();
   });
 
+  it("offers a way back to the landing page", async () => {
+    renderPage(<QuizAttemptPage />, {
+      path: "/quizzes/:quizId/attempt",
+      route: `/quizzes/${QUIZ_ID}/attempt`,
+      answers: {
+        [`/quizzes/${QUIZ_ID}/take`]: TAKE,
+        "/quiz-attempts": {
+          ...ATTEMPT,
+          id: ATTEMPT_ID,
+          questions: TAKE.questions,
+        },
+        [`/quiz-attempts/${ATTEMPT_ID}`]: ATTEMPT,
+      },
+    });
+
+    await waitFor(
+      () => expect(screen.getByText("ما هو الكتاب؟")).toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toHaveAttribute("href", "/");
+  });
+
   it("submits the attempt by itself when the time is up", async () => {
     // The server refuses every answer once the budget of the attempt is
     // exhausted: an attempt that is not submitted would stay in progress
@@ -284,6 +308,9 @@ describe("the page of the result", () => {
     // The number of the correct and of the wrong answers.
     expect(screen.getByText("إجابات صحيحة")).toBeInTheDocument();
     expect(screen.getByText("إجابات خاطئة")).toBeInTheDocument();
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toHaveAttribute("href", "/");
   });
 
   it("sends the member back to the verse of the quiz", async () => {
