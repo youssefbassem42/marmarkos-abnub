@@ -272,3 +272,17 @@ number.
 | `BR-58` | A quiz whose title changed shows its current title | `app/modules/points/infrastructure/persistence/point_transaction_repository.py` |
 | `BR-59` | A member never sees the points of another member; the endpoint never takes the id of a member | `app/modules/points/presentation/router.py` |
 | `BR-60` | The attempts deleted with their quiz do not appear | `app/modules/points/infrastructure/persistence/point_transaction_repository.py` |
+
+## The blog posts (the point 7 of the plan)
+
+| Identifier | The rule | Where it lives |
+|---|---|---|
+| `BR-61` | Only an admin or a servant may write a blog post; a member may read and comment but may not write | `app/modules/blog/application/commands/post_commands.py` |
+| `BR-62` | The author of a post, an admin, or a servant may update or delete that post | `app/modules/blog/application/commands/post_commands.py` |
+| `BR-63` | A post whose publication date is in the future stays `DRAFT` until the shared scheduler publishes it; a past date publishes the post at once | `app/modules/blog/application/commands/post_commands.py` |
+| `BR-64` | The member-facing list and detail expose published posts only; a draft, scheduled, or archived post is hidden | `app/modules/blog/application/queries/post_queries.py` |
+| `BR-65` | Deleting a blog post is soft: its status becomes `ARCHIVED`, the row remains, and the member-facing answers never show it | `app/modules/blog/application/commands/post_commands.py` |
+| `BR-66` | A post's tags are the existing blog categories; the public list may be filtered by one tag | `app/modules/blog/application/commands/post_commands.py`, `app/modules/blog/application/queries/post_queries.py` |
+| `BR-67` | A blog cover is uploaded through the shared media service with the 1 MB limit | `app/modules/blog/presentation/router.py` |
+| `D-4` | The interface calls the blog categories "tags"; the database tables keep their names | `app/modules/blog/application/dto/post_dto.py` |
+| `D-6` | The admin and the servant may write a blog post | `app/modules/blog/application/commands/post_commands.py` |
