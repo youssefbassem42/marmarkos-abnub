@@ -9,7 +9,6 @@ import { CheckEmailPage } from "@/pages/auth/verify-email/CheckEmailPage";
 import { VerifyEmailResultPage } from "@/pages/auth/verify-email/VerifyEmailResultPage";
 import { GoogleCallbackPage } from "@/pages/auth/google-callback/GoogleCallbackPage";
 import { ProfilePage } from "@/pages/profile/ProfilePage";
-import { PlaceholderPage } from "@/pages/placeholder/PlaceholderPage";
 import { AboutUsPage } from "@/pages/about/AboutUsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { ForbiddenPage } from "@/pages/ForbiddenPage";
@@ -167,6 +166,14 @@ const SlidesPage = lazyWithRetry(() =>
 // Analytics module
 const MonthlyAnalyticsPage = lazyWithRetry(
   () => import("@/modules/analytics/pages/MonthlyAnalyticsPage"),
+);
+
+// Blog module
+const BlogListPage = lazyWithRetry(
+  () => import("@/modules/blog/pages/blog/BlogListPage"),
+);
+const BlogPostPage = lazyWithRetry(
+  () => import("@/modules/blog/pages/blog/BlogPostPage"),
 );
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -567,13 +574,22 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    // Private section: content is members-only until signed in.
+    // Public blog: a visitor may read the published posts without signing in.
     path: "/blog",
     handle: { parent: "/" },
     element: (
-      <RequireAuth>
-        <PlaceholderPage titleKey="blog" />
-      </RequireAuth>
+      <Suspense fallback={<PageSkeleton />}>
+        <BlogListPage />
+      </Suspense>
+    ),
+  },
+  {
+    path: "/blog/:slug",
+    handle: { parent: "/blog" },
+    element: (
+      <Suspense fallback={<PageSkeleton />}>
+        <BlogPostPage />
+      </Suspense>
     ),
   },
   {
