@@ -37,11 +37,28 @@ if (typeof window !== "undefined" && !window.ResizeObserver) {
 
 // IntersectionObserver stub: the landing page reveals its sections when
 // they scroll into view. jsdom does not implement it.
+//
+// The stub behaves like a browser that shows the first screen of the page:
+// every observed element counts as visible at once. A page that uses the
+// `reveal` class without the observer of the landing page then reads as
+// empty in the test - exactly as it reads in the browser.
 class IntersectionObserverStub implements IntersectionObserver {
   readonly root: Element | null = null;
   readonly rootMargin: string = "";
   readonly thresholds: ReadonlyArray<number> = [];
-  observe(): void {}
+  private readonly callback: IntersectionObserverCallback;
+
+  constructor(callback: IntersectionObserverCallback) {
+    this.callback = callback;
+  }
+
+  observe(target: Element): void {
+    this.callback(
+      [{ isIntersecting: true, target } as IntersectionObserverEntry],
+      this as unknown as IntersectionObserver,
+    );
+  }
+
   unobserve(): void {}
   disconnect(): void {}
   takeRecords(): IntersectionObserverEntry[] {
