@@ -24,6 +24,8 @@ build/
 
 # Node
 node_modules/
+# The symlink of the worktrees is not a directory: it must be ignored too.
+node_modules
 dist/
 .vite/
 coverage/
