@@ -184,6 +184,15 @@ export const QUIZ_ANALYTICS_OVERVIEW = {
   average_score: 72.5,
 };
 
+export const QUIZ_ANALYTICS_LIST = {
+  items: [{ ...QUIZ_ADMIN_ITEM, status: "PUBLISHED" }],
+  total: 1,
+  page: 1,
+  size: 20,
+  pages: 1,
+  has_next: false,
+};
+
 export const QUIZ_ANALYTICS = {
   participants: 8,
   completed: 5,
@@ -208,6 +217,19 @@ export const QUIZ_ANALYTICS = {
     { status: "COMPLETED", users: 5, percentage: 62.5 },
     { status: "AUTO_FINISHED", users: 3, percentage: 37.5 },
   ],
+};
+
+export const EMPTY_QUIZ_ANALYTICS = {
+  participants: 0,
+  completed: 0,
+  auto_finished: 0,
+  average_score_out_of_10: 0,
+  highest_score: 0,
+  lowest_score: 0,
+  total_points_awarded: 0,
+  max_possible_points: 10,
+  score_distribution: [],
+  completion_status: [],
 };
 
 export const QUIZ_ANALYTICS_USERS = {
@@ -244,4 +266,11 @@ export const QUIZ_ANALYTICS_USERS = {
   size: 20,
   pages: 1,
   has_next: false,
+};
+
+export const EMPTY_QUIZ_ANALYTICS_USERS = {
+  ...QUIZ_ANALYTICS_USERS,
+  items: [],
+  total: 0,
+  pages: 1,
 };
