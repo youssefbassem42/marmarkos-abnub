@@ -66,6 +66,10 @@ ENDPOINTS: dict[tuple[str, str], str] = {
     ("GET", "/quiz-analytics/users/{user_id}"): "monthlyUserDetailSchema",
     ("POST", "/anonymous-messages"): "anonymousMessageCreateSchema",
     ("GET", "/anonymous-messages"): "anonymousMessageAdminSchema",
+    ("GET", "/blog/posts"): "blogPostSummarySchema",
+    ("GET", "/blog/posts/{post_id}"): "blogPostDetailSchema",
+    ("GET", "/admin/blog/posts"): "blogPostAdminSchema",
+    ("POST", "/admin/blog/posts/cover"): "blogImageUploadSchema",
 }
 
 # The fields of a schema of the frontend: `field: z.…`.
