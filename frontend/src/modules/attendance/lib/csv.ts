@@ -1,15 +1,10 @@
-import { downloadBlob } from "@/lib/download";
+import { createCsvBlob, downloadCsv } from "@/lib/csv";
 import { attendanceApi } from "../api";
 import type { AttendanceStatusValue } from "../types";
 
 const MAX_PAGE_SIZE = 100;
 
-function escapeCell(value: string): string {
-  if (/[",\n\r]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
-}
+export { downloadCsv };
 
 /**
  * Client-side CSV export of the full filtered set (not just one page):
@@ -27,7 +22,7 @@ export async function buildAttendanceCsv(options: {
   }) => string[];
   filters?: Record<string, string | number | undefined>;
 }): Promise<Blob> {
-  const rows: string[] = [options.headers.map(escapeCell).join(",")];
+  const rows: string[][] = [];
 
   let page = 1;
   for (;;) {
@@ -38,7 +33,7 @@ export async function buildAttendanceCsv(options: {
     });
 
     for (const record of response.attendance_records) {
-      rows.push(options.formatRow(record).map(escapeCell).join(","));
+      rows.push(options.formatRow(record));
     }
 
     if (page >= response.pages || response.attendance_records.length === 0)
@@ -46,13 +41,5 @@ export async function buildAttendanceCsv(options: {
     page += 1;
   }
 
-  // BOM first so Excel detects UTF-8.
-  return new Blob([`\uFEFF${rows.join("\r\n")}`], {
-    type: "text/csv;charset=utf-8",
-  });
-}
-
-/** Trigger a browser download for a generated CSV blob. */
-export function downloadCsv(blob: Blob, filename: string): void {
-  downloadBlob(blob, filename);
+  return createCsvBlob(options.headers, rows);
 }
