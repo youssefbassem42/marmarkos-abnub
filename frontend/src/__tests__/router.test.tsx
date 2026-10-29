@@ -226,7 +226,7 @@ describe("the map of the parents", () => {
     expect(parentOf("/points")).toBe("/");
   });
 
-  it("keeps the administration on its own dashboard", async () => {
+  it("keeps the administration and its sections on their declared parents", async () => {
     window.history.pushState({}, "", "/");
     vi.resetModules();
     const module = await import("@/router");
@@ -260,5 +260,19 @@ describe("the map of the parents", () => {
     expect(parentOf("attendance/history")).toBe("/admin/dashboard");
     expect(parentOf("attendance/absent")).toBe("/admin/dashboard");
     expect(parentOf("landing/slides")).toBe("/admin/dashboard");
+
+    // The screens of a section return to the list of that section.
+    expect(parentOf("bible-verses/new")).toBe("/admin/bible-verses");
+    expect(parentOf("bible-verses/:verseId/edit")).toBe("/admin/bible-verses");
+    expect(parentOf("bible-verses/:verseId/schedule")).toBe(
+      "/admin/bible-verses",
+    );
+    expect(parentOf("quizzes")).toBe("/admin/quizzes");
+    expect(parentOf("quizzes/new")).toBe("/admin/quizzes");
+    expect(parentOf("quizzes/:quizId/builder")).toBe("/admin/quizzes");
+    expect(parentOf("quizzes/:quizId/questions/new")).toBe("/admin/quizzes");
+    expect(parentOf("quizzes/:quizId/questions/:questionId/edit")).toBe(
+      "/admin/quizzes",
+    );
   });
 });

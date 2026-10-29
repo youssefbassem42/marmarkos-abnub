@@ -337,7 +337,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "bible-verses/new",
-            handle: { parent: "/admin/dashboard" },
+            handle: { parent: "/admin/bible-verses" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <VerseFormPage />
@@ -346,7 +346,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "bible-verses/:verseId/edit",
-            handle: { parent: "/admin/dashboard" },
+            handle: { parent: "/admin/bible-verses" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <VerseFormPage />
@@ -355,7 +355,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "bible-verses/:verseId/schedule",
-            handle: { parent: "/admin/dashboard" },
+            handle: { parent: "/admin/bible-verses" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <VerseSchedulePage />
@@ -373,7 +373,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes",
-            handle: { parent: "/admin/dashboard" },
+            handle: { parent: "/admin/quizzes" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuizListPage />
@@ -413,7 +413,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes/new",
-            handle: { parent: "/admin/dashboard" },
+            handle: { parent: "/admin/quizzes" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuizBuilderPage />
@@ -422,7 +422,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes/:quizId/builder",
-            handle: { parent: "/admin/dashboard" },
+            handle: { parent: "/admin/quizzes" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuizBuilderPage />
@@ -431,7 +431,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes/:quizId/questions/new",
-            handle: { parent: "/admin/dashboard" },
+            handle: { parent: "/admin/quizzes" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuestionFormPage />
@@ -440,7 +440,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes/:quizId/questions/:questionId/edit",
-            handle: { parent: "/admin/dashboard" },
+            handle: { parent: "/admin/quizzes" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuestionFormPage />
