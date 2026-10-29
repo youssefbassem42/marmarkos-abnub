@@ -336,7 +336,14 @@ class PointTransactionRepository:
                     User.last_name,
                     User.avatar,
                 )
-                .order_by(func.sum(PointTransaction.points).desc())
+                # The tie-break: two members with the same number of points
+                # are always in the same order (the name), otherwise the
+                # order of the leaderboard changes from one query to the next.
+                .order_by(
+                    func.sum(PointTransaction.points).desc(),
+                    User.first_name.asc(),
+                    User.last_name.asc(),
+                )
                 .limit(limit)
             )
         ).all()
