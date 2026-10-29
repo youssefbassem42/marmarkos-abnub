@@ -87,6 +87,42 @@ export const POINT_ACTIVITY = {
   source: "QUIZ_COMPLETION",
 };
 
+export const POINTS_BY_QUIZ = {
+  items: [
+    {
+      quiz_id: "quiz-1",
+      quiz_title: "اختبار الآية",
+      points: 60,
+      attempts: 3,
+      average_score_out_of_10: 8.5,
+      last_attempt_at: "2026-10-29T10:00:00Z",
+    },
+    {
+      quiz_id: "quiz-2",
+      quiz_title: "اختبار الإيمان",
+      points: 2,
+      attempts: 1,
+      average_score_out_of_10: 10,
+      last_attempt_at: "2026-10-20T10:00:00Z",
+    },
+  ],
+  total: 2,
+  page: 1,
+  size: 20,
+  pages: 1,
+  has_next: false,
+  total_points: 62,
+};
+
+export const POINT_ACTIVITY_PAGE = {
+  items: [POINT_ACTIVITY],
+  total: 1,
+  page: 1,
+  size: 20,
+  pages: 1,
+  has_next: false,
+};
+
 export const ANONYMOUS_MESSAGE = {
   id: "message-1",
   message: "رسالة إلى الخادم",

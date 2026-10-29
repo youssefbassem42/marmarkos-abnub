@@ -9,7 +9,7 @@
 
 import { z } from "zod";
 
-import { loose } from "./common";
+import { loose, paginated } from "./common";
 
 /* ------------------------------------------------------------------ users */
 
@@ -119,6 +119,22 @@ export const pointActivityItemSchema = loose({
   verse_id: z.string().nullable(),
   verse_reference: z.string().nullable(),
   source: z.string(),
+});
+
+/** One quiz of the summary of the points of the member per quiz. */
+export const pointsByQuizItemSchema = loose({
+  quiz_id: z.string(),
+  quiz_title: z.string(),
+  points: z.number(),
+  attempts: z.number(),
+  average_score_out_of_10: z.number(),
+  last_attempt_at: z.string(),
+});
+
+/** The summary of the points of the member per quiz (`Page[T]` and `total_points`). */
+export const pointsByQuizSchema = loose({
+  ...paginated(pointsByQuizItemSchema).shape,
+  total_points: z.number(),
 });
 
 /* ------------------------------------------------- the analytics of a month */

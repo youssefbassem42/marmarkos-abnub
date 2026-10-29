@@ -9,6 +9,7 @@ import { screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
+import { POINTS_BY_QUIZ, POINT_ACTIVITY_PAGE } from "@/test/fixtures/member";
 import PointsPage from "@/modules/points/pages/PointsPage";
 import { NotificationsPage } from "@/modules/notifications/pages/NotificationsPage";
 
@@ -58,6 +59,63 @@ describe("the points of the member", () => {
       timeout: 5_000,
     });
     expect(screen.getByText("40")).toBeInTheDocument();
+  });
+});
+
+describe("the summary of the points per quiz", () => {
+  const baseAnswers = {
+    "/users/me/points/monthly": MONTHLY,
+    "/users/me/points": POINTS,
+    "/users/me/points/history": POINT_ACTIVITY_PAGE,
+  };
+
+  it("shows the points of the member in each quiz", async () => {
+    renderPage(<PointsPage />, {
+      answers: { ...baseAnswers, "/users/me/points/by-quiz": POINTS_BY_QUIZ },
+    });
+
+    await waitFor(
+      () => expect(screen.getByText("اختبار الآية")).toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
+    expect(screen.getByText("اختبار الإيمان")).toBeInTheDocument();
+    // The numbers are formatted with the Arabic digits of ar-EG.
+    expect(screen.getByText("٦٠")).toBeInTheDocument();
+    expect(screen.getByText("٣")).toBeInTheDocument();
+    expect(screen.getByText("٨٫٥ / 10")).toBeInTheDocument();
+    expect(screen.getByText(/٦٢/)).toBeInTheDocument();
+  });
+
+  it("says that there is no quiz yet", async () => {
+    renderPage(<PointsPage />, {
+      answers: {
+        ...baseAnswers,
+        "/users/me/points/by-quiz": { ...POINTS_BY_QUIZ, items: [], total: 0 },
+      },
+    });
+
+    await waitFor(
+      () =>
+        expect(screen.getByText("لم تخض أي اختبار بعد")).toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
+  });
+
+  it("shows the error when the summary fails", async () => {
+    renderPage(<PointsPage />, {
+      answers: {
+        ...baseAnswers,
+        "/users/me/points/by-quiz": {
+          status: 500,
+          body: { detail: "server error" },
+        },
+      },
+    });
+
+    await waitFor(
+      () => expect(screen.getByText("حاول مرة تاني")).toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
   });
 });
 

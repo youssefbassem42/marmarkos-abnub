@@ -14,6 +14,8 @@ import type {
   monthlyPointsItemSchema,
   monthlyPointsSchema,
   pointActivityItemSchema,
+  pointsByQuizItemSchema,
+  pointsByQuizSchema,
   pointsSchema,
 } from "@/lib/schemas/member";
 
@@ -29,6 +31,12 @@ export type MonthlyPointsResponse = z.infer<typeof monthlyPointsSchema>;
 /** One movement of the ledger of the points. */
 export type PointsHistoryItem = z.infer<typeof pointActivityItemSchema>;
 
+/** One quiz of the summary of the points of the member per quiz. */
+export type PointsByQuizItem = z.infer<typeof pointsByQuizItemSchema>;
+
+/** The summary of the points of the member per quiz (the envelope of the backend). */
+export type PointsByQuizResponse = z.infer<typeof pointsByQuizSchema>;
+
 export interface Paginated<T> {
   items: T[];
   total: number;
@@ -38,6 +46,12 @@ export interface Paginated<T> {
 }
 
 export interface PointsHistoryParams {
+  page?: number;
+  size?: number;
+}
+
+/** The page of the summary of the points of the member per quiz. */
+export interface PointsByQuizParams {
   page?: number;
   size?: number;
 }

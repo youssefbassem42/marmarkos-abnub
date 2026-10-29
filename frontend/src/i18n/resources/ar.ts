@@ -1394,6 +1394,16 @@ export const ar = {
       viewAllHistory: "عرض كل التاريخ",
       viewAllActivity: "عرض كل النشاط",
       activity: "النشاط الأخير",
+      byQuiz: {
+        title: "نقاطي في كل اختبار",
+        totalPoints: "إجمالي نقاطك: {{total}}",
+        quiz: "الاختبار",
+        points: "النقاط",
+        attempts: "المحاولات",
+        average: "المتوسط",
+        lastAttempt: "آخر محاولة",
+        empty: "لم تخض أي اختبار بعد",
+      },
       empty: {
         title: "لا توجد نقاط بعد",
         body: "ابدأ بالقراءة والاختبار لجمع النقاط.",

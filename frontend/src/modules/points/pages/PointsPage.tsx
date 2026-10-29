@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { PointsKpiRow } from "../components/PointsKpiRow";
 import { PointsOverTimeChart } from "../components/PointsOverTimeChart";
 import { MonthlyHistoryList } from "../components/MonthlyHistoryList";
+import { PointsByQuizTable } from "../components/PointsByQuizTable";
 import { RecentActivityList } from "../components/RecentActivityList";
 import { useMyPoints, useMonthlyPoints } from "../hooks";
 
@@ -111,6 +112,8 @@ export default function PointsPage() {
             data={monthlyQuery.data}
             isPending={monthlyQuery.isPending}
           />
+
+          <PointsByQuizTable />
 
           <div className="grid gap-6 lg:grid-cols-2">
             <MonthlyHistoryList

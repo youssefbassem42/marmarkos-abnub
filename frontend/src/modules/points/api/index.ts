@@ -16,11 +16,14 @@ import { paginated } from "@/lib/schemas/common";
 import {
   monthlyPointsSchema,
   pointActivityItemSchema,
+  pointsByQuizSchema,
   pointsSchema,
 } from "@/lib/schemas/member";
 import type {
   MonthlyPointsResponse,
   Paginated,
+  PointsByQuizResponse,
+  PointsByQuizParams,
   PointsHistoryItem,
   PointsHistoryParams,
   PointsResponse,
@@ -50,6 +53,17 @@ export const pointsApi = {
     const response = await apiClient.get("/users/me/points/history", {
       params,
       schema: paginated(pointActivityItemSchema),
+    });
+    return response.data;
+  },
+
+  /** The points of the current user per quiz, paginated */
+  getMyPointsByQuiz: async (
+    params?: PointsByQuizParams,
+  ): Promise<PointsByQuizResponse> => {
+    const response = await apiClient.get("/users/me/points/by-quiz", {
+      params,
+      schema: pointsByQuizSchema,
     });
     return response.data;
   },
