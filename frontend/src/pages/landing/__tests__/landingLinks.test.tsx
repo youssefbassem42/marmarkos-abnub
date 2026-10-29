@@ -7,7 +7,7 @@
  */
 
 import { screen } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 import { renderPage } from "@/test/pageHarness";
 import { router } from "@/router";
@@ -82,6 +82,22 @@ describe("the links of the landing page", () => {
     expect(
       screen.queryByRole("link", { name: /يوتيوب|YouTube/i }),
     ).not.toBeInTheDocument();
+  });
+
+  it("lands on the section a link with an anchor names", () => {
+    // The quick links of the footer point at the sections of this page
+    // from every page of the platform: the member has to arrive at the
+    // section, not at the top of the page.
+    const scroll = vi.spyOn(Element.prototype, "scrollIntoView");
+
+    renderPage(<LandingPage />, { route: "/#ministries" });
+
+    const section = document.getElementById("ministries");
+    expect(section).not.toBeNull();
+    expect(scroll).toHaveBeenCalled();
+    expect(section?.scrollIntoView).toHaveBeenCalled();
+
+    scroll.mockRestore();
   });
 
   it("has no dead anchor on the landing page", () => {
