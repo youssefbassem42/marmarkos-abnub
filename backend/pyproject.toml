@@ -34,7 +34,7 @@ dependencies = [
 
     # The comments accept a deliberately small HTML vocabulary (BR-78).
     # Bleach removes every tag, attribute and URL outside that policy.
-    "bleach==6.2.0",
+    "bleach==6.4.0",
 
     # python:3.x-slim ships no OS zoneinfo database; without this wheel
     # ZoneInfo("Africa/Cairo") raises and every attendance route 500s.
