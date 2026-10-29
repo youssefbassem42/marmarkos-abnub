@@ -35,7 +35,7 @@ export const mediaApi = {
   /** The active slides, in order — the public fields only. */
   getPublicSlides: async (
     params?: MediaSlideListParams,
-  ): Promise<{ items: LandingSlide[]; total: number }> => {
+  ): Promise<Paginated<LandingSlide>> => {
     const response = await apiClient.get("/landing/slides", {
       params,
       schema: landingSlidePublicPageSchema,

@@ -277,6 +277,9 @@ export const ar = {
     },
     slider: {
       slide: "الشريحة {{index}} من {{total}}",
+      previous: "الشريحة السابقة",
+      next: "الشريحة التالية",
+      control: "التحكم في السلايدر",
     },
     pillars: {
       heading: "نحن عن",

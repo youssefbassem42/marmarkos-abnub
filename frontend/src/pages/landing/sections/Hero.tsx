@@ -2,6 +2,9 @@ import { CalendarDays } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { Link } from "react-router-dom";
 import hero from "@/assets/hero-worship.jpg";
+import { Skeleton } from "@/components/ui/skeleton";
+import { usePublicSlides } from "@/modules/media/hooks";
+import { HeroSlider } from "./HeroSlider";
 import { YouthFigure } from "./YouthFigure";
 
 export function Hero() {
@@ -10,6 +13,9 @@ export function Hero() {
   const titleLines = tCommon("brand.message", {
     returnObjects: true,
   }) as readonly string[];
+
+  const slidesQuery = usePublicSlides({ page: 1, size: 20 });
+  const slides = slidesQuery.data?.items ?? [];
 
   return (
     <section id="home" className="relative overflow-hidden pt-24 lg:pt-28">
@@ -60,13 +66,21 @@ export function Hero() {
         </div>
 
         <div className="relative reveal">
-          <img
-            src={hero}
-            alt={"شباب يعبدون بأيدي مرفوعة بجانب صليب مضيء عند الغروب"}
-            width={1200}
-            height={912}
-            className="brush-mask w-full object-cover"
-          />
+          {slidesQuery.isPending ? (
+            <div className="brush-mask w-full min-h-[600px] flex items-center justify-center">
+              <Skeleton className="w-full h-[600px] rounded-2xl" />
+            </div>
+          ) : slidesQuery.error || slides.length === 0 ? (
+            <img
+              src={hero}
+              alt={t("hero.imageAlt")}
+              width={1200}
+              height={912}
+              className="brush-mask w-full object-cover"
+            />
+          ) : (
+            <HeroSlider slides={slides} />
+          )}
           <YouthFigure
             className="absolute -left-2 bottom-[-6%] h-32 w-auto drop-shadow-sm sm:h-40 lg:h-48"
             color="var(--brand-blue)"
