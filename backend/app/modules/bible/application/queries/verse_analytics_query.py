@@ -31,7 +31,7 @@ async def _member_role_id(uow: UnitOfWork) -> int:
     return role.id
 
 
-def _member_subquery(uow: UnitOfWork, member_role_id: int) -> Select[tuple[uuid.UUID]]:
+def _member_subquery(uow: UnitOfWork, member_role_id: int) -> Select[uuid.UUID]:
     return select(User.id).join(Role, Role.id == User.role_id).where(Role.id == member_role_id)
 
 

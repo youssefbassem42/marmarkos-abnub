@@ -52,9 +52,7 @@ _SORT_COLUMNS = {
 }
 
 
-def _apply_admin_filters(
-    stmt: Select[tuple[Any]], filters: VerseAdminFilters
-) -> Select[tuple[Any]]:
+def _apply_admin_filters(stmt: Select[Any], filters: VerseAdminFilters) -> Select[Any]:
     if filters.status is not None:
         stmt = stmt.where(BibleVerse.status == filters.status)
     if filters.q:
@@ -84,9 +82,7 @@ def _apply_admin_filters(
     return stmt
 
 
-def _apply_published_filters(
-    stmt: Select[tuple[Any]], filters: PublishedFilters
-) -> Select[tuple[Any]]:
+def _apply_published_filters(stmt: Select[Any], filters: PublishedFilters) -> Select[Any]:
     from app.modules.bible.infrastructure.persistence.models import VerseRead
 
     stmt = stmt.where(BibleVerse.status == VerseStatus.PUBLISHED)
