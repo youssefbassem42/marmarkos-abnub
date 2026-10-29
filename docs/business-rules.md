@@ -216,6 +216,23 @@ code cites an identifier that is not listed here.
 
 ---
 
+## The calculations of the reports (the point 5 of the plan)
+
+| Identifier | The rule | Where it lives |
+|---|---|---|
+| `BR-41` | What counts as an attempt: a finished attempt is one whose status is `COMPLETED` (submitted by the member) or `AUTO_FINISHED`; `IN_PROGRESS` never counts as finished, in the monthly report nor in the per-quiz analytics | `app/modules/quiz/infrastructure/persistence/attempt_repository.py` (`quiz_kpis`, `score_distribution`, `completion_status_counts`, `results_page`) |
+| `BR-42` | What the average score is: the average of the scores out of ten (`round(score / total_points * 10, 1)` per finished attempt), rounded to one decimal, over the finished attempts paid out in the period; attempts whose snapshotted total is zero count as zero | `app/modules/points/infrastructure/persistence/point_transaction_repository.py` (`monthly_kpis`) |
+| `BR-43` | What the completion rate is: finished attempts of the member in the month ÷ quizzes published in the month × 100, rounded to one decimal; the denominator is at least one (`max(published, 1)`) so a month without published quizzes never divides by zero | `app/modules/points/application/queries/monthly_analytics_query.py` (`monthly_users_query`, `monthly_users_export`) |
+| `BR-44` | The month: the platform timezone (`Africa/Cairo`, neither the server nor the browser) and the first day of the local month as the period key (`month_start` of the award moment); a month runs from its first instant `00:00` local to the first instant of the next month | `app/core/time/periods.py` (`month_start`, `month_bounds`), `app/core/time/clock.py` (`platform_timezone`) |
+| `BR-45` | The participants: the distinct members with at least one finished attempt paid out in the month | `app/modules/points/infrastructure/persistence/point_transaction_repository.py` (`monthly_kpis`) |
+| `BR-46` | The auto-finished attempts: they count as finished — they count in the participants, the completed count, the average score and the points of the month; only `IN_PROGRESS` is left out | `app/modules/quiz/infrastructure/persistence/attempt_repository.py` (`quiz_kpis` filters `status != IN_PROGRESS`) |
+| `BR-47` | The export carries the same numbers as the page: the same query, the same filters (`q`, `min_points`, `score_range`, `completion_rate`, `min_quizzes`) and the same completion-rate denominator; only the pagination disappears (every matching row) | `app/modules/points/presentation/analytics_router.py` (`monthly_users_export`) and `app/modules/quiz/presentation/router.py` (`quiz_analytics_users_export`) |
+| `BR-48` | The archived or hidden quizzes: the reports do not filter by the quiz's status, so an attempt on a quiz that is `DRAFT` or `ARCHIVED` still counts in the monthly report and in the per-quiz analytics, as long as the quiz row still exists | `app/modules/points/infrastructure/persistence/point_transaction_repository.py` (`monthly_kpis` joins no quiz-status filter); `app/modules/quiz/application/queries/quiz_analytics_query.py` (`quiz_analytics_query` checks the quiz exists but not its status) |
+| `BR-49` | The attempts of a deleted member: the platform protects those records by cascade — deleting a member deletes their attempts and their ledger rows, so they disappear from the reports instead of dangling | `app/modules/quiz/infrastructure/persistence/models.py` (`quiz_attempts.user_id`, `ondelete=CASCADE`); `app/modules/points/infrastructure/persistence/models.py` (`point_transactions.user_id`, `ondelete=CASCADE`) |
+| `BR-50` | The average score of a quiz (per-quiz analytics): `round(total points awarded ÷ participants ÷ max possible points × 10, 1)`, which is not the per-attempt average of the monthly report | `app/modules/quiz/application/queries/quiz_analytics_query.py` (`quiz_analytics_query`) |
+
+---
+
 ## The known defect of the numbering
 
 The rules were numbered per phase, so the same number means different
