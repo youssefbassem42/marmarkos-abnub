@@ -53,9 +53,9 @@ export default defineConfig({
       // floor goes up with every one of them.
       thresholds: {
         statements: 73,
-        branches: 62,
+        branches: 63,
         functions: 66,
-        lines: 74,
+        lines: 75,
       },
     },
   },
