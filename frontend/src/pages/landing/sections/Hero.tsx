@@ -1,5 +1,6 @@
 import { CalendarDays } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import hero from "@/assets/hero-worship.jpg";
 import { YouthFigure } from "./YouthFigure";
 
@@ -49,6 +50,12 @@ export function Hero() {
             <a href="#about" className="btn-outline px-6 py-3.5 text-sm">
               <span className="font-arabic">{t("hero.ctaSecondary")}</span>
             </a>
+            <Link
+              to="/bible-verses"
+              className="btn-outline px-6 py-3.5 text-sm"
+            >
+              <span className="font-arabic">{t("hero.ctaVerse")}</span>
+            </Link>
           </div>
         </div>
 

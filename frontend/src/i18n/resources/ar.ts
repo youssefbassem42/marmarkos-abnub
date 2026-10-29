@@ -272,6 +272,7 @@ export const ar = {
       eyebrow: "إجتماع الشباب بأبنوب",
       ctaPrimary: "شاركنا هذا الأسبوع",
       ctaSecondary: "اعرف المزيد",
+      ctaVerse: "إقرأ الآية اليومية",
     },
     pillars: {
       heading: "نحن عن",
@@ -333,6 +334,10 @@ export const ar = {
         "خدمة الصلاة",
       ],
       contactUs: "تواصل معنا",
+      social: {
+        account: "حساب المنصة على فيسبوك",
+        group: "مجموعة الشباب على فيسبوك",
+      },
       addressLine1: "إجتماع الشباب بأبنوب",
       addressLine2: "أبنوب، أسيوط، مصر",
       copyright: "© {{year}} إجتماع الشباب بأبنوب. جميع الحقوق محفوظة.",

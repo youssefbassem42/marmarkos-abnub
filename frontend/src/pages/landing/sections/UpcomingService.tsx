@@ -1,5 +1,6 @@
 import { CalendarDays, Clock, MapPin, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
 export function UpcomingService() {
@@ -45,8 +46,8 @@ export function UpcomingService() {
           </p>
         </div>
 
-        <a
-          href="#contact"
+        <Link
+          to="/#about"
           className="focus-ring inline-flex items-center justify-center gap-3 rounded-xl bg-mint px-7 py-3.5 text-sm font-bold text-white transition-transform duration-200 hover:-translate-y-0.5"
         >
           <span className="font-arabic">{t("upcoming.cta")}</span>
@@ -54,7 +55,7 @@ export function UpcomingService() {
             className={cn("h-4 w-4", "-scale-x-100")}
             aria-hidden="true"
           />
-        </a>
+        </Link>
       </div>
     </section>
   );

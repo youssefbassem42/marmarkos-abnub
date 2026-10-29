@@ -1,14 +1,14 @@
-import { MapPin, Mail, Facebook, Instagram, Youtube } from "lucide-react";
+import { Link } from "react-router-dom";
+import { MapPin, Mail, Facebook, Users } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import { cn } from "@/lib/utils";
 import logo from "@/assets/church-logo.png";
 
-const socials = [
-  { Icon: Facebook, label: "Facebook" },
-  { Icon: Instagram, label: "Instagram" },
-  { Icon: Youtube, label: "YouTube" },
-];
+/** Where every quick link lands: a route of the platform, or the landing
+   page carrying the anchor of a section that exists on it. Positional,
+   in the same order as footer.quickItems in i18n. */
+const linkTo = ["/", "/about-us", "/#ministries", "/#events", "/about-us"];
 
 export function Footer() {
   const { t } = useTranslation("landing");
@@ -44,12 +44,12 @@ export function Footer() {
           <ul className="mt-4 space-y-2 text-sm text-white/75">
             {quickItems.map((label, i) => (
               <li key={label}>
-                <a
-                  href={`#${linkSlug[i]}`}
+                <Link
+                  to={linkTo[i]}
                   className="focus-ring rounded-sm hover:text-mint"
                 >
                   {label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -62,12 +62,12 @@ export function Footer() {
           <ul className="mt-4 space-y-2 text-sm text-white/75">
             {ministryItems.map((label) => (
               <li key={label}>
-                <a
-                  href="#ministries"
+                <Link
+                  to="/#ministries"
                   className="focus-ring rounded-sm hover:text-mint"
                 >
                   {label}
-                </a>
+                </Link>
               </li>
             ))}
           </ul>
@@ -100,17 +100,28 @@ export function Footer() {
             </li>
           </ul>
           <ul className="mt-5 flex gap-3">
-            {socials.map(({ Icon, label }) => (
-              <li key={label}>
-                <a
-                  href="#contact"
-                  aria-label={label}
-                  className="focus-ring grid h-9 w-9 place-items-center rounded-full bg-white/12 transition-colors hover:bg-mint"
-                >
-                  <Icon className="h-4 w-4" aria-hidden="true" />
-                </a>
-              </li>
-            ))}
+            <li>
+              <a
+                href="https://www.facebook.com/share/1DR39SM7cS/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t("footer.social.account")}
+                className="focus-ring grid h-9 w-9 place-items-center rounded-full bg-white/12 transition-colors hover:bg-mint"
+              >
+                <Facebook className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </li>
+            <li>
+              <a
+                href="https://www.facebook.com/share/g/1W86NCJfkF/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t("footer.social.group")}
+                className="focus-ring grid h-9 w-9 place-items-center rounded-full bg-white/12 transition-colors hover:bg-mint"
+              >
+                <Users className="h-4 w-4" aria-hidden="true" />
+              </a>
+            </li>
           </ul>
         </div>
       </div>
@@ -125,6 +136,3 @@ export function Footer() {
     </footer>
   );
 }
-
-/** Anchor slugs matching the quick-link order in i18n. */
-const linkSlug = ["home", "about", "ministries", "events", "contact"];
