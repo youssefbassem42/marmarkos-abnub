@@ -29,7 +29,7 @@ import { AnonymousMessagePage } from "../AnonymousMessagePage";
 import { ApiError } from "@/lib/api";
 
 const mockedSubmit = vi.mocked(anonymousMessagesApi.submit);
-const mockedList = vi.mocked(notificationsApi.list);
+const mockedList = vi.mocked(anonymousMessagesApi.list);
 
 function renderPage() {
   const queryClient = new QueryClient({
