@@ -7,6 +7,12 @@ export const ar = {
     retry: "حاول مرة تاني",
     loading: "جارٍ التحميل...",
     adminPanel: "لوحة التحكم",
+    theme: {
+      light: "الوضع الفاتح",
+      dark: "الوضع الداكن",
+      toLight: "التبديل إلى الوضع الفاتح",
+      toDark: "التبديل إلى الوضع الداكن",
+    },
     back: "رجوع",
     cancel: "إلغاء",
     confirm: "تأكيد",

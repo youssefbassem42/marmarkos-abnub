@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Moon, Sun } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ function applyTheme(theme: Theme): void {
 
 /** Light/dark switch; persists the choice and toggles the `dark` class. */
 export function ThemeToggle({ className }: { className?: string }) {
+  const { t } = useTranslation("common");
   const [theme, setTheme] = useState<Theme>(getStoredTheme);
 
   useEffect(() => {
@@ -36,8 +38,8 @@ export function ThemeToggle({ className }: { className?: string }) {
     <button
       type="button"
       onClick={toggle}
-      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
-      title={isDark ? "Light mode" : "Dark mode"}
+      aria-label={isDark ? t("theme.toLight") : t("theme.toDark")}
+      title={isDark ? t("theme.light") : t("theme.dark")}
       className={cn(
         "focus-ring inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-card text-ink shadow-sm transition-colors hover:bg-secondary",
         className,
