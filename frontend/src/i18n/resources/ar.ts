@@ -813,6 +813,7 @@ export const ar = {
       verseAnalytics: "تحليلات الأبيات",
       quizAnalytics: "تحليلات الاختبارات",
       monthlyAnalytics: "التحليلات الشهرية",
+      contentManagement: "إدارة المحتوى",
       slides: "السلايدر",
     },
     slides: {

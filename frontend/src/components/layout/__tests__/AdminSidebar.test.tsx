@@ -62,7 +62,7 @@ describe("admin sidebar (D-8)", () => {
       "الاختبارات",
       "الرسائل",
       "الإشعارات",
-      "السلايدر",
+      "إدارة المحتوى",
       "التقارير",
       "الإعدادات",
     ];
@@ -137,12 +137,22 @@ describe("admin sidebar (D-8)", () => {
     ).toBe(true);
   });
 
-  it("links the slides entry to the ADMIN-only slides page", () => {
+  it("has a Content Management section that opens the slides page", () => {
     signInAsAdmin();
     renderWithProviders(<AdminSidebar />, ["/admin/dashboard"]);
 
-    const link = screen.getByRole("link", { name: /السلايدر/ });
-    expect(link.getAttribute("href")).toBe("/admin/landing/slides");
+    // The owner (2026-10-29): the content lives in its own section of the
+    // administration, and the slider carousel is inside it.
+    const section = screen.getByRole("link", { name: /إدارة المحتوى/ });
+    expect(section.getAttribute("href")).toBe("/admin/landing/slides");
+  });
+
+  it("shows the slider carousel inside the Content Management section", () => {
+    signInAsAdmin();
+    renderWithProviders(<AdminSidebar />, ["/admin/landing/slides"]);
+
+    const slide = screen.getByRole("link", { name: /السلايدر/ });
+    expect(slide.getAttribute("href")).toBe("/admin/landing/slides");
   });
 
   it("hides the slides entry from a SERVANT", () => {

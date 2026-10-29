@@ -6,8 +6,8 @@ import {
   BookOpen,
   Calendar,
   ClipboardList,
+  FolderOpen,
   History,
-  Image,
   LayoutDashboard,
   MessageSquare,
   ScanLine,
@@ -56,6 +56,7 @@ type NavKey =
   | "verseAnalytics"
   | "quizAnalytics"
   | "monthlyAnalytics"
+  | "contentManagement"
   | "slides"
   | "settings";
 
@@ -70,6 +71,7 @@ interface SubItem {
     | "verseAnalytics"
     | "quizAnalytics"
     | "monthlyAnalytics"
+    | "slides"
   >;
 }
 
@@ -130,9 +132,13 @@ const NAV_ITEMS: readonly (LinkItem | DisabledItem)[] = [
   },
   { to: "/admin/notifications", labelKey: "notifications", Icon: Bell },
   {
+    // The content the platform shows to the members and that the admin
+    // changes without a deployment (the owner, 2026-10-29).
     to: "/admin/landing/slides",
-    labelKey: "slides",
-    Icon: Image,
+    labelKey: "contentManagement",
+    Icon: FolderOpen,
+    subItems: [{ to: "/admin/landing/slides", labelKey: "slides" }],
+    subPathPrefix: "/admin/landing",
     adminOnly: true,
   },
   {
