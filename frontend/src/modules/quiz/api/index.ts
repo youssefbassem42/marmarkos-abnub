@@ -26,6 +26,7 @@ import type {
   CreateQuizPayload,
   Paginated,
   QuizAdminItem,
+  QuizAnalyticsOverview,
   QuizDetailResponse,
   QuizTakeResponse,
   QuizValidationResponse,
@@ -119,14 +120,7 @@ export const quizApi = {
   },
 
   /** Aggregate quiz stats for the admin dashboard */
-  getAnalyticsOverview: async (): Promise<{
-    total_quizzes: number;
-    published_quizzes: number;
-    participants: number;
-    completed: number;
-    auto_finished: number;
-    average_score: number;
-  }> => {
+  getAnalyticsOverview: async (): Promise<QuizAnalyticsOverview> => {
     const response = await apiClient.get("/quizzes/analytics/overview", {
       schema: quizAnalyticsOverviewSchema,
     });

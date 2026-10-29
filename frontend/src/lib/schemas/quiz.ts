@@ -21,7 +21,6 @@ export const attemptStatusSchema = z.enum([
   "IN_PROGRESS",
   "COMPLETED",
   "AUTO_FINISHED",
-  "EXPIRED",
 ]);
 
 /** One option of a question (the manager side, with the correctness). */
@@ -231,5 +230,6 @@ export const quizAnalyticsOverviewSchema = loose({
   published_quizzes: z.number(),
   participants: z.number(),
   completed: z.number(),
+  auto_finished: z.number(),
   average_score: z.number(),
 });

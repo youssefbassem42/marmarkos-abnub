@@ -22,6 +22,7 @@ import type {
   questionOptionSchema,
   questionSchema,
   quizAdminItemSchema,
+  quizAnalyticsOverviewSchema,
   quizDetailSchema,
   quizStatusSchema,
   quizTakeSchema,
@@ -36,6 +37,9 @@ export type QuizStatus = z.infer<typeof quizStatusSchema>;
 export type AttemptStatus = z.infer<typeof attemptStatusSchema>;
 
 export type QuizAdminItem = z.infer<typeof quizAdminItemSchema>;
+
+/** The summary of the quizzes (the tiles of the dashboard). */
+export type QuizAnalyticsOverview = z.infer<typeof quizAnalyticsOverviewSchema>;
 
 export type QuizOptionResponse = z.infer<typeof questionOptionSchema>;
 
