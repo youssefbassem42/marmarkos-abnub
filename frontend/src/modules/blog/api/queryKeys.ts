@@ -1,0 +1,13 @@
+/** React Query key factories for the blog module. */
+
+import type { AdminBlogPostsListParams, BlogPostsListParams } from "../types";
+
+export const blogKeys = {
+  all: ["blog"] as const,
+  posts: () => [...blogKeys.all, "posts"] as const,
+  publicList: (params?: BlogPostsListParams) =>
+    [...blogKeys.posts(), "public", params ?? {}] as const,
+  adminList: (params?: AdminBlogPostsListParams) =>
+    [...blogKeys.posts(), "admin", params ?? {}] as const,
+  detail: (postId: string) => [...blogKeys.posts(), "detail", postId] as const,
+};
