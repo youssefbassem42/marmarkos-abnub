@@ -35,6 +35,14 @@ const LIST = {
 };
 
 describe("the list of the quizzes", () => {
+  it("offers a way back to the list of the quizzes", () => {
+    renderPage(<QuizListPage />, { admin: true });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toBeVisible();
+    expect(back).toHaveAttribute("href", "/admin/quizzes");
+  });
+
   it("shows the quizzes of the administration", async () => {
     renderPage(<QuizListPage />, {
       admin: true,
@@ -77,6 +85,14 @@ describe("the list of the quizzes", () => {
 });
 
 describe("the analytics of the quizzes", () => {
+  it("offers a way back to the dashboard of the administration", () => {
+    renderPage(<QuizAnalyticsPage />, { admin: true });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toBeVisible();
+    expect(back).toHaveAttribute("href", "/admin/dashboard");
+  });
+
   it("shows the numbers of the quizzes", async () => {
     renderPage(<QuizAnalyticsPage />, {
       admin: true,

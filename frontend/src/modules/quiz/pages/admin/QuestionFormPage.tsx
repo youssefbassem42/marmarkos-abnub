@@ -14,6 +14,7 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
+import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
@@ -117,6 +118,13 @@ export default function QuestionFormPage() {
   if (quizLoading) {
     return (
       <div className="space-y-6 p-6">
+        <AdminTopbar
+          title={
+            isEdit ? t("admin.question.editTitle") : t("admin.question.newTitle")
+          }
+          backHref="/admin/quizzes"
+          showSidebarTrigger
+        />
         <Skeleton className="h-5 w-64" />
         <Skeleton className="h-64" />
       </div>
@@ -142,6 +150,13 @@ export default function QuestionFormPage() {
 
   return (
     <div>
+      <AdminTopbar
+        title={
+          isEdit ? t("admin.question.editTitle") : t("admin.question.newTitle")
+        }
+        backHref="/admin/quizzes"
+        showSidebarTrigger
+      />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
         <Breadcrumb>
           <BreadcrumbList>

@@ -63,6 +63,18 @@ const VERSE = {
 };
 
 describe("the builder of the quizzes", () => {
+  it("offers a way back to the list of the quizzes", () => {
+    renderPage(<QuizBuilderPage />, {
+      admin: true,
+      route: "/admin/quizzes/quiz-1/builder",
+      path: "/admin/quizzes/:quizId/builder",
+    });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toBeVisible();
+    expect(back).toHaveAttribute("href", "/admin/quizzes");
+  });
+
   it("shows the quiz that is edited", async () => {
     renderPage(<QuizBuilderPage />, {
       admin: true,

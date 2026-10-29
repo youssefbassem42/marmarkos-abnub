@@ -709,6 +709,8 @@ export default function QuizAnalyticsPage() {
       <AdminTopbar
         title={t("admin.analytics.title")}
         subtitle={t("admin.analytics.subtitle")}
+        backHref="/admin/dashboard"
+        showSidebarTrigger
       />
 
       <main className="space-y-6">

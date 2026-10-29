@@ -287,6 +287,14 @@ export default function QuizBuilderPage() {
   if (quizLoading) {
     return (
       <div className="space-y-6 p-6">
+        <AdminTopbar
+          title={
+            isEdit ? t("admin.builder.editTitle") : t("admin.builder.newTitle")
+          }
+          subtitle={t("admin.manage.subtitle")}
+          backHref="/admin/quizzes"
+          showSidebarTrigger
+        />
         <Skeleton className="h-5 w-64" />
         <div className="grid gap-6 lg:grid-cols-3">
           <div className="space-y-6 lg:col-span-2">
@@ -357,16 +365,13 @@ export default function QuizBuilderPage() {
           isEdit ? t("admin.builder.editTitle") : t("admin.builder.newTitle")
         }
         subtitle={t("admin.manage.subtitle")}
+        backHref="/admin/quizzes"
+        showSidebarTrigger
       />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
         {/* Top bar: title + actions */}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/admin/quizzes">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
             <div>
               <h1 className="text-2xl font-bold tracking-tight font-arabic">
                 {isEdit
