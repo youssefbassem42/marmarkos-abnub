@@ -29,7 +29,7 @@ import { AnonymousMessagePage } from "../AnonymousMessagePage";
 import { ApiError } from "@/lib/api";
 
 const mockedSubmit = vi.mocked(anonymousMessagesApi.submit);
-const mockedList = vi.mocked(anonymousMessagesApi.list);
+const mockedList = vi.mocked(notificationsApi.list);
 
 function renderPage() {
   const queryClient = new QueryClient({
@@ -176,5 +176,12 @@ describe("AnonymousMessagePage", () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
     expect(mockedList).not.toHaveBeenCalled();
     expect(notificationsApi.summary).not.toHaveBeenCalled();
+  });
+
+  it("offers a way back to the landing page", () => {
+    renderPage();
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toHaveAttribute("href", "/");
   });
 });

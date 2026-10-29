@@ -4,6 +4,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { BrandFooterStrip } from "@/components/layout/BrandFooterStrip";
 import { BrandPanel } from "@/pages/auth/components/BrandPanel";
 import { cn } from "@/lib/utils";
+import { PageHeader } from "@/components/common/PageHeader";
 import { AnonymousMessageForm } from "../components/AnonymousMessageForm";
 import { BeforeYouSendCard } from "../components/BeforeYouSendCard";
 import { ImportantInfoCard } from "../components/ImportantInfoCard";
@@ -35,14 +36,11 @@ export function AnonymousMessagePage() {
 
         <section className="w-full bg-soft lg:w-[70%]">
           <div className="mx-auto w-full max-w-3xl px-5 py-10 lg:px-8">
-            <header className="text-center">
-              <h1 className="font-heading text-3xl font-extrabold tracking-tight text-ink font-arabic">
-                {t("title")}
-              </h1>
-              <p className="mt-2 text-sm text-muted-foreground font-arabic text-base">
-                {t("subtitle")}
-              </p>
-            </header>
+            <PageHeader
+              title={t("title")}
+              description={t("subtitle")}
+              backTo="/"
+            />
 
             <div className="mt-8">
               <AnonymousMessageForm onSubmitted={setResult} />
