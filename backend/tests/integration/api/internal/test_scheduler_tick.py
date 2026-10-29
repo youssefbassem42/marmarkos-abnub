@@ -11,6 +11,8 @@ from app.modules.bible.infrastructure.persistence.models import (
     BibleVerse,
     VersePublicationSchedule,
 )
+from app.modules.blog.domain.enums.post_status import PostStatus
+from app.modules.blog.infrastructure.persistence.models import BlogPost
 from app.modules.users.domain.enums.role_name import RoleName
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 from tests.utils import bearer, create_user_direct, login, register_and_login
@@ -110,3 +112,46 @@ async def test_admin_bearer_can_trigger_tick(client: AsyncClient, db_engine) -> 
     auth = await login(client, email="tick-admin2@example.com")
     response = await client.post(TICK_URL, headers=bearer(auth["access_token"]))
     assert response.status_code == 200
+
+
+async def _schedule_one_blog_post() -> None:
+    """A post whose publication date has come, waiting for the tick."""
+    async with UnitOfWork.create(async_session_factory) as uow:
+        post = BlogPost(
+            author_id=(await uow.users.get_by_email("tick-blog-author@example.com")).id,
+            title="A scheduled post",
+            slug="a-scheduled-post",
+            content="The body of the post",
+            status=PostStatus.DRAFT,
+            published_at=datetime.now(UTC) - timedelta(minutes=2),
+        )
+        await uow.blog_posts.add(post)
+        await uow.commit()
+
+
+async def test_the_tick_publishes_the_scheduled_posts_of_the_blog(
+    client: AsyncClient, db_engine, monkeypatch
+) -> None:
+    """The scheduled posts of the blog go live with the shared tick (BR-64)."""
+    secret = "tick-blog-secret"
+    settings.CRON_SECRET = secret
+    try:
+        await create_user_direct(
+            engine=db_engine,
+            email="tick-blog-author@example.com",
+            role_name=RoleName.ADMIN,
+        )
+        await _schedule_one_blog_post()
+
+        with patch("app.shared.application.outbox_dispatcher.EVENT_HANDLERS", {}):
+            response = await client.post(TICK_URL, headers={"X-Cron-Secret": secret})
+
+        assert response.status_code == 200, response.text
+        assert response.json()["published"] == 1
+
+        async with UnitOfWork.create(async_session_factory) as uow:
+            post = await uow.blog_posts.get_by_slug("a-scheduled-post")
+            assert post is not None
+            assert post.status is PostStatus.PUBLISHED
+    finally:
+        settings.CRON_SECRET = None

@@ -1,10 +1,13 @@
 """Blog-post API tests (Phase 7.2)."""
 
+import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
+from sqlalchemy import update
 
+from app.modules.blog.infrastructure.persistence.models import BlogPost
 from app.modules.users.domain.enums.role_name import RoleName
 from tests.utils import DEFAULT_PASSWORD, bearer, create_user_direct
 
@@ -458,3 +461,53 @@ async def test_openapi_declares_the_blog_answers(client: AsyncClient) -> None:
     assert "201" in create["responses"]
     assert public["responses"]["200"]["content"]["application/json"]["schema"]
     assert create["responses"]["201"]["content"]["application/json"]["schema"]
+
+
+async def test_the_tick_publishes_the_scheduled_post_when_its_date_comes(
+    client: AsyncClient, db_engine
+) -> None:
+    """A scheduled post goes live by itself when the date passes (BR-64).
+
+    The shared scheduler tick publishes it; the public list shows it after
+    the tick, and a second tick does not publish it twice.
+    """
+    admin = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-admin-tick@example.com",
+        role=RoleName.ADMIN,
+    )
+    member = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-member-tick@example.com",
+        role=RoleName.MEMBER,
+    )
+    tomorrow = datetime.now(UTC) + timedelta(days=1)
+    created = await _create_post(client, admin, title="موضوع غد", published_at=tomorrow)
+    assert created["status"] == "DRAFT"
+
+    # The date passes: the row keeps its schedule, the tick finds it.
+    async with db_engine.begin() as conn:
+        await conn.execute(
+            update(BlogPost)
+            .where(BlogPost.id == uuid.UUID(str(created["id"])))
+            .values(published_at=datetime.now(UTC) - timedelta(minutes=2))
+        )
+
+    before = await client.get(PUBLIC_URL, headers=member)
+    assert before.json()["items"] == []
+
+    from app.core.database import async_session_factory
+    from app.modules.blog.application.services.publication_service import publish_due
+
+    result = await publish_due(async_session_factory)
+    assert result["published"] == 1
+
+    after = await client.get(PUBLIC_URL, headers=member)
+    assert [item["id"] for item in after.json()["items"]] == [created["id"]]
+
+    # The runner is idempotent: a second tick publishes nothing.
+    again = await publish_due(async_session_factory)
+    assert again["published"] == 0
+    assert again["skipped"] == 0

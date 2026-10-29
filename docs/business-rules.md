@@ -284,5 +284,6 @@ number.
 | `BR-65` | Deleting a blog post is soft: its status becomes `ARCHIVED`, the row remains, and the member-facing answers never show it | `app/modules/blog/application/commands/post_commands.py` |
 | `BR-66` | A post's tags are the existing blog categories; the public list may be filtered by one tag | `app/modules/blog/application/commands/post_commands.py`, `app/modules/blog/application/queries/post_queries.py` |
 | `BR-67` | A blog cover is uploaded through the shared media service with the 1 MB limit | `app/modules/blog/presentation/router.py` |
+| `BR-68` | The shared scheduler tick publishes the scheduled posts of the blog whose date has come; the runner is idempotent and safe when two ticks run at the same time | `app/modules/blog/application/services/publication_service.py` |
 | `D-4` | The interface calls the blog categories "tags"; the database tables keep their names | `app/modules/blog/application/dto/post_dto.py` |
 | `D-6` | The admin and the servant may write a blog post | `app/modules/blog/application/commands/post_commands.py` |

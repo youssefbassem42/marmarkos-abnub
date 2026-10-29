@@ -19,6 +19,9 @@ from app.config import settings
 from app.core.database import async_session_factory
 from app.core.observability import render
 from app.modules.bible.application.services.publication_service import publish_due
+from app.modules.blog.application.services.publication_service import (
+    publish_due as publish_blog_due,
+)
 from app.modules.internal.presentation.dependencies import CronOrAdmin
 from app.shared.application.outbox_dispatcher import dispatch_pending
 from app.shared.infrastructure.persistence.outbox import OutboxEvent, OutboxStatus
@@ -53,12 +56,16 @@ async def scheduler_tick(actor: CronOrAdmin) -> SchedulerTickResponse:
     _ = actor
 
     publication = await publish_due(async_session_factory, limit=settings.SCHEDULER_TICK_MAX_BATCH)
+    # The scheduled posts of the blog are published by the same tick (BR-64).
+    blog_publication = await publish_blog_due(
+        async_session_factory, limit=settings.SCHEDULER_TICK_MAX_BATCH
+    )
     delivery = await dispatch_pending(
         async_session_factory, limit=settings.SCHEDULER_TICK_MAX_BATCH
     )
     return SchedulerTickResponse(
-        published=publication["published"],
-        publish_failed=publication["failed"],
+        published=publication["published"] + blog_publication["published"],
+        publish_failed=publication["failed"] + blog_publication["failed"],
         # V2: attempts are never auto-finished; the member must submit.
         auto_finished_attempts=0,
         outbox_processed=delivery["processed"],
