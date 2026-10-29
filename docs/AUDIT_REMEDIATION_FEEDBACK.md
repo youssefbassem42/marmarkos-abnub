@@ -320,6 +320,8 @@ what it believes; the reviewer writes the test of what the product needs.**
 | 45 | The **production database was three migrations behind** (`c9d4e5f6a87b` instead of `c1d2e3f4a5b6`) | The deployment started, but the first login died on `column "persistent" of relation "refresh_tokens" does not exist` | The migrations were applied (the owner did it); the three of them are expand-only. The lesson for the pipeline: **the deployment must run the migrations before it serves** — the repository has `scripts/migrate.py` for it, the Vercel project needs the step |
 | 46 | An agent committed the **symlink of its worktree** (`backend/.venv`): the rule of the `.gitignore` (`.venv/`) matches a directory, not a symlink | The cherry-pick replaced the real environment of the backend with a link to itself: **the tools of the backend disappeared** | The rule ignores the symlink too; the environment was rebuilt. The lesson for the briefs: the agents commit with `git add -A` — the ignore rules must cover the symlinks as well |
 | 47 | The rebuilt environment installed **mypy 2.4** (the pins are floors), and it is stricter about the generics of SQLAlchemy | The pipeline would have failed on three annotations that the older mypy accepted | The annotations follow the statements they receive (`Select[Any]` for the filter helpers, `Select[UUID]` for the subquery of the analytics) |
+| 48 | The switch of the **light/dark mode** carried its label and its title in **English** ("Switch to dark mode") | The only component of the shell that spoke another language than the platform; the house rule says every string lives in `ar.ts` | The strings live in the namespace `common` of `ar.ts` and the test pins them |
+| 49 | The **exports of the analytics** called an **unpaged** endpoint and named the file with an identifier of the quiz | The file the administrator took away could carry **rows the screen did not show**, and its name told him nothing | The export serialises **the page that is on the screen** through the shared helper of the CSV (the BOM, the escaping), and the file carries the month and the title of the quiz. The test pins the BOM, the header, the visible rows and the name |
 
 The wave also **landed** the phases that need no decision: the gallery goes
 away, the page "من نحن", the links of the landing page, the slider of the
@@ -327,6 +329,16 @@ landing page and its administration (the section "إدارة المحتوى"), t
 points per quiz, the report of the analytics, the way back of the member
 pages and of the administration, the backend of the blog and the page of
 the analysis of a quiz.
+
+**Two lessons of the fleet itself:**
+
+- the **provider of the models** refuses more than **two agents at the
+  same time** (the answers stop with a 429). The wave of six agents lost
+  three of them to the rate limit; the wave of two finished ✔.
+- the **worktrees cannot live in `/tmp`**: the system cleaned it in the
+  middle of the wave and the work of four agents was lost with it (the
+  commits survived — the worktrees live now in `~/wt` ✔, and the briefs
+  say "commit early" ✔).
 
 ---
 

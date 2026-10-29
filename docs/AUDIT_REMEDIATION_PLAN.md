@@ -268,3 +268,16 @@ double-labelled column.
 | The deployment | The API answers **200** again. Two things were missing in the platform and not in the code: the variable `ATTENDANCE_PIN_PEPPER` and the migrations. Both are now in place, and the code makes the adoption of the pepper safe for the members |
 | The gates | Backend **647 tests** (the coverage 77.88 %), frontend **407 tests** (the coverage 73.44 %), `ruff`/`mypy`/`eslint`/`tsc`/`prettier`/`npm audit`/`pip-audit`/`alembic check`/`gitleaks` green |
 | The rule that changed | The agent commits with `git add -A`: the ignore rules must cover the **symlinks** as well, not only the directories |
+
+### 2026-10-29 — The second wave: the editor, the screens of the blog, the way back of the administration
+
+| Item | Result |
+|---|---|
+| The editor | **TipTap** is pinned and the **shared** editor of the platform (`modules/blog/components/RichTextEditor.tsx`) is landed: the posts and the comments use the same one (the decision D-5). The `npm audit` is green. |
+| The screens of the blog | The **public list** (the cards, the tag, the search, the pagination, the empty state, the skeleton, the error state) and the **page of a post** (the body is the HTML the server sanitises) are landed. A visitor reads without signing in. |
+| The way back | The pages of the **administration** carry the way back too: the dashboard, the members, the notifications, the messages, the verses, the quizzes, the builder, the form of a question, the analytics. The screens of a section go back to the **list of the section** (the map of the parents decides it, the components do not guess). |
+| The exports | The two exports of the analytics now answer **what the screen shows** (the old ones called an unpaged endpoint) and the file carries the month and the title. The helper of the CSV is shared (the BOM, the escaping). |
+| The notification of a published post | The event of the publication has a consumer: every member gets a notification, the members who asked for it get the mail, the author gets neither, and a repeated event creates nothing twice. |
+| The defects of the review | Two more: the switch of the theme spoke **English** (#48), and the exports disagreed with the screen (#49) |
+| The lessons of the fleet | The provider of the models refuses more than **two agents at a time** (a 429), and the worktrees cannot live in `/tmp` (the system cleaned it and the work of four agents was lost — the commits survived) |
+| The gates | Backend **676 tests** (the coverage 78.00 %), frontend **446 tests** (the coverage 73.77 %), the end-to-end **6 tests**, `ruff`/`mypy`/`eslint`/`tsc`/`prettier`/`npm audit`/`pip-audit` green |
