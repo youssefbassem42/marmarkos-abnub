@@ -30,6 +30,19 @@ const VERSE = {
 };
 
 describe("the form of a verse", () => {
+  it("offers a way back to the list of the verses", () => {
+    renderPage(<VerseFormPage />, {
+      admin: true,
+      route: "/admin/bible-verses/verse-1/edit",
+      path: "/admin/bible-verses/:verseId/edit",
+      answers: { "/bible-verses/verse-1": VERSE },
+    });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toBeVisible();
+    expect(back).toHaveAttribute("href", "/admin/bible-verses");
+  });
+
   it("shows the fields of the verse that is edited", async () => {
     renderPage(<VerseFormPage />, {
       admin: true,
@@ -105,6 +118,14 @@ describe("the form of a verse", () => {
 });
 
 describe("the analytics of the verses", () => {
+  it("offers a way back to the dashboard of the administration", () => {
+    renderPage(<VerseAnalyticsPage />, { admin: true });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toBeVisible();
+    expect(back).toHaveAttribute("href", "/admin/dashboard");
+  });
+
   it("shows the overview of the engagement", async () => {
     renderPage(<VerseAnalyticsPage />, {
       admin: true,

@@ -4,7 +4,7 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@/lib/zodResolver";
 import { toast } from "sonner";
-import { ArrowLeft, Calendar, CheckCircle, Loader2, Save } from "lucide-react";
+import { Calendar, CheckCircle, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
@@ -168,6 +168,12 @@ export default function VerseFormPage() {
   if (verseLoading) {
     return (
       <div className="space-y-6 p-6">
+        <AdminTopbar
+          title={isEdit ? t("admin.form.edit") : t("admin.form.create")}
+          subtitle={t("admin.form.title")}
+          backHref="/admin/bible-verses"
+          showSidebarTrigger
+        />
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-4 w-48" />
         <div className="space-y-4">
@@ -184,6 +190,8 @@ export default function VerseFormPage() {
       <AdminTopbar
         title={isEdit ? t("admin.form.edit") : t("admin.form.create")}
         subtitle={t("admin.form.title")}
+        backHref="/admin/bible-verses"
+        showSidebarTrigger
       />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
         {/* Breadcrumb */}
@@ -213,18 +221,9 @@ export default function VerseFormPage() {
 
         {/* Header */}
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" asChild>
-              <Link to="/admin/bible-verses">
-                <ArrowLeft className="h-4 w-4" />
-              </Link>
-            </Button>
-            <div>
-              <h1 className="text-2xl font-bold">
-                {isEdit ? t("admin.form.edit") : t("admin.form.create")}
-              </h1>
-            </div>
-          </div>
+          <h1 className="text-2xl font-bold">
+            {isEdit ? t("admin.form.edit") : t("admin.form.create")}
+          </h1>
 
           {/* Desktop Action Buttons */}
           <div className="hidden md:flex items-center gap-2">

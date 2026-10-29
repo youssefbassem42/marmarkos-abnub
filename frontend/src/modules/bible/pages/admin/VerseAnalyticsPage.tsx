@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
-  ArrowLeft,
   BookOpen,
   CheckCircle2,
   Eye,
@@ -152,18 +151,13 @@ export default function VerseAnalyticsPage() {
       <AdminTopbar
         title={t("admin.analytics.title")}
         subtitle={t("admin.analytics.subtitle")}
+        backHref="/admin/dashboard"
+        showSidebarTrigger
       />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/admin/bible-verses">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <h1 className="text-2xl font-bold tracking-tight font-arabic">
-            {t("admin.analytics.title")}
-          </h1>
-        </div>
+        <h1 className="text-2xl font-bold tracking-tight font-arabic">
+          {t("admin.analytics.title")}
+        </h1>
 
         {/* Overview tiles */}
         <section className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">

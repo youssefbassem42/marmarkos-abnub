@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import { toast } from "sonner";
-import { ArrowLeft, Check, CheckCircle, FileText } from "lucide-react";
+import { Check, CheckCircle, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -109,6 +109,12 @@ export default function VerseSchedulePage() {
   if (verseLoading) {
     return (
       <div className="space-y-6 p-6">
+        <AdminTopbar
+          title={t("admin.schedule.title")}
+          subtitle={t("admin.schedule.subtitle")}
+          backHref="/admin/bible-verses"
+          showSidebarTrigger
+        />
         <Skeleton className="h-8 w-64" />
         <Skeleton className="h-4 w-48" />
         <div className="space-y-4">
@@ -124,6 +130,8 @@ export default function VerseSchedulePage() {
       <AdminTopbar
         title={t("admin.schedule.title")}
         subtitle={t("admin.schedule.subtitle")}
+        backHref="/admin/bible-verses"
+        showSidebarTrigger
       />
       <main className="mx-auto w-full max-w-6xl space-y-6 px-5 pb-16 pt-6 lg:px-8">
         {/* Breadcrumb */}
@@ -150,18 +158,11 @@ export default function VerseSchedulePage() {
         </Breadcrumb>
 
         {/* Header */}
-        <div className="flex items-center gap-3">
-          <Button variant="ghost" size="icon" asChild>
-            <Link to="/admin/bible-verses">
-              <ArrowLeft className="h-4 w-4" />
-            </Link>
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold">{t("admin.schedule.title")}</h1>
-            <p className="text-muted-foreground text-sm">
-              {t("admin.schedule.subtitle")}
-            </p>
-          </div>
+        <div>
+          <h1 className="text-2xl font-bold">{t("admin.schedule.title")}</h1>
+          <p className="text-muted-foreground text-sm">
+            {t("admin.schedule.subtitle")}
+          </p>
         </div>
 
         {/* Steps */}

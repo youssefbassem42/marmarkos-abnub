@@ -49,6 +49,14 @@ const QUIZ_DETAIL = {
 };
 
 describe("the management of the verses", () => {
+  it("offers a way back to the dashboard of the administration", () => {
+    renderPage(<BibleManagementPage />, { admin: true });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toBeVisible();
+    expect(back).toHaveAttribute("href", "/admin/dashboard");
+  });
+
   it("shows the verses of the administration", async () => {
     renderPage(<BibleManagementPage />, {
       admin: true,

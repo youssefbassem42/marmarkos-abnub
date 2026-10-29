@@ -45,6 +45,19 @@ const SCHEDULE = {
 };
 
 describe("the schedule of a verse", () => {
+  it("offers a way back to the list of the verses", () => {
+    renderPage(<VerseSchedulePage />, {
+      admin: true,
+      route: "/admin/bible-verses/verse-1/schedule",
+      path: "/admin/bible-verses/:verseId/schedule",
+      answers: { "/bible-verses/verse-1": VERSE },
+    });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toBeVisible();
+    expect(back).toHaveAttribute("href", "/admin/bible-verses");
+  });
+
   it("shows the verse and waits for the day and the hour", async () => {
     renderPage(<VerseSchedulePage />, {
       admin: true,
