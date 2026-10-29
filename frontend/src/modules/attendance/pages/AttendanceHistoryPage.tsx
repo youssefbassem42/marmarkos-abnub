@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
-import { Button } from "@/components/ui/button";
 import { AttendanceStatusBadge } from "../components/AttendanceStatusBadge";
 import {
   HistoryFilters,
@@ -134,6 +133,7 @@ export function AttendanceHistoryPage() {
         title={t("history.title")}
         subtitle={t("history.subtitle")}
         backHref="/"
+        showSidebarTrigger
       />
 
       <main className="mx-auto w-full max-w-7xl px-5 py-8 lg:px-8">

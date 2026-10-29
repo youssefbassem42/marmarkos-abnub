@@ -9,8 +9,10 @@
 
 import { fireEvent, screen, waitFor } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
+import { Route, Routes } from "react-router-dom";
 
 import { renderPage } from "@/test/pageHarness";
+import { AttendanceLayout } from "@/layouts/AttendanceLayout";
 import { CheckInPage } from "@/modules/attendance/pages/CheckInPage";
 
 const STATISTICS = {
@@ -127,12 +129,20 @@ describe("the page of the check-in", () => {
   });
 
   it("offers a way back to the landing page", () => {
-    renderPage(<CheckInPage />, {
-      answers: {
-        "/attendance/statistics/meeting": STATISTICS,
-        "/attendance/meeting": MEETING,
+    renderPage(
+      <Routes>
+        <Route path="/admin/attendance/check-in" element={<AttendanceLayout />}>
+          <Route index element={<CheckInPage />} />
+        </Route>
+      </Routes>,
+      {
+        route: "/admin/attendance/check-in",
+        answers: {
+          "/attendance/statistics/meeting": STATISTICS,
+          "/attendance/meeting": MEETING,
+        },
       },
-    });
+    );
 
     const back = screen.getByRole("link", { name: "رجوع" });
     expect(back).toHaveAttribute("href", "/");

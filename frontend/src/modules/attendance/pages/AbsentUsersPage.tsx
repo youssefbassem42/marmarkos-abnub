@@ -7,7 +7,6 @@ import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAbsentUsers } from "../hooks/useAbsentUsers";
 
@@ -50,6 +49,7 @@ export function AbsentUsersPage() {
         title={t("dashboard.absent.pageTitle")}
         subtitle={t("dashboard.absent.subtitle")}
         backHref="/"
+        showSidebarTrigger
       />
       <main className="mx-auto w-full max-w-4xl space-y-5 px-5 pb-16 pt-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">

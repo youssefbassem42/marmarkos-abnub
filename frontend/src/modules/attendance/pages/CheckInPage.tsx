@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { KeyRound, QrCode, ScanLine } from "lucide-react";
 import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { PageHeader } from "@/components/common/PageHeader";
 import { QRScanner, type CameraFailure } from "../components/QRScanner";
 import { ManualCodeEntry } from "../components/ManualCodeEntry";
 import { PinEntry } from "../components/PinEntry";
@@ -251,11 +250,6 @@ export function CheckInPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title={t("checkIn.title")}
-        description={t("checkIn.subtitle")}
-        backTo="/"
-      />
       {/* Scanner card */}
       <section className="rounded-2xl border border-border bg-card p-5 card-elevated">
         {/* Mode tabs: camera QR vs typed PIN (offline fallback) */}

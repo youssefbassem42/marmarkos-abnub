@@ -88,6 +88,7 @@ describe("the history of the attendance", () => {
 
     const back = screen.getByRole("link", { name: "رجوع" });
     expect(back).toHaveAttribute("href", "/");
+    expect(screen.getByLabelText("Toggle sidebar")).toBeInTheDocument();
   });
 });
 
@@ -158,5 +159,6 @@ describe("the list of the absent members", () => {
 
     const back = screen.getByRole("link", { name: "رجوع" });
     expect(back).toHaveAttribute("href", "/");
+    expect(screen.getByLabelText("Toggle sidebar")).toBeInTheDocument();
   });
 });

@@ -17,6 +17,12 @@ interface AdminTopbarProps {
    * screen) must not render SidebarTrigger, whose hook throws outside one.
    */
   backHref?: string;
+  /**
+   * Keep the sidebar trigger beside a back link. Pages inside the admin
+   * shell need both controls; the check-in split screen does not have a
+   * sidebar provider.
+   */
+  showSidebarTrigger?: boolean;
 }
 
 /**
@@ -24,7 +30,12 @@ interface AdminTopbarProps {
  * + subtitle → spacer → notification bell (disabled, no badge — the
  * notifications module is Phase 4) → avatar menu → language → theme.
  */
-export function AdminTopbar({ title, subtitle, backHref }: AdminTopbarProps) {
+export function AdminTopbar({
+  title,
+  subtitle,
+  backHref,
+  showSidebarTrigger = false,
+}: AdminTopbarProps) {
   const { t } = useTranslation("common");
   const { t: tLanding } = useTranslation("landing");
   const { t: tAttendance } = useTranslation("attendance");
@@ -44,9 +55,10 @@ export function AdminTopbar({ title, subtitle, backHref }: AdminTopbarProps) {
               aria-hidden="true"
             />
           </Link>
-        ) : (
+        ) : null}
+        {showSidebarTrigger || !backHref ? (
           <SidebarTrigger aria-label="Toggle sidebar" />
-        )}
+        ) : null}
 
         <div className="min-w-0">
           {title ? (
