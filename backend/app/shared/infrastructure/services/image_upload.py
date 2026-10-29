@@ -19,6 +19,13 @@ _MAX_IMAGE_BYTES = 2 * 1024 * 1024
 _HTTP_TIMEOUT_SECONDS = 20.0
 
 
+def _max_size_message(max_bytes: int) -> str:
+    megabytes = max_bytes // (1024 * 1024)
+    if megabytes * (1024 * 1024) == max_bytes:
+        return f"Image must be {megabytes} MB or smaller"
+    return f"Image must be {max_bytes} bytes or smaller"
+
+
 def cloudinary_configured() -> bool:
     return bool(
         settings.CLOUDINARY_CLOUD_NAME
@@ -39,16 +46,27 @@ def _signed_params(folder: str) -> dict[str, str]:
     }
 
 
-async def upload_image(data: bytes, content_type: str, folder: str = "avatars") -> str:
-    """Upload an image to Cloudinary and return its secure URL."""
+async def upload_image(
+    data: bytes,
+    content_type: str,
+    folder: str = "avatars",
+    max_bytes: int = _MAX_IMAGE_BYTES,
+) -> str:
+    """Upload an image to Cloudinary and return its secure URL.
+
+    ``max_bytes`` caps the size of the uploaded file: a file that is too
+    big is refused with a ``ValidationError`` instead of reaching
+    Cloudinary. The default keeps the historic 2 MB limit, so the avatars
+    and the verse covers keep their behaviour.
+    """
     if not cloudinary_configured():
         raise ForbiddenError("Image uploads are not configured")
     if content_type not in _ALLOWED_CONTENT_TYPES:
         raise ValidationError("Only JPEG, PNG or WebP images are allowed")
     if len(data) == 0:
         raise ValidationError("The uploaded file is empty")
-    if len(data) > _MAX_IMAGE_BYTES:
-        raise ValidationError("Image must be 2 MB or smaller")
+    if len(data) > max_bytes:
+        raise ValidationError(_max_size_message(max_bytes))
 
     url = _CLOUDINARY_UPLOAD_URL.format(cloud_name=settings.CLOUDINARY_CLOUD_NAME)
     async with httpx.AsyncClient(timeout=_HTTP_TIMEOUT_SECONDS) as client:
