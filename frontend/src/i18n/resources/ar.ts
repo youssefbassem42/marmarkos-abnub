@@ -1412,6 +1412,7 @@ export const ar = {
         notAvailable: "غير متاح",
         exportButton: "تصدير CSV",
         exporting: "جارٍ تحضير الملف...",
+        exportFilename: "نتائج-{{title}}.csv",
         exportSuccess: "تم تجهيز ملف التحليل.",
         exportFailed: "تعذر تجهيز ملف التحليل.",
         emptyTitle: "لا توجد محاولات بعد",

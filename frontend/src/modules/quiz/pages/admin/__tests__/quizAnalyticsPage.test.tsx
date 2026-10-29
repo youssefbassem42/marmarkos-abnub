@@ -18,6 +18,7 @@ import {
   QUIZ_ANALYTICS_LIST,
   QUIZ_ANALYTICS_OVERVIEW,
   QUIZ_ANALYTICS_USERS,
+  QUIZ_DETAIL,
 } from "@/test/fixtures/quiz";
 import QuizAnalyticsPage from "@/modules/quiz/pages/admin/QuizAnalyticsPage";
 
@@ -26,6 +27,20 @@ vi.mock("@/lib/download", () => ({
 }));
 
 const mockedDownloadBlob = vi.mocked(downloadBlob);
+
+async function blobBytes(blob: Blob): Promise<Uint8Array> {
+  const buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(blob);
+  });
+  return new Uint8Array(buffer);
+}
+
+async function blobText(blob: Blob): Promise<string> {
+  return new TextDecoder("utf-8").decode(await blobBytes(blob));
+}
 
 const OVERVIEW = QUIZ_ANALYTICS_OVERVIEW;
 const LIST = QUIZ_ANALYTICS_LIST;
@@ -178,14 +193,10 @@ describe("the analysis of the quizzes", () => {
     );
   });
 
-  it("exports the results of the selected quiz", async () => {
+  it("exports the visible results with the quiz title in the file name", async () => {
     const user = userEvent.setup();
-    const csv = new Blob(["العضو,الدرجة\nأحمد,10"], {
-      type: "text/csv;charset=utf-8",
-    });
     const { calls } = renderAnalytics(
       {
-        "/quizzes/quiz-1/analytics/export": csv,
         "/quizzes/quiz-1/analytics/users": QUIZ_ANALYTICS_USERS,
         "/quizzes/quiz-1/analytics": QUIZ_ANALYTICS,
         "/quizzes": LIST,
@@ -195,16 +206,42 @@ describe("the analysis of the quizzes", () => {
 
     await user.click(await screen.findByRole("button", { name: "تصدير CSV" }));
 
-    await waitFor(
-      () =>
-        expect(
-          calls.some((call) => call.url === "/quizzes/quiz-1/analytics/export"),
-        ).toBe(true),
-      { timeout: 5_000 },
+    await waitFor(() => expect(mockedDownloadBlob).toHaveBeenCalledOnce());
+    const [blob, filename] = mockedDownloadBlob.mock.calls[0]!;
+    const bytes = await blobBytes(blob);
+    const text = await blobText(blob);
+
+    expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
+    expect(filename).toBe("نتائج-اختبار الآية.csv");
+    expect(text.replace(/^\uFEFF/, "").split("\r\n")).toEqual([
+      "الاسم,الدرجة,النقاط المكتسبة,النسبة المئوية,الحالة,مدة الحل",
+      "أحمد محمد,١٠,١٠,١٠٠%,مكتملة,٥ د ٠ ث",
+      "فاطمة علي,٤,٠,٤٠%,انتهت تلقائيًا,١٠ د ٠ ث",
+    ]);
+    expect(
+      calls.some((call) => call.url === "/quizzes/quiz-1/analytics/export"),
+    ).toBe(false);
+  });
+
+  it("loads a missing quiz title before naming its export", async () => {
+    const user = userEvent.setup();
+    const { calls } = renderAnalytics(
+      {
+        "/quizzes/quiz-1": QUIZ_DETAIL,
+        "/quizzes/quiz-1/analytics/users": QUIZ_ANALYTICS_USERS,
+        "/quizzes/quiz-1/analytics": QUIZ_ANALYTICS,
+        "/quizzes": { ...LIST, items: [], total: 0 },
+      },
+      "/admin/analytics/quizzes?quiz=quiz-1",
     );
+
+    await user.click(await screen.findByRole("button", { name: "تصدير CSV" }));
+
+    await waitFor(() => expect(mockedDownloadBlob).toHaveBeenCalledOnce());
     expect(mockedDownloadBlob).toHaveBeenCalledWith(
-      csv,
-      "quiz-quiz-1-results.csv",
+      expect.any(Blob),
+      "نتائج-اختبار الآية.csv",
     );
+    expect(calls.some((call) => call.url === "/quizzes/quiz-1")).toBe(true);
   });
 });

@@ -49,7 +49,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { downloadBlob } from "@/lib/download";
+import { downloadCsvRows } from "@/lib/csv";
 
 import { quizApi } from "../../api";
 import { useAdminQuizzes } from "../../hooks/useAdminQuizzes";
@@ -317,8 +317,31 @@ function QuizAnalyticsDetail({
   async function handleExport() {
     setExporting(true);
     try {
-      const blob = await quizApi.exportQuizAnalytics(quizId);
-      downloadBlob(blob, `quiz-${quizId}-results.csv`);
+      const title = quizTitle ?? (await quizApi.getQuiz(quizId)).title;
+      const rows = (users.data?.items ?? []).map((user) => [
+        user.full_name,
+        formatNumber(user.score),
+        formatNumber(user.points_awarded),
+        `${formatNumber(user.percentage)}%`,
+        t(`admin.analytics.status.${user.status}`),
+        t("admin.analytics.duration", {
+          minutes: formatNumber(Math.floor(user.time_taken_seconds / 60)),
+          seconds: formatNumber(user.time_taken_seconds % 60),
+        }),
+      ]);
+
+      downloadCsvRows(
+        t("admin.analytics.exportFilename", { title }),
+        [
+          t("admin.analytics.colName"),
+          t("admin.analytics.colScore"),
+          t("admin.analytics.colPoints"),
+          t("admin.analytics.colPercentage"),
+          t("admin.analytics.colUserStatus"),
+          t("admin.analytics.colTime"),
+        ],
+        rows,
+      );
       toast.success(t("admin.analytics.exportSuccess"));
     } catch {
       toast.error(t("admin.analytics.exportFailed"));
@@ -353,7 +376,7 @@ function QuizAnalyticsDetail({
           type="button"
           variant="outline"
           className="ms-auto"
-          disabled={exporting}
+          disabled={exporting || users.isPending || users.isError}
           onClick={() => void handleExport()}
         >
           <Download className="h-4 w-4" aria-hidden="true" />
