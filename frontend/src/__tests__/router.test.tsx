@@ -224,9 +224,6 @@ describe("the map of the parents", () => {
     expect(parentOf("/quizzes/:quizId/result")).toBe("/");
     expect(parentOf("/anonymous-messages")).toBe("/");
     expect(parentOf("/points")).toBe("/");
-    expect(parentOf("attendance/check-in")).toBe("/");
-    expect(parentOf("attendance/history")).toBe("/");
-    expect(parentOf("attendance/absent")).toBe("/");
   });
 
   it("keeps the administration on its own dashboard", async () => {
@@ -256,5 +253,12 @@ describe("the map of the parents", () => {
     expect(parentOf("/attendance")).toBe("/admin/dashboard");
     expect(parentOf("dashboard")).toBe("/admin/dashboard");
     expect(parentOf("notifications")).toBe("/admin/dashboard");
+    // The attendance of the administration is part of the administration:
+    // the way back goes to its dashboard, not to the landing page (a member
+    // would be refused there).
+    expect(parentOf("attendance/check-in")).toBe("/admin/dashboard");
+    expect(parentOf("attendance/history")).toBe("/admin/dashboard");
+    expect(parentOf("attendance/absent")).toBe("/admin/dashboard");
+    expect(parentOf("landing/slides")).toBe("/admin/dashboard");
   });
 });

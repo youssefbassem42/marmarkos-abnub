@@ -238,12 +238,12 @@ export const router = createBrowserRouter([
         element: <Navigate to="/admin/dashboard" replace />,
       },
       {
-        handle: { parent: "/" },
+        handle: { parent: "/admin/dashboard" },
         element: <AttendanceLayout />,
         children: [
           {
             path: "attendance/check-in",
-            handle: { parent: "/" },
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <CheckInPage />
@@ -267,7 +267,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "attendance/history",
-            handle: { parent: "/" },
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <AttendanceHistoryPage />
@@ -276,7 +276,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "attendance/absent",
-            handle: { parent: "/" },
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <AbsentUsersPage />
@@ -384,6 +384,7 @@ export const router = createBrowserRouter([
             // The slides are managed by the admin alone (the owner,
             // 2026-10-29): SERVANT gets the visible 403 page.
             path: "landing/slides",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <RequireRole roles={["ADMIN"]}>
                 <Suspense fallback={<PageSkeleton />}>
