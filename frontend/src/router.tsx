@@ -504,13 +504,10 @@ export const router = createBrowserRouter([
     ),
   },
   {
-    // Private section: content is members-only until signed in.
+    // The gallery is gone: the old address keeps working as a redirect to
+    // the landing page so bookmarks and old links never answer 404.
     path: "/gallery",
-    element: (
-      <RequireAuth>
-        <PlaceholderPage titleKey="gallery" />
-      </RequireAuth>
-    ),
+    element: <Navigate to="/" replace />,
   },
   {
     path: "/about-us",

@@ -262,7 +262,6 @@ export const ar = {
       home: "الرئيسية",
       anonymous: "رسائل مجهولة",
       blog: "المدونة",
-      gallery: "معرض الصور",
       aboutUs: "من نحن",
       notifications: "الإشعارات",
       login: "تسجيل الدخول",
@@ -325,14 +324,7 @@ export const ar = {
     },
     footer: {
       quickLinks: "روابط سريعة",
-      quickItems: [
-        "الرئيسية",
-        "من نحن",
-        "الخدمات",
-        "الفعاليات",
-        "معرض الصور",
-        "تواصل معنا",
-      ],
+      quickItems: ["الرئيسية", "من نحن", "الخدمات", "الفعاليات", "تواصل معنا"],
       ministries: "الخدمات",
       ministryItems: [
         "خدمة الشباب",

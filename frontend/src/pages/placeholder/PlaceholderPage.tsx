@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 
 interface PlaceholderPageProps {
   /** i18n key under landing.nav, e.g. "blog" */
-  titleKey: "blog" | "gallery" | "aboutUs";
+  titleKey: "blog" | "aboutUs";
 }
 
 /** Temporary stand-in page for sections under construction. */

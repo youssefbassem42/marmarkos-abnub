@@ -7,7 +7,7 @@ export function BibleVerse() {
   const { t: tCommon } = useTranslation("common");
 
   return (
-    <section id="gallery" className="bg-soft py-14 lg:py-16">
+    <section id="verse" className="bg-soft py-14 lg:py-16">
       <div className="mx-auto grid max-w-7xl items-center gap-10 px-5 lg:grid-cols-3 lg:px-8">
         <figure className="reveal flex gap-3">
           <Quote

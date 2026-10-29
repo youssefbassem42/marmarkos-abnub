@@ -127,11 +127,4 @@ export function Footer() {
 }
 
 /** Anchor slugs matching the quick-link order in i18n. */
-const linkSlug = [
-  "home",
-  "about",
-  "ministries",
-  "events",
-  "gallery",
-  "contact",
-];
+const linkSlug = ["home", "about", "ministries", "events", "contact"];

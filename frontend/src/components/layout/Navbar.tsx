@@ -35,7 +35,7 @@ import {
 import { cn } from "@/lib/utils";
 
 interface NavItem {
-  key: "home" | "anonymous" | "blog" | "gallery" | "aboutUs";
+  key: "home" | "anonymous" | "blog" | "aboutUs";
   to: string;
 }
 
@@ -43,7 +43,6 @@ const NAV_ITEMS: NavItem[] = [
   { key: "home", to: "/" },
   { key: "anonymous", to: "/anonymous-messages" },
   { key: "blog", to: "/blog" },
-  { key: "gallery", to: "/gallery" },
   { key: "aboutUs", to: "/about-us" },
 ];
 
