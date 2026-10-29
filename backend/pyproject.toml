@@ -80,7 +80,7 @@ branch = true
 # The floor is the current measured coverage (77.12 % with branch
 # coverage at the time of writing). It may only ever be raised - never
 # lowered (CI-005).
-fail_under = 77
+fail_under = 77.5
 show_missing = true
 skip_covered = true
 exclude_lines = [

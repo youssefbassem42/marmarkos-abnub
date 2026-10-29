@@ -52,9 +52,9 @@ export default defineConfig({
       // quizzes): covering them is one render test per screen, and the
       // floor goes up with every one of them.
       thresholds: {
-        statements: 72,
-        branches: 61,
-        functions: 65,
+        statements: 73,
+        branches: 62,
+        functions: 66,
         lines: 74,
       },
     },
