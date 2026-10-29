@@ -17,6 +17,7 @@ from app.modules.users.application.dto.profile_update import (
 )
 from app.modules.users.application.services.attendance_pin import (
     PIN_TAKEN_MESSAGE,
+    attendance_pin_hash_candidates,
     hash_attendance_pin,
     validate_pin_format,
 )
@@ -86,7 +87,13 @@ class ProfileCommandService:
         validate_pin_format(pin)
         pin_hash = hash_attendance_pin(pin)
 
-        holder = await self._uow.users.get_by_attendance_pin_hash(pin_hash)
+        # The PIN is refused when another member holds it under any of the
+        # hashes it may be stored under (the current pepper and the legacy
+        # one): the lookup of a typed PIN uses both, so a PIN that lives
+        # under one of them must stay unique (SEC-006).
+        holder = await self._uow.users.get_by_any_attendance_pin_hash(
+            attendance_pin_hash_candidates(pin)
+        )
         if holder is not None and holder.id != user.id:
             raise ConflictError(PIN_TAKEN_MESSAGE)
 

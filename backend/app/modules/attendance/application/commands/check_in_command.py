@@ -31,6 +31,7 @@ from app.modules.notifications.application.services.notification_service import 
 )
 from app.modules.users.application.services.attendance_pin import (
     PIN_UNKNOWN_MESSAGE,
+    attendance_pin_hash_candidates,
     hash_attendance_pin,
 )
 from app.modules.users.domain.enums.role_name import RoleName
@@ -152,9 +153,22 @@ class CheckInCommand:
         open_meeting = self._resolve_open_meeting(meeting_date)
 
         pin_hash = hash_attendance_pin(pin)
-        user = await self._uow.users.get_by_attendance_pin_hash(pin_hash)
+        # The hashes of a typed PIN: the current one and, while the legacy
+        # hashes are still in the table, the one of the legacy scheme. The
+        # member is found through either of them (SEC-006).
+        user = await self._uow.users.get_by_any_attendance_pin_hash(
+            attendance_pin_hash_candidates(pin)
+        )
         if user is None:
             raise ValidationError(PIN_UNKNOWN_MESSAGE)
+
+        # The stored hash was written by the legacy scheme: re-hash it with
+        # the current pepper so the member's PIN migrates by itself the
+        # first time he uses it. The write rides on the transaction of the
+        # attendance: if the check-in fails, the hash stays as it was.
+        if user.attendance_pin_hash != pin_hash:
+            user.attendance_pin_hash = pin_hash
+            logger.info("The attendance PIN of a member was re-hashed with the current pepper")
 
         if user.status != UserStatus.ACTIVE:
             raise ValidationError(

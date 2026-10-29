@@ -4,13 +4,14 @@ from datetime import timedelta
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.core.time import today_local
 from app.modules.attendance.domain.meeting_schedule import current_meeting_date
 from app.modules.users.application.services.attendance_pin import (
     hash_attendance_pin,
+    legacy_hash_attendance_pin,
 )
 from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
@@ -146,6 +147,58 @@ async def test_check_in_by_unknown_pin_is_validation_error(
     response = await client.post(ATTENDANCE_CHECK_IN_URL, json={"pin": "00000"}, headers=servant)
     assert response.status_code == 422
     assert response.json()["detail"]["code"] == "validation_error"
+
+
+@pytest.mark.asyncio
+async def test_a_pin_hashed_by_the_legacy_scheme_is_still_accepted(
+    client: AsyncClient, db_engine: AsyncEngine
+):
+    """The adoption of the pepper does not invalidate the PINs of the members.
+
+    The hash in the table was written by the legacy scheme (a derivative of
+    the JWT secret): the check-in finds the member through it and re-hashes
+    his PIN with the current pepper, so the stored hashes migrate by
+    themselves (SEC-006).
+    """
+    member_id = await create_user_direct(
+        db_engine, email="pin.legacy@test.com", role_name=RoleName.MEMBER
+    )
+    legacy_hash = legacy_hash_attendance_pin("24680")
+    async with db_engine.begin() as conn:
+        await conn.execute(
+            update(User).where(User.id == member_id).values(attendance_pin_hash=legacy_hash)
+        )
+
+    admin = await _headers_for(client, db_engine, "pin.legacy.a@test.com", RoleName.ADMIN)
+    response = await client.post(ATTENDANCE_CHECK_IN_URL, json={"pin": "24680"}, headers=admin)
+    assert response.status_code == 201, response.text
+    assert response.json()["attendance"]["user_id"] == str(member_id)
+
+    async with db_engine.connect() as conn:
+        stored = await conn.scalar(select(User.attendance_pin_hash).where(User.id == member_id))
+    assert stored == hash_attendance_pin("24680")
+    assert stored != legacy_hash
+
+
+@pytest.mark.asyncio
+async def test_a_pin_held_by_the_legacy_scheme_cannot_be_taken(
+    client: AsyncClient, db_engine: AsyncEngine
+):
+    """The uniqueness of a PIN holds across the two schemes."""
+    member_id = await create_user_direct(
+        db_engine, email="pin.legacy.take@test.com", role_name=RoleName.MEMBER
+    )
+    async with db_engine.begin() as conn:
+        await conn.execute(
+            update(User)
+            .where(User.id == member_id)
+            .values(attendance_pin_hash=legacy_hash_attendance_pin("13579"))
+        )
+
+    other = await _member_headers(client, db_engine, "pin.legacy.other@test.com")
+    conflict = await client.put(PIN_URL, json={"pin": "13579"}, headers=other)
+    assert conflict.status_code == 409
+    assert conflict.json()["detail"]["code"] == "conflict"
 
 
 @pytest.mark.asyncio

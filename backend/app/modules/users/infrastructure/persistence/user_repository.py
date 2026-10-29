@@ -1,4 +1,5 @@
 import uuid
+from collections.abc import Sequence
 from datetime import datetime
 
 from sqlalchemy import select
@@ -38,12 +39,19 @@ class UserRepository:
         result = await self._session.execute(select(User).where(User.phone == phone).limit(1))
         return result.scalar_one_or_none()
 
-    async def get_by_attendance_pin_hash(self, pin_hash: str) -> User | None:
-        """Resolve a typed attendance PIN to its unique holder (or none)."""
+    async def get_by_any_attendance_pin_hash(self, pin_hashes: Sequence[str]) -> User | None:
+        """Resolve a typed PIN stored under any of the given hashes (or none).
+
+        The hashes of a typed PIN are the ones of the current pepper and,
+        while the legacy hashes are still in the table, the one of the
+        legacy scheme (SEC-006). The query stays a single statement.
+        """
+        if not pin_hashes:
+            return None
         result = await self._session.execute(
             select(User)
             .options(selectinload(User.role))
-            .where(User.attendance_pin_hash == pin_hash)
+            .where(User.attendance_pin_hash.in_(list(pin_hashes)))
             .limit(1)
         )
         return result.scalar_one_or_none()
