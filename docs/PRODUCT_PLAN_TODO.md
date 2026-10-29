@@ -432,8 +432,13 @@ from admin panel so admin can change images easily"*.
    anchors to the sections of the landing page (`#about`) and they are dead
    everywhere else (the footer is on the notifications page too). They become
    `Link`s that carry the landing page (`/#about`) or that go to a real route.
-   The social links go to the real addresses of the platform (they are
-   placeholders today - the addresses are **Decision D-2**).
+4. The **social part of the footer** keeps **Facebook only** (the decision of
+   the owner): the **account** and the **group**, each with its own icon (the
+   account and the group of the same network - the icon of the group is the
+   one of the people). The icons of **Instagram and YouTube are removed**:
+   the platform has no account there, and a link that goes nowhere is worse
+   than no link. The two links carry `rel="noopener noreferrer"` and
+   `target="_blank"`.
 4. The buttons of the **About Us** section and of the **Upcoming service**
    go to the real routes.
 5. Every link has an **accessible name** and the external ones carry
@@ -475,7 +480,9 @@ an action survives in the landing page.
   module has no application layer yet - this phase creates it).
 - 7.2.3 The router: `app/modules/media/presentation/router.py` with the
   public list and the admin CRUD, mounted in `app/api/v1/router.py`.
-- 7.2.4 The permissions: the admin (and the servant?) - **Decision D-3**.
+- 7.2.4 The permissions: **the admin alone** (the decision D-3 of the
+  owner): the routes of the administration are behind the guard of the
+  admin; the servant reads, the admin writes.
 - 7.2.5 The tests: the CRUD, the order, the activation, the public answer.
 - 7.2.6 The contract guard passes (the route exists in the OpenAPI).
 
@@ -499,8 +506,11 @@ describes the answers.
 6. The render test proves the list, the form and the error.
 
 **Tasks**
-- 7.3.1 The route and the link in the admin sidebar (the section "the
-  landing page").
+- 7.3.1 The route and the link in the admin sidebar: a **new section
+  "Content Management"** (`إدارة المحتوى`) is added to the sidebar of the
+  administration, and the entry **"the slider carousel"** (`السلايدر`) lives
+  inside it. The section holds the content that the platform shows to the
+  members and that the admin changes without a deployment.
 - 7.3.2 The list page + the form (the shared `FormProvider` + the local
   `zodResolver` - the audit's own adapter, not a new dependency).
 - 7.3.3 The upload with the preview.
@@ -734,17 +744,19 @@ it is split into eight phases that can be delivered one by one.**
    status: no migration of the enum), who may write.
 2. **The tags are the categories that the model already has**
    (`BlogCategory` + `BlogPostCategory`) → the owner calls them "tags", the
-   database calls them "categories": the **interface** says "tags"
-   (**Decision D-4**: rename the tables, or keep the name and change the
-   interface - the recommendation is to keep the tables and rename the
-   interface, a rename of the tables is a migration for nothing).
+   database calls them "categories": **the tables keep their name and the
+   interface says "tags"** (the decision D-4 of the owner). The DTOs and the
+   schemas are named `tag`/`tags`; the models stay as they are: no migration
+   of the tables.
 3. The comment counts **words**, not characters (the owner wrote "500 Word"):
    the backend counts them, the frontend shows the counter as the member
    types.
 
 **Tasks**
 - 10.1.1 The rules in the catalogue + the guard test.
-- 10.1.2 The decisions D-4 (the tags), D-5 (the editor), D-6 (who writes).
+- 10.1.2 The decisions of the owner (D-4 the tags, D-5 the editor, D-6
+  who writes, D-7 the HTML and the depth) are written in the catalogue as
+  the rules of the blog.
 
 ### 10.2 The backend: the posts
 
@@ -861,13 +873,16 @@ a member; the mail is in the outbox.
 2. The **administration** (`/admin/blog`) lists all the posts (the drafts,
    the scheduled, the published) with their status and their date.
 3. The form of a post: the title, the excerpt, the cover (the upload with a
-   preview, the limit of 1 MB), the body (**the editor** - Decision D-5), the
+   preview, the limit of 1 MB), the body (**the editor TipTap** - the
+   decision D-5 of the owner), the
    tags (a select of the existing ones + the creation of a new one), the
    date of the publication, the flag of the mail.
 4. The **schedule** is a date and a time (the platform timezone); the form
    says when the post will be published ("سيُنشر غدًا في ٧ مساءً").
 5. The owner can **delete** their post (with the confirmation) and the admin
-   can delete any post.
+   can delete any post. **The admin and the servant may write** (the decision
+   D-6 of the owner) and the administration of the posts lives in the section
+   **"Content Management"** of the sidebar, next to the slider.
 6. The status of the post is visible in the administration (a `Badge`: the
    draft in the muted, the scheduled in the orange, the published in the
    mint).
@@ -875,6 +890,11 @@ a member; the mail is in the outbox.
    to the list of the posts).
 
 **Tasks**
+- 10.5.0 The **dependency**: `@tiptap/react`, `@tiptap/starter-kit` and the
+  extensions of the toolbar (the underline, the colour, the bullet list, the
+  emoji) - pinned, with `npm audit` green and the lock file committed. The
+  editor is **one** component (`modules/blog/components/RichTextEditor.tsx`)
+  that the post and the comment both use.
 - 10.5.1 The page of a post (`pages/blog/BlogPostPage.tsx`).
 - 10.5.2 The administration (the list + the form + the delete).
 - 10.5.3 The upload of the cover (the limit of 1 MB - 0.2.2).
@@ -931,7 +951,9 @@ without it.
    border in `--border`, the indent of 4 per level).
 2. The member writes with a **rich editor**: the text, the **bullets**, the
    **underline**, the **colour** (the palette of the platform: the navy, the
-   blue, the mint, the orange, the red) and the **emojis**.
+   blue, the mint, the orange, the red) and the **emojis**. The editor is
+   **TipTap** (the decision D-5 of the owner): the same one as the body of a
+   post, so the toolbar and the rules are written once.
 3. The editor counts the **words** and shows the counter (the limit of 500,
    the colour of the warning when it is near).
 4. The member can **reply** to a comment, **edit** their own and **delete**
@@ -1021,24 +1043,43 @@ included.
 
 ---
 
-## 12. The open decisions (the questions for the owner)
+## 12. The decisions of the owner (2026-10-29 — all of them are taken)
 
-The work **stops** at a decision. Nothing is assumed. Each decision names the
-phase it blocks, the options and the recommendation.
+The owner answered **every** question on 2026-10-29. The answers are the
+contract of the phases below: they are written in the plan, they are in the
+commit of the phase, and they are in `docs/business-rules.md` when they are a
+rule of the platform.
 
-| # | The question | It blocks | The options | The recommendation |
-|---|---|---|---|---|
-| **D-1** | The text of the "About Us" page: in the repository or editable from the administration? | 1.1 | (a) in `ar.ts` (b) a table + an admin screen | **(a)** for the first version: the page does not change often, and a table + a router + an admin screen is three times the work for a text that changes twice a year. (b) later, if the owner asks for it |
-| **D-2** | The addresses of the social links of the footer (Facebook, Instagram, YouTube) and the pages of the ministries | 4.1 | (a) the real addresses (b) they are removed from the footer (c) they stay as text | **(a)** - the owner gives the addresses; until then the links are **removed** (a link that goes nowhere is worse than no link) |
-| **D-3** | Who manages the slides of the landing page: the admin alone, or the servant too? | 4.2 | (a) admin (b) admin + servant | **(a)** - the same rule as the rest of the content (the servant reads, the admin writes). The owner decides |
-| **D-4** | The "tags" of the posts are the categories that the database already has (`BlogCategory`), or are the tables renamed? | 7.1, 7.2 | (a) the interface says "tags", the tables keep the name (b) the tables are renamed (a migration) | **(a)** - the interface is what the owner sees; a rename of the tables is a migration for nothing |
-| **D-5** | The editor of the body of a post and of a comment: a **rich text** editor (a new dependency, TipTap) or a simple text box? | 7.5, 7.7 | (a) TipTap (the formatting the owner asked for: bullets, underline, colour, emojis) (b) a plain text box | **(a)** - the owner asked for the formatting explicitly; TipTap is the standard, it is maintained, and its output is HTML that the backend sanitizes. The dependency is pinned and Renovate keeps it up to date |
-| **D-6** | Who may write a post: the admin, the servant, the members? | 7.2 | (a) admin + servant (b) admin only (c) every member | **(a)** - the recommendation. (c) brings the moderation with it (every post needs a review before it is published) |
-| **D-7** | The HTML of the comments: the tags that are allowed (the sanitizer) | 7.6 | (a) `p, br, strong, em, u, s, ul, ol, li, blockquote, span (the colours of the palette), a (safe href)` (b) everything that is not a script | **(a)** - the formatting of the owner, nothing more. The library (`bleach`) is **not installed today**: the phase adds it, pinned, and `pip-audit` must stay clean |
-| **D-8** | The depth of the replies: two levels or a tree without a limit? | 7.6, 7.7 | (a) two levels (b) without a limit | **(b)** - the model already supports the tree without a limit; the interface indents and the depth is visible. The limit of two levels is a rule to write if the owner prefers it |
-| **D-9** | The 52 MB of PNG in the **history** of the repository (the gallery of the designs): rewrite the history? | — | (a) rewrite (everybody at the same time) (b) leave it | **(b)** for now - the working tree is 4.5 MB and the rewriting touches every clone. It is a decision of the team, not a phase of this plan |
+| # | The question | The answer of the owner | What it changes in the plan |
+|---|---|---|---|
+| **D-1** | The text of the "About Us" page: in the repository or in the administration? | **(a) in the repository** | The phase 1.1 writes the text in `ar.ts` (the namespace `aboutUs`). There is **no table, no router and no admin screen** for it |
+| **D-2** | The social links of the footer | **Only Facebook: the account and the group. The other icons are removed.** The account: `https://www.facebook.com/share/1DR39SM7cS/` · the group: `https://www.facebook.com/share/g/1W86NCJfkF/` | The phase 4.1 removes the Instagram and the YouTube icons and the third entry, and keeps the two links of Facebook (the two icons are the same network: the **account** and the **group**) |
+| **D-3** | Who manages the slides of the landing page? | **The admin alone.** The slides live in a **new section of the administration: "Content Management"** ("إدارة المحتوى"), and **inside it the management of the slider carousel** | The phase 4.2 (the API) protects the routes with the admin only. The phase 4.3 adds the section **"Content Management"** to the sidebar of the administration, with the entry **"the slider carousel"** inside it |
+| **D-4** | The "tags" of the posts | **The tables keep the name "categories"; the interface says "tags"** | The DTOs and the schemas are named `tag`/`tags`; the models stay `BlogCategory`/`BlogPostCategory`. No migration of the tables |
+| **D-5** | The editor of the body of a post and of a comment | **TipTap is added** | The phases 7.5 and 7.7 add `@tiptap/react` + the starter kit (pinned; Renovate keeps them up to date). The output is HTML, sanitized by the backend |
+| **D-6** | Who may write a post? | **The admin and the servant** | The permissions of the blog: the **owner of the post**, the **admin** and the **servant** may write; a member may only read and comment |
+| **D-7** | The HTML of the comments and the depth of the replies | **The allowed HTML as recommended, and the replies without a limit** | The policy of the sanitizer: `p, br, strong, em, u, s, ul, ol, li, blockquote, span (the colours of the palette), a (a safe href)`. The tree has no depth limit |
+| **D-8** | The depth of the replies | **Without a limit** (the same answer as D-7) | The model carries the tree; the interface indents and shows the depth |
+| **D-9** | The 52 MB of PNG in the history of the repository | **Not decided** - it does not block any phase of this plan | Nothing in this plan changes; the working tree is 4.5 MB and the question stays with the team |
 
----
+### 12.1 What the decisions add to the plan
+
+1. **A new section in the administration: "Content Management"** (`إدارة المحتوى`).
+   It holds the **slider carousel** (phase 4.3). It is the home of the content
+   that the platform shows to the members and that the admin changes without
+   a code deployment. The **blog** (phase 7.5) joins the same section: it is
+   content of the same nature, and a second place for the posts would split
+   the work of the admin in two.
+2. **The footer's social part**: two links of Facebook (the account and the
+   group), the icons of Instagram and YouTube are **removed** (they are not
+   links to anything).
+3. **The blog is written by the servants too**: the form of the post is under
+   the guard of the **servant** (and the admin), and the administration of
+   the posts is in the section "Content Management".
+4. **TipTap** is the editor of the body of a post and of a comment. It is a
+   **new dependency** of the frontend: it is pinned, it goes through
+   `npm audit` and the review of Renovate, and the content is **sanitized by
+   the backend** whatever the editor sends.
 
 ## 13. The definition of "done" (the same for every phase)
 
