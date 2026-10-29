@@ -1006,28 +1006,26 @@ The phases are **sequential**: the next one starts when the previous one is
 accepted. The order follows the dependencies (the table below) and the
 **value for the members** (the points that the members use first come first).
 
-| # | The phase | The point | Depends on | The size |
-|---|---|---|---|---|
-| 0.1 | The shared header with the way back | 6 | — | half a day |
-| 0.2 | The media service takes the size | 7 | — | 2 hours |
-| 0.3 | The rules of the content | 1, 4, 7 | — | half a day |
-| 1.1-1.2 | The page "About Us" | 1 | 0.1, 0.3 | 1 day |
-| 2.1-2.3 | "My points": per quiz and per month | 2 | — | 2 days |
-| 3.1 | The gallery goes away | 3 | — | 1 hour |
-| 4.1 | The links of the landing page | 4 | — | half a day |
-| 4.2-4.4 | The slider that the admin controls | 4 | 0.2, 4.1 | 3 days |
-| 5.1-5.3 | The audit of the calculations | 5 | — | 2 days |
-| 5.2 | The analysis of a quiz | 5 | 5.1 | 2 days |
-| 5.3 | The report that can be taken away | 5 | 5.1 | 1 day |
-| 6.1-6.2 | The way back on every screen | 6 | 0.1 | 2 days |
-| 7.1 | The rules of the blog | 7 | 0.3 | half a day |
-| 7.2 | The backend of the posts | 7 | 7.1 | 3 days |
-| 7.3 | The notification and the mail | 7 | 7.2 | 2 days |
-| 7.4 | The list of the posts | 7 | 7.2 | 2 days |
-| 7.5 | The page of a post and the administration | 7 | 7.2, 7.4 | 3 days |
-| 7.6 | The backend of the comments | 7 | 7.2 | 3 days |
-| 7.7 | The frontend of the comments | 7 | 7.6, 7.5 | 3 days |
-| 7.8 | The likes | 7 | 7.2, 7.5 | 2 days |
+| # | The phase | The point | Depends on | The size | The state |
+|---|---|---|---|---|---|
+| 0.1 | The shared header with the way back | 6 | — | half a day | **done** |
+| 0.2 | The media service takes the size | 7 | — | 2 hours | **done** |
+| 0.3 | The rules of the content | 1, 4, 7 | — | half a day | **done** (the catalogue, BR-01 to BR-68) |
+| 1.1-1.2 | The page "About Us" | 1 | 0.1, 0.3 | 1 day | **done** |
+| 2.1-2.3 | "My points": per quiz and per month | 2 | — | 2 days | 2.1 and 2.2 **done** · 2.3 in the work |
+| 3.1 | The gallery goes away | 3 | — | 1 hour | **done** |
+| 4.1 | The links of the landing page | 4 | — | half a day | **done** |
+| 4.2-4.4 | The slider that the admin controls | 4 | 0.2, 4.1 | 3 days | **done** |
+| 5.1-5.3 | The audit of the calculations | 5 | — | 2 days | 5.1 **done** · 5.2 **done** · 5.3 in the work |
+| 6.1-6.2 | The way back on every screen | 6 | 0.1 | 2 days | 6.1 **done** (the members) · 6.2 in the work (the administration) |
+| 7.1 | The rules of the blog | 7 | 0.3 | half a day | **done** |
+| 7.2 | The backend of the posts | 7 | 7.1 | 3 days | **done** |
+| 7.3 | The notification and the mail | 7 | 7.2 | 2 days | in the work |
+| 7.4 | The list of the posts | 7 | 7.2 | 2 days | in the work |
+| 7.5 | The page of a post and the administration | 7 | 7.2, 7.4 | 3 days | in the work |
+| 7.6 | The backend of the comments | 7 | 7.2 | 3 days | in the work |
+| 7.7 | The frontend of the comments | 7 | 7.6, 7.5 | 3 days | waiting for 7.5 and 7.6 |
+| 7.8 | The likes | 7 | 7.2, 7.5 | 2 days | in the work |
 
 **The critical path:** 7.1 → 7.2 → 7.5 → 7.7 (the blog). The other points
 can be delivered **in parallel** by another person, because they touch
@@ -1040,6 +1038,15 @@ different modules.
 
 **The total:** about **30 working days** for the seven points, the blog
 included.
+
+**How the work is done now (2026-10-29):** the phases are **not** done one
+after another by one person any more — they are spread over **a fleet of
+subagents**, each in its own worktree, its own branch and its own database,
+and the orchestrator reviews the diff, runs the gates and lands the work
+**one concern per commit** ✔. The phases that do not depend on each other
+run **at the same time** ✔ (the table above: 2.3, 5.3, 6.2, 7.3, 7.4, 7.5,
+7.6 and 7.8 were in flight together ✔). The order of the table stays the
+order of the **acceptance**, not the order of the writing ✔.
 
 ---
 
