@@ -70,6 +70,25 @@ describe("the history of the attendance", () => {
       { timeout: 5_000 },
     );
   });
+
+  it("offers a way back to the landing page", () => {
+    renderPage(<AttendanceHistoryPage />, {
+      admin: true,
+      answers: {
+        "/attendance": {
+          total_count: 0,
+          attendance_records: [],
+          page: 1,
+          size: 20,
+          pages: 1,
+          has_next: false,
+        },
+      },
+    });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toHaveAttribute("href", "/");
+  });
 });
 
 describe("the list of the absent members", () => {
@@ -120,5 +139,24 @@ describe("the list of the absent members", () => {
       () => expect(screen.getAllByText(/لا يوجد|لا/).length).toBeGreaterThan(0),
       { timeout: 5_000 },
     );
+  });
+
+  it("offers a way back to the landing page", () => {
+    renderPage(<AbsentUsersPage />, {
+      admin: true,
+      answers: {
+        "/attendance/absent": {
+          meeting_date: "2026-10-22",
+          absent_count: 0,
+          absent_users: [],
+          is_final: true,
+          page: 1,
+          size: 20,
+        },
+      },
+    });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toHaveAttribute("href", "/");
   });
 });

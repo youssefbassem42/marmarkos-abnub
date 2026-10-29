@@ -1,7 +1,7 @@
 import { useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, UserRoundX } from "lucide-react";
+import { UserRoundX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
@@ -37,10 +37,6 @@ export function AbsentUsersPage() {
   const total = query.data?.absent_count ?? 0;
   const pages = Math.max(1, Math.ceil(total / PAGE_SIZE));
 
-  const dashHref = meetingDate
-    ? `/admin/dashboard?meeting_date=${encodeURIComponent(meetingDate)}`
-    : "/admin/dashboard";
-
   const title = useMemo(() => {
     if (!meetingDate) return t("dashboard.absent.titleOpen");
     return `${t("dashboard.absent.title")} — ${new Intl.DateTimeFormat(
@@ -53,15 +49,10 @@ export function AbsentUsersPage() {
       <AdminTopbar
         title={t("dashboard.absent.pageTitle")}
         subtitle={t("dashboard.absent.subtitle")}
+        backHref="/"
       />
       <main className="mx-auto w-full max-w-4xl space-y-5 px-5 pb-16 pt-6 lg:px-8">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to={dashHref}>
-              <ArrowLeft className="me-1 h-4 w-4" />
-              {t("dashboard.absent.backToDashboard")}
-            </Link>
-          </Button>
           <p className="text-sm font-semibold text-muted-foreground font-arabic">
             {title}
             {!query.data?.is_final && (

@@ -1,8 +1,8 @@
 import { useMemo } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { useTranslation } from "react-i18next";
-import { ArrowLeft, Download, QrCode, SearchX } from "lucide-react";
+import { Download, QrCode, SearchX } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
@@ -133,17 +133,10 @@ export function AttendanceHistoryPage() {
       <AdminTopbar
         title={t("history.title")}
         subtitle={t("history.subtitle")}
+        backHref="/"
       />
 
       <main className="mx-auto w-full max-w-7xl px-5 py-8 lg:px-8">
-        <div className="mb-5">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/admin/dashboard">
-              <ArrowLeft className="me-1 h-4 w-4" />
-              {t("history.backToDashboard")}
-            </Link>
-          </Button>
-        </div>
         <div className="space-y-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <HistoryFilters

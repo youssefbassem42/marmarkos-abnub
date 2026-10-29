@@ -125,4 +125,16 @@ describe("the page of the check-in", () => {
       { timeout: 5_000 },
     );
   });
+
+  it("offers a way back to the landing page", () => {
+    renderPage(<CheckInPage />, {
+      answers: {
+        "/attendance/statistics/meeting": STATISTICS,
+        "/attendance/meeting": MEETING,
+      },
+    });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toHaveAttribute("href", "/");
+  });
 });
