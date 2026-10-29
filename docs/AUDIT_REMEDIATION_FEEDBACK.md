@@ -304,6 +304,30 @@ the member stays signed in past the expiry, a reload restores the session
 from the cookie, the default cookie dies with the window and the cookie of
 "remember me" carries `Max-Age=2592000`.
 
+### 4.4 The wave of the subagents (2026-10-29)
+
+The work of the plan of `TODO.md` was spread over **eleven subagents**, each
+in its own worktree, its own branch and its own database. The review of the
+work of every agent found defects that no test of the agent had seen — the
+same lesson as §4.1 and §4.2, one level up: **the agent writes the test of
+what it believes; the reviewer writes the test of what the product needs.**
+
+| # | The defect | The consequence | The fix |
+|---|---|---|---|
+| 42 | The map of the parents of the routes put the **attendance of the administration** under the landing page, and the pages of the members under the dashboard of the administration | The way back of a member's history of the attendance sent the member to a page he is **refused** (403) | The map is corrected, and the test that walks the routes of the router proves the parent of every route — it caught the route of the slides the same day |
+| 43 | A **scheduled post of the blog** stayed `DRAFT`: the public list only shows the published posts, and **nothing published it** (the tick only knew the schedules of the verses) | Every scheduled post would have stayed invisible for ever | The shared tick publishes the scheduled posts of the blog now: the rows are claimed with `FOR UPDATE SKIP LOCKED`, the status changes under a row lock, each post is published in its own transaction and the runner is idempotent. The shape of the answer of the tick does not change |
+| 44 | A production deployment **without `ATTENDANCE_PIN_PEPPER` refuses to start** (SEC-006) | The whole API answered 500 on every path after the first deployment of the audit | The guard stays (it is right), but the adoption of the pepper is now **safe**: the hashes of the legacy scheme stay readable, the check-in finds the member through them and re-hashes his PIN with the current pepper. Any value works; no PIN is lost |
+| 45 | The **production database was three migrations behind** (`c9d4e5f6a87b` instead of `c1d2e3f4a5b6`) | The deployment started, but the first login died on `column "persistent" of relation "refresh_tokens" does not exist` | The migrations were applied (the owner did it); the three of them are expand-only. The lesson for the pipeline: **the deployment must run the migrations before it serves** — the repository has `scripts/migrate.py` for it, the Vercel project needs the step |
+| 46 | An agent committed the **symlink of its worktree** (`backend/.venv`): the rule of the `.gitignore` (`.venv/`) matches a directory, not a symlink | The cherry-pick replaced the real environment of the backend with a link to itself: **the tools of the backend disappeared** | The rule ignores the symlink too; the environment was rebuilt. The lesson for the briefs: the agents commit with `git add -A` — the ignore rules must cover the symlinks as well |
+| 47 | The rebuilt environment installed **mypy 2.4** (the pins are floors), and it is stricter about the generics of SQLAlchemy | The pipeline would have failed on three annotations that the older mypy accepted | The annotations follow the statements they receive (`Select[Any]` for the filter helpers, `Select[UUID]` for the subquery of the analytics) |
+
+The wave also **landed** the phases that need no decision: the gallery goes
+away, the page "من نحن", the links of the landing page, the slider of the
+landing page and its administration (the section "إدارة المحتوى"), the
+points per quiz, the report of the analytics, the way back of the member
+pages and of the administration, the backend of the blog and the page of
+the analysis of a quiz.
+
 ---
 
 ## 5. How it was verified
