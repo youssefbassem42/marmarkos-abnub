@@ -312,5 +312,8 @@ number.
 | Identifier | The rule | Where it lives |
 |---|---|---|
 | `D-7` | The comments use the small safe HTML vocabulary of the editor, and their replies form a tree without a depth limit | `app/modules/comments/application/services/comment_content.py` |
+| `BR-77` | Only the owner of a comment may edit it; the owner, an administrator, or a servant may delete it, and no role may edit a comment owned by another member | `app/modules/comments/application/commands/comment_commands.py` |
 | `BR-78` | A comment stores only the safe HTML vocabulary of the editor: `p`, `br`, `strong`, `em`, `u`, `s`, `ul`, `ol`, `li`, `blockquote`, `span` with a palette colour, and `a` with an HTTP(S) or same-platform path; scripts, event handlers, unsafe URLs, and every other attribute are removed before storage | `app/modules/comments/application/services/comment_content.py` |
 | `BR-79` | A comment has at most 500 visible words; the backend counts the words of the sanitised HTML and rejects the request when the limit is exceeded | `app/modules/comments/application/services/comment_content.py` |
+| `BR-80` | The replies form a tree without a depth limit; deleting a comment is soft, exposes only "تم حذف التعليق", and keeps its replies in the tree | `app/modules/comments/application/commands/comment_commands.py`, `app/modules/comments/application/queries/comment_queries.py` |
+| `BR-81` | Only a signed-in member may comment, and only on a post that is published and due for members | `app/modules/comments/application/commands/comment_commands.py` |

@@ -63,10 +63,13 @@ _SAFE_STYLE = re.compile(
     re.IGNORECASE,
 )
 _DANGEROUS_ELEMENT = re.compile(
-    r"<(script|style)\b[^>]*>.*?</\1\s*>",
+    r"<(script|style)\b[^>]*>.*?(?:</\1\s*>|$)",
     re.IGNORECASE | re.DOTALL,
 )
 _BLOCK_TAGS = frozenset({"p", "br", "ul", "ol", "li", "blockquote"})
+
+DELETED_COMMENT_CONTENT = "تم حذف التعليق"
+"""The only text a deleted comment exposes (BR-80)."""
 
 
 def _safe_href(value: str) -> bool:
@@ -74,7 +77,9 @@ def _safe_href(value: str) -> bool:
     candidate = value.strip()
     lowered = candidate.lower()
     return (
-        lowered.startswith("http://") or lowered.startswith("https://") or candidate.startswith("/")
+        lowered.startswith("http://")
+        or lowered.startswith("https://")
+        or (candidate.startswith("/") and not candidate.startswith("//"))
     )
 
 
