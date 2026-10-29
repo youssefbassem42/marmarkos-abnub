@@ -9,11 +9,12 @@ honest.
 from typing import Annotated, Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, status
+from fastapi import APIRouter, Depends, File, Header, Query, Response, UploadFile, status
 
 from app.core.database import get_unit_of_work
-from app.core.exceptions import NotFoundError
+from app.core.exceptions import NotFoundError, UnauthorizedError
 from app.core.pagination import Page, PageParams
+from app.modules.blog.application.commands.like_commands import like_post, unlike_post
 from app.modules.blog.application.commands.post_commands import (
     create_post,
     delete_post,
@@ -21,6 +22,7 @@ from app.modules.blog.application.commands.post_commands import (
     schedule_post,
     update_post,
 )
+from app.modules.blog.application.dto.like_dto import LikeResponse
 from app.modules.blog.application.dto.post_dto import (
     BlogImageUploadResponse,
     BlogPostAdminResponse,
@@ -30,6 +32,7 @@ from app.modules.blog.application.dto.post_dto import (
     BlogPostSummaryResponse,
     BlogPostUpdateRequest,
 )
+from app.modules.blog.application.queries.like_queries import get_post_likes
 from app.modules.blog.application.queries.post_queries import (
     get_admin_post,
     get_public_post_detail,
@@ -37,8 +40,11 @@ from app.modules.blog.application.queries.post_queries import (
     list_public_posts,
 )
 from app.modules.blog.presentation.dependencies import BlogManager, CurrentUser
+from app.modules.users.domain.enums.user_status import UserStatus
+from app.modules.users.infrastructure.persistence.models import User
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 from app.shared.infrastructure.services.image_upload import upload_image
+from app.shared.security import jwt_service
 
 router = APIRouter(tags=["Blog"])
 
@@ -51,6 +57,38 @@ _MANAGER_FAILURES: dict[int | str, dict[str, Any]] = {
     404: {"description": "Post not found"},
     422: {"description": "Validation error"},
 }
+
+
+def _bearer_token(authorization: str | None) -> str | None:
+    """Read an optional bearer token without making the route authenticated."""
+    if not authorization:
+        return None
+    scheme, _, token = authorization.partition(" ")
+    if scheme.lower() != "bearer" or not token.strip():
+        return None
+    return token.strip()
+
+
+async def _optional_viewer(
+    uow: _UoW,
+    authorization: Annotated[str | None, Header()] = None,
+) -> User | None:
+    """Resolve the caller softly: an absent or stale token means anonymous."""
+    token = _bearer_token(authorization)
+    if token is None:
+        return None
+    try:
+        user_id = jwt_service.decode_access_token(token)
+    except (UnauthorizedError, AttributeError, TypeError, ValueError):
+        return None
+
+    user = await uow.users.get_by_id(user_id)
+    if user is None or user.status is not UserStatus.ACTIVE:
+        return None
+    return user
+
+
+_OptionalViewer = Annotated[User | None, Depends(_optional_viewer)]
 
 
 async def _admin_response(uow: UnitOfWork, post_id: UUID) -> BlogPostAdminResponse:
@@ -95,6 +133,58 @@ async def get_blog_post(
     if item is None:
         raise NotFoundError("Post not found")
     return item
+
+
+@router.get(
+    "/blog/posts/{post_id}/likes",
+    response_model=LikeResponse,
+    responses={404: {"description": "Post not found"}},
+)
+async def get_blog_post_likes(
+    post_id: UUID,
+    uow: _UoW,
+    viewer: _OptionalViewer,
+) -> LikeResponse:
+    """Return the active likes and the caller's own like state."""
+    item = await get_post_likes(uow, post_id, viewer)
+    if item is None:
+        raise NotFoundError("Post not found")
+    return item
+
+
+@router.post(
+    "/blog/posts/{post_id}/like",
+    response_model=LikeResponse,
+    responses={
+        404: {"description": "Post not found"},
+        409: {"description": "A concurrent request already created the like"},
+    },
+)
+async def like_blog_post(
+    post_id: UUID,
+    actor: CurrentUser,
+    uow: _UoW,
+) -> LikeResponse:
+    """Like a post once; repeating the request keeps the single like."""
+    result = await like_post(uow, actor, post_id)
+    await uow.commit()
+    return result
+
+
+@router.delete(
+    "/blog/posts/{post_id}/like",
+    response_model=LikeResponse,
+    responses={404: {"description": "Post not found"}},
+)
+async def unlike_blog_post(
+    post_id: UUID,
+    actor: CurrentUser,
+    uow: _UoW,
+) -> LikeResponse:
+    """Take back the caller's like; repeating the request stays successful."""
+    result = await unlike_post(uow, actor, post_id)
+    await uow.commit()
+    return result
 
 
 @router.get(

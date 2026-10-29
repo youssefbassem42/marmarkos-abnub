@@ -22,7 +22,11 @@ from app.modules.blog.application.dto.post_dto import (
     BlogTagResponse,
 )
 from app.modules.blog.domain.enums.post_status import PostStatus
-from app.modules.blog.infrastructure.persistence.models import BlogCategory, BlogPost
+from app.modules.blog.infrastructure.persistence.models import (
+    BlogCategory,
+    BlogPost,
+    BlogPostLike,
+)
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 
@@ -39,13 +43,14 @@ def _tags(post: BlogPost) -> list[BlogTagResponse]:
     ]
 
 
-def _summary(post: BlogPost) -> BlogPostSummaryResponse:
+def _summary(post: BlogPost, likes_count: int) -> BlogPostSummaryResponse:
     return BlogPostSummaryResponse(
         id=post.id,
         title=post.title,
         excerpt=post.excerpt,
         cover_image=post.cover_image,
         tags=_tags(post),
+        likes_count=max(0, likes_count),
         published_at=post.published_at,
         author=_author(post),
     )
@@ -100,7 +105,13 @@ async def list_public_posts(
     if search:
         conditions.append(BlogPost.title.ilike(f"%{search.strip()}%"))
 
-    statement = select(BlogPost).options(
+    likes_count = (
+        select(func.count(BlogPostLike.id))
+        .where(BlogPostLike.post_id == BlogPost.id)
+        .correlate(BlogPost)
+        .scalar_subquery()
+    )
+    statement = select(BlogPost, likes_count.label("likes_count")).options(
         selectinload(BlogPost.author),
         selectinload(BlogPost.categories),
     )
@@ -115,8 +126,8 @@ async def list_public_posts(
 
     total = int((await uow.session.execute(count_statement)).scalar_one())
     result = await uow.session.execute(statement.limit(page.size).offset(page.offset))
-    posts = list(result.scalars().unique().all())
-    return Page.build([_summary(post) for post in posts], total, page)
+    posts = [_summary(post, int(likes_count)) for post, likes_count in result.all()]
+    return Page.build(posts, total, page)
 
 
 async def get_public_post_detail(

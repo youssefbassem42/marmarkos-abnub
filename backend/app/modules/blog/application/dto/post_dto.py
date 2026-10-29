@@ -121,6 +121,7 @@ class BlogPostSummaryResponse(BaseModel):
     excerpt: str | None = Field(default=None, description="Post summary")
     cover_image: str | None = Field(default=None, description="Cover image URL")
     tags: list[BlogTagResponse] = Field(description="Tags carried by the post")
+    likes_count: int = Field(ge=0, description="Number of active likes")
     published_at: datetime | None = Field(default=None, description="Publication date")
     author: BlogAuthorResponse = Field(description="Post author")
 

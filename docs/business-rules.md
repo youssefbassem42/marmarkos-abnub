@@ -288,6 +288,15 @@ number.
 | `D-4` | The interface calls the blog categories "tags"; the database tables keep their names | `app/modules/blog/application/dto/post_dto.py` |
 | `D-6` | The admin and the servant may write a blog post | `app/modules/blog/application/commands/post_commands.py` |
 
+## The likes of the blog posts (the point 7 of the plan)
+
+| Identifier | The rule | Where it lives |
+|---|---|---|
+| `BR-69` | Only a signed-in member may like a post or take the like back; every reader may see the number of the likes, and an anonymous reader never has a like of their own | `app/modules/blog/presentation/router.py` |
+| `BR-70` | A member may like a post once; a repeated like is idempotent, while the loser of a concurrent race receives a conflict instead of a server error | `app/modules/blog/application/commands/like_commands.py` |
+| `BR-71` | Taking a like back is idempotent; the number shown is the number of the active likes and is never negative | `app/modules/blog/application/commands/like_commands.py`, `app/modules/blog/application/queries/like_queries.py` |
+| `BR-77` | A like needs an existing post and answers 404 when the post does not exist; a member may like their own post | `app/modules/blog/application/commands/like_commands.py` |
+
 ## The notification and the mail of a published blog post
 
 | Identifier | The rule | Where it lives |
