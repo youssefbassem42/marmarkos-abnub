@@ -23,6 +23,9 @@ from app.modules.comments.application.dto.comment_dto import (
     CommentResponse,
     CommentUpdateRequest,
 )
+
+# Importing the consumer registers its outbox handler with the dispatcher.
+from app.modules.comments.application.handlers import comment_created_handler  # noqa: F401
 from app.modules.comments.application.queries.comment_queries import (
     get_comment_response,
     list_comment_tree,

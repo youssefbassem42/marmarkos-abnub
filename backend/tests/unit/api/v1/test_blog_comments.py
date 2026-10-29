@@ -8,6 +8,7 @@ from datetime import UTC, datetime
 from httpx import AsyncClient
 from sqlalchemy import insert, select
 
+from app.core.database import async_session_factory
 from app.modules.blog.domain.enums.post_status import PostStatus
 from app.modules.blog.infrastructure.persistence.models import BlogPost
 from app.modules.comments.application.services.comment_content import (
@@ -15,7 +16,10 @@ from app.modules.comments.application.services.comment_content import (
     sanitize_comment_html,
 )
 from app.modules.comments.infrastructure.persistence.models import Comment
+from app.modules.notifications.domain.enums.notification_type import NotificationType
+from app.modules.notifications.infrastructure.persistence.models import Notification
 from app.modules.users.domain.enums.role_name import RoleName
+from app.shared.application.outbox_dispatcher import dispatch_pending
 from tests.utils import DEFAULT_PASSWORD, bearer, create_user_direct
 
 POSTS_URL = "/api/v1/blog/posts"
@@ -307,6 +311,64 @@ async def test_the_soft_deletion_hides_the_text_and_keeps_the_replies(
     assert "نص سرّي" not in response.text
     assert len(root["replies"]) == 1
     assert root["replies"][0]["id"] == reply["id"]
+
+
+async def test_the_post_owner_and_the_parent_comment_owner_are_notified(
+    client: AsyncClient, db_engine
+) -> None:
+    post_owner_id, _ = await _actor(
+        client,
+        db_engine,
+        email="comment-notify-post-owner@example.com",
+    )
+    parent_owner_id, parent_owner = await _actor(
+        client,
+        db_engine,
+        email="comment-notify-parent-owner@example.com",
+    )
+    _, replier = await _actor(
+        client,
+        db_engine,
+        email="comment-notify-replier@example.com",
+    )
+    post_id = await _published_post(db_engine, post_owner_id)
+    top = await _create_comment(client, parent_owner, post_id, "<p>تعليق أصلي</p>")
+
+    first_dispatch = await dispatch_pending(async_session_factory)
+    assert first_dispatch == {"processed": 1, "failed": 0}
+
+    await _create_comment(
+        client,
+        replier,
+        post_id,
+        "<p>رد جديد</p>",
+        parent_comment_id=str(top["id"]),
+    )
+    second_dispatch = await dispatch_pending(async_session_factory)
+    assert second_dispatch == {"processed": 1, "failed": 0}
+
+    async with db_engine.begin() as connection:
+        rows = list(
+            (
+                await connection.execute(
+                    select(Notification.user_id, Notification.data).where(
+                        Notification.type == NotificationType.BLOG_COMMENT
+                    )
+                )
+            ).all()
+        )
+
+    by_user: dict[uuid.UUID, list[dict[str, object] | None]] = {}
+    for user_id, data in rows:
+        assert user_id is not None
+        by_user.setdefault(user_id, []).append(data)
+
+    assert len(by_user[post_owner_id]) == 2
+    assert len(by_user[parent_owner_id]) == 1
+    parent_notification = by_user[parent_owner_id][0]
+    assert parent_notification is not None
+    assert parent_notification["post_id"] == str(post_id)
+    assert parent_notification["cta_url"] == f"/blog/comments-{post_id.hex}"
 
 
 async def test_a_missing_post_and_an_anonymous_member_are_refused(
