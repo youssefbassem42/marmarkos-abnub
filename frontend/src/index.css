@@ -229,6 +229,12 @@
   box-shadow: var(--shadow-card);
 }
 
+/* The measure of a line of Arabic text: readable on a phone and on a
+   desktop, never edge to edge. */
+@utility max-w-prose {
+  max-width: 38rem;
+}
+
 @utility btn-primary {
   display: inline-flex;
   align-items: center;

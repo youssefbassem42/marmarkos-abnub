@@ -10,6 +10,7 @@ import { VerifyEmailResultPage } from "@/pages/auth/verify-email/VerifyEmailResu
 import { GoogleCallbackPage } from "@/pages/auth/google-callback/GoogleCallbackPage";
 import { ProfilePage } from "@/pages/profile/ProfilePage";
 import { PlaceholderPage } from "@/pages/placeholder/PlaceholderPage";
+import { AboutUsPage } from "@/pages/about/AboutUsPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
 import { ForbiddenPage } from "@/pages/ForbiddenPage";
 import { RequireAuth } from "@/components/common/RequireAuth";
@@ -511,7 +512,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/about-us",
-    element: <PlaceholderPage titleKey="aboutUs" />,
+    element: <AboutUsPage />,
   },
   {
     // Private: notifications are personal to the signed-in member.

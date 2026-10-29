@@ -156,9 +156,7 @@ describe("the table of the routes", () => {
   it("redirects the old gallery address to the landing page", async () => {
     await renderRouterAt("/gallery");
 
-    await waitFor(() =>
-      expect(window.location.pathname).toBe("/"),
-    );
+    await waitFor(() => expect(window.location.pathname).toBe("/"));
   });
 
   it("renders the landing page without a link to the gallery", async () => {

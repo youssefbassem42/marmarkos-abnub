@@ -1,5 +1,6 @@
 import { Check, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 import church from "@/assets/church-evening.jpg";
 import { cn } from "@/lib/utils";
 import { YouthFigure } from "./YouthFigure";
@@ -47,13 +48,13 @@ export function About() {
               </li>
             ))}
           </ul>
-          <a href="#contact" className="btn-primary mt-8 px-6 py-3.5 text-sm">
+          <Link to="/about-us" className="btn-primary mt-8 px-6 py-3.5 text-sm">
             <span className="font-arabic">{t("about.cta")}</span>
             <ArrowRight
               className={cn("h-4 w-4", "-scale-x-100")}
               aria-hidden="true"
             />
-          </a>
+          </Link>
         </div>
 
         <div className="relative reveal">
