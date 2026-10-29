@@ -8,6 +8,7 @@ import { AppPagination } from "@/components/common/AppPagination";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
 import { Skeleton } from "@/components/ui/skeleton";
+import { PageHeader } from "@/components/common/PageHeader";
 import { cn } from "@/lib/utils";
 import { useMarkRead, useNotifications } from "../hooks";
 import { NotificationList } from "../components/NotificationList";
@@ -68,22 +69,7 @@ export function NotificationsPage() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <main className="mx-auto w-full max-w-4xl px-5 pb-16 pt-28 lg:px-8">
-        <header className="text-center">
-          <h1
-            className={cn(
-              "font-heading text-3xl font-extrabold tracking-tight text-ink font-arabic",
-            )}
-          >
-            {t("title")}
-          </h1>
-          <p
-            className={cn(
-              "mt-2 text-sm text-muted-foreground font-arabic text-base",
-            )}
-          >
-            {t("subtitle")}
-          </p>
-        </header>
+        <PageHeader title={t("title")} description={t("subtitle")} backTo="/" />
 
         <div className="mt-8">
           <NotificationTabs

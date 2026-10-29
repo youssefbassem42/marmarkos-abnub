@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   CalendarCheck,
@@ -17,6 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/layout/Navbar";
+import { PageHeader } from "@/components/common/PageHeader";
 import { AttendanceStatusBadge } from "@/modules/attendance/components/AttendanceStatusBadge";
 import { useMyAttendance } from "@/modules/attendance/hooks/useMyAttendance";
 import { AttendancePinCard } from "./AttendancePinCard";
@@ -194,7 +195,7 @@ export function ProfilePage() {
       setUser({ ...user, has_password: true });
       setPasswordStatus({ kind: "ok", text: t("password.success") });
     } catch (error) {
-      setPasswordStatus({
+      setProfileStatus({
         kind: "error",
         text:
           error instanceof ApiError
@@ -214,14 +215,11 @@ export function ProfilePage() {
       <Navbar />
 
       <main className="mx-auto max-w-3xl px-5 pb-16 pt-28 lg:px-8">
-        <header className="text-center">
-          <h1 className="text-3xl font-extrabold tracking-tight text-ink font-arabic">
-            {t("heading")}
-          </h1>
-          <p className="mt-2 text-muted-foreground font-arabic text-lg">
-            {t("subtitle")}
-          </p>
-        </header>
+        <PageHeader
+          title={t("heading")}
+          description={t("subtitle")}
+          backTo="/"
+        />
 
         {/* Avatar */}
         <section className="mt-10 flex flex-col items-center gap-4 rounded-2xl border border-border bg-card p-6 card-elevated sm:flex-row">
@@ -550,15 +548,6 @@ export function ProfilePage() {
             {savingPassword ? t("password.updating") : t("password.cta")}
           </Button>
         </form>
-
-        <p className="mt-8 text-center text-sm text-muted-foreground">
-          <Link
-            to="/"
-            className="font-semibold text-brand-blue underline-offset-4 hover:underline font-arabic"
-          >
-            ← /
-          </Link>
-        </p>
       </main>
     </div>
   );

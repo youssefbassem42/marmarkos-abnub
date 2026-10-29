@@ -67,6 +67,16 @@ describe("the page of the profile", () => {
     );
   });
 
+  it("offers a way back to the landing page", () => {
+    saveAuth({ accessToken: "token", user: MEMBER }, false);
+    renderPage(<ProfilePage />, {
+      answers: { "/attendance/me": ATTENDANCE },
+    });
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toHaveAttribute("href", "/");
+  });
+
   it("refuses a password that does not match the confirmation", async () => {
     saveAuth({ accessToken: "token", user: MEMBER }, false);
     const harness = renderPage(<ProfilePage />, {

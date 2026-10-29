@@ -201,4 +201,12 @@ describe("NotificationsPage", () => {
       within(second.getByRole("main")).getByRole("navigation"),
     ).toBeInTheDocument();
   });
+
+  it("offers a way back to the landing page", async () => {
+    mockedList.mockResolvedValueOnce(makePage([]));
+    renderPage();
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toHaveAttribute("href", "/");
+  });
 });
