@@ -120,7 +120,9 @@ export default function QuestionFormPage() {
       <div className="space-y-6 p-6">
         <AdminTopbar
           title={
-            isEdit ? t("admin.question.editTitle") : t("admin.question.newTitle")
+            isEdit
+              ? t("admin.question.editTitle")
+              : t("admin.question.newTitle")
           }
           backHref="/admin/quizzes"
           showSidebarTrigger

@@ -28,7 +28,9 @@ describe("the switch of the theme", () => {
     const user = userEvent.setup();
     render(<ThemeToggle />);
 
-    await user.click(screen.getByRole("button", { name: "التبديل إلى الوضع الداكن" }));
+    await user.click(
+      screen.getByRole("button", { name: "التبديل إلى الوضع الداكن" }),
+    );
 
     expect(document.documentElement.classList.contains("dark")).toBe(true);
     expect(localStorage.getItem("marmarkos.theme")).toBe("dark");
@@ -42,7 +44,9 @@ describe("the switch of the theme", () => {
     const user = userEvent.setup();
     render(<ThemeToggle />);
 
-    await user.click(screen.getByRole("button", { name: "التبديل إلى الوضع الفاتح" }));
+    await user.click(
+      screen.getByRole("button", { name: "التبديل إلى الوضع الفاتح" }),
+    );
 
     expect(document.documentElement.classList.contains("dark")).toBe(false);
     expect(localStorage.getItem("marmarkos.theme")).toBe("light");
