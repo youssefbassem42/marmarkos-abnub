@@ -38,10 +38,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-import { analyticsApi, currentMonth } from "../api";
+import { currentMonth } from "../api";
 import { useMonthlyAnalytics } from "../hooks/useMonthlyAnalytics";
 import { useMonthlyUsers } from "../hooks/useMonthlyUsers";
-import { downloadBlob } from "@/lib/download";
+import { downloadCsvRows } from "@/lib/csv";
 
 const PAGE_SIZE = 20;
 
@@ -99,15 +99,31 @@ export default function MonthlyAnalyticsPage() {
     }),
   );
 
-  async function handleExport() {
+  function handleExport() {
     setExporting(true);
     try {
-      const blob = await analyticsApi.exportMonthly(month, {
-        q: query || undefined,
-      });
-      downloadBlob(blob, `quiz-analytics-${month}.csv`);
+      const rows = (users.data?.items ?? []).map((user) => [
+        user.rank,
+        user.full_name,
+        user.quizzes_completed,
+        user.total_points,
+        user.average_score_out_of_10.toFixed(1),
+        `${user.completion_rate.toFixed(0)}%`,
+      ]);
+
+      downloadCsvRows(
+        t("export.filename", { month }),
+        [
+          t("table.rank"),
+          t("table.name"),
+          t("table.quizzes"),
+          t("table.points"),
+          t("table.average"),
+          t("table.completion"),
+        ],
+        rows,
+      );
     } catch {
-      // The button is disabled while it runs; a failure only needs a hint.
       window.alert(t("export.failed"));
     } finally {
       setExporting(false);

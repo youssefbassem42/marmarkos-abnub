@@ -788,6 +788,7 @@ export const ar = {
       button: "تصدير CSV",
       preparing: "جارٍ التحضير...",
       failed: "تعذر تجهيز الملف. حاول مرة تاني.",
+      filename: "نقاط-{{month}}.csv",
     },
     errors: {
       load: "تعذر تحميل التحليلات. حاول مرة تاني.",

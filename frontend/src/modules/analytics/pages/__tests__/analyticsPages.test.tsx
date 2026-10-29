@@ -7,12 +7,20 @@
  */
 
 import { screen, waitFor } from "@testing-library/react";
-import { describe, expect, it } from "vitest";
+import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
+import { downloadBlob } from "@/lib/download";
 import { renderPage } from "@/test/pageHarness";
 import { MEMBER } from "@/test/fixtures/member";
 import MonthlyAnalyticsPage from "@/modules/analytics/pages/MonthlyAnalyticsPage";
 import { UsersAdminPage } from "@/modules/users/pages/UsersAdminPage";
+
+vi.mock("@/lib/download", () => ({
+  downloadBlob: vi.fn(),
+}));
+
+const mockedDownloadBlob = vi.mocked(downloadBlob);
 
 const OVERVIEW = {
   month: "2026-10-01",
@@ -66,7 +74,25 @@ const USERS_PAGE = {
   has_next: false,
 };
 
+async function blobBytes(blob: Blob): Promise<Uint8Array> {
+  const buffer = await new Promise<ArrayBuffer>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as ArrayBuffer);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(blob);
+  });
+  return new Uint8Array(buffer);
+}
+
+async function blobText(blob: Blob): Promise<string> {
+  return new TextDecoder("utf-8").decode(await blobBytes(blob));
+}
+
 describe("the analytics of the month", () => {
+  beforeEach(() => {
+    mockedDownloadBlob.mockClear();
+  });
+
   it("shows the numbers of the month", async () => {
     renderPage(<MonthlyAnalyticsPage />, {
       admin: true,
@@ -96,6 +122,40 @@ describe("the analytics of the month", () => {
         expect(screen.getAllByText("محمود عبد الله").length).toBeGreaterThan(0),
       { timeout: 5_000 },
     );
+  });
+
+  it("exports the visible page with a pinned Arabic header", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-10-15T12:00:00Z"));
+
+    try {
+      const user = userEvent.setup();
+      renderPage(<MonthlyAnalyticsPage />, {
+        admin: true,
+        answers: {
+          "/quiz-analytics/monthly/users": USERS_PAGE,
+          "/quiz-analytics/monthly": OVERVIEW,
+        },
+      });
+
+      await user.click(
+        await screen.findByRole("button", { name: "تصدير CSV" }),
+      );
+
+      await waitFor(() => expect(mockedDownloadBlob).toHaveBeenCalledOnce());
+      const [blob, filename] = mockedDownloadBlob.mock.calls[0]!;
+      const bytes = await blobBytes(blob);
+      const text = await blobText(blob);
+
+      expect(Array.from(bytes.slice(0, 3))).toEqual([0xef, 0xbb, 0xbf]);
+      expect(filename).toBe("نقاط-2026-10.csv");
+      expect(text.replace(/^\uFEFF/, "").split("\r\n")).toEqual([
+        "#,الاسم,الاختبارات,النقاط,المتوسط,نسبة الإكمال",
+        "1,محمود عبد الله,4,90,8.5,100%",
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it("asks the server for the month with the canonical contract", async () => {
