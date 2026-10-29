@@ -16,6 +16,7 @@ import { QuizTeaserCard } from "../components/QuizTeaserCard";
 export default function VerseDetailPage() {
   const { verseId } = useParams<{ verseId: string }>();
   const { t } = useTranslation("bible");
+  const { t: tCommon } = useTranslation("common");
 
   const verse = useVerse(verseId!);
   const markAsRead = useMarkAsRead();
@@ -46,13 +47,13 @@ export default function VerseDetailPage() {
   return (
     <div className="space-y-6">
       <Button asChild variant="ghost" size="sm" className="gap-1 font-arabic">
-        <Link to="/bible-verses">
+        <Link to="/">
           <ArrowLeft className="h-4 w-4 rtl:hidden" aria-hidden="true" />
           <ArrowLeft
             className="hidden h-4 w-4 rotate-180 rtl:block"
             aria-hidden="true"
           />
-          {t("detail.back")}
+          {tCommon("back")}
         </Link>
       </Button>
 

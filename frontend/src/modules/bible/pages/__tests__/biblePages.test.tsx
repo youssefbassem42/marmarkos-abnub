@@ -73,6 +73,24 @@ describe("the feed of the verses", () => {
       { timeout: 5_000 },
     );
   });
+
+  it("offers a way back to the landing page", async () => {
+    renderPage(<BibleVersesPage />, {
+      answers: {
+        "/bible-verses/published": FEED,
+        "/bible-verses/current": VERSE_CARD,
+      },
+    });
+
+    await waitFor(
+      () =>
+        expect(screen.getAllByText("آية الاختبار").length).toBeGreaterThan(0),
+      { timeout: 5_000 },
+    );
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toHaveAttribute("href", "/");
+  });
 });
 
 describe("the page of a verse", () => {
@@ -94,6 +112,26 @@ describe("the page of a verse", () => {
     expect(screen.getAllByText(/اقرؤوا لي/).length).toBeGreaterThan(0);
   });
 
+  it("offers a way back to the landing page", async () => {
+    renderPage(<VerseDetailPage />, {
+      path: "/bible-verses/:verseId",
+      route: "/bible-verses/verse-1",
+      answers: {
+        "/bible-verses/verse-1": DETAIL,
+        "/bible-verses/verse-1/open": { status: 204 },
+      },
+    });
+
+    await waitFor(
+      () =>
+        expect(screen.getAllByText("آية الاختبار").length).toBeGreaterThan(0),
+      { timeout: 5_000 },
+    );
+
+    const back = screen.getByRole("link", { name: "رجوع" });
+    expect(back).toHaveAttribute("href", "/");
+  });
+
   it("keeps the quiz locked until the verse is read", async () => {
     renderPage(<VerseDetailPage />, {
       path: "/bible-verses/:verseId",
@@ -110,7 +148,7 @@ describe("the page of a verse", () => {
       { timeout: 5_000 },
     );
     expect(
-      screen.queryByRole("link", { name: "ابدأ الاختبار" }),
+      screen.queryByRole("link", { name: /ابدأ الاختبار/ }),
     ).not.toBeInTheDocument();
   });
 
