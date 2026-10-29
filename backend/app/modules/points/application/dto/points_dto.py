@@ -5,6 +5,8 @@ from datetime import date, datetime
 
 from pydantic import BaseModel, Field
 
+from app.core.pagination import Page
+
 
 class PointsResponse(BaseModel):
     """GET /users/me/points."""
@@ -35,3 +37,27 @@ class PointActivityItem(BaseModel):
     verse_id: uuid.UUID | None = Field(default=None, description="Verse id")
     verse_reference: str | None = Field(default=None, description="Verse reference")
     source: str = Field(description="Point source")
+
+
+class PointsByQuizItem(BaseModel):
+    """One line of GET /users/me/points/by-quiz: the points of one quiz."""
+
+    quiz_id: uuid.UUID = Field(description="The quiz")
+    quiz_title: str = Field(description="The current title of the quiz")
+    points: int = Field(ge=0, description="The sum of the ledger on this quiz")
+    attempts: int = Field(ge=0, description="The number of the paid attempts on this quiz")
+    average_score_out_of_10: float = Field(
+        description="The average of the scores out of ten of the graded attempts"
+    )
+    last_attempt_at: datetime = Field(description="The date of the last attempt")
+
+
+class PointsByQuizPage(Page[PointsByQuizItem]):
+    """A page of the points per quiz plus the lifetime total of the member.
+
+    The envelope is the standard ``Page`` of the platform
+    (``items/total/page/size/pages/has_next``) with the lifetime total
+    next to it, so the frontend never recomputes the member's total.
+    """
+
+    total_points: int = Field(ge=0, description="The lifetime total of the member")

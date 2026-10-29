@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from datetime import date, datetime
 from typing import TypedDict, cast
 
-from sqlalchemy import Numeric, case, delete, func, select
+from sqlalchemy import Numeric, case, delete, desc, func, select
 from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -33,6 +33,17 @@ class PointHistoryRow(TypedDict):
     quiz_title: str | None
     verse_id: uuid.UUID | None
     verse_reference: str | None
+
+
+class PointsByQuizRow(TypedDict):
+    """One row of the points of a member per quiz (BR-56..BR-60)."""
+
+    quiz_id: uuid.UUID
+    quiz_title: str
+    points: int
+    attempts: int
+    average_score_out_of_10: float | None
+    last_attempt_at: datetime
 
 
 class LeaderboardRow(TypedDict):
@@ -236,6 +247,62 @@ class PointTransactionRepository:
             base.order_by(PointTransaction.awarded_at.desc()).limit(limit).offset(offset)
         )
         return [cast(PointHistoryRow, dict(row._mapping)) for row in rows.all()], total
+
+    async def points_by_quiz_page(
+        self, user_id: uuid.UUID, *, limit: int, offset: int
+    ) -> tuple[list[PointsByQuizRow], int]:
+        """One line per quiz of the member: the sum of his ledger (BR-56..BR-60).
+
+        The points of a quiz are the sum of the ledger rows of the member on
+        that quiz - one row per finished attempt, so a quiz taken twice is one
+        line whose points are the sum of the two. A quiz whose title changed
+        shows its current title (the join reads ``quizzes.title`` at query
+        time), and attempts deleted with their quiz never appear (the join is
+        inner, the cascade removed their rows).
+        """
+        from app.modules.quiz.infrastructure.persistence.models import Quiz, QuizAttempt
+
+        points = func.coalesce(func.sum(PointTransaction.points), 0).label("points")
+        last_attempt_at = func.max(PointTransaction.awarded_at).label("last_attempt_at")
+        base = (
+            select(
+                Quiz.id.label("quiz_id"),
+                Quiz.title.label("quiz_title"),
+                points,
+                func.count().label("attempts"),
+                func.round(
+                    func.avg(
+                        case(
+                            (
+                                QuizAttempt.total_points > 0,
+                                func.round(
+                                    QuizAttempt.score.cast(Numeric)
+                                    / QuizAttempt.total_points.cast(Numeric)
+                                    * 10,
+                                    1,
+                                ),
+                            ),
+                            else_=None,
+                        )
+                    ),
+                    1,
+                ).label("average_score_out_of_10"),
+                last_attempt_at,
+            )
+            .join(QuizAttempt, QuizAttempt.id == PointTransaction.quiz_attempt_id)
+            .join(Quiz, Quiz.id == QuizAttempt.quiz_id)
+            .where(PointTransaction.user_id == user_id)
+            .group_by(Quiz.id, Quiz.title)
+        )
+        total = int(
+            (
+                await self._session.execute(select(func.count()).select_from(base.subquery()))
+            ).scalar_one()
+        )
+        rows = await self._session.execute(
+            base.order_by(desc(points), desc(last_attempt_at)).limit(limit).offset(offset)
+        )
+        return [cast(PointsByQuizRow, dict(row._mapping)) for row in rows.all()], total
 
     # -- Monthly analytics (P5-035) ------------------------------------------
 

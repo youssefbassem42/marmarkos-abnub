@@ -10,10 +10,12 @@ from app.core.pagination import Page, PageParams
 from app.modules.points.application.dto.points_dto import (
     MonthlyPointsResponse,
     PointActivityItem,
+    PointsByQuizPage,
     PointsResponse,
 )
 from app.modules.points.application.queries.points_queries import (
     my_monthly_points_query,
+    my_points_by_quiz_query,
     my_points_history_query,
     my_points_query,
 )
@@ -51,3 +53,14 @@ async def my_points_history(
     size: _Size = 20,
 ) -> Page[PointActivityItem]:
     return await my_points_history_query(uow, viewer, PageParams(page=page, size=size))
+
+
+@router.get("/by-quiz")
+async def my_points_by_quiz(
+    viewer: CurrentUser,
+    uow: _UoW,
+    page: _Page = 1,
+    size: _Size = 20,
+) -> PointsByQuizPage:
+    """BR-56..BR-60: the points of the member per quiz, paginated."""
+    return await my_points_by_quiz_query(uow, viewer, PageParams(page=page, size=size))

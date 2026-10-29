@@ -262,3 +262,13 @@ number.
 | `BR-54` | Deleting a slide removes it physically; the media module has no soft-delete pattern | `app/modules/media/application/commands/landing_slide_commands.py` |
 | `BR-55` | The image goes through the shared media upload service; slides use the 2 MB limit, like the verse covers | `app/shared/infrastructure/services/image_upload.py` |
 
+
+## The points of each quiz (the point 2 of the plan)
+
+| Identifier | The rule | Where it lives |
+|---|---|---|
+| `BR-56` | The points of a quiz are the sum of the ledger of the member on that quiz - one line per quiz, the sum when the quiz was taken twice | `app/modules/points/infrastructure/persistence/point_transaction_repository.py` |
+| `BR-57` | The average is the average of the scores out of ten of the graded attempts, rounded to one decimal; an attempt that was not graded (in progress, abandoned) is not in the average | `app/modules/points/infrastructure/persistence/point_transaction_repository.py` |
+| `BR-58` | A quiz whose title changed shows its current title | `app/modules/points/infrastructure/persistence/point_transaction_repository.py` |
+| `BR-59` | A member never sees the points of another member; the endpoint never takes the id of a member | `app/modules/points/presentation/router.py` |
+| `BR-60` | The attempts deleted with their quiz do not appear | `app/modules/points/infrastructure/persistence/point_transaction_repository.py` |
