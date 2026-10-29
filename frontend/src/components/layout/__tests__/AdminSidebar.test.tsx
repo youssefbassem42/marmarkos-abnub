@@ -62,6 +62,7 @@ describe("admin sidebar (D-8)", () => {
       "الاختبارات",
       "الرسائل",
       "الإشعارات",
+      "السلايدر",
       "التقارير",
       "الإعدادات",
     ];
@@ -134,6 +135,42 @@ describe("admin sidebar (D-8)", () => {
       button.getAttribute("data-active") === "true" ||
         button.closest("[data-active='true']") !== null,
     ).toBe(true);
+  });
+
+  it("links the slides entry to the ADMIN-only slides page", () => {
+    signInAsAdmin();
+    renderWithProviders(<AdminSidebar />, ["/admin/dashboard"]);
+
+    const link = screen.getByRole("link", { name: /السلايدر/ });
+    expect(link.getAttribute("href")).toBe("/admin/landing/slides");
+  });
+
+  it("hides the slides entry from a SERVANT", () => {
+    saveAuth(
+      {
+        accessToken: "test-token",
+        user: {
+          id: "u2",
+          email: "s@t.com",
+          phone: null,
+          first_name: "Servant",
+          last_name: "User",
+          date_of_birth: null,
+          address: null,
+          avatar: null,
+          role: "SERVANT",
+          status: "ACTIVE",
+          public_id: "p2",
+          created_at: "2026-01-01T00:00:00Z",
+          has_password: true,
+          email_verified: true,
+        },
+      },
+      true,
+    );
+    renderWithProviders(<AdminSidebar />, ["/admin/notifications"]);
+
+    expect(screen.queryByText("السلايدر")).not.toBeInTheDocument();
   });
 
   it("hides the ADMIN-only messages entry from a SERVANT", () => {

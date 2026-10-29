@@ -157,6 +157,13 @@ const PointsPage = lazyWithRetry(
   () => import("@/modules/points/pages/PointsPage"),
 );
 
+// Media module
+const SlidesPage = lazyWithRetry(() =>
+  import("@/modules/media/pages/admin/SlidesPage").then((m) => ({
+    default: m.SlidesPage,
+  })),
+);
+
 // Analytics module
 const MonthlyAnalyticsPage = lazyWithRetry(
   () => import("@/modules/analytics/pages/MonthlyAnalyticsPage"),
@@ -339,6 +346,18 @@ export const router = createBrowserRouter([
               <Suspense fallback={<PageSkeleton />}>
                 <QuizListPage />
               </Suspense>
+            ),
+          },
+          {
+            // The slides are managed by the admin alone (the owner,
+            // 2026-10-29): SERVANT gets the visible 403 page.
+            path: "landing/slides",
+            element: (
+              <RequireRole roles={["ADMIN"]}>
+                <Suspense fallback={<PageSkeleton />}>
+                  <SlidesPage />
+                </Suspense>
+              </RequireRole>
             ),
           },
           {

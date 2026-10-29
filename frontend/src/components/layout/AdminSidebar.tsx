@@ -7,6 +7,7 @@ import {
   Calendar,
   ClipboardList,
   History,
+  Image,
   LayoutDashboard,
   MessageSquare,
   ScanLine,
@@ -55,6 +56,7 @@ type NavKey =
   | "verseAnalytics"
   | "quizAnalytics"
   | "monthlyAnalytics"
+  | "slides"
   | "settings";
 
 interface SubItem {
@@ -127,6 +129,12 @@ const NAV_ITEMS: readonly (LinkItem | DisabledItem)[] = [
     adminOnly: true,
   },
   { to: "/admin/notifications", labelKey: "notifications", Icon: Bell },
+  {
+    to: "/admin/landing/slides",
+    labelKey: "slides",
+    Icon: Image,
+    adminOnly: true,
+  },
   {
     to: "/admin/analytics/verses",
     labelKey: "reports",
