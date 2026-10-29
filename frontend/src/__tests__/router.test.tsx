@@ -167,3 +167,94 @@ describe("the table of the routes", () => {
     ).not.toBeInTheDocument();
   });
 });
+
+describe("the map of the parents", () => {
+  it("gives every route a parent", async () => {
+    window.history.pushState({}, "", "/");
+    vi.resetModules();
+    const module = await import("@/router");
+
+    const collected: Array<{ path?: string; handle?: unknown }> = [];
+    const walk = (routes: unknown[]) => {
+      for (const route of routes) {
+        collected.push(route as { path?: string; handle?: unknown });
+        walk((route as { children?: unknown[] }).children ?? []);
+      }
+    };
+    walk(module.router.routes);
+
+    expect(collected).not.toHaveLength(0);
+    for (const route of collected) {
+      expect(
+        route.handle,
+        `no parent for the route ${String(route.path)}`,
+      ).toMatchObject({
+        parent: expect.any(String),
+      });
+    }
+  });
+
+  it("points every member screen back to the landing page", async () => {
+    window.history.pushState({}, "", "/");
+    vi.resetModules();
+    const module = await import("@/router");
+
+    const parentOf = (path: string): string | undefined => {
+      const found: string[] = [];
+      const walk = (routes: unknown[]) => {
+        for (const route of routes) {
+          if ((route as { path?: string }).path === path) {
+            found.push(
+              (route as { handle?: { parent?: string } }).handle?.parent ?? "",
+            );
+          }
+          if ((route as { children?: unknown[] }).children) {
+            walk((route as { children?: unknown[] }).children!);
+          }
+        }
+      };
+      walk(module.router.routes);
+      return found[0];
+    };
+
+    expect(parentOf("/profile")).toBe("/");
+    expect(parentOf("/notifications")).toBe("/");
+    expect(parentOf("/bible-verses/:verseId")).toBe("/");
+    expect(parentOf("/quizzes/:quizId/take")).toBe("/");
+    expect(parentOf("/quizzes/:quizId/result")).toBe("/");
+    expect(parentOf("/anonymous-messages")).toBe("/");
+    expect(parentOf("/points")).toBe("/");
+    expect(parentOf("attendance/check-in")).toBe("/");
+    expect(parentOf("attendance/history")).toBe("/");
+    expect(parentOf("attendance/absent")).toBe("/");
+  });
+
+  it("keeps the administration on its own dashboard", async () => {
+    window.history.pushState({}, "", "/");
+    vi.resetModules();
+    const module = await import("@/router");
+
+    const parentOf = (path: string): string | undefined => {
+      const found: string[] = [];
+      const walk = (routes: unknown[]) => {
+        for (const route of routes) {
+          if ((route as { path?: string }).path === path) {
+            found.push(
+              (route as { handle?: { parent?: string } }).handle?.parent ?? "",
+            );
+          }
+          if ((route as { children?: unknown[] }).children) {
+            walk((route as { children?: unknown[] }).children!);
+          }
+        }
+      };
+      walk(module.router.routes);
+      return found[0];
+    };
+
+    expect(parentOf("/admin")).toBe("/admin/dashboard");
+    expect(parentOf("/attendance")).toBe("/admin/dashboard");
+    expect(parentOf("dashboard")).toBe("/admin/dashboard");
+    expect(parentOf("notifications")).toBe("/admin/dashboard");
+  });
+});

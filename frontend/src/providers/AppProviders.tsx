@@ -5,7 +5,7 @@ import { LanguageProvider } from "@/i18n/LanguageProvider";
 import i18n from "@/i18n";
 
 import { Toaster } from "@/components/ui/sonner";
-import { router } from "@/router";
+import { router, FocusAfterNavigation } from "@/router";
 import { restoreSession } from "@/lib/session";
 
 const queryClient = new QueryClient({
@@ -67,6 +67,7 @@ export function AppProviders() {
       <LanguageProvider>
         <AppToaster />
         <RouterProvider router={router} />
+        <FocusAfterNavigation />
       </LanguageProvider>
     </QueryClientProvider>
   );

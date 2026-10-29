@@ -1,4 +1,4 @@
-import { lazy, Suspense, type ComponentType } from "react";
+import { lazy, Suspense, useEffect, type ComponentType } from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LandingPage } from "@/pages/landing/LandingPage";
 import { RegisterPage } from "@/pages/auth/register/RegisterPage";
@@ -169,44 +169,54 @@ const MonthlyAnalyticsPage = lazyWithRetry(
   () => import("@/modules/analytics/pages/MonthlyAnalyticsPage"),
 );
 
+// eslint-disable-next-line react-refresh/only-export-components
 export const router = createBrowserRouter([
   {
     path: "/",
+    handle: { parent: "/" },
     element: <LandingPage />,
   },
   {
     path: "/register",
+    handle: { parent: "/" },
     element: <RegisterPage />,
   },
   {
     path: "/login",
+    handle: { parent: "/" },
     element: <LoginPage />,
   },
   {
     path: "/forgot-password",
+    handle: { parent: "/" },
     element: <ForgotPasswordPage />,
   },
   {
     path: "/reset-password",
+    handle: { parent: "/" },
     element: <ResetPasswordPage />,
   },
   {
     path: "/google/callback",
+    handle: { parent: "/" },
     element: <GoogleCallbackPage />,
   },
   {
     // Step after registration: the account exists but stays inactive
     // until the emailed verification link is confirmed.
     path: "/verify-email",
+    handle: { parent: "/" },
     element: <CheckEmailPage />,
   },
   {
     // Target of the link inside the verification email.
     path: "/verify-email/confirm",
+    handle: { parent: "/" },
     element: <VerifyEmailResultPage />,
   },
   {
     path: "/profile",
+    handle: { parent: "/" },
     element: (
       <RequireAuth>
         <ProfilePage />
@@ -218,15 +228,22 @@ export const router = createBrowserRouter([
   {
     // ADMIN + SERVANT only; a signed-in MEMBER sees the visible 403 page.
     path: "/admin",
+    handle: { parent: "/admin/dashboard" },
     element: <RequireRole roles={["ADMIN", "SERVANT"]} />,
     errorElement: <ForbiddenPage />,
     children: [
-      { index: true, element: <Navigate to="/admin/dashboard" replace /> },
       {
+        index: true,
+        handle: { parent: "/admin/dashboard" },
+        element: <Navigate to="/admin/dashboard" replace />,
+      },
+      {
+        handle: { parent: "/" },
         element: <AttendanceLayout />,
         children: [
           {
             path: "attendance/check-in",
+            handle: { parent: "/" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <CheckInPage />
@@ -236,10 +253,12 @@ export const router = createBrowserRouter([
         ],
       },
       {
+        handle: { parent: "/admin/dashboard" },
         element: <AdminLayout />,
         children: [
           {
             path: "dashboard",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <AttendanceDashboardPage />
@@ -248,6 +267,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "attendance/history",
+            handle: { parent: "/" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <AttendanceHistoryPage />
@@ -256,6 +276,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "attendance/absent",
+            handle: { parent: "/" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <AbsentUsersPage />
@@ -264,6 +285,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "notifications",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <AdminNotificationsPage />
@@ -273,10 +295,12 @@ export const router = createBrowserRouter([
           {
             // ADMIN-only: SERVANT gets the visible 403 page, not a blank.
             path: "users",
+            handle: { parent: "/admin/dashboard" },
             element: <RequireRole roles={["ADMIN"]} />,
             children: [
               {
                 index: true,
+                handle: { parent: "/admin/dashboard" },
                 element: (
                   <Suspense fallback={<PageSkeleton />}>
                     <UsersAdminPage />
@@ -288,10 +312,12 @@ export const router = createBrowserRouter([
           {
             // ADMIN-only: SERVANT gets the visible 403 page, not a blank.
             path: "anonymous-messages",
+            handle: { parent: "/admin/dashboard" },
             element: <RequireRole roles={["ADMIN"]} />,
             children: [
               {
                 index: true,
+                handle: { parent: "/admin/dashboard" },
                 element: (
                   <Suspense fallback={<PageSkeleton />}>
                     <AdminAnonymousMessagesPage />
@@ -302,6 +328,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "bible-verses",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <BibleManagementPage />
@@ -310,6 +337,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "bible-verses/new",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <VerseFormPage />
@@ -318,6 +346,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "bible-verses/:verseId/edit",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <VerseFormPage />
@@ -326,6 +355,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "bible-verses/:verseId/schedule",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <VerseSchedulePage />
@@ -334,6 +364,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "bible-verses/:verseId/quiz",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <VerseQuizRedirectPage />
@@ -342,6 +373,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuizListPage />
@@ -362,6 +394,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes/manage",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuizManagePage />
@@ -370,6 +403,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes/:quizId/manage",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuizManagePage />
@@ -378,6 +412,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes/new",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuizBuilderPage />
@@ -386,6 +421,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes/:quizId/builder",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuizBuilderPage />
@@ -394,6 +430,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes/:quizId/questions/new",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuestionFormPage />
@@ -402,6 +439,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "quizzes/:quizId/questions/:questionId/edit",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuestionFormPage />
@@ -410,6 +448,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "analytics/verses",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <VerseAnalyticsPage />
@@ -418,6 +457,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "analytics/quizzes",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <QuizAnalyticsPage />
@@ -426,6 +466,7 @@ export const router = createBrowserRouter([
           },
           {
             path: "analytics/monthly",
+            handle: { parent: "/admin/dashboard" },
             element: (
               <Suspense fallback={<PageSkeleton />}>
                 <MonthlyAnalyticsPage />
@@ -440,24 +481,29 @@ export const router = createBrowserRouter([
   // -- Legacy attendance paths: bookmarks keep working (R-4) ---------------
   {
     path: "/attendance",
+    handle: { parent: "/admin/dashboard" },
     element: <Navigate to="/admin/attendance/check-in" replace />,
   },
   {
     path: "/attendance/check-in",
+    handle: { parent: "/admin/dashboard" },
     element: <Navigate to="/admin/attendance/check-in" replace />,
   },
   {
     path: "/attendance/dashboard",
+    handle: { parent: "/admin/dashboard" },
     element: <Navigate to="/admin/dashboard" replace />,
   },
   {
     path: "/attendance/history",
+    handle: { parent: "/admin/dashboard" },
     element: <Navigate to="/admin/attendance/history" replace />,
   },
 
   {
     // Public (D-9): anyone may submit; no token required.
     path: "/anonymous-messages",
+    handle: { parent: "/" },
     element: (
       <Suspense fallback={<PageSkeleton />}>
         <AnonymousMessagePage />
@@ -466,6 +512,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/bible-verses",
+    handle: { parent: "/" },
     element: (
       <RequireAuth>
         <Suspense fallback={<PageSkeleton />}>
@@ -476,6 +523,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/bible-verses/:verseId",
+    handle: { parent: "/" },
     element: (
       <RequireAuth>
         <Suspense fallback={<PageSkeleton />}>
@@ -486,6 +534,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/quizzes/:quizId/take",
+    handle: { parent: "/" },
     element: (
       <RequireAuth>
         <Suspense fallback={<PageSkeleton />}>
@@ -496,6 +545,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/quizzes/:quizId/result",
+    handle: { parent: "/" },
     element: (
       <RequireAuth>
         <Suspense fallback={<PageSkeleton />}>
@@ -506,6 +556,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/points",
+    handle: { parent: "/" },
     element: (
       <RequireAuth>
         <Suspense fallback={<PageSkeleton />}>
@@ -517,6 +568,7 @@ export const router = createBrowserRouter([
   {
     // Private section: content is members-only until signed in.
     path: "/blog",
+    handle: { parent: "/" },
     element: (
       <RequireAuth>
         <PlaceholderPage titleKey="blog" />
@@ -527,15 +579,18 @@ export const router = createBrowserRouter([
     // The gallery is gone: the old address keeps working as a redirect to
     // the landing page so bookmarks and old links never answer 404.
     path: "/gallery",
+    handle: { parent: "/" },
     element: <Navigate to="/" replace />,
   },
   {
     path: "/about-us",
+    handle: { parent: "/" },
     element: <AboutUsPage />,
   },
   {
     // Private: notifications are personal to the signed-in member.
     path: "/notifications",
+    handle: { parent: "/" },
     element: (
       <RequireAuth>
         <Suspense fallback={<PageSkeleton />}>
@@ -546,6 +601,68 @@ export const router = createBrowserRouter([
   },
   {
     path: "*",
+    handle: { parent: "/" },
     element: <NotFoundPage />,
   },
 ]);
+
+/**
+ * After a navigation, the focus goes to the `h1` of the new page (or to the
+ * main region when the page has no `h1`): a member who moves from page to
+ * page lands straight at the content of the page.
+ *
+ * Every navigation goes through the history of the browser, so the component
+ * watches `pushState`/`replaceState` and `popstate` and moves the focus once
+ * the new page has rendered. It needs no hook of the router, so it can be
+ * mounted once next to the router and it stays mounted for every page.
+ */
+export function FocusAfterNavigation() {
+  useEffect(() => {
+    const moveFocus = () => {
+      const target =
+        document.querySelector<HTMLElement>("h1") ??
+        document.querySelector<HTMLElement>("main, [role=main]");
+      if (target) {
+        target.focus({ preventScroll: true });
+      }
+    };
+
+    // The router renders the new page in a transition, so the focus must be
+    // moved after the render - a macrotask, not a microtask.
+    const scheduleFocus = () => {
+      setTimeout(moveFocus, 0);
+    };
+
+    const pushState = window.history.pushState;
+    const replaceState = window.history.replaceState;
+    window.history.pushState = function (
+      this: History,
+      data: unknown,
+      unused: string,
+      url?: string | URL | null,
+    ) {
+      pushState.call(this, data, unused, url);
+      scheduleFocus();
+    };
+    window.history.replaceState = function (
+      this: History,
+      data: unknown,
+      unused: string,
+      url?: string | URL | null,
+    ) {
+      replaceState.call(this, data, unused, url);
+      scheduleFocus();
+    };
+
+    window.addEventListener("popstate", scheduleFocus);
+    scheduleFocus();
+
+    return () => {
+      window.history.pushState = pushState;
+      window.history.replaceState = replaceState;
+      window.removeEventListener("popstate", scheduleFocus);
+    };
+  }, []);
+
+  return null;
+}
