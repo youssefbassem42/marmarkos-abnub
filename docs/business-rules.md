@@ -306,3 +306,11 @@ number.
 | `BR-74` | Only an active member with a verified email address has opted in to the blog mail; the author never receives it | `app/modules/notifications/application/services/notification_service.py` |
 | `BR-75` | The delivery is idempotent: a repeated publication event creates neither a second notification nor a second mail for the same member and post | `app/modules/notifications/infrastructure/persistence/notification_repository.py` |
 | `BR-76` | The mails are sent with bounded concurrency and the failure of one member never stops the other members | `app/modules/notifications/application/services/notification_service.py` |
+
+## The comments of the blog posts (the point 7 of the plan)
+
+| Identifier | The rule | Where it lives |
+|---|---|---|
+| `D-7` | The comments use the small safe HTML vocabulary of the editor, and their replies form a tree without a depth limit | `app/modules/comments/application/services/comment_content.py` |
+| `BR-78` | A comment stores only the safe HTML vocabulary of the editor: `p`, `br`, `strong`, `em`, `u`, `s`, `ul`, `ol`, `li`, `blockquote`, `span` with a palette colour, and `a` with an HTTP(S) or same-platform path; scripts, event handlers, unsafe URLs, and every other attribute are removed before storage | `app/modules/comments/application/services/comment_content.py` |
+| `BR-79` | A comment has at most 500 visible words; the backend counts the words of the sanitised HTML and rejects the request when the limit is exceeded | `app/modules/comments/application/services/comment_content.py` |
