@@ -1,3 +1,4 @@
+export * from "./useAdminBlogPost";
 export * from "./useAdminBlogPosts";
 export * from "./useBlogPost";
 export * from "./useBlogPosts";

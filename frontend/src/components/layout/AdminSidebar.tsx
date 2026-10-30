@@ -58,6 +58,7 @@ type NavKey =
   | "monthlyAnalytics"
   | "contentManagement"
   | "slides"
+  | "blogPosts"
   | "settings";
 
 interface SubItem {
@@ -72,6 +73,7 @@ interface SubItem {
     | "quizAnalytics"
     | "monthlyAnalytics"
     | "slides"
+    | "blogPosts"
   >;
 }
 
@@ -137,8 +139,11 @@ const NAV_ITEMS: readonly (LinkItem | DisabledItem)[] = [
     to: "/admin/landing/slides",
     labelKey: "contentManagement",
     Icon: FolderOpen,
-    subItems: [{ to: "/admin/landing/slides", labelKey: "slides" }],
-    subPathPrefix: "/admin/landing",
+    subItems: [
+      { to: "/admin/landing/slides", labelKey: "slides" },
+      { to: "/admin/blog/posts", labelKey: "blogPosts" },
+    ],
+    subPathPrefix: "/admin",
     adminOnly: true,
   },
   {

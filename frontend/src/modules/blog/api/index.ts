@@ -57,6 +57,14 @@ export const blogApi = {
     return response.data;
   },
 
+  /** One post for the administration (a draft included). */
+  getAdminPost: async (postId: string): Promise<BlogPostAdmin> => {
+    const response = await apiClient.get(`/admin/blog/posts/${postId}`, {
+      schema: blogPostAdminSchema,
+    });
+    return response.data;
+  },
+
   /** Create a draft, or a post with a publication date. */
   createPost: async (data: BlogPostCreatePayload): Promise<BlogPostAdmin> => {
     const response = await apiClient.post("/admin/blog/posts", data, {

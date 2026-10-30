@@ -10,4 +10,6 @@ export const blogKeys = {
   adminList: (params?: AdminBlogPostsListParams) =>
     [...blogKeys.posts(), "admin", params ?? {}] as const,
   detail: (postId: string) => [...blogKeys.posts(), "detail", postId] as const,
+  adminDetail: (postId: string) =>
+    [...blogKeys.posts(), "admin", "detail", postId] as const,
 };
