@@ -8,6 +8,7 @@
 import { apiClient } from "@/lib/api";
 import { paginated } from "@/lib/schemas/common";
 import {
+  blogCommentSchema,
   blogImageUploadSchema,
   blogPostAdminSchema,
   blogPostDetailSchema,
@@ -15,6 +16,10 @@ import {
 } from "@/lib/schemas/blog";
 import type {
   AdminBlogPostsListParams,
+  BlogComment,
+  BlogCommentCreatePayload,
+  BlogCommentUpdatePayload,
+  BlogCommentsListParams,
   BlogImageUpload,
   BlogPostAdmin,
   BlogPostCreatePayload,
@@ -44,6 +49,47 @@ export const blogApi = {
       schema: blogPostDetailSchema,
     });
     return response.data;
+  },
+
+  /** The visible tree of comments for a published post. */
+  getComments: async (
+    postId: string,
+    params?: BlogCommentsListParams,
+  ): Promise<Paginated<BlogComment>> => {
+    const response = await apiClient.get(`/blog/posts/${postId}/comments`, {
+      params,
+      schema: paginated(blogCommentSchema),
+    });
+    return response.data;
+  },
+
+  /** Create a top-level comment or a reply. */
+  createComment: async (
+    postId: string,
+    data: BlogCommentCreatePayload,
+  ): Promise<BlogComment> => {
+    const response = await apiClient.post(
+      `/blog/posts/${postId}/comments`,
+      data,
+      { schema: blogCommentSchema },
+    );
+    return response.data;
+  },
+
+  /** Edit a comment owned by the signed-in member. */
+  updateComment: async (
+    commentId: string,
+    data: BlogCommentUpdatePayload,
+  ): Promise<BlogComment> => {
+    const response = await apiClient.patch(`/blog/comments/${commentId}`, data, {
+      schema: blogCommentSchema,
+    });
+    return response.data;
+  },
+
+  /** Soft-delete a comment; the server keeps its replies in the tree. */
+  deleteComment: async (commentId: string): Promise<void> => {
+    await apiClient.delete(`/blog/comments/${commentId}`);
   },
 
   /** Every post, including drafts, scheduled posts and archived posts. */

@@ -42,6 +42,15 @@ export interface BlogCommentsListParams {
   size?: number;
 }
 
+export interface BlogCommentCreatePayload {
+  content: string;
+  parent_comment_id?: string | null;
+}
+
+export interface BlogCommentUpdatePayload {
+  content: string;
+}
+
 export interface AdminBlogPostsListParams {
   page?: number;
   size?: number;
