@@ -511,3 +511,47 @@ async def test_the_tick_publishes_the_scheduled_post_when_its_date_comes(
     again = await publish_due(async_session_factory)
     assert again["published"] == 0
     assert again["skipped"] == 0
+
+
+async def test_the_administration_reads_one_post_with_its_fields(
+    client: AsyncClient, db_engine
+) -> None:
+    """The form of the administration needs the post it edits (a draft too)."""
+    admin = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-admin-one@example.com",
+        role=RoleName.ADMIN,
+    )
+    created = await _create_post(client, admin, title="موضوع واحد")
+
+    response = await client.get(f"{ADMIN_URL}/{created['id']}", headers=admin)
+
+    assert response.status_code == 200, response.text
+    body = response.json()
+    assert body["id"] == created["id"]
+    assert body["title"] == "موضوع واحد"
+    assert body["status"] == "DRAFT"
+    assert body["author_id"]
+
+
+async def test_a_member_does_not_read_the_post_of_the_administration(
+    client: AsyncClient, db_engine
+) -> None:
+    admin = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-admin-two@example.com",
+        role=RoleName.ADMIN,
+    )
+    member = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-member-two@example.com",
+        role=RoleName.MEMBER,
+    )
+    created = await _create_post(client, admin, title="موضوع محمي")
+
+    response = await client.get(f"{ADMIN_URL}/{created['id']}", headers=member)
+
+    assert response.status_code == 403

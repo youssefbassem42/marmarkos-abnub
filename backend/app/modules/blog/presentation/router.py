@@ -203,6 +203,21 @@ async def list_admin_blog_posts(
     return await list_admin_posts(uow, PageParams(page=page, size=size))
 
 
+@router.get(
+    "/admin/blog/posts/{post_id}",
+    response_model=BlogPostAdminResponse,
+    responses=_MANAGER_FAILURES,
+)
+async def get_admin_blog_post(
+    post_id: UUID,
+    actor: BlogManager,
+    uow: _UoW,
+) -> BlogPostAdminResponse:
+    """One post with its administration fields (a draft included)."""
+    _ = actor
+    return await _admin_response(uow, post_id)
+
+
 @router.post(
     "/admin/blog/posts",
     status_code=status.HTTP_201_CREATED,
