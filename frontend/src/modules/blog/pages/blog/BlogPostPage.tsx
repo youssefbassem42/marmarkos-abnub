@@ -7,6 +7,7 @@ import { PageHeader } from "@/components/common/PageHeader";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateOrEmpty } from "@/lib/datetime";
+import { CommentSection } from "../../components/CommentSection";
 import { useBlogPost } from "../../hooks";
 
 /** One published post and its server-sanitised HTML body. */
@@ -131,6 +132,8 @@ export function BlogPostPage() {
             />
           </div>
         </article>
+
+        <CommentSection postId={post.id} />
       </main>
     </div>
   );

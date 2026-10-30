@@ -81,9 +81,13 @@ export const blogApi = {
     commentId: string,
     data: BlogCommentUpdatePayload,
   ): Promise<BlogComment> => {
-    const response = await apiClient.patch(`/blog/comments/${commentId}`, data, {
-      schema: blogCommentSchema,
-    });
+    const response = await apiClient.patch(
+      `/blog/comments/${commentId}`,
+      data,
+      {
+        schema: blogCommentSchema,
+      },
+    );
     return response.data;
   },
 
