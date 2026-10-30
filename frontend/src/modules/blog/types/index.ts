@@ -9,6 +9,8 @@ import type { z } from "zod";
 
 import type {
   blogAuthorSchema,
+  blogCommentAuthorSchema,
+  blogCommentSchema,
   blogImageUploadSchema,
   blogPostAdminSchema,
   blogPostDetailSchema,
@@ -24,10 +26,18 @@ export type BlogPostSummary = z.infer<typeof blogPostSummarySchema>;
 export type BlogPostDetail = z.infer<typeof blogPostDetailSchema>;
 export type BlogPostAdmin = z.infer<typeof blogPostAdminSchema>;
 export type BlogImageUpload = z.infer<typeof blogImageUploadSchema>;
+export type BlogCommentAuthor = z.infer<typeof blogCommentAuthorSchema>;
+export type BlogComment = z.infer<typeof blogCommentSchema>;
 
 export interface BlogPostsListParams {
   tag?: string;
   q?: string;
+  page?: number;
+  size?: number;
+}
+
+/** The top-level comments are paginated; every root keeps its replies. */
+export interface BlogCommentsListParams {
   page?: number;
   size?: number;
 }

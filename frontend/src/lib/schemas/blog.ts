@@ -69,3 +69,40 @@ export const blogPostAdminSchema = loose({
 export const blogImageUploadSchema = loose({
   url: z.string(),
 });
+
+/** The public identity of the author of a comment. */
+export const blogCommentAuthorSchema = loose({
+  id: z.string(),
+  full_name: z.string(),
+});
+
+/**
+ * The fields of a comment before its replies are attached.
+ *
+ * The tree is recursive, so the replies are added by the lazy schema
+ * below. Keeping the flat fields in their own schema lets TypeScript
+ * infer every field of a comment from zod (the answer type is never
+ * written twice).
+ */
+const blogCommentBaseSchema = loose({
+  id: z.string(),
+  post_id: z.string(),
+  parent_comment_id: z.string().nullable(),
+  content: z.string(),
+  status: z.string(),
+  author: blogCommentAuthorSchema,
+  created_at: z.string(),
+  updated_at: z.string(),
+});
+
+type BlogCommentValue = z.infer<typeof blogCommentBaseSchema> & {
+  replies: BlogCommentValue[];
+};
+
+/** One comment and the replies nested underneath it (BR-80). */
+export const blogCommentSchema = z.lazy((): z.ZodType<BlogCommentValue> =>
+  loose({
+    ...blogCommentBaseSchema.shape,
+    replies: z.array(blogCommentSchema),
+  }),
+);
