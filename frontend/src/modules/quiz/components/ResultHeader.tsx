@@ -15,8 +15,8 @@ export function ResultHeader() {
         <ArrowRight className="h-4 w-4" aria-hidden="true" />
         {tCommon("back")}
       </Link>
-      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-yellow-100 dark:bg-yellow-950">
-        <Trophy className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+      <div className="flex h-16 w-16 items-center justify-center rounded-full bg-brand-orange/10 dark:bg-navy/90">
+        <Trophy className="h-8 w-8 text-brand-orange dark:text-brand-orange" />
       </div>
       <div>
         <h1 className="text-2xl font-bold">{t("result.completed")}</h1>

@@ -20,10 +20,10 @@ export function QuizTimer({
       className={cn(
         "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium tabular-nums",
         isExpired &&
-          "border-red-500/50 bg-red-50 text-red-600 dark:bg-red-950 dark:text-red-400",
+          "border-brand-red/50 bg-brand-red/10 text-brand-red dark:bg-navy/90 dark:text-brand-red",
         isWarning &&
           !isExpired &&
-          "border-orange-500/50 bg-orange-50 text-orange-600 dark:bg-orange-950 dark:text-orange-400",
+          "border-brand-orange/50 bg-brand-orange/10 text-brand-orange dark:bg-navy/90 dark:text-brand-orange",
         !isWarning &&
           !isExpired &&
           "border-border bg-muted text-muted-foreground",

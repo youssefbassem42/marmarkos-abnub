@@ -35,7 +35,7 @@ export function ScoreSummary({
       <div className="grid grid-cols-3 gap-3">
         <Card>
           <CardContent className="flex items-center gap-2 p-3">
-            <CheckCircle className="h-5 w-5 shrink-0 text-green-600 dark:text-green-400" />
+            <CheckCircle className="h-5 w-5 shrink-0 text-mint dark:text-mint" />
             <div>
               <p className="text-lg font-semibold leading-tight">
                 {correctCount}
@@ -48,7 +48,7 @@ export function ScoreSummary({
         </Card>
         <Card>
           <CardContent className="flex items-center gap-2 p-3">
-            <XCircle className="h-5 w-5 shrink-0 text-red-600 dark:text-red-400" />
+            <XCircle className="h-5 w-5 shrink-0 text-brand-red dark:text-brand-red" />
             <div>
               <p className="text-lg font-semibold leading-tight">
                 {incorrectCount}

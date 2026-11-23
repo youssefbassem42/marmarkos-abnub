@@ -19,7 +19,7 @@ export function PointsProgressBars({
       label: t("result.progress.week"),
       earned: weekPoints,
       max: Math.max(weekPoints, 100),
-      color: "bg-emerald-500",
+      color: "bg-mint",
     },
     {
       label: t("result.progress.month"),
@@ -31,7 +31,7 @@ export function PointsProgressBars({
       label: t("result.progress.lifetime"),
       earned: lifetimePoints,
       max: Math.max(lifetimePoints, 1000),
-      color: "bg-orange-500",
+      color: "bg-brand-orange",
     },
   ];
 

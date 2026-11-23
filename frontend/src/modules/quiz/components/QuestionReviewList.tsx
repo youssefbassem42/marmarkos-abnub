@@ -52,9 +52,9 @@ export function QuestionReviewList({
                 >
                   <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full">
                     {q.is_correct ? (
-                      <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      <CheckCircle className="h-5 w-5 text-mint dark:text-mint" />
                     ) : (
-                      <XCircle className="h-5 w-5 text-red-600 dark:text-red-400" />
+                      <XCircle className="h-5 w-5 text-brand-red dark:text-brand-red" />
                     )}
                   </div>
                   <CardTitle className="flex-1 text-sm font-medium">
@@ -92,10 +92,10 @@ export function QuestionReviewList({
                           className={cn(
                             "rounded-lg border p-2.5 text-sm",
                             isCorrectOption &&
-                              "border-green-500 bg-green-50 dark:bg-green-950",
+                              "border-mint bg-mint/10 dark:bg-navy/90",
                             isUserSelected &&
                               !isCorrectOption &&
-                              "border-red-500 bg-red-50 dark:bg-red-950",
+                              "border-brand-red bg-brand-red/10 dark:bg-navy/90",
                             !isCorrectOption &&
                               !isUserSelected &&
                               "border-transparent bg-muted/50",

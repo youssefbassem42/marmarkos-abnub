@@ -16,7 +16,7 @@ export function AutosaveIndicator({ status }: AutosaveIndicatorProps) {
     <div
       className={cn(
         "inline-flex items-center gap-1.5 text-xs",
-        status === "saved" && "text-green-600 dark:text-green-400",
+        status === "saved" && "text-mint dark:text-mint",
         status === "saving" && "text-muted-foreground",
         status === "failed" && "text-destructive",
       )}
