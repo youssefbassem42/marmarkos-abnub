@@ -1,4 +1,5 @@
 import { spawn } from "node:child_process";
+import { existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -36,8 +37,12 @@ function run(command: string, args: string[], env: NodeJS.ProcessEnv) {
 }
 
 export default async function globalSetup(): Promise<void> {
+  // The same resolution as the API of the run: the variable first, the
+  // environment of the backend next, the interpreter of the system last
+  // (the pipeline has no environment of its own).
+  const venvPython = path.join(backend, ".venv/bin/python");
   const python =
-    process.env.E2E_PYTHON ?? path.join(backend, ".venv/bin/python");
+    process.env.E2E_PYTHON ?? (existsSync(venvPython) ? venvPython : "python3");
   const databaseUrl =
     process.env.E2E_DATABASE_URL ??
     "postgresql+asyncpg://marmarkos:marmarkos@127.0.0.1:55432/marmarkos_e2e";

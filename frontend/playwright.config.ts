@@ -1,3 +1,6 @@
+import { existsSync } from "node:fs";
+import path from "node:path";
+
 import { defineConfig, devices } from "@playwright/test";
 
 /**
@@ -23,6 +26,20 @@ const API_URL = `http://127.0.0.1:${API_PORT}`;
 
 const BACKEND = "../backend";
 
+/**
+ * The Python that runs the API of the end-to-end run.
+ *
+ * The virtual environment of the backend is the interpreter of the
+ * local runs; the pipeline installs the backend with the interpreter of
+ * the runner and has no environment of its own. The path of the
+ * environment is therefore a **fallback**, never a requirement: the
+ * variable `E2E_PYTHON` wins, the environment comes next, and the
+ * interpreter of the system is the last choice.
+ */
+const VENV_PYTHON = path.join(BACKEND, ".venv/bin/python");
+const PYTHON =
+  process.env.E2E_PYTHON ?? (existsSync(VENV_PYTHON) ? VENV_PYTHON : "python3");
+
 export default defineConfig({
   testDir: "./e2e",
   timeout: 60_000,
@@ -47,8 +64,7 @@ export default defineConfig({
   ],
   webServer: [
     {
-      command:
-        ".venv/bin/uvicorn app.main:app --host 127.0.0.1 --port " + API_PORT,
+      command: `${PYTHON} -m uvicorn app.main:app --host 127.0.0.1 --port ${API_PORT}`,
       cwd: BACKEND,
       url: `${API_URL}/api/v1/health`,
       reuseExistingServer: !process.env.CI,
