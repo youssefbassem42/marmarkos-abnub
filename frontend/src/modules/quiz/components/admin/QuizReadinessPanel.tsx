@@ -68,9 +68,9 @@ export function QuizReadinessPanel({ quizId }: QuizReadinessPanelProps) {
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-medium font-arabic">
             {validation.is_publishable ? (
-              <CheckCircle2 className="h-4 w-4 text-green-600" />
+              <CheckCircle2 className="h-4 w-4 text-mint" />
             ) : (
-              <AlertTriangle className="h-4 w-4 text-yellow-600" />
+              <AlertTriangle className="h-4 w-4 text-brand-orange" />
             )}
             {t("admin.validation.readyTitle")}
           </CardTitle>
@@ -79,7 +79,7 @@ export function QuizReadinessPanel({ quizId }: QuizReadinessPanelProps) {
           {rules.map((rule) => (
             <div key={rule.code} className="flex items-center gap-3 text-sm">
               {rule.passed ? (
-                <Check className="h-4 w-4 shrink-0 text-green-600" />
+                <Check className="h-4 w-4 shrink-0 text-mint" />
               ) : (
                 <XCircle className="h-4 w-4 shrink-0 text-destructive" />
               )}
@@ -95,22 +95,22 @@ export function QuizReadinessPanel({ quizId }: QuizReadinessPanelProps) {
           ))}
 
           {validation.is_publishable ? (
-            <div className="mt-2 rounded-lg bg-green-50 p-3 text-center dark:bg-green-950">
-              <div className="flex items-center justify-center gap-2 text-sm font-medium text-green-700 dark:text-green-300 font-arabic">
+            <div className="mt-2 rounded-lg bg-mint/10 p-3 text-center dark:bg-navy/90">
+              <div className="flex items-center justify-center gap-2 text-sm font-medium text-mint dark:text-mint font-arabic">
                 <CheckCircle2 className="h-4 w-4" />
                 {t("admin.validation.readyToPublish")}
               </div>
-              <p className="mt-1 text-xs text-green-600 dark:text-green-400 font-arabic">
+              <p className="mt-1 text-xs text-mint dark:text-mint font-arabic">
                 {t("admin.validation.readyHint")}
               </p>
             </div>
           ) : (
-            <div className="mt-2 rounded-lg bg-amber-50 p-3 text-center dark:bg-amber-950">
-              <div className="flex items-center justify-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-300 font-arabic">
+            <div className="mt-2 rounded-lg bg-brand-orange/10 p-3 text-center dark:bg-navy/90">
+              <div className="flex items-center justify-center gap-2 text-sm font-medium text-brand-orange dark:text-brand-orange font-arabic">
                 <AlertTriangle className="h-4 w-4" />
                 {t("admin.validation.notReady")}
               </div>
-              <p className="mt-1 text-xs text-amber-600 dark:text-amber-400 font-arabic">
+              <p className="mt-1 text-xs text-brand-orange dark:text-brand-orange font-arabic">
                 {t("admin.validation.fixIssuesHint")}
               </p>
             </div>
@@ -122,7 +122,7 @@ export function QuizReadinessPanel({ quizId }: QuizReadinessPanelProps) {
       <Card>
         <CardHeader className="pb-3">
           <CardTitle className="flex items-center gap-2 text-sm font-medium font-arabic">
-            <Lightbulb className="h-4 w-4 text-yellow-500" />
+            <Lightbulb className="h-4 w-4 text-brand-orange" />
             {t("admin.builder.tips")}
           </CardTitle>
         </CardHeader>

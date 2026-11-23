@@ -205,7 +205,7 @@ export function QuestionOverviewList({
                       </TableCell>
                       <TableCell className="text-start">
                         {q.options.filter((o) => o.is_correct).length > 0 ? (
-                          <span className="text-green-600 text-sm">✓</span>
+                          <span className="text-mint text-sm">✓</span>
                         ) : (
                           <span className="text-destructive text-sm">✗</span>
                         )}

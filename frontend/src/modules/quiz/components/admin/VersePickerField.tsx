@@ -28,9 +28,9 @@ interface VersePickerFieldProps {
 }
 
 const STATUS_STYLES: Record<VerseStatus, string> = {
-  PUBLISHED:
-    "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
-  SCHEDULED: "bg-sky-100 text-sky-700 dark:bg-sky-950 dark:text-sky-400",
+  PUBLISHED: "bg-mint/10 text-mint dark:bg-navy/90 dark:text-mint",
+  SCHEDULED:
+    "bg-brand-blue/10 text-brand-blue dark:bg-navy/90 dark:text-brand-blue",
   DRAFT: "bg-muted text-muted-foreground",
   ARCHIVED: "bg-muted text-muted-foreground line-through",
 };

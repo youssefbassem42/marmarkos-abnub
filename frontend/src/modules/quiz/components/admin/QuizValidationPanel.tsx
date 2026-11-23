@@ -53,7 +53,7 @@ export function QuizValidationPanel({ quizId }: QuizValidationPanelProps) {
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
           {validation.is_publishable ? (
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <CheckCircle2 className="h-4 w-4 text-mint" />
           ) : (
             <XCircle className="h-4 w-4 text-destructive" />
           )}
@@ -64,7 +64,7 @@ export function QuizValidationPanel({ quizId }: QuizValidationPanelProps) {
       </CardHeader>
       <CardContent>
         {validation.is_publishable ? (
-          <p className="text-sm text-green-600 font-arabic">
+          <p className="text-sm text-mint font-arabic">
             {t("admin.validation.allPassed")}
           </p>
         ) : (
@@ -72,7 +72,7 @@ export function QuizValidationPanel({ quizId }: QuizValidationPanelProps) {
             {validation.rules.map((rule: QuizValidationRule) => (
               <li key={rule.code} className="flex items-start gap-2 text-sm">
                 {rule.passed ? (
-                  <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" />
+                  <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-mint" />
                 ) : (
                   <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
                 )}

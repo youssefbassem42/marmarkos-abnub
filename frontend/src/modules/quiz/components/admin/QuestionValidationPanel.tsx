@@ -42,9 +42,9 @@ export function QuestionValidationPanel({
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center gap-2 text-sm font-medium">
           {allPassed ? (
-            <CheckCircle2 className="h-4 w-4 text-green-600" />
+            <CheckCircle2 className="h-4 w-4 text-mint" />
           ) : (
-            <XCircle className="h-4 w-4 text-yellow-600" />
+            <XCircle className="h-4 w-4 text-brand-orange" />
           )}
           {allPassed
             ? t("admin.validation.readyToPublish")
@@ -56,7 +56,7 @@ export function QuestionValidationPanel({
           {rules.map((rule, i) => (
             <li key={i} className="flex items-start gap-2 text-sm">
               {rule.passed ? (
-                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-green-600" />
+                <CheckCircle2 className="mt-0.5 h-3.5 w-3.5 shrink-0 text-mint" />
               ) : (
                 <XCircle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-destructive" />
               )}

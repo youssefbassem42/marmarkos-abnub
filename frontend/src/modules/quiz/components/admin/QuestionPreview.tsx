@@ -56,7 +56,7 @@ export function QuestionPreview({ question, options }: QuestionPreviewProps) {
         </div>
 
         {correctIndex >= 0 && (
-          <p className="text-xs text-green-600">
+          <p className="text-xs text-mint">
             {t("admin.question.correctAnswerLabel", {
               letter:
                 letters[correctIndex] ?? String.fromCharCode(65 + correctIndex),
