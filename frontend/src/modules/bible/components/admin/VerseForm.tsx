@@ -210,7 +210,7 @@ export function VerseForm() {
           <div className="space-y-2">
             <Label>{t("admin.form.fields.verseRef")}</Label>
             <div className="flex items-center gap-2 rounded-md border border-border bg-muted/50 px-3 py-2">
-              <CheckCircle className="h-4 w-4 shrink-0 text-green-600" />
+              <CheckCircle className="h-4 w-4 shrink-0 text-mint" />
               <span className="text-sm font-medium text-foreground">
                 {generateVerseRef(
                   watchedBook as BibleBookEnglish,
