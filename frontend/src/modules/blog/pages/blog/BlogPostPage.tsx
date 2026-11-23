@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateOrEmpty } from "@/lib/datetime";
 import { CommentSection } from "../../components/CommentSection";
+import { LikeButton } from "../../components/LikeButton";
 import { useBlogPost } from "../../hooks";
 
 /** One published post and its server-sanitised HTML body. */
@@ -132,6 +133,10 @@ export function BlogPostPage() {
             />
           </div>
         </article>
+
+        <div className="flex justify-end">
+          <LikeButton postId={post.id} />
+        </div>
 
         <CommentSection postId={post.id} />
       </main>

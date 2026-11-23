@@ -1551,6 +1551,11 @@ export const ar = {
         check: "علامة صح",
       },
     },
+    likes: {
+      like: "أعجبني ({{count}})",
+      liked: "أعجبك ({{count}})",
+      signInHint: "سجّل الدخول لتعبير عن إعجابك",
+    },
     comments: {
       title: "التعليقات",
       empty: "لا توجد تعليقات بعد، كن أول التعليقات.",
