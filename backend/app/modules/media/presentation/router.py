@@ -101,6 +101,24 @@ async def create_landing_slide_endpoint(
     return item
 
 
+# The literal path is declared **before** the parameterised one: a
+# router that matches "/admin/landing/slides/{slide_id}" first answers
+# the OPTIONS of "/admin/landing/slides/reorder" with the methods of the
+# slide (GET, PATCH, DELETE) and never with POST. The contract test of
+# the API compares the Allow header with the schema (ST205).
+@router.post(
+    "/admin/landing/slides/reorder",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses=_ADMIN_FAILURES,
+)
+async def reorder_landing_slides_endpoint(
+    actor: AdminUser, uow: _UoW, payload: LandingSlideReorderRequest
+) -> Response:
+    """Persist the ids as the new display order (admin only)."""
+    await reorder_landing_slides(uow, payload.ids)
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
+
+
 @router.patch(
     "/admin/landing/slides/{slide_id}",
     response_model=LandingSlideAdminItem,
@@ -145,17 +163,4 @@ async def update_landing_slide_endpoint(
 async def delete_landing_slide_endpoint(slide_id: UUID, actor: AdminUser, uow: _UoW) -> Response:
     """Delete a slide (admin only)."""
     await delete_landing_slide(uow, slide_id)
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
-
-
-@router.post(
-    "/admin/landing/slides/reorder",
-    status_code=status.HTTP_204_NO_CONTENT,
-    responses=_ADMIN_FAILURES,
-)
-async def reorder_landing_slides_endpoint(
-    actor: AdminUser, uow: _UoW, payload: LandingSlideReorderRequest
-) -> Response:
-    """Persist the ids as the new display order (admin only)."""
-    await reorder_landing_slides(uow, payload.ids)
     return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -203,6 +203,33 @@ async def list_admin_blog_posts(
     return await list_admin_posts(uow, PageParams(page=page, size=size))
 
 
+# The literal path is declared **before** the parameterised one: a
+# router that matches "/admin/blog/posts/{post_id}" first answers the
+# OPTIONS of "/admin/blog/posts/cover" with the methods of the post
+# (GET, PATCH, DELETE) and never with POST. The contract test of the
+# API compares the Allow header with the schema (ST205).
+@router.post(
+    "/admin/blog/posts/cover",
+    status_code=status.HTTP_201_CREATED,
+    response_model=BlogImageUploadResponse,
+    responses=_MANAGER_FAILURES,
+)
+async def upload_blog_cover(
+    actor: BlogManager,
+    file: Annotated[UploadFile, File(...)],
+) -> BlogImageUploadResponse:
+    """Upload a post cover through the shared media service (BR-67)."""
+    _ = actor
+    data = await file.read()
+    url = await upload_image(
+        data,
+        file.content_type or "",
+        folder="blog-covers",
+        max_bytes=1 * 1024 * 1024,
+    )
+    return BlogImageUploadResponse(url=url)
+
+
 @router.get(
     "/admin/blog/posts/{post_id}",
     response_model=BlogPostAdminResponse,
@@ -233,28 +260,6 @@ async def create_blog_post(
     post = await create_post(uow, actor, payload)
     await uow.commit()
     return await _admin_response(uow, post.id)
-
-
-@router.post(
-    "/admin/blog/posts/cover",
-    status_code=status.HTTP_201_CREATED,
-    response_model=BlogImageUploadResponse,
-    responses=_MANAGER_FAILURES,
-)
-async def upload_blog_cover(
-    actor: BlogManager,
-    file: Annotated[UploadFile, File(...)],
-) -> BlogImageUploadResponse:
-    """Upload a post cover through the shared media service (BR-67)."""
-    _ = actor
-    data = await file.read()
-    url = await upload_image(
-        data,
-        file.content_type or "",
-        folder="blog-covers",
-        max_bytes=1 * 1024 * 1024,
-    )
-    return BlogImageUploadResponse(url=url)
 
 
 @router.patch(

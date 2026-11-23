@@ -14,6 +14,15 @@ jobs:
   e2e:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        # The pyproject.toml of the backend lives in `backend/`; without
+        # this the step of the installation ran in the root of the
+        # repository, where there is no package to install, and the job
+        # died before the first test (the run never reached the
+        # browser).
+        working-directory: backend
+
     env:
       # The browser, the API and the database of the run. The values are
       # throw-away test secrets (32+ bytes, as RFC 7518 asks for HS256).
@@ -64,12 +73,12 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
-          cd frontend && npm ci && cd ..
+          npm ci --prefix ../frontend
 
       - name: Install the browser
         # The end-to-end tests drive a real Chromium (QA-001): a member
         # signs in, takes a quiz and a servant records a check-in.
-        run: npx --prefix frontend playwright install --with-deps chromium
+        run: npx --prefix ../frontend playwright install --with-deps chromium
 
       - name: Run the end-to-end tests
         # The run creates its own database (marmarkos_e2e), applies the
