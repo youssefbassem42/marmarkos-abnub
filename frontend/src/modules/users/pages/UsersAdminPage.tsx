@@ -32,12 +32,11 @@ const ROLE_STYLES: Record<UserRole, string> = {
 };
 
 const STATUS_STYLES: Record<UserStatus, string> = {
-  ACTIVE:
-    "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400",
+  ACTIVE: "bg-mint/10 text-mint dark:bg-navy/90 dark:text-mint",
   INACTIVE: "bg-muted text-muted-foreground",
   SUSPENDED:
-    "bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-400",
-  BANNED: "bg-red-100 text-red-700 dark:bg-red-950 dark:text-red-400",
+    "bg-brand-orange/10 text-brand-orange dark:bg-navy/90 dark:text-brand-orange",
+  BANNED: "bg-brand-red/10 text-brand-red dark:bg-navy/90 dark:text-brand-red",
 };
 
 function formatDateTime(value: string | null, locale: string): string {
@@ -93,7 +92,7 @@ export function UsersAdminPage() {
       label: t("kpi.active"),
       value: stats.active,
       Icon: UserCheck,
-      color: "text-emerald-600",
+      color: "text-mint",
     },
     {
       label: t("kpi.inactive"),
