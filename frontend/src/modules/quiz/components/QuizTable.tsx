@@ -23,9 +23,9 @@ interface QuizTableProps {
 
 const STATUS_STYLES: Record<QuizStatus, string> = {
   DRAFT: "bg-muted text-muted-foreground",
-  PUBLISHED:
-    "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
-  ARCHIVED: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+  PUBLISHED: "bg-mint/10 text-mint dark:bg-navy/90 dark:text-mint",
+  ARCHIVED:
+    "bg-brand-red/10 text-brand-red dark:bg-navy/90 dark:text-brand-red",
 };
 
 export function QuizTable({ items, isPending }: QuizTableProps) {

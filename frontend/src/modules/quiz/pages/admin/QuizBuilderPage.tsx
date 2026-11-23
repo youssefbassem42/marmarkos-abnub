@@ -456,10 +456,10 @@ export default function QuizBuilderPage() {
                       }
                     />
                     {existingQuiz.data && (
-                      <div className="flex items-start gap-3 rounded-xl border border-amber-300 bg-amber-50 p-3 dark:border-amber-900 dark:bg-amber-950/40">
-                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" />
+                      <div className="flex items-start gap-3 rounded-xl border border-brand-orange/30 bg-brand-orange/10 p-3 dark:border-brand-orange/30 dark:bg-navy/90">
+                        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-brand-orange" />
                         <div className="min-w-0 text-sm font-arabic">
-                          <p className="text-amber-800 dark:text-amber-300">
+                          <p className="text-brand-orange dark:text-brand-orange">
                             {t("admin.builder.verseHasQuiz", {
                               title: existingQuiz.data.title,
                             })}
