@@ -227,15 +227,26 @@ export function AdminSidebar() {
                       <SidebarMenuSub>
                         {item.subItems?.map((sub) => (
                           <SidebarMenuSubItem key={sub.to}>
-                            <NavLink to={sub.to}>
-                              {({ isActive }) => (
-                                <SidebarMenuSubButton isActive={isActive}>
-                                  <span className="font-arabic">
+                            {/*
+                              The button of the shadcn set is a link of
+                              its own: wrapping a router link in it made
+                              two links inside one another (the browser
+                              complained and the keyboard reached only
+                              the outer one). The `asChild` makes the
+                              router link the button itself.
+                            */}
+                            <SidebarMenuSubButton asChild>
+                              <NavLink to={sub.to}>
+                                {({ isActive }) => (
+                                  <span
+                                    data-active={isActive}
+                                    className="font-arabic data-[active=true]:bg-sidebar-accent data-[active=true]:text-sidebar-accent-foreground"
+                                  >
                                     {t(`nav.${sub.labelKey}`)}
                                   </span>
-                                </SidebarMenuSubButton>
-                              )}
-                            </NavLink>
+                                )}
+                              </NavLink>
+                            </SidebarMenuSubButton>
                           </SidebarMenuSubItem>
                         ))}
                       </SidebarMenuSub>

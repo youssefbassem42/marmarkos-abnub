@@ -51,20 +51,18 @@ function signInAsAdmin() {
 describe("admin sidebar (D-8)", () => {
   afterEach(() => clearAuth());
 
-  it("renders all ten design nav items in order for an ADMIN", () => {
+  it("renders every nav item of the platform in order for an ADMIN", () => {
     signInAsAdmin();
     const labels = [
       "لوحة التحكم",
       "الأعضاء",
       "الحضور",
-      "الفعاليات",
       "أقسام الكتاب المقدس",
       "الاختبارات",
       "الرسائل",
       "الإشعارات",
       "إدارة المحتوى",
       "التقارير",
-      "الإعدادات",
     ];
 
     renderWithProviders(<AdminSidebar />, ["/admin/dashboard"]);
@@ -74,17 +72,14 @@ describe("admin sidebar (D-8)", () => {
     }
   });
 
-  it("renders disabled items as aria-disabled and never as links", () => {
+  it("shows no entry that leads nowhere", () => {
+    // The sections that do not exist yet are not in the menu: an entry
+    // that cannot be opened is an entry that only disappoints.
     signInAsAdmin();
     renderWithProviders(<AdminSidebar />, ["/admin/dashboard"]);
 
     for (const label of ["الفعاليات", "الإعدادات"]) {
-      const item = screen.getByText(label);
-      const button = item.closest("button");
-      expect(button).not.toBeNull();
-      expect(button).toHaveAttribute("aria-disabled");
-      // Not wrapped in a router link.
-      expect(item.closest("a")).toBeNull();
+      expect(screen.queryByText(label)).toBeNull();
     }
   });
 
