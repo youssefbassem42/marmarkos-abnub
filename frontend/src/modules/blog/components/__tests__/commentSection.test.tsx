@@ -5,7 +5,7 @@ import userEvent from "@testing-library/user-event";
 import { CommentSection } from "@/modules/blog/components/CommentSection";
 import { renderPage } from "@/test/pageHarness";
 import { clearAuth, updateStoredUser } from "@/lib/auth";
-import type { RegisteredUser } from "@/lib/schemas/member";
+import type { RegisteredUser } from "@/lib/api";
 
 const A_COMMENT = {
   id: "44444444-4444-4444-8444-444444444444",

@@ -4,14 +4,12 @@ import {
   BarChart3,
   Bell,
   BookOpen,
-  Calendar,
   ClipboardList,
   FolderOpen,
   History,
   LayoutDashboard,
   MessageSquare,
   ScanLine,
-  Settings,
   Users,
 } from "lucide-react";
 import logo from "@/assets/church-logo.png";
@@ -111,7 +109,6 @@ const NAV_ITEMS: readonly (LinkItem | DisabledItem)[] = [
     ],
     subPathPrefix: "/admin/attendance",
   },
-  { labelKey: "events", Icon: Calendar, kind: "disabled" },
   {
     to: "/admin/bible-verses",
     labelKey: "bibleVerses",
@@ -157,7 +154,6 @@ const NAV_ITEMS: readonly (LinkItem | DisabledItem)[] = [
     ],
     subPathPrefix: "/admin/analytics",
   },
-  { labelKey: "settings", Icon: Settings, kind: "disabled" },
 ] as const;
 
 /** Admin navigation sidebar; physical side follows the active language. */

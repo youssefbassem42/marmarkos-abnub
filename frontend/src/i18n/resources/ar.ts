@@ -1,9 +1,6 @@
 export const ar = {
   common: {
     comingSoon: "قريبًا",
-    placeholder: {
-      body: "هذه الصفحة قيد الإنشاء — عرفنا قريبًا!",
-    },
     retry: "حاول مرة تاني",
     loading: "جارٍ التحميل...",
     adminPanel: "لوحة التحكم",

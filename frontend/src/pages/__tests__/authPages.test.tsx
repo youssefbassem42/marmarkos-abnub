@@ -14,7 +14,6 @@ import { describe, expect, it } from "vitest";
 import { renderPage } from "@/test/pageHarness";
 import { ForbiddenPage } from "@/pages/ForbiddenPage";
 import { NotFoundPage } from "@/pages/NotFoundPage";
-import { PlaceholderPage } from "@/pages/placeholder/PlaceholderPage";
 import { LandingPage } from "@/pages/landing/LandingPage";
 import { LoginPage } from "@/pages/auth/login/LoginPage";
 import { RegisterPage } from "@/pages/auth/register/RegisterPage";
@@ -284,16 +283,5 @@ describe("the pages of the end of the road", () => {
         screen.getByRole("heading", { name: "لا تملك صلاحية الوصول" }),
       ).toBeInTheDocument(),
     );
-  });
-
-  it("names the page that is not ready yet", async () => {
-    renderPage(<PlaceholderPage titleKey="blog" />);
-
-    await waitFor(() =>
-      expect(
-        screen.getByRole("heading", { name: "المدونة" }),
-      ).toBeInTheDocument(),
-    );
-    expect(screen.getByText(/هذه الصفحة قيد الإنشاء/)).toBeInTheDocument();
   });
 });
