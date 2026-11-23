@@ -494,7 +494,7 @@ export function ProfilePage() {
           </h2>
 
           {!user.has_password && (
-            <p className="rounded-xl bg-blue-50 px-4 py-3 text-sm text-brand-blue font-arabic">
+            <p className="rounded-xl bg-brand-blue/10 px-4 py-3 text-sm text-brand-blue font-arabic">
               {t("password.noCurrentHint")}
             </p>
           )}
