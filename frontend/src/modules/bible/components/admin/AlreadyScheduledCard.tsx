@@ -46,9 +46,9 @@ export function AlreadyScheduledCard({
   }).format(scheduledAt);
 
   return (
-    <Card className="border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/30">
+    <Card className="border-brand-orange/30 bg-brand-orange/10 dark:border-brand-orange/30 dark:bg-navy/90">
       <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base text-amber-700 dark:text-amber-400">
+        <CardTitle className="flex items-center gap-2 text-base text-brand-orange dark:text-brand-orange">
           <AlertTriangle className="h-4 w-4" />
           {t("admin.schedule.already.scheduled")}
         </CardTitle>
