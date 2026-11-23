@@ -24,9 +24,19 @@ import type {
  * verse): the type was missing here, so the accent of such a
  * notification was `undefined` and the list of the notifications
  * **crashed** for the manager who created the verse.
+ *
+ * `BLOG_COMMENT` was added with the comments of the blog (the phase
+ * 7.6): the backend tells the author of a post that a member answered
+ * their post. The fallback kept the list alive, but the notification
+ * had the generic accent instead of the one of a comment.
  */
 export type NotificationType =
-  "BLOG_POST" | "ANNOUNCEMENT" | "ATTENDANCE" | "SYSTEM" | "BIBLE_VERSE";
+  | "BLOG_POST"
+  | "BLOG_COMMENT"
+  | "ANNOUNCEMENT"
+  | "ATTENDANCE"
+  | "SYSTEM"
+  | "BIBLE_VERSE";
 
 /** Presentation grouping over NotificationType (plan §3.4). */
 export type NotificationTab =

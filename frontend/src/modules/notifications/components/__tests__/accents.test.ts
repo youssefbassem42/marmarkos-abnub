@@ -23,6 +23,7 @@ import type { NotificationType } from "@/modules/notifications/types";
 /** The types of the backend (`NotificationType` of the backend). */
 const BACKEND_TYPES = [
   "BLOG_POST",
+  "BLOG_COMMENT",
   "ANNOUNCEMENT",
   "ATTENDANCE",
   "SYSTEM",

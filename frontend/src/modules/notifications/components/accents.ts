@@ -59,6 +59,14 @@ export const NOTIFICATION_ACCENTS: Record<NotificationType, AccentEntry> = {
     accentBg: "bg-brand-blue/10",
     accentBorder: "border-brand-blue",
   },
+  BLOG_COMMENT: {
+    // A comment is a voice of a member on a post of the blog: the
+    // colour of the reading with the glyph of the speech.
+    Icon: MessageSquare,
+    accentText: "text-brand-blue",
+    accentBg: "bg-brand-blue/10",
+    accentBorder: "border-brand-blue",
+  },
 };
 
 /**
