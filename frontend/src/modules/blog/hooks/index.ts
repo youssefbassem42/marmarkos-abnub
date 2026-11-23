@@ -9,6 +9,8 @@ export * from "./useBlogPosts";
 export * from "./useCreateBlogPost";
 export * from "./useDeleteBlogPost";
 export * from "./usePublishBlogPost";
+export * from "./usePostLikes";
 export * from "./useScheduleBlogPost";
+export * from "./useToggleLike";
 export * from "./useUpdateBlogPost";
 export * from "./useUploadBlogCover";

@@ -10,6 +10,7 @@ import { paginated } from "@/lib/schemas/common";
 import {
   blogCommentSchema,
   blogImageUploadSchema,
+  blogLikeSchema,
   blogPostAdminSchema,
   blogPostDetailSchema,
   blogPostSummarySchema,
@@ -21,6 +22,7 @@ import type {
   BlogCommentUpdatePayload,
   BlogCommentsListParams,
   BlogImageUpload,
+  BlogLike,
   BlogPostAdmin,
   BlogPostCreatePayload,
   BlogPostDetail,
@@ -47,6 +49,32 @@ export const blogApi = {
   getPost: async (postId: string): Promise<BlogPostDetail> => {
     const response = await apiClient.get(`/blog/posts/${postId}`, {
       schema: blogPostDetailSchema,
+    });
+    return response.data;
+  },
+
+  /** The active likes of a published post and the caller's like state. */
+  getLikes: async (postId: string): Promise<BlogLike> => {
+    const response = await apiClient.get(`/blog/posts/${postId}/likes`, {
+      schema: blogLikeSchema,
+    });
+    return response.data;
+  },
+
+  /** Give the post a like as the signed-in member. */
+  like: async (postId: string): Promise<BlogLike> => {
+    const response = await apiClient.post(
+      `/blog/posts/${postId}/like`,
+      undefined,
+      { schema: blogLikeSchema },
+    );
+    return response.data;
+  },
+
+  /** Take back the signed-in member's like. */
+  unlike: async (postId: string): Promise<BlogLike> => {
+    const response = await apiClient.delete(`/blog/posts/${postId}/like`, {
+      schema: blogLikeSchema,
     });
     return response.data;
   },
