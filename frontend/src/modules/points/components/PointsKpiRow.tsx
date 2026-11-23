@@ -26,19 +26,19 @@ export function PointsKpiRow({ data, isPending }: PointsKpiRowProps) {
     <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
       <StatCard
         icon={Award}
-        iconClassName="text-amber-600"
+        iconClassName="text-brand-orange"
         label={t("page.lifetime")}
         value={data?.lifetime ?? 0}
       />
       <StatCard
         icon={CalendarDays}
-        iconClassName="text-emerald-600"
+        iconClassName="text-mint"
         label={t("page.thisMonth")}
         value={data?.this_month ?? 0}
       />
       <StatCard
         icon={CalendarRange}
-        iconClassName="text-sky-600"
+        iconClassName="text-brand-blue"
         label={t("page.thisWeek")}
         value={data?.this_week ?? 0}
       />

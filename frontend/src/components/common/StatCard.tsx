@@ -13,15 +13,15 @@ interface StatCardProps {
 
 const toneMap: Record<string, string> = {
   default: "bg-muted/50",
-  success: "bg-emerald-500/10",
-  warning: "bg-amber-500/10",
+  success: "bg-mint/10",
+  warning: "bg-brand-orange/10",
   danger: "bg-destructive/10",
 };
 
 const iconToneMap: Record<string, string> = {
   default: "text-muted-foreground",
-  success: "text-emerald-600",
-  warning: "text-amber-600",
+  success: "text-mint",
+  warning: "text-brand-orange",
   danger: "text-destructive",
 };
 
