@@ -16,9 +16,7 @@ const MEMBER = {
 const NOTIFICATION_TITLE = "إشعار الاختبار";
 
 test.describe("the notifications", () => {
-  test("a member sees the notifications of the platform", async ({
-    page,
-  }) => {
+  test("a member sees the notifications of the platform", async ({ page }) => {
     await page.goto("/login");
     await page.locator("#email").fill(MEMBER.email);
     await page.locator("#password").fill(MEMBER.password);

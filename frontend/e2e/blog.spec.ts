@@ -33,7 +33,9 @@ test.describe("the blog", () => {
       page.getByRole("heading", { name: "المدونة", exact: true }),
     ).toBeVisible({ timeout: 20_000 });
 
-    const post = page.getByRole("link", { name: new RegExp(POST_TITLE) }).first();
+    const post = page
+      .getByRole("link", { name: new RegExp(POST_TITLE) })
+      .first();
     await expect(post).toBeVisible({ timeout: 20_000 });
     await post.click();
 
