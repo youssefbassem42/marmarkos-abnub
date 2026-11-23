@@ -12,6 +12,7 @@ import type {
   blogCommentAuthorSchema,
   blogCommentSchema,
   blogImageUploadSchema,
+  blogLikeSchema,
   blogPostAdminSchema,
   blogPostDetailSchema,
   blogPostStatusSchema,
@@ -26,6 +27,7 @@ export type BlogPostSummary = z.infer<typeof blogPostSummarySchema>;
 export type BlogPostDetail = z.infer<typeof blogPostDetailSchema>;
 export type BlogPostAdmin = z.infer<typeof blogPostAdminSchema>;
 export type BlogImageUpload = z.infer<typeof blogImageUploadSchema>;
+export type BlogLike = z.infer<typeof blogLikeSchema>;
 export type BlogCommentAuthor = z.infer<typeof blogCommentAuthorSchema>;
 export type BlogComment = z.infer<typeof blogCommentSchema>;
 

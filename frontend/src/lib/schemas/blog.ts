@@ -70,6 +70,13 @@ export const blogImageUploadSchema = loose({
   url: z.string(),
 });
 
+/** The active likes of a post and the signed-in member's own like state. */
+export const blogLikeSchema = loose({
+  post_id: z.string(),
+  likes_count: z.number().int().nonnegative(),
+  liked: z.boolean(),
+});
+
 /** The public identity of the author of a comment. */
 export const blogCommentAuthorSchema = loose({
   id: z.string(),
