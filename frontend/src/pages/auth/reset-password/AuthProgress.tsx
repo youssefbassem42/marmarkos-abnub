@@ -26,9 +26,7 @@ export function AuthProgress() {
                   "grid h-8 w-8 shrink-0 place-items-center rounded-full text-sm font-bold transition-colors",
                   isActive && "bg-mint text-white ring-4 ring-mint/25",
                   isCompleted && "bg-mint text-white",
-                  !isActive &&
-                    !isCompleted &&
-                    "bg-gray-200 text-muted-foreground",
+                  !isActive && !isCompleted && "bg-soft text-muted-foreground",
                 )}
               >
                 {isCompleted ? (
@@ -42,7 +40,7 @@ export function AuthProgress() {
                   "leading-tight transition-colors font-arabic text-sm sm:text-base",
                   isActive && "font-bold text-ink",
                   isCompleted && "font-semibold text-mint",
-                  !isActive && !isCompleted && "text-gray-400",
+                  !isActive && !isCompleted && "text-muted-foreground",
                 )}
               >
                 {label}
