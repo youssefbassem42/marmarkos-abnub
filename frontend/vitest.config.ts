@@ -52,10 +52,13 @@ export default defineConfig({
       // quizzes): covering them is one render test per screen, and the
       // floor goes up with every one of them.
       thresholds: {
-        statements: 73,
-        branches: 63,
-        functions: 66,
-        lines: 75,
+        // The measured value after the wave of the blog and of the
+        // points: 74.63 / 65.16 / 67.85 / 76.50. The floors sit on the
+        // stable measurement and they only go up.
+        statements: 74,
+        branches: 64,
+        functions: 67,
+        lines: 76,
       },
     },
   },
