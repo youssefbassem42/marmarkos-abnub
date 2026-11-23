@@ -237,7 +237,7 @@ export default function VerseSchedulePage() {
         )}
 
         {isPublished && (
-          <div className="rounded-lg border border-green-200 bg-green-50 p-4 text-sm text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-400">
+          <div className="rounded-lg border border-mint/30 bg-mint/10 p-4 text-sm text-mint dark:border-mint/30 dark:bg-navy/90 dark:text-mint">
             {t("admin.schedule.already.published")}
           </div>
         )}
