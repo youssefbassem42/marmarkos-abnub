@@ -12,9 +12,9 @@ interface VerseMobileListProps {
 
 const STATUS_BADGE_CLASS: Record<string, string> = {
   DRAFT: "bg-muted text-muted-foreground",
-  SCHEDULED: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
-  PUBLISHED: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  ARCHIVED: "bg-red-500/10 text-red-700 dark:text-red-400",
+  SCHEDULED: "bg-brand-orange/10 text-brand-orange dark:text-brand-orange",
+  PUBLISHED: "bg-mint/10 text-mint dark:text-mint",
+  ARCHIVED: "bg-brand-red/10 text-brand-red dark:text-brand-red",
 };
 
 export function VerseMobileList({ items }: VerseMobileListProps) {
