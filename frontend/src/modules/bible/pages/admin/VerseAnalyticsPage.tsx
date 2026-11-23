@@ -440,7 +440,7 @@ export default function VerseAnalyticsPage() {
                                       className={cn(
                                         "rounded-full text-xs",
                                         user.has_read
-                                          ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-400"
+                                          ? "bg-mint/10 text-mint dark:bg-navy/90 dark:text-mint"
                                           : "bg-muted text-muted-foreground",
                                       )}
                                     >
