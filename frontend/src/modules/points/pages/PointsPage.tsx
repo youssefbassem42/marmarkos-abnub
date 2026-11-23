@@ -1,7 +1,6 @@
 import { useTranslation } from "react-i18next";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { ArrowLeft, Trophy } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { Navbar } from "@/components/layout/Navbar";
 import { EmptyState } from "@/components/common/EmptyState";
 import { Button } from "@/components/ui/button";
@@ -10,7 +9,14 @@ import { PointsOverTimeChart } from "../components/PointsOverTimeChart";
 import { MonthlyHistoryList } from "../components/MonthlyHistoryList";
 import { PointsByQuizTable } from "../components/PointsByQuizTable";
 import { RecentActivityList } from "../components/RecentActivityList";
+import { MonthlyPointsSummary } from "../components/MonthlyPointsSummary";
+import { PointsMonthSelector } from "../components/PointsMonthSelector";
 import { useMyPoints, useMonthlyPoints } from "../hooks";
+
+function currentMonth(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
 
 export default function PointsPage() {
   const { t } = useTranslation("points");
@@ -18,6 +24,8 @@ export default function PointsPage() {
 
   const pointsQuery = useMyPoints();
   const monthlyQuery = useMonthlyPoints();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const selectedMonth = searchParams.get("month") ?? currentMonth();
 
   const hasAnyPoints =
     pointsQuery.data &&
@@ -105,6 +113,28 @@ export default function PointsPage() {
               {t("page.subtitle")}
             </p>
           </div>
+
+          <PointsMonthSelector
+            months={monthlyQuery.data?.items ?? []}
+            selectedMonth={selectedMonth}
+            onMonthChange={(month) => {
+              setSearchParams((current) => {
+                const next = new URLSearchParams(current);
+                next.set("month", month);
+                return next;
+              });
+            }}
+            isPending={monthlyQuery.isPending}
+            isDisabled={monthlyQuery.isError}
+          />
+
+          <MonthlyPointsSummary
+            data={monthlyQuery.data}
+            selectedMonth={selectedMonth}
+            isPending={monthlyQuery.isPending}
+            isError={monthlyQuery.isError}
+            onRetry={() => void monthlyQuery.refetch()}
+          />
 
           <PointsKpiRow data={pointsQuery.data} isPending={false} />
 
