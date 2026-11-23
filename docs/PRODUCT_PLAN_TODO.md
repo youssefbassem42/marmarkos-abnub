@@ -1012,20 +1012,20 @@ accepted. The order follows the dependencies (the table below) and the
 | 0.2 | The media service takes the size | 7 | — | 2 hours | **done** |
 | 0.3 | The rules of the content | 1, 4, 7 | — | half a day | **done** (the catalogue, BR-01 to BR-68) |
 | 1.1-1.2 | The page "About Us" | 1 | 0.1, 0.3 | 1 day | **done** |
-| 2.1-2.3 | "My points": per quiz and per month | 2 | — | 2 days | 2.1 and 2.2 **done** · 2.3 in the work |
+| 2.1-2.3 | "My points": per quiz and per month | 2 | — | 2 days | **done** (2.3: the member chooses the month, the choice lives in the URL) |
 | 3.1 | The gallery goes away | 3 | — | 1 hour | **done** |
 | 4.1 | The links of the landing page | 4 | — | half a day | **done** |
 | 4.2-4.4 | The slider that the admin controls | 4 | 0.2, 4.1 | 3 days | **done** |
-| 5.1-5.3 | The audit of the calculations | 5 | — | 2 days | 5.1 **done** · 5.2 **done** · 5.3 in the work |
-| 6.1-6.2 | The way back on every screen | 6 | 0.1 | 2 days | 6.1 **done** (the members) · 6.2 in the work (the administration) |
+| 5.1-5.3 | The audit of the calculations | 5 | — | 2 days | **done** (5.3: the export of what the screen shows, with the BOM) |
+| 6.1-6.2 | The way back on every screen | 6 | 0.1 | 2 days | **done** (every one of the 52 routes carries its parent) |
 | 7.1 | The rules of the blog | 7 | 0.3 | half a day | **done** |
 | 7.2 | The backend of the posts | 7 | 7.1 | 3 days | **done** |
-| 7.3 | The notification and the mail | 7 | 7.2 | 2 days | in the work |
-| 7.4 | The list of the posts | 7 | 7.2 | 2 days | in the work |
-| 7.5 | The page of a post and the administration | 7 | 7.2, 7.4 | 3 days | in the work |
-| 7.6 | The backend of the comments | 7 | 7.2 | 3 days | in the work |
-| 7.7 | The frontend of the comments | 7 | 7.6, 7.5 | 3 days | waiting for 7.5 and 7.6 |
-| 7.8 | The likes | 7 | 7.2, 7.5 | 2 days | in the work |
+| 7.3 | The notification and the mail | 7 | 7.2 | 2 days | **done** |
+| 7.4 | The list of the posts | 7 | 7.2 | 2 days | **done** |
+| 7.5 | The page of a post and the administration | 7 | 7.2, 7.4 | 3 days | **done** (the TipTap editor, the cover of 1 MB, the schedule) |
+| 7.6 | The backend of the comments | 7 | 7.2 | 3 days | **done** (BR-78…BR-82, the sanitizer of bleach) |
+| 7.7 | The frontend of the comments | 7 | 7.6, 7.5 | 3 days | **done** (the tree, the reply, the edit, the removal) |
+| 7.8 | The likes | 7 | 7.2, 7.5 | 2 days | **done** (the button, the number of the server) |
 
 **The critical path:** 7.1 → 7.2 → 7.5 → 7.7 (the blog). The other points
 can be delivered **in parallel** by another person, because they touch
@@ -1038,6 +1038,14 @@ different modules.
 
 **The total:** about **30 working days** for the seven points, the blog
 included.
+
+**The state of the plan (2026-11-23):** the **eighteen phases are done**.
+The last ones (the likes, the frontend of the comments, the month of the
+points) landed with the third wave of the subagents. What is left is not
+a phase of the plan any more: the journeys of the end-to-end run, the
+deployment of the frontend (the alias of Vercel answers
+`DEPLOYMENT_NOT_FOUND` today) and the rotation of the secrets (the work
+of a human).
 
 **How the work is done now (2026-10-29):** the phases are **not** done one
 after another by one person any more — they are spread over **a fleet of

@@ -323,6 +323,27 @@ what it believes; the reviewer writes the test of what the product needs.**
 | 48 | The switch of the **light/dark mode** carried its label and its title in **English** ("Switch to dark mode") | The only component of the shell that spoke another language than the platform; the house rule says every string lives in `ar.ts` | The strings live in the namespace `common` of `ar.ts` and the test pins them |
 | 49 | The **exports of the analytics** called an **unpaged** endpoint and named the file with an identifier of the quiz | The file the administrator took away could carry **rows the screen did not show**, and its name told him nothing | The export serialises **the page that is on the screen** through the shared helper of the CSV (the BOM, the escaping), and the file carries the month and the title of the quiz. The test pins the BOM, the header, the visible rows and the name |
 
+### 4.5 The third wave (2026-11-23) — the blog, the dead code, the design system
+
+The wave closed the plan of `TODO.md`: the blog reached the members (the
+list, the post, the administration, the comments, the likes, the
+notification of the published post), the month that the member chooses
+landed, and the **dead code** and the **raw colours** of the frontend
+went away. The review found five more defects.
+
+| # | The defect | The consequence | The fix |
+|---|---|---|---|
+| 50 | The **notification of a comment** (`BLOG_COMMENT`) did not exist in the frontend: the type was missing from the union and from the map of the accents | The list did not crash (there is a fallback for a type of the future), but the notification of a comment had the generic icon instead of the one of a comment | The type and its accent (the glyph of the speech, the colour of the reading) are in the map, and the test of the accents knows the type |
+| 51 | The **sub-items of the menu** of the administration were a router link **inside** the link of the shadcn button | The browser complained about the nesting (`<a>` inside `<a>`) and the keyboard reached only the outer link | The button of the shadcn set is now the router link itself (`asChild`) |
+| 52 | The hook of the like **invalidated the query right after the change** | The number on the screen could jump **backwards** when another device changed the same post at the same time | The answer of the server **is** the state of the like: it is written into the cache as it arrived, with no refetch |
+| 53 | The test of the comments imported the type of the member from **the wrong module** | The gate of the types (`tsc -b`) did not see it: the tests do not type-check themselves | The type comes from the module that declares it; `tsc -b --force` is in the pipeline |
+| 54 | The frontend used the **raw palette of Tailwind** in **141 places** of **26 files** (`text-green-600`, `bg-amber-500`, …) | The colours of the platform did not follow the design system, and they did not change with the theme | Every one of them is now a token of `index.css` (`mint`, `brand-orange`, `brand-red`, `brand-blue`, `navy`, `soft`). The count of the raw palette is **zero** |
+
+The **dead code** went away with them: the placeholder page (the
+stand-in of the blog while the blog did not exist — it was reachable by
+no route), the two entries of the admin menu that led nowhere
+("events" and "settings"), and the string of the placeholder.
+
 The wave also **landed** the phases that need no decision: the gallery goes
 away, the page "من نحن", the links of the landing page, the slider of the
 landing page and its administration (the section "إدارة المحتوى"), the

@@ -281,3 +281,15 @@ double-labelled column.
 | The defects of the review | Two more: the switch of the theme spoke **English** (#48), and the exports disagreed with the screen (#49) |
 | The lessons of the fleet | The provider of the models refuses more than **two agents at a time** (a 429), and the worktrees cannot live in `/tmp` (the system cleaned it and the work of four agents was lost — the commits survived) |
 | The gates | Backend **676 tests** (the coverage 78.00 %), frontend **446 tests** (the coverage 73.77 %), the end-to-end **6 tests**, `ruff`/`mypy`/`eslint`/`tsc`/`prettier`/`npm audit`/`pip-audit` green |
+
+### 2026-11-23 — The third wave: the blog reaches the members, the dead code goes, the colours obey the design system
+
+| Item | Result |
+|---|---|
+| The plan of `TODO.md` | **The eighteen phases are done.** The last ones: the likes (the button and the number of the server), the frontend of the comments (the tree, the reply, the edit, the removal), the month that the member chooses (the choice lives in the URL: `?month=YYYY-MM`) |
+| The blog | The **administration** (the list of every post with its state, the form with the TipTap editor, the cover of 1 MB, the tags, the schedule, the archive) and the **comments** (the tree, the replies, the 500 words, the sanitizer of bleach, the notification of the owner of the post) are landed |
+| The dead code | The placeholder page, the two entries of the admin menu that led nowhere, the string of the placeholder: gone |
+| The design system | The **141 raw colours of Tailwind** of 26 files are now the tokens of `index.css`. The count of the raw palette is **zero** (outside the shadcn set, which carries its own colours) |
+| The defects of the review | Five more (#50…#54): the notification of a comment without an accent, a link inside a link in the menu, the refetch that made the number of the likes jump backwards, a test that imported a type from the wrong module, the raw colours |
+| The gates | Backend **714 tests** (the coverage 77.79 %, the floor 77.7), frontend **469 tests** (the coverage 74.63 %, the floors 74/64/67/76), `ruff`/`mypy`/`eslint`/`tsc`/`prettier`/`npm audit`/`pip-audit` green |
+| What is still open | The **frontend of the production** answers `DEPLOYMENT_NOT_FOUND` (the alias of Vercel has no deployment), the **rotation of the secrets** (a human), the **journeys of the end-to-end run** (the agent of the wave is writing them) |
