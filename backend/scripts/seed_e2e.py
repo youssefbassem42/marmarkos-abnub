@@ -71,6 +71,9 @@ ADMIN_PASSWORD = "E2eAdmin!2026"
 POINTS_MEMBER_EMAIL = "e2e-points@example.com"
 POINTS_MEMBER_PASSWORD = "e2e-PointsMember!2026"
 
+READER_EMAIL = "e2e-reader@example.com"
+READER_PASSWORD = "e2e-ReaderMember!2026"
+
 E2E_VERSE_REFERENCE = "E2E-1"
 E2E_VERSE_TITLE = "آية الاختبار"
 E2E_VERSE_TEXT = "آية للاختبار الشامل."
@@ -369,6 +372,13 @@ async def seed() -> None:
             first_name="عضو",
             role=member_role,
         )
+        await _upsert_user(
+            session,
+            email=READER_EMAIL,
+            password=READER_PASSWORD,
+            first_name="قارئ",
+            role=member_role,
+        )
 
         # The PIN of the member (the offline fallback of the QR code).
         from app.modules.users.application.services.attendance_pin import (
@@ -387,6 +397,7 @@ async def seed() -> None:
     print("the E2E data is ready:")
     print(f"  member : {MEMBER_EMAIL} / {MEMBER_PASSWORD} (PIN {MEMBER_PIN})")
     print(f"  points : {POINTS_MEMBER_EMAIL} / {POINTS_MEMBER_PASSWORD}")
+    print(f"  reader : {READER_EMAIL} / {READER_PASSWORD}")
     print(f"  admin  : {ADMIN_EMAIL} / {ADMIN_PASSWORD}")
     print(f"  database: {settings.DATABASE_URL.split('/')[-1]}")
 
