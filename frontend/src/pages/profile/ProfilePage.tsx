@@ -5,6 +5,7 @@ import {
   CalendarCheck,
   Camera,
   CheckCircle2,
+  Download,
   KeyRound,
   Mail,
   MapPin,
@@ -13,6 +14,16 @@ import {
   RefreshCw,
   User,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -41,6 +52,7 @@ function currentYearMonth(): { year: number; month: number } {
 
 export function ProfilePage() {
   const { t } = useTranslation("profile");
+  const { t: tCommon } = useTranslation("common");
   const navigate = useNavigate();
 
   const [user, setUser] = useState(getAuthUser);
@@ -62,33 +74,89 @@ export function ProfilePage() {
   const [savingPassword, setSavingPassword] = useState(false);
   const [passwordStatus, setPasswordStatus] = useState<Status>(null);
 
-  // Attendance QR (backend issues a fresh token and returns an SVG)
+  // Attendance QR: the code of the member does **not** change from one
+  // visit to the next (BR-83) - the member saves it once and shows it
+  // to the servant without opening the platform. Only the button that
+  // changes the code replaces it (BR-84).
   const [qrUrl, setQrUrl] = useState<string | null>(null);
   const [qrLoading, setQrLoading] = useState(false);
+  const [qrChangeOpen, setQrChangeOpen] = useState(false);
 
   const { year: myYear, month: myMonth } = currentYearMonth();
   const myAttendance = useMyAttendance(myYear, myMonth);
 
-  const loadQr = async () => {
+  const loadQr = async (regenerate = false) => {
     if (!getAccessToken()) return;
     setQrLoading(true);
     try {
-      const response = await apiClient.get<string>("/users/me/qr", {
-        responseType: "text",
-        headers: {
-          Accept: "image/svg+xml",
-          Authorization: `Bearer ${getAccessToken()}`,
-        },
-      });
+      const response = regenerate
+        ? await apiClient.post<string>("/users/me/qr/regenerate", undefined, {
+            responseType: "text",
+            headers: {
+              Accept: "image/svg+xml",
+              Authorization: `Bearer ${getAccessToken()}`,
+            },
+          })
+        : await apiClient.get<string>("/users/me/qr", {
+            responseType: "text",
+            headers: {
+              Accept: "image/svg+xml",
+              Authorization: `Bearer ${getAccessToken()}`,
+            },
+          });
       const blob = new Blob([response.data], { type: "image/svg+xml" });
       setQrUrl((previous) => {
         if (previous) URL.revokeObjectURL(previous);
         return URL.createObjectURL(blob);
       });
     } catch {
-      /* keep previous code visible; the refresh button retries */
+      /* keep previous code visible; the buttons retry */
     } finally {
       setQrLoading(false);
+    }
+  };
+
+  /**
+   * Save the code as an image.
+   *
+   * The member keeps a copy of the code (a photo on the phone, a sheet
+   * of paper) and shows it to the servant without opening the platform.
+   * The picture is a PNG (what a phone shares); when the browser cannot
+   * draw the code, the vector file is saved instead.
+   */
+  const downloadQr = async () => {
+    if (!qrUrl) return;
+    const name = `qr-${user?.public_id ?? "attendance"}.png`;
+    try {
+      const image = new Image();
+      image.crossOrigin = "anonymous";
+      image.src = qrUrl;
+      await image.decode();
+      const canvas = document.createElement("canvas");
+      canvas.width = 512;
+      canvas.height = 512;
+      const context = canvas.getContext("2d");
+      if (!context) throw new Error("no canvas");
+      context.fillStyle = "#ffffff";
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const blob = await new Promise<Blob | null>((resolve) =>
+        canvas.toBlob(resolve, "image/png"),
+      );
+      if (!blob) throw new Error("no blob");
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = name;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      // The browser cannot draw the vector code: the file is saved as it
+      // is (an SVG is an image too).
+      const link = document.createElement("a");
+      link.href = qrUrl;
+      link.download = name.replace(/\.png$/, ".svg");
+      link.click();
     }
   };
 
@@ -283,24 +351,63 @@ export function ProfilePage() {
             <p className="mt-1 text-sm leading-6 text-muted-foreground font-arabic">
               {t("qr.hint")}
             </p>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => void loadQr()}
-              disabled={qrLoading}
-              className="mt-3 h-10 rounded-xl border-navy px-4 text-sm font-semibold text-ink focus-ring font-arabic"
-            >
-              <RefreshCw
-                className={cn("me-2 h-4 w-4", qrLoading && "animate-spin")}
-                aria-hidden="true"
-              />
-              {t("qr.refresh")}
-            </Button>
+            <div className="mt-3 flex flex-wrap justify-center gap-2 sm:justify-start">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => void downloadQr()}
+                disabled={!qrUrl || qrLoading}
+                className="h-10 rounded-xl border-navy px-4 text-sm font-semibold text-ink focus-ring font-arabic"
+              >
+                <Download className="me-2 h-4 w-4" aria-hidden="true" />
+                {t("qr.download")}
+              </Button>
+
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setQrChangeOpen(true)}
+                disabled={qrLoading}
+                className="h-10 rounded-xl border-navy px-4 text-sm font-semibold text-ink focus-ring font-arabic"
+              >
+                <RefreshCw
+                  className={cn("me-2 h-4 w-4", qrLoading && "animate-spin")}
+                  aria-hidden="true"
+                />
+                {t("qr.change")}
+              </Button>
+            </div>
           </div>
         </section>
 
         {/* Attendance PIN: offline fallback when the QR can't be shown. */}
         <AttendancePinCard />
+
+        {/*
+          The only way the code changes (BR-84): the member asks for it
+          and the copy he saved stops working at once.
+        */}
+        <AlertDialog open={qrChangeOpen} onOpenChange={setQrChangeOpen}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>{t("qr.changeTitle")}</AlertDialogTitle>
+              <AlertDialogDescription>
+                {t("qr.changeDescription")}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>{tCommon("cancel")}</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={() => {
+                  setQrChangeOpen(false);
+                  void loadQr(true);
+                }}
+              >
+                {t("qr.change")}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
 
         {/* My attendance (US-012): sits directly under the QR card. */}
         {myAttendance.data &&
