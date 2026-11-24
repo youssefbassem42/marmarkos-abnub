@@ -22,6 +22,7 @@ REFRESH_URL = "/api/v1/auth/refresh"
 LOGOUT_URL = "/api/v1/auth/logout"
 ME_URL = "/api/v1/users/me"
 QR_URL = "/api/v1/users/me/qr"
+QR_REGENERATE_URL = "/api/v1/users/me/qr/regenerate"
 USERS_URL = "/api/v1/users"
 
 # -- Attendance (Phase 2) ----------------------------------------------------
