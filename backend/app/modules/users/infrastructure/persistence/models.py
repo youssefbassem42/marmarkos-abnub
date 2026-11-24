@@ -181,10 +181,17 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
 class UserQrCode(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     """Revocable QR identity token.
 
-    The QR payload is a high-entropy opaque token; only its SHA-256 hash
-    is stored. Revocation = ``is_active=False``; regeneration = new row
+    The QR payload is a high-entropy opaque token. Its SHA-256 hash is
+    what the check-in validates; the payload itself is stored beside it
+    so the **same** code can be shown again to its owner (the member
+    saves it once and shows it to the servant without opening the
+    platform). Revocation = ``is_active=False``; regeneration = new row
     (at most one active token per user, enforced by a partial unique
     index). No personal data is embedded in the QR code.
+
+    ``payload`` is nullable: the rows created before the change hold
+    only the hash, and the next visit of their owner creates the first
+    readable payload (the old code is replaced once).
     """
 
     __tablename__ = "user_qr_codes"
@@ -201,6 +208,7 @@ class UserQrCode(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
     token_hash: Mapped[str] = mapped_column(String(64), unique=True, index=True, nullable=False)
+    payload: Mapped[str | None] = mapped_column(String(128), nullable=True)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     deactivated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
 
