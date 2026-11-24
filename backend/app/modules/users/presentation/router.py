@@ -75,12 +75,45 @@ async def upload_avatar(
     return map_user_to_response(user)
 
 
-@router.get("/me/qr")
+@router.get(
+    "/me/qr",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {"image/svg+xml": {}},
+            "description": "The QR code of the member (the same code every time)",
+        }
+    },
+)
 async def get_me_qr(
     current_user: Annotated[User, Depends(get_current_user)],
     session: SessionDependency,
 ) -> Response:
+    """The QR code of the member; it does not change from one visit to the next."""
     svg = await ProfileQueryService(session).get_qr(current_user)
+    return Response(content=svg, media_type="image/svg+xml")
+
+
+@router.post(
+    "/me/qr/regenerate",
+    response_class=Response,
+    responses={
+        200: {
+            "content": {"image/svg+xml": {}},
+            "description": "The new QR code of the member",
+        }
+    },
+)
+async def regenerate_me_qr(
+    current_user: Annotated[User, Depends(get_current_user)],
+    session: SessionDependency,
+) -> Response:
+    """Replace the QR code of the member; the old one stops working at once.
+
+    This is the only way a code changes (BR-83): the member asks for it
+    when his saved copy was lost or shown to somebody he does not trust.
+    """
+    svg = await ProfileQueryService(session).regenerate_qr(current_user)
     return Response(content=svg, media_type="image/svg+xml")
 
 
