@@ -33,14 +33,35 @@ class ProfileQueryService:
         return user
 
     async def get_qr(self, user: User) -> str:
-        """Issue a fresh, revocable QR token and render it as SVG.
+        """Render the QR code of the member, and keep it **the same**.
 
-        Issuing a new token deactivates the previous one, so QR codes are
-        revocable and regeneratable. Only the token hash is persisted; the
-        payload carries no personal data.
+        The code of a member does not change when the page is opened
+        again, when the browser is refreshed or when the member signs in
+        again: the member saves it once and shows it to the servant
+        without opening the platform (BR-83).
+
+        The code is created the first time only. A code created before
+        the payload was stored (only its hash was known) is replaced
+        once, and only once.
+        """
+        existing = await self._uow.qr_codes.get_active_for_user(user.id)
+        if existing is not None and existing.payload:
+            return self._qr.generate_svg(existing.payload)
+
+        payload = generate_qr_payload()
+        await self._uow.qr_codes.create_for_user(user.id, hash_qr_payload(payload), payload=payload)
+        await self._uow.commit()
+        return self._qr.generate_svg(payload)
+
+    async def regenerate_qr(self, user: User) -> str:
+        """Replace the code of the member with a new one (BR-83).
+
+        The old code stops working **immediately**: the copy that the
+        member saved (a photo, a printed sheet) is refused by the
+        check-in from this moment on.
         """
         payload = generate_qr_payload()
-        await self._uow.qr_codes.create_for_user(user.id, hash_qr_payload(payload))
+        await self._uow.qr_codes.create_for_user(user.id, hash_qr_payload(payload), payload=payload)
         await self._uow.commit()
         return self._qr.generate_svg(payload)
 

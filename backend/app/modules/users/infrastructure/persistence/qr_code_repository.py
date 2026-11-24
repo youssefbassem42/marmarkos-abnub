@@ -18,13 +18,20 @@ class UserQrCodeRepository:
     def __init__(self, session: AsyncSession) -> None:
         self._session = session
 
-    async def create_for_user(self, user_id: uuid.UUID, token_hash: str) -> UserQrCode:
+    async def create_for_user(
+        self, user_id: uuid.UUID, token_hash: str, payload: str | None = None
+    ) -> UserQrCode:
+        """Create the active code of the member and deactivate the old one.
+
+        The payload is stored beside its hash so the **same** code can be
+        shown again to its owner; the check-in only ever reads the hash.
+        """
         await self._session.execute(
             update(UserQrCode)
             .where(UserQrCode.user_id == user_id, UserQrCode.is_active.is_(True))
             .values(is_active=False, deactivated_at=now_utc())
         )
-        code = UserQrCode(user_id=user_id, token_hash=token_hash, is_active=True)
+        code = UserQrCode(user_id=user_id, token_hash=token_hash, payload=payload, is_active=True)
         self._session.add(code)
         await self._session.flush()
         return code
