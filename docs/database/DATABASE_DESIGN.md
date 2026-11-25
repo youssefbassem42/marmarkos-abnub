@@ -52,7 +52,8 @@ so tests, Alembic autogenerate, and `create_all` always see the same schema.
 ### comments (`comments` module)
 | Table | Purpose |
 |---|---|
-| `comments` | Self-referencing `parent_comment_id` for threaded replies. `status` VISIBLE / HIDDEN / DELETED — **comments are never physically deleted** (soft moderation preserves accountability) |
+| `comments` | Self-referencing `parent_comment_id` for threaded replies. Deleting a comment uses `ON DELETE CASCADE` to remove its whole reply subtree; `DELETED` remains only as a legacy moderation value and is no longer written. |
+| `blog_comment_likes` | Unique `(comment_id, user_id)`; one like per member per comment or reply |
 
 ### notifications (`notifications` module)
 | Table | Purpose |

@@ -9,6 +9,7 @@ from httpx import AsyncClient
 from sqlalchemy import insert, select
 
 from app.core.database import async_session_factory
+from app.modules.admin.infrastructure.persistence.models import AuditLog
 from app.modules.blog.domain.enums.post_status import PostStatus
 from app.modules.blog.infrastructure.persistence.models import BlogPost
 from app.modules.comments.application.services.comment_content import (
@@ -283,34 +284,64 @@ async def test_only_the_owner_edits_a_comment_but_a_servant_may_delete_it(
     assert servant_delete.status_code == 204
 
 
-async def test_the_soft_deletion_hides_the_text_and_keeps_the_replies(
+async def test_deleting_a_comment_removes_its_whole_reply_subtree(
     client: AsyncClient, db_engine
 ) -> None:
     owner_id, _ = await _actor(client, db_engine, email="comment-delete-owner@example.com")
-    _, member = await _actor(client, db_engine, email="comment-delete-member@example.com")
+    member_id, member = await _actor(client, db_engine, email="comment-delete-member@example.com")
     _, replier = await _actor(client, db_engine, email="comment-delete-replier@example.com")
     post_id = await _published_post(db_engine, owner_id)
+    other_post_id = await _published_post(db_engine, owner_id)
     top = await _create_comment(client, member, post_id, "<p>نص سرّي</p>")
     reply = await _create_comment(
         client,
         replier,
         post_id,
-        "<p>الرد يبقى</p>",
+        "<p>رد</p>",
         parent_comment_id=str(top["id"]),
     )
+    nested_reply = await _create_comment(
+        client,
+        member,
+        post_id,
+        "<p>رد الرد</p>",
+        parent_comment_id=str(reply["id"]),
+    )
+    other_comment = await _create_comment(client, member, other_post_id, "<p>تعليق آخر</p>")
 
     deleted = await client.delete(f"{COMMENTS_URL}/{top['id']}", headers=member)
     assert deleted.status_code == 204
 
     response = await client.get(f"{POSTS_URL}/{post_id}/comments", headers=member)
     assert response.status_code == 200, response.text
-    root = response.json()["items"][0]
-    assert root["id"] == top["id"]
-    assert root["status"] == "DELETED"
-    assert root["content"] == "تم حذف التعليق"
-    assert "نص سرّي" not in response.text
-    assert len(root["replies"]) == 1
-    assert root["replies"][0]["id"] == reply["id"]
+    assert response.json()["items"] == []
+
+    async with db_engine.begin() as connection:
+        remaining = set(
+            (
+                await connection.execute(
+                    select(Comment.id).where(
+                        Comment.id.in_([top["id"], reply["id"], nested_reply["id"]])
+                    )
+                )
+            ).scalars()
+        )
+        audit_actor = (
+            await connection.execute(
+                select(AuditLog.actor_user_id).where(
+                    AuditLog.action == "comment.delete",
+                    AuditLog.entity_type == "comment",
+                    AuditLog.entity_id == str(top["id"]),
+                )
+            )
+        ).scalar_one()
+
+    assert remaining == set()
+    assert audit_actor == member_id
+
+    other_tree = await client.get(f"{POSTS_URL}/{other_post_id}/comments", headers=member)
+    assert other_tree.status_code == 200, other_tree.text
+    assert [item["id"] for item in other_tree.json()["items"]] == [other_comment["id"]]
 
 
 async def test_the_post_owner_and_the_parent_comment_owner_are_notified(

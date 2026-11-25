@@ -87,7 +87,7 @@ app/
 - `blog_post_likes`: unique `(post_id, user_id)`; toggle is race-safe via `INSERT ... ON CONFLICT DO NOTHING` then physical delete on unlike.
 
 ### 5.5 comments
-- Self-referencing `parent_comment_id` for threaded replies. `status` VISIBLE/HIDDEN/DELETED — **never physically deleted** (soft moderation; verified by `test_comment_never_physically_deleted`). HIDDEN/DELETED excluded from public listings unless requested.
+- Self-referencing `parent_comment_id` for threaded replies. A deletion removes the comment and its complete reply subtree through `ON DELETE CASCADE`; the audit trail remains. `DELETED` is retained only as a legacy database value and is no longer written. `blog_comment_likes` has a unique `(comment_id, user_id)` pair.
 
 ### 5.6 notifications
 - Per-user rows; `user_id IS NULL` = broadcast to all (e.g., announcements). `data` JSONB payload, `read_at` for unread counting (`count_unread`).
@@ -168,7 +168,7 @@ One file per module plus FK/cascade tests:
 - `test_auth.py` — token hashing, metadata, revocation, revoke-all.
 - `test_attendance.py` — creation, duplicate prevention, multi-session same day, analytics (counts, percentage, trend, absent users).
 - `test_blog.py` — post creation, unique slug, search/category filter, like toggle + uniqueness.
-- `test_comments.py` — replies, moderation, soft-delete, nested depth.
+- `test_comments.py` — replies, moderation, hard-delete subtree, nested depth.
 - `test_notifications.py` — per-user + broadcast, unread counts, mark-read.
 - `test_anonymous_messages.py` — no-account-linkage columns (including the two nullable self-declared fields), Telegram lifecycle with attempt bookkeeping, exclusive claim.
 - `test_bible.py` — weekly publish uniqueness, drafts, current-verse lookup.
@@ -218,7 +218,7 @@ DATABASE_URL=postgresql+asyncpg://marmarkos:marmarkos@localhost:55432/marmarkos_
 
 - `audit_logs.metadata` column is accessed via the `details` attribute (`metadata` is reserved by SQLAlchemy).
 - Attendance percentage is computed only against ACTIVE users; absent-user reports exclude INACTIVE/SUSPENDED/BANNED.
-- Comments are never hard-deleted; `status=DELETED` preserves accountability.
+- Comment deletion removes the selected row and its reply subtree; the deletion remains in the audit log.
 
 ## 19. Deliverables Checklist
 

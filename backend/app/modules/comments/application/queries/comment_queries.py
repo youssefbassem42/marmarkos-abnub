@@ -1,9 +1,9 @@
 """Read queries for the comment tree of a blog post (Phase 7.6).
 
-The member-facing answer contains visible comments, deleted tombstones, and
-the replies nested below them.  Hidden and flagged branches stay out of the
-answer.  Pagination applies to the top-level comments; a root always carries
-its complete reply tree (BR-80).
+The member-facing answer contains visible comments and the replies nested
+below them. Hidden and flagged branches stay out of the answer. Pagination
+applies to the top-level comments; a root always carries its complete reply
+tree (BR-80).
 """
 
 from __future__ import annotations
@@ -21,9 +21,6 @@ from app.modules.comments.application.dto.comment_dto import (
     CommentAuthorResponse,
     CommentLikeResponse,
     CommentResponse,
-)
-from app.modules.comments.application.services.comment_content import (
-    DELETED_COMMENT_CONTENT,
 )
 from app.modules.comments.domain.enums.comment_status import CommentStatus
 from app.modules.comments.infrastructure.persistence.models import Comment
@@ -43,14 +40,11 @@ def _response(
     likes_count: int,
     liked: bool,
 ) -> CommentResponse:
-    content = comment.content
-    if comment.status is CommentStatus.DELETED:
-        content = DELETED_COMMENT_CONTENT
     return CommentResponse(
         id=comment.id,
         post_id=comment.post_id,
         parent_comment_id=comment.parent_comment_id,
-        content=content,
+        content=comment.content,
         status=comment.status.value,
         author=_author(comment),
         likes_count=max(0, likes_count),
@@ -68,7 +62,7 @@ def _render_tree(
     liked_ids: set[uuid.UUID],
 ) -> CommentResponse | None:
     """Render one branch, hiding moderated branches completely."""
-    if comment.status not in {CommentStatus.VISIBLE, CommentStatus.DELETED}:
+    if comment.status is not CommentStatus.VISIBLE:
         return None
 
     replies: list[CommentResponse] = []
@@ -146,7 +140,7 @@ async def get_comment_response(
         .options(selectinload(Comment.author))
         .where(
             Comment.parent_comment_id == comment.id,
-            Comment.status.in_((CommentStatus.VISIBLE, CommentStatus.DELETED)),
+            Comment.status == CommentStatus.VISIBLE,
         )
         .order_by(Comment.created_at, Comment.id)
     )

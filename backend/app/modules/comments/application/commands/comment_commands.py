@@ -17,7 +17,6 @@ from app.modules.comments.application.dto.comment_dto import (
     CommentUpdateRequest,
 )
 from app.modules.comments.application.services.comment_content import (
-    DELETED_COMMENT_CONTENT,
     count_comment_words,
     sanitize_comment_html,
 )
@@ -129,7 +128,7 @@ async def update_comment(
 
 
 async def delete_comment(uow: UnitOfWork, actor: User, comment_id: uuid.UUID) -> Comment:
-    """Soft-delete a comment; its owner, an admin, or a servant may do so."""
+    """Delete a comment and its replies; its owner, admin, or servant may."""
     comment = await uow.comments.get_by_id(comment_id)
     if comment is None:
         raise NotFoundError("Comment not found")
@@ -141,12 +140,11 @@ async def delete_comment(uow: UnitOfWork, actor: User, comment_id: uuid.UUID) ->
     if not may_delete:
         raise ForbiddenError("Only the owner, an admin, or a servant may delete a comment")
 
-    comment.status = CommentStatus.DELETED
-    comment.content = DELETED_COMMENT_CONTENT
     await uow.audit.record(
         action="comment.delete",
         entity_type="comment",
         entity_id=str(comment.id),
         actor_user_id=actor.id,
     )
+    await uow.comments.delete_subtree(comment.id)
     return comment

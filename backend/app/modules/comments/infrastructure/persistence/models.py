@@ -1,8 +1,8 @@
 """SQLAlchemy ORM models for the comments module.
 
 Self-referencing replies: ``parent_comment_id IS NULL`` is a top-level
-comment, otherwise a reply. Comments are moderated by status
-(VISIBLE/HIDDEN/DELETED/FLAGGED), never physically deleted.
+comment, otherwise a reply. Moderation may hide or flag a comment; a
+member's deletion removes the selected row and its reply subtree.
 """
 
 import uuid
@@ -48,9 +48,14 @@ class Comment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     post: Mapped["BlogPost"] = relationship(back_populates="comments")
     author: Mapped["User"] = relationship(back_populates="comments")
     parent: Mapped["Comment | None"] = relationship(
-        back_populates="replies", remote_side="Comment.id"
+        back_populates="replies",
+        remote_side="Comment.id",
+        passive_deletes=True,
     )
-    replies: Mapped[list["Comment"]] = relationship(back_populates="parent")
+    replies: Mapped[list["Comment"]] = relationship(
+        back_populates="parent",
+        passive_deletes=True,
+    )
     likes: Mapped[list["BlogCommentLike"]] = relationship(
         back_populates="comment", passive_deletes=True
     )

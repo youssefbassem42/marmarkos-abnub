@@ -1,6 +1,6 @@
 import uuid
 
-from sqlalchemy import func, select
+from sqlalchemy import delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -9,10 +9,11 @@ from app.modules.comments.infrastructure.persistence.models import Comment
 
 
 class CommentRepository:
-    """Comment/reply persistence with moderation.
+    """Comment/reply persistence with moderation and hard deletion.
 
-    Comments are never physically deleted: moderators flip ``status``
-    (VISIBLE/HIDDEN/DELETED/FLAGGED).
+    Moderation may hide or flag a branch. A member's deletion removes the
+    selected row; the database's self-referencing cascade removes its
+    whole reply subtree in the same transaction.
     """
 
     def __init__(self, session: AsyncSession) -> None:
@@ -48,6 +49,16 @@ class CommentRepository:
 
     async def set_status(self, comment: Comment, status: CommentStatus) -> None:
         comment.status = status
+        await self._session.flush()
+
+    async def delete_subtree(self, comment_id: uuid.UUID) -> None:
+        """Delete a comment and every reply below it.
+
+        The ``comments.parent_comment_id`` foreign key uses
+        ``ON DELETE CASCADE``. A Core delete bypasses ORM relationship
+        bookkeeping, so PostgreSQL owns the recursive removal atomically.
+        """
+        await self._session.execute(delete(Comment).where(Comment.id == comment_id))
         await self._session.flush()
 
     async def count_for_post(self, post_id: uuid.UUID) -> int:

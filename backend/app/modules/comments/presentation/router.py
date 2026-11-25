@@ -183,7 +183,7 @@ async def delete_blog_comment(
     actor: CurrentUser,
     uow: _UoW,
 ) -> Response:
-    """Soft-delete a comment; the owner, an admin, or a servant may do so."""
+    """Delete a comment and its replies; the owner, admin, or servant may."""
     await delete_comment(uow, actor, comment_id)
     await uow.commit()
     return Response(status_code=status.HTTP_204_NO_CONTENT)

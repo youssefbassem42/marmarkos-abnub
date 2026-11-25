@@ -68,9 +68,6 @@ _DANGEROUS_ELEMENT = re.compile(
 )
 _BLOCK_TAGS = frozenset({"p", "br", "ul", "ol", "li", "blockquote"})
 
-DELETED_COMMENT_CONTENT = "تم حذف التعليق"
-"""The only text a deleted comment exposes (BR-80)."""
-
 
 def _safe_href(value: str) -> bool:
     """Accept absolute HTTP(S) links and same-platform relative paths."""

@@ -72,20 +72,27 @@ async def test_comment_moderation_status(uow: UnitOfWork) -> None:
     assert len(moderated) == 1
 
 
-async def test_comment_never_physically_deleted(uow: UnitOfWork, db_session) -> None:
+async def test_comment_subtree_is_physically_deleted(uow: UnitOfWork, db_session) -> None:
     author = await make_user(uow, "del-author@example.com")
     commenter = await make_user(uow, "del-commenter@example.com")
     post = await make_post(uow, author.id)
     comment = Comment(post_id=post.id, user_id=commenter.id, content="Remove me")
     await uow.comments.add(comment)
     await uow.commit()
-
-    await uow.comments.set_status(comment, CommentStatus.DELETED)
+    reply = Comment(
+        post_id=post.id,
+        user_id=commenter.id,
+        parent_comment_id=comment.id,
+        content="Remove me too",
+    )
+    await uow.comments.add(reply)
     await uow.commit()
 
-    rows = list((await db_session.execute(select(Comment))).scalars().all())
-    assert len(rows) == 1
-    assert rows[0].status is CommentStatus.DELETED
+    await uow.comments.delete_subtree(comment.id)
+    await uow.commit()
+
+    rows = list((await db_session.execute(select(Comment.id))).scalars().all())
+    assert rows == []
 
 
 async def test_comment_like_unique_pair(uow: UnitOfWork, db_session) -> None:
