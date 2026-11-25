@@ -1,4 +1,216 @@
+/**
+ * Machine messages returned by the API are kept beside the Arabic copy.
+ * They are never displayed directly: the error translator uses this map
+ * to find the Arabic sentence that explains the same failure.
+ */
+export const apiServerMessageKeys = {
+  "Image must be 5 MB or smaller": "errors.api.imageTooLarge",
+  "Image must be 2 MB or smaller": "errors.api.imageTooLarge",
+  "The uploaded file is empty": "errors.api.imageEmpty",
+  "Image upload failed; please try again": "errors.api.imageUploadFailed",
+  "Image uploads are not configured": "errors.api.imageUploadsDisabled",
+  "Only JPEG, PNG or WebP images are allowed": "errors.api.imageUploadFailed",
+  "Invalid credentials": "errors.api.invalidCredentials",
+  "Account is not active": "errors.api.accountInactive",
+  "Email not verified": "errors.api.emailNotVerified",
+  "Please verify your email address before signing in":
+    "errors.api.emailNotVerified",
+  "Not authenticated": "errors.api.sessionExpired",
+  "Invalid or expired token": "errors.api.sessionExpired",
+  "Invalid or expired refresh token": "errors.api.sessionExpired",
+  "Current password is incorrect": "errors.api.currentPasswordIncorrect",
+  "This verification link is invalid or has expired":
+    "errors.api.invalidVerificationLink",
+  "This reset link is invalid or has expired": "errors.api.invalidResetLink",
+  "Could not complete Google sign-in": "errors.api.googleSignInFailed",
+  "Google did not return an identity": "errors.api.googleSignInFailed",
+  "The Google account has no verified email":
+    "errors.api.googleEmailNotVerified",
+  "Google sign-in is not configured": "errors.api.googleNotConfigured",
+  "An account with this email already exists": "errors.api.emailAlreadyExists",
+  "An account with this phone number already exists":
+    "errors.api.phoneAlreadyExists",
+  "An account with these details already exists":
+    "errors.api.accountAlreadyExists",
+  "This phone number is already registered": "errors.api.phoneAlreadyExists",
+  "This PIN is already used by another member. Please choose a different one.":
+    "errors.api.attendancePinTaken",
+  "No member is registered with this PIN": "errors.api.attendancePinUnknown",
+  "The attendance PIN must be exactly 5 digits":
+    "errors.api.attendancePinInvalid",
+  "The comment is already liked": "errors.api.alreadyLiked",
+  "The post is already liked": "errors.api.alreadyLiked",
+  "This verse already has an active schedule":
+    "errors.api.verseAlreadyScheduled",
+  "A quiz already exists for this verse": "errors.api.quizAlreadyExists",
+  "You have already started this quiz": "errors.api.attemptAlreadyExists",
+  "Attempt is already finished": "errors.api.attemptAlreadyFinished",
+  "Only failed messages can be retried": "errors.api.messageNotFailed",
+  "Insufficient permissions": "errors.api.noPermission",
+  "Only the owner of a comment may edit": "errors.api.commentEditPermission",
+  "Only the owner, an admin, or a servant may delete a comment":
+    "errors.api.commentDeletePermission",
+  "Only administrators can send announcements":
+    "errors.api.announcementsPermission",
+  "Only administrators can excuse attendance":
+    "errors.api.attendancePermission",
+  "Only an admin or a servant may write blog posts":
+    "errors.api.blogWritePermission",
+  "Only the author, an admin, or a servant may manage this post":
+    "errors.api.blogManagePermission",
+  "The comment must contain visible text": "errors.api.commentTextRequired",
+  "The comment must contain at most 500 words": "errors.api.commentTooLong",
+  "Tag names must not be empty": "errors.api.tagNameRequired",
+  "Tag names must be at most 80 characters": "errors.api.tagNameTooLong",
+  "The title must not be empty": "errors.api.titleRequired",
+  "The body must not be empty": "errors.api.bodyRequired",
+  "Invalid or inactive QR code": "errors.api.invalidAttendanceCode",
+  "This verse has no active schedule": "errors.api.noActiveSchedule",
+  "Could not delete the attendance PIN": "errors.api.attendancePinDeleteFailed",
+  "Resource not found": "errors.api.notFound",
+  "Question not found": "errors.api.questionNotFound",
+  "Comment not found": "errors.api.commentNotFound",
+  "Parent comment not found": "errors.api.parentCommentNotFound",
+  "Post not found": "errors.api.postNotFound",
+  "Attempt not found": "errors.api.attemptNotFound",
+  "Quiz not found": "errors.api.quizNotFound",
+  "Verse not found": "errors.api.verseNotFound",
+  "Slide not found": "errors.api.slideNotFound",
+  "Message not found": "errors.api.messageNotFound",
+  "Notification not found": "errors.api.notificationNotFound",
+  "User not found": "errors.api.memberNotFound",
+  "Short code not found": "errors.api.postNotFound",
+  "Attendance record not found": "errors.api.attendanceRecordNotFound",
+  "This status change is not allowed": "errors.api.invalidStatusTransition",
+  "This verse is already published": "errors.api.verseAlreadyPublished",
+  "This verse has no active schedule to cancel": "errors.api.noActiveSchedule",
+  "You cannot schedule a post more than two years ahead":
+    "errors.api.scheduleTooFarAhead",
+  "Invalid Schedule — you cannot schedule a post in the past":
+    "errors.api.scheduleInPast",
+  "The quiz is not ready to be published": "errors.api.quizNotPublishable",
+  "Quiz is not available": "errors.api.quizNotAvailable",
+  "Quiz has no questions": "errors.api.quizHasNoQuestions",
+  "Verse must be marked read before starting the quiz":
+    "errors.api.verseNotRead",
+  "The active time budget is exhausted": "errors.api.budgetExhausted",
+  "The active time budget is exhausted; submit your answers":
+    "errors.api.budgetExhausted",
+  "Option does not belong to the question": "errors.api.invalidOption",
+  "question_ids must be a permutation of the quiz's questions":
+    "errors.api.invalidReorder",
+  "Too many rows to export. Narrow the filters first":
+    "errors.api.exportTooLarge",
+  "The scheduler endpoint is disabled": "errors.api.serverError",
+} as const;
+
 export const ar = {
+  errors: {
+    unauthorized: "انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى.",
+    forbidden: "لا تملك الصلاحية اللازمة لتنفيذ هذا الإجراء.",
+    conflict: "تم تنفيذ هذا الإجراء بالفعل.",
+    validation: "البيانات المُدخلة غير صالحة. يرجى مراجعتها وحاول مرة أخرى.",
+    network: "تعذّر الاتصال بالخادم. تحقق من اتصالك وحاول مرة أخرى.",
+    unknown: "حدث خطأ غير متوقع. حاول مرة أخرى.",
+    api: {
+      sessionExpired:
+        "انتهت صلاحية الجلسة. يرجى تسجيل الدخول مرة أخرى للمتابعة.",
+      noPermission: "لا تملك الصلاحية اللازمة لتنفيذ هذا الإجراء.",
+      notFound: "العنصر المطلوب غير موجود أو تم حذفه.",
+      alreadyDone: "تم تنفيذ هذا الإجراء بالفعل.",
+      invalidData: "البيانات المُدخلة غير صالحة. يرجى مراجعتها وحاول مرة أخرى.",
+      tooLarge: "حجم البيانات أكبر من المسموح. قلّل حجمها وحاول مرة أخرى.",
+      tooManyAttempts:
+        "لقد حاولت كثيرًا في وقت قصير. انتظر قليلًا ثم حاول مرة أخرى.",
+      serverError:
+        "حدث خطأ في الخادم. هذه المشكلة ليست من طرفك؛ يرجى المحاولة لاحقًا.",
+      network:
+        "تعذّر الاتصال بالخادم. تحقق من اتصالك بالإنترنت وحاول مرة أخرى.",
+      imageTooLarge:
+        "حجم الصورة أكبر من 5 ميغابايت. اختر صورة أصغر وحاول مرة أخرى.",
+      imageEmpty: "الملف الذي اخترته فارغ. اختر ملفًا آخر وحاول مرة أخرى.",
+      imageUploadFailed: "فشل رفع الصورة. تأكد أن الملف صورة ثم حاول مرة أخرى.",
+      imageUploadsDisabled:
+        "خدمة رفع الصور غير مهيأة حاليًا. تواصل مع الإدارة للمساعدة.",
+      invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
+      emailNotVerified:
+        "يجب تأكيد بريدك الإلكتروني أولًا. افتح رسالة التحقق المرسلة إليك.",
+      accountInactive: "حسابك غير مفعّل. تواصل مع الإدارة لتفعيل الحساب.",
+      currentPasswordIncorrect: "كلمة المرور الحالية غير صحيحة.",
+      invalidVerificationLink:
+        "رابط تفعيل الحساب غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.",
+      invalidResetLink:
+        "رابط إعادة تعيين كلمة المرور غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.",
+      googleSignInFailed: "تعذّر إكمال تسجيل الدخول عبر Google. حاول مرة أخرى.",
+      googleEmailNotVerified:
+        "البريد الإلكتروني في حساب Google غير مُفعّل. فعّله ثم حاول مرة أخرى.",
+      googleNotConfigured:
+        "تسجيل الدخول عبر Google غير مهيأ حاليًا. تواصل مع الإدارة.",
+      emailAlreadyExists:
+        "هذا البريد الإلكتروني مسجّل بالفعل. جرّب تسجيل الدخول.",
+      phoneAlreadyExists: "رقم الهاتف هذا مسجّل بالفعل لعضو آخر.",
+      accountAlreadyExists: "يوجد حساب مسجّل بهذه البيانات بالفعل.",
+      attendancePinTaken: "رمز الحضور مستخدم من عضو آخر. اختر رمزًا مختلفًا.",
+      attendancePinUnknown: "لا يوجد عضو مسجّل بهذا الرمز.",
+      attendancePinInvalid: "رمز الحضور يجب أن يتكون من 5 أرقام.",
+      attendancePinDeleteFailed: "تعذّر حذف رمز الحضور. حاول مرة أخرى.",
+      alreadyLiked: "لقد أعجبت بهذا العنصر بالفعل.",
+      verseAlreadyScheduled: "هذه الآية مُجدولة بالفعل.",
+      quizAlreadyExists: "يوجد اختبار مرتبط بهذه الآية بالفعل.",
+      attemptAlreadyExists:
+        "لقد بدأت هذا الاختبار بالفعل. تابع المحاولة الحالية.",
+      attemptAlreadyFinished: "انتهت هذه المحاولة بالفعل.",
+      messageNotFailed: "يمكن إعادة إرسال الرسائل الفاشلة فقط.",
+      commentEditPermission:
+        "لا يمكنك تعديل التعليق إلا إذا كنت صاحب التعليق أو أحد الخدام.",
+      commentDeletePermission:
+        "لا يمكنك حذف التعليق إلا إذا كنت صاحبه أو أحد الخدام.",
+      announcementsPermission: "إرسال الإعلانات متاح للإدارة فقط.",
+      attendancePermission: "تسجيل الاعتذار عن الحضور متاح للإدارة فقط.",
+      blogWritePermission: "كتابة منشورات المدونة متاحة للخدام والإدارة فقط.",
+      blogManagePermission:
+        "لا يمكنك إدارة هذا المنشور إلا إذا كنت كاتبه أو أحد الخدام.",
+      commentTextRequired: "اكتب نصًا ظاهرًا في التعليق.",
+      commentTooLong: "التعليق أطول من 500 كلمة. اختصره ثم حاول مرة أخرى.",
+      tagNameRequired: "لا يمكن ترك اسم الوسم فارغًا.",
+      tagNameTooLong: "اسم الوسم أطول من 80 حرفًا.",
+      titleRequired: "العنوان مطلوب.",
+      bodyRequired: "نص المنشور مطلوب.",
+      invalidAttendanceCode: "رمز الحضور غير صالح أو غير مفعّل.",
+      noActiveSchedule: "لا توجد جدولة نشطة لهذه الآية.",
+      questionNotFound: "السؤال المطلوب غير موجود أو تم حذفه.",
+      commentNotFound: "التعليق المطلوب غير موجود أو تم حذفه.",
+      parentCommentNotFound: "التعليق الأصلي المطلوب غير موجود.",
+      postNotFound: "المنشور المطلوب غير موجود أو تم حذفه.",
+      attemptNotFound: "المحاولة المطلوبة غير موجودة.",
+      quizNotFound: "الاختبار المطلوب غير موجود أو تم حذفه.",
+      verseNotFound: "الآية المطلوبة غير موجودة أو تم حذفها.",
+      slideNotFound: "الشريحة المطلوبة غير موجودة أو تم حذفها.",
+      messageNotFound: "الرسالة المطلوبة غير موجودة.",
+      notificationNotFound: "الإشعار المطلوب غير موجود.",
+      memberNotFound: "العضو المطلوب غير موجود.",
+      attendanceRecordNotFound: "سجل الحضور المطلوب غير موجود.",
+      invalidStatusTransition:
+        "لا يمكن تغيير حالة هذه الآية الآن. راجع حالتها ثم حاول مرة أخرى.",
+      verseAlreadyPublished: "هذه الآية منشورة بالفعل.",
+      invalidSchedule: "موعد الجدولة غير صالح. اختر تاريخًا ووقتًا صالحين.",
+      scheduleTooFarAhead:
+        "لا يمكن جدولة المنشور بعد أكثر من عامين. اختر تاريخًا أقرب.",
+      scheduleInPast:
+        "لا يمكن جدولة المنشور في الماضي. اختر تاريخًا مستقبليًا.",
+      quizNotPublishable:
+        "الاختبار غير جاهز للنشر. أكمل المتطلبات ثم حاول مرة أخرى.",
+      quizNotAvailable: "هذا الاختبار غير متاح حاليًا.",
+      quizHasNoQuestions: "لا يحتوي هذا الاختبار على أسئلة بعد.",
+      verseNotRead: "يجب تحديد الآية كمقروءة قبل بدء الاختبار.",
+      budgetExhausted: "انتهى الوقت المخصص للإجابة. سلّم إجاباتك الآن.",
+      invalidOption: "الخيار المحدد لا ينتمي إلى هذا السؤال.",
+      invalidReorder:
+        "ترتيب الأسئلة المُرسل غير صالح. أعد ترتيب الأسئلة وحاول مرة أخرى.",
+      exportTooLarge:
+        "عدد الصفوف أكبر من المسموح للتصدير. ضيّق عوامل التصفية ثم حاول مرة أخرى.",
+    },
+  },
   common: {
     comingSoon: "قريبًا",
     retry: "حاول مرة تاني",
