@@ -68,3 +68,21 @@ class CommentRepository:
             )
         )
         return int(result.scalar_one())
+
+    async def counts_for_posts(self, post_ids: list[uuid.UUID]) -> dict[uuid.UUID, int]:
+        """Count the comments of a whole page with one grouped query.
+
+        The blog needs the number of the comments of every card of the
+        list. The count belongs to the comments (they own the rows and
+        the state), and the blog asks for it through the unit of work:
+        importing the model of the comments into the blog would close an
+        import cycle (the comments already know the posts).
+        """
+        if not post_ids:
+            return {}
+        result = await self._session.execute(
+            select(Comment.post_id, func.count(Comment.id))
+            .where(Comment.post_id.in_(post_ids))
+            .group_by(Comment.post_id)
+        )
+        return {post_id: int(count) for post_id, count in result.all()}

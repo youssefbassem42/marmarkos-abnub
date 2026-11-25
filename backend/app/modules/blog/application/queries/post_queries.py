@@ -30,7 +30,6 @@ from app.modules.blog.infrastructure.persistence.models import (
     BlogPost,
     BlogPostLike,
 )
-from app.modules.comments.infrastructure.persistence.models import Comment
 from app.modules.users.infrastructure.persistence.models import User
 from app.shared.contracts.users import RoleName
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
@@ -140,28 +139,17 @@ def _likes_count_query() -> ScalarSelect[int]:
     )
 
 
-def _comments_count_query() -> ScalarSelect[int]:
-    return (
-        select(func.count(Comment.id))
-        .where(Comment.post_id == BlogPost.id)
-        .correlate(BlogPost)
-        .scalar_subquery()
-    )
-
-
 async def _comment_counts(
     uow: UnitOfWork,
     post_ids: list[uuid.UUID],
 ) -> dict[uuid.UUID, int]:
-    """Count the comments of a whole page with one grouped query."""
-    if not post_ids:
-        return {}
-    result = await uow.session.execute(
-        select(Comment.post_id, func.count(Comment.id))
-        .where(Comment.post_id.in_(post_ids))
-        .group_by(Comment.post_id)
-    )
-    return {post_id: int(count) for post_id, count in result.all()}
+    """Count the comments of a whole page with one grouped query.
+
+    The count belongs to the comments (they own the rows); the blog
+    asks for it through the unit of work so that the two modules do not
+    import each other in a circle.
+    """
+    return await uow.comments.counts_for_posts(post_ids)
 
 
 async def list_blog_posts(
@@ -238,16 +226,15 @@ async def get_post_detail(
     or an archived post.  Every other reader receives ``None`` (BR-64).
     """
     likes_count = _likes_count_query()
-    comments_count = _comments_count_query()
     result = await uow.session.execute(
-        select(BlogPost, likes_count.label("likes_count"), comments_count.label("comments_count"))
+        select(BlogPost, likes_count.label("likes_count"))
         .options(selectinload(BlogPost.author), selectinload(BlogPost.categories))
         .where(BlogPost.id == post_id)
     )
     row = result.one_or_none()
     if row is None:
         return None
-    post, post_likes_count, post_comments_count = row
+    post, post_likes_count = row
 
     is_public = post.status is PostStatus.PUBLISHED and (
         post.published_at is None or post.published_at <= now_utc()
@@ -255,7 +242,8 @@ async def get_post_detail(
     may_manage = viewer is not None and (viewer.id == post.author_id or _is_manager(viewer))
     if not is_public and not may_manage:
         return None
-    return _detail(post, int(post_likes_count), int(post_comments_count))
+    comments_count = await uow.comments.count_for_post(post_id)
+    return _detail(post, int(post_likes_count), comments_count)
 
 
 async def get_short_link(
@@ -276,14 +264,14 @@ async def get_short_link(
 async def get_admin_post(uow: UnitOfWork, post_id: uuid.UUID) -> BlogPostAdminResponse | None:
     """Return one post with its administration fields."""
     likes_count = _likes_count_query()
-    comments_count = _comments_count_query()
     result = await uow.session.execute(
-        select(BlogPost, likes_count.label("likes_count"), comments_count.label("comments_count"))
+        select(BlogPost, likes_count.label("likes_count"))
         .options(selectinload(BlogPost.author), selectinload(BlogPost.categories))
         .where(BlogPost.id == post_id)
     )
     row = result.one_or_none()
     if row is None:
         return None
-    post, post_likes_count, post_comments_count = row
-    return _admin(post, int(post_likes_count), int(post_comments_count))
+    post, post_likes_count = row
+    comments_count = await uow.comments.count_for_post(post_id)
+    return _admin(post, int(post_likes_count), comments_count)
