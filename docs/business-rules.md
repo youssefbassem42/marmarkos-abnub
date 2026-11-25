@@ -312,6 +312,8 @@ number.
 | `BR-76` | Announcement mails are sent with bounded concurrency and the failure of one member never stops the other members | `app/modules/notifications/application/services/notification_service.py` |
 | `BR-91` | Liking a post or a comment notifies its author once with a `BLOG_LIKE` notification; nobody notifies themself, and the notification id is derived from the liked item and the member who liked it | `app/modules/notifications/application/services/notification_service.py` |
 | `BR-92` | A member may like a comment or reply once; taking the like back is idempotent, the count is never negative, and every comment in the tree carries its count and the caller's own like state | `app/modules/comments/application/commands/comment_like_commands.py` |
+| `BR-93` | The editor of a post saves the draft on the server ten seconds after the writer stops typing; the autosave never publishes, never schedules, and never resets the text under the writer's hands | `frontend/src/modules/blog/pages/blog/BlogPostFormPage.tsx` |
+| `BR-94` | A post carries two kinds of images: the **cover** (its own route, 1 MB) and the **pictures of the body** (their own route, 2 MB), uploaded through the shared media service | `app/modules/blog/presentation/router.py` |
 
 ## The comments of the blog posts (the point 7 of the plan)
 
