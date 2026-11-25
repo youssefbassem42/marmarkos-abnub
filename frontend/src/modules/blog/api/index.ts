@@ -5,6 +5,7 @@
  * DTO before it reaches a page.
  */
 
+
 import { apiClient } from "@/lib/api";
 import { paginated } from "@/lib/schemas/common";
 import {
@@ -56,9 +57,10 @@ export const blogApi = {
 
   /** Resolve the stable short address of a post. */
   getShortLink: async (code: string): Promise<BlogShortLink> => {
-    const response = await apiClient.get(`/blog/posts/short/${code}`, {
-      schema: blogShortLinkSchema,
-    });
+    const response = await apiClient.get(
+      `/blog/posts/short/${encodeURIComponent(code)}`,
+      { schema: blogShortLinkSchema },
+    );
     return response.data;
   },
 

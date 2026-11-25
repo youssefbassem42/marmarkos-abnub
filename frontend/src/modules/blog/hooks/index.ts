@@ -1,5 +1,6 @@
 export * from "./useBlogComments";
 export * from "./useBlogPost";
+export * from "./useBlogPostByShortCode";
 export * from "./useCreateBlogComment";
 export * from "./useDeleteBlogComment";
 export * from "./useUpdateBlogComment";

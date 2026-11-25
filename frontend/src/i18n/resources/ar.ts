@@ -1518,6 +1518,10 @@ export const ar = {
       notFoundTitle: "المنشور غير موجود",
       notFoundBody: "ربما نُشر المنشور أو أصبح مؤرشفًا.",
     },
+    shortLink: {
+      loading: "جارٍ فتح المنشور...",
+      failed: "تعذر فتح المنشور. حاول مرة أخرى.",
+    },
     editor: {
       label: "محرر النص",
       placeholder: "اكتب نص المنشور هنا…",

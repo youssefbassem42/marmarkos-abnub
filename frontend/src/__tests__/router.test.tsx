@@ -15,7 +15,22 @@ import { RouterProvider } from "react-router-dom";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import type { RegisteredUser } from "@/lib/api";
-import { installApi, makeQueryClient } from "@/test/pageHarness";
+import { makeQueryClient } from "@/test/pageHarness";
+
+const BLOG_POST = {
+  id: "11111111-1111-4111-8111-111111111111",
+  title: "عنوان المنشور",
+  excerpt: "ملخص المنشور",
+  body: "<p>نص المنشور</p>",
+  cover_image: null,
+  tags: [],
+  status: "PUBLISHED",
+  published_at: "2026-10-29T10:00:00Z",
+  author: { id: "author-1", full_name: "كاتب المنشور" },
+  likes_count: 3,
+  comments_count: 2,
+  short_code: "a1b2c3d4",
+};
 
 const MEMBER: RegisteredUser = {
   id: "11111111-1111-4111-8111-111111111111",
@@ -42,10 +57,15 @@ const MEMBER: RegisteredUser = {
  * its own copy of the session, because the guard reads the token from
  * the memory of the module.
  */
-async function renderRouterAt(path: string, user?: RegisteredUser) {
+async function renderRouterAt(
+  path: string,
+  user?: RegisteredUser,
+  answers: Record<string, unknown> = {},
+) {
   window.history.pushState({}, "", path);
   vi.resetModules();
-  installApi({});
+  const harness = await import("@/test/pageHarness");
+  harness.installApi(answers);
 
   if (user) {
     const auth = await import("@/lib/auth");
@@ -88,6 +108,7 @@ describe("the table of the routes", () => {
       "/notifications",
       "/blog/new",
       "/blog/:postId/edit",
+      "/p/:code",
       "*",
     ]) {
       expect(paths).toContain(expected);
@@ -181,6 +202,49 @@ describe("the table of the routes", () => {
 
     expect(
       await screen.findByRole("heading", { name: "الصفحة غير موجودة" }),
+    ).toBeInTheDocument();
+  });
+
+  it("opens a public tiny link and sends the visitor to the post", async () => {
+    await renderRouterAt("/p/a1b2c3d4", undefined, {
+      "/blog/posts/short/a1b2c3d4": {
+        post_id: BLOG_POST.id,
+        slug: "the-published-post",
+      },
+      "/blog/posts/the-published-post": BLOG_POST,
+    });
+
+    await waitFor(
+      () =>
+        expect(
+          screen.getByRole("heading", { name: "عنوان المنشور" }),
+        ).toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
+    expect(window.location.pathname).toBe("/blog/the-published-post");
+  });
+
+  it("shows the 404 page when a tiny link is unknown", async () => {
+    await renderRouterAt("/p/unknown", undefined, {
+      "/blog/posts/short/unknown": { status: 404 },
+    });
+
+    await waitFor(
+      () =>
+        expect(
+          screen.getByRole("heading", { name: "الصفحة غير موجودة" }),
+        ).toBeInTheDocument(),
+      { timeout: 5_000 },
+    );
+  });
+
+  it("offers a retry when the tiny-link lookup fails", async () => {
+    await renderRouterAt("/p/broken", undefined, {
+      "/blog/posts/short/broken": { status: 500 },
+    });
+
+    expect(
+      await screen.findByRole("button", { name: /حاول مرة تاني/ }),
     ).toBeInTheDocument();
   });
 

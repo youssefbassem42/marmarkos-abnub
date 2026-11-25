@@ -175,6 +175,9 @@ const BlogListPage = lazyWithRetry(
 const BlogPostPage = lazyWithRetry(
   () => import("@/modules/blog/pages/blog/BlogPostPage"),
 );
+const BlogShortLinkPage = lazyWithRetry(
+  () => import("@/modules/blog/pages/blog/BlogShortLinkPage"),
+);
 const BlogPostFormPage = lazyWithRetry(
   () => import("@/modules/blog/pages/blog/BlogPostFormPage"),
 );
@@ -574,6 +577,16 @@ export const router = createBrowserRouter([
           <PointsPage />
         </Suspense>
       </RequireAuth>
+    ),
+  },
+  {
+    // Public tiny link: it opens the post for a visitor who never signed in.
+    path: "/p/:code",
+    handle: { parent: "/" },
+    element: (
+      <Suspense fallback={<PageSkeleton />}>
+        <BlogShortLinkPage />
+      </Suspense>
     ),
   },
   {
