@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, MailCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useApiError } from "@/hooks/useApiError";
 import { cn } from "@/lib/utils";
 
 const DEFAULT_COOLDOWN_SECONDS = 60;
@@ -41,10 +42,12 @@ export function CheckEmailCard({
   resendHidden = false,
 }: CheckEmailCardProps) {
   const { t } = useTranslation("verification");
+  const describeError = useApiError();
   const [cooldown, setCooldown] = useState(DEFAULT_COOLDOWN_SECONDS);
   const [sending, setSending] = useState(false);
   const [resent, setResent] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const timerRef = useRef<number | null>(null);
 
   const startCooldown = useCallback((seconds: number) => {
@@ -69,11 +72,13 @@ export function CheckEmailCard({
     setSending(true);
     setResent(false);
     setFailed(false);
+    setErrorMessage(null);
     try {
       await onResend();
       setResent(true);
-    } catch {
+    } catch (error) {
       setFailed(true);
+      setErrorMessage(describeError(error).message);
     } finally {
       setSending(false);
       startCooldown(DEFAULT_COOLDOWN_SECONDS);
@@ -130,7 +135,7 @@ export function CheckEmailCard({
             "mt-4 rounded-xl border border-brand-red/30 bg-brand-red/5 px-4 py-2.5 text-brand-red font-arabic text-lg",
           )}
         >
-          {resendFailedLabel ?? t("resendFailed")}
+          {errorMessage ?? resendFailedLabel ?? t("resendFailed")}
         </p>
       ) : null}
 

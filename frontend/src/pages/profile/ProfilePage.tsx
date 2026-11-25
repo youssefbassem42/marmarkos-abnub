@@ -29,12 +29,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Navbar } from "@/components/layout/Navbar";
 import { PageHeader } from "@/components/common/PageHeader";
+import { useApiError } from "@/hooks/useApiError";
 import { AttendanceStatusBadge } from "@/modules/attendance/components/AttendanceStatusBadge";
 import { useMyAttendance } from "@/modules/attendance/hooks/useMyAttendance";
 import { AttendancePinCard } from "./AttendancePinCard";
 import {
   apiClient,
-  ApiError,
   changePassword,
   updateProfile,
   uploadAvatar,
@@ -53,6 +53,7 @@ function currentYearMonth(): { year: number; month: number } {
 export function ProfilePage() {
   const { t } = useTranslation("profile");
   const { t: tCommon } = useTranslation("common");
+  const describeError = useApiError();
   const navigate = useNavigate();
 
   const [user, setUser] = useState(getAuthUser);
@@ -193,10 +194,7 @@ export function ProfilePage() {
     } catch (error) {
       setProfileStatus({
         kind: "error",
-        text:
-          error instanceof ApiError && error.status === 403
-            ? t("validation.uploadFailed")
-            : t("validation.uploadFailed"),
+        text: describeError(error).message,
       });
     } finally {
       setUploading(false);
@@ -225,10 +223,7 @@ export function ProfilePage() {
     } catch (error) {
       setProfileStatus({
         kind: "error",
-        text:
-          error instanceof ApiError
-            ? error.message || t("validation.saveFailed")
-            : t("validation.networkError"),
+        text: describeError(error).message,
       });
     } finally {
       setSavingProfile(false);
@@ -268,10 +263,7 @@ export function ProfilePage() {
     } catch (error) {
       setProfileStatus({
         kind: "error",
-        text:
-          error instanceof ApiError
-            ? error.message || t("validation.saveFailed")
-            : t("validation.networkError"),
+        text: describeError(error).message,
       });
     } finally {
       setSavingPassword(false);

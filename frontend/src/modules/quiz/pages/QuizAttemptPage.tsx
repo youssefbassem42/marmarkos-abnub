@@ -6,6 +6,7 @@ import { ApiError, toApiError } from "@/lib/api";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageHeader } from "@/components/common/PageHeader";
+import { useApiError } from "@/hooks/useApiError";
 import { useStartAttempt, attemptIdFromError } from "../hooks/useStartAttempt";
 import { useAttempt } from "../hooks/useAttempt";
 import { useQuizForTake } from "../hooks/useQuizForTake";
@@ -39,6 +40,7 @@ export default function QuizAttemptPage() {
   const { quizId } = useParams<{ quizId: string }>();
   const { t } = useTranslation("quiz");
   const { t: tCommon } = useTranslation("common");
+  const describeError = useApiError();
   const navigate = useNavigate();
 
   // The draft of the attempt in progress (the resume of the quiz). It is
@@ -63,6 +65,7 @@ export default function QuizAttemptPage() {
     draft?.answers ?? {},
   );
   const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const [saveError, setSaveError] = useState<string | null>(null);
   const [hasSubmitted, setHasSubmitted] = useState(false);
   // Server-anchored active-time budget from heartbeat/save responses (V2).
   const [budgetAnchor, setBudgetAnchor] = useState<{
@@ -82,6 +85,7 @@ export default function QuizAttemptPage() {
     data: takeData,
     isLoading: takeLoading,
     isError: takeError,
+    error: takeQueryError,
   } = useQuizForTake(quizId ?? "", { enabled: !!quizId });
   const saveAnswer = useSaveAnswer();
   const submitAttempt = useSubmitAttempt();
@@ -343,11 +347,21 @@ export default function QuizAttemptPage() {
             setSaveStatus("saved");
             setBudgetAnchor({ remainingSeconds: body.remaining_seconds });
           },
-          onError: () => setSaveStatus("failed"),
+          onError: (error) => {
+            setSaveStatus("failed");
+            setSaveError(describeError(error).message);
+          },
         },
       );
     },
-    [currentQuestion, attemptId, answersLocked, timer.isExpired, saveAnswer],
+    [
+      currentQuestion,
+      attemptId,
+      answersLocked,
+      timer.isExpired,
+      saveAnswer,
+      describeError,
+    ],
   );
 
   const handleSubmit = useCallback(() => {
@@ -360,9 +374,13 @@ export default function QuizAttemptPage() {
         if (quizId) clearQuizDraft(quizId);
         navigate(`/quizzes/${quizId}/result?attemptId=${attemptId}`);
       },
-      onError: () => setHasSubmitted(false),
+      onError: (error) => {
+        setHasSubmitted(false);
+        setSaveStatus("failed");
+        setSaveError(describeError(error).message);
+      },
     });
-  }, [attemptId, hasSubmitted, quizId, navigate, submitAttempt]);
+  }, [attemptId, hasSubmitted, quizId, navigate, submitAttempt, describeError]);
 
   // The time is up: the attempt is submitted **by itself**.
   //
@@ -415,7 +433,13 @@ export default function QuizAttemptPage() {
         className="flex flex-col items-center justify-center gap-4 p-8"
         role="alert"
       >
-        <p className="text-destructive">{tCommon("errors.unknown")}</p>
+        <p className="text-destructive">
+          {
+            describeError(
+              startAttempt.isError ? startAttempt.error : takeQueryError,
+            ).message
+          }
+        </p>
         <Button variant="outline" onClick={() => window.location.reload()}>
           {tCommon("retry")}
         </Button>
@@ -476,7 +500,7 @@ export default function QuizAttemptPage() {
 
       {/* Save status + question counter */}
       <div className="flex items-center justify-between">
-        <AutosaveIndicator status={saveStatus} />
+        <AutosaveIndicator status={saveStatus} errorMessage={saveError} />
         <span className="text-sm text-muted-foreground">
           {t("take.question")} {currentIndex + 1}{" "}
           {t("take.of", { total: questions.length })}

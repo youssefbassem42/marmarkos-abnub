@@ -123,7 +123,7 @@ export function AttendanceHistoryPage() {
       downloadCsv(blob, `${filename}.csv`);
       toast.success(t("history.export.csv"));
     } catch {
-      toast.error(t("errors.network"));
+      toast.error(t("history.export.failed"));
     }
   };
 

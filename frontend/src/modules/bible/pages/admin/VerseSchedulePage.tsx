@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
+import { useApiError } from "@/hooks/useApiError";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -31,6 +32,7 @@ export default function VerseSchedulePage() {
   const { verseId } = useParams<{ verseId: string }>();
   const { t } = useTranslation("bible");
   const { t: tAdmin } = useTranslation("admin");
+  const describeError = useApiError();
   const navigate = useNavigate();
   const [activeStep, setActiveStep] = useState<1 | 2>(1);
 
@@ -65,8 +67,8 @@ export default function VerseSchedulePage() {
               toast.success(t("admin.schedule.rescheduled"));
               navigate("/admin/bible-verses");
             },
-            onError: () => {
-              toast.error(t("admin.schedule.saveFailed"));
+            onError: (error) => {
+              toast.error(describeError(error).message);
             },
           },
         );
@@ -78,8 +80,8 @@ export default function VerseSchedulePage() {
               toast.success(t("admin.schedule.saved"));
               navigate("/admin/bible-verses");
             },
-            onError: () => {
-              toast.error(t("admin.schedule.saveFailed"));
+            onError: (error) => {
+              toast.error(describeError(error).message);
             },
           },
         );
@@ -92,6 +94,7 @@ export default function VerseSchedulePage() {
       scheduleMutation,
       rescheduleMutation,
       t,
+      describeError,
       navigate,
     ],
   );

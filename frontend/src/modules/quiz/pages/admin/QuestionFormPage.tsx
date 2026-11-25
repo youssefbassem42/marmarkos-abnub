@@ -15,6 +15,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
+import { useApiError } from "@/hooks/useApiError";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Form } from "@/components/ui/form";
@@ -37,6 +38,7 @@ export default function QuestionFormPage() {
   const isEdit = !!questionId;
   const { t } = useTranslation("quiz");
   const { t: tAdmin } = useTranslation("admin");
+  const describeError = useApiError();
   const navigate = useNavigate();
 
   const { data: quiz, isLoading: quizLoading } = useQuiz(quizId ?? "");
@@ -108,8 +110,8 @@ export default function QuestionFormPage() {
           toast.success(t("admin.question.savedToast"));
           navigate(`/admin/quizzes/${quizId}/manage`);
         },
-        onError: () => {
-          toast.error(t("admin.question.saveError"));
+        onError: (error) => {
+          toast.error(describeError(error).message);
         },
       },
     );

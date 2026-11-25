@@ -6,6 +6,7 @@ import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
+import { useApiError } from "@/hooks/useApiError";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -54,6 +55,7 @@ function SlideRow({
   onDelete,
 }: SlideRowProps) {
   const { t } = useTranslation("admin");
+  const describeError = useApiError();
   const updateSlide = useUpdateSlide();
   const isUpdating = updateSlide.isPending;
 
@@ -70,8 +72,8 @@ function SlideRow({
               : t("slides.actions.deactivate"),
           );
         },
-        onError: () => {
-          toast.error(t("slides.failed"));
+        onError: (error) => {
+          toast.error(describeError(error).message);
         },
       },
     );
@@ -185,6 +187,7 @@ function SlideRow({
 export function SlidesPage() {
   const { t } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
+  const describeError = useApiError();
 
   const [page, setPage] = useState(1);
   const size = 20;
@@ -241,8 +244,8 @@ export function SlidesPage() {
       toast.success(t("slides.saved"));
       setDialogOpen(false);
       setEditing(null);
-    } catch {
-      toast.error(t("slides.saveFailed"));
+    } catch (error) {
+      toast.error(describeError(error).message);
     }
   };
 
@@ -253,8 +256,8 @@ export function SlidesPage() {
       toast.success(tCommon("delete"));
       setDeleteOpen(false);
       setSlideToDelete(null);
-    } catch {
-      toast.error(t("slides.failed"));
+    } catch (error) {
+      toast.error(describeError(error).message);
       setDeleteOpen(false);
       setSlideToDelete(null);
     }
@@ -269,11 +272,11 @@ export function SlidesPage() {
       try {
         await reorderSlides.mutateAsync(ordered.map((slide) => slide.id));
         toast.success(t("slides.reordered"));
-      } catch {
-        toast.error(t("slides.failed"));
+      } catch (error) {
+        toast.error(describeError(error).message);
       }
     },
-    [items, reorderSlides, t],
+    [describeError, items, reorderSlides, t],
   );
 
   if (query.isPending) {

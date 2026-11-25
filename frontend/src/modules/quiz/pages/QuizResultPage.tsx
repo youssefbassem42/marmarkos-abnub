@@ -6,6 +6,7 @@ import {
   useSearchParams,
 } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import { useApiError } from "@/hooks/useApiError";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ArrowLeft, BarChart3 } from "lucide-react";
 import { useAttemptResult } from "../hooks/useAttemptResult";
@@ -18,6 +19,7 @@ export default function QuizResultPage() {
   const { quizId } = useParams<{ quizId: string }>();
   const { t } = useTranslation("quiz");
   const { t: tCommon } = useTranslation("common");
+  const describeError = useApiError();
   const navigate = useNavigate();
 
   // The id of the attempt comes from the router, not from
@@ -31,6 +33,7 @@ export default function QuizResultPage() {
     data: result,
     isLoading,
     isError,
+    error,
   } = useAttemptResult(attemptId, {
     enabled: !!attemptId,
   });
@@ -41,7 +44,7 @@ export default function QuizResultPage() {
         className="flex flex-col items-center justify-center gap-4 p-8"
         role="alert"
       >
-        <p className="text-destructive">{tCommon("errors.unknown")}</p>
+        <p className="text-destructive">{t("result.missingAttempt")}</p>
         <Button variant="outline" onClick={() => navigate(-1)}>
           {tCommon("back")}
         </Button>
@@ -75,7 +78,7 @@ export default function QuizResultPage() {
         className="flex flex-col items-center justify-center gap-4 p-8"
         role="alert"
       >
-        <p className="text-destructive">{tCommon("errors.unknown")}</p>
+        <p className="text-destructive">{describeError(error).message}</p>
         <Button variant="outline" onClick={() => window.location.reload()}>
           {tCommon("retry")}
         </Button>

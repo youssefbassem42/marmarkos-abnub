@@ -8,6 +8,7 @@ import { AppPagination } from "@/components/common/AppPagination";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
 import { PageHeader } from "@/components/common/PageHeader";
+import { useApiError } from "@/hooks/useApiError";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -43,6 +44,7 @@ const PAGE_SIZE = 12;
 export function BlogListPage() {
   const { t } = useTranslation("blog");
   const { t: tCommon } = useTranslation("common");
+  const describeError = useApiError();
   const [searchParams, setSearchParams] = useSearchParams();
   const [postToArchive, setPostToArchive] = useState<BlogPostSummary | null>(
     null,
@@ -102,7 +104,7 @@ export function BlogListPage() {
   const handlePublish = (post: BlogPostSummary) => {
     publishPost.mutate(post.id, {
       onSuccess: () => toast.success(t("admin.published")),
-      onError: () => toast.error(t("admin.failed")),
+      onError: (error) => toast.error(describeError(error).message),
     });
   };
 
@@ -114,7 +116,7 @@ export function BlogListPage() {
       { postId: post.id, data: { published_at: publishedAt.toISOString() } },
       {
         onSuccess: () => toast.success(t("admin.scheduled")),
-        onError: () => toast.error(t("admin.failed")),
+        onError: (error) => toast.error(describeError(error).message),
       },
     );
   };
@@ -126,7 +128,7 @@ export function BlogListPage() {
         toast.success(t("admin.archived"));
         setPostToArchive(null);
       },
-      onError: () => toast.error(t("admin.failed")),
+      onError: (error) => toast.error(describeError(error).message),
     });
   };
 

@@ -9,6 +9,8 @@ export type ScanResultVariant = "success" | "warning" | "error";
 interface ScanResultCardProps {
   variant: ScanResultVariant;
   title: string;
+  /** The specific reason shown below the title. */
+  message?: string;
   /** Present for success: the recorded attendance. */
   record?: AttendanceRecord;
   onScanNext?: () => void;
@@ -39,6 +41,7 @@ const VARIANT_STYLES = {
 export function ScanResultCard({
   variant,
   title,
+  message,
   record,
   onScanNext,
 }: ScanResultCardProps) {
@@ -62,6 +65,12 @@ export function ScanResultCard({
           <h2 className={cn("font-heading text-lg font-bold", titleClass)}>
             {title}
           </h2>
+
+          {message ? (
+            <p className="mt-2 text-sm leading-6 text-muted-foreground font-arabic">
+              {message}
+            </p>
+          ) : null}
 
           {record && (
             <dl className="mt-3 space-y-2 text-sm">

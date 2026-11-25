@@ -4,9 +4,13 @@ import { cn } from "@/lib/utils";
 
 interface AutosaveIndicatorProps {
   status: "idle" | "saving" | "saved" | "failed";
+  errorMessage?: string | null;
 }
 
-export function AutosaveIndicator({ status }: AutosaveIndicatorProps) {
+export function AutosaveIndicator({
+  status,
+  errorMessage,
+}: AutosaveIndicatorProps) {
   const { t } = useTranslation("quiz");
   const { t: tCommon } = useTranslation("common");
 
@@ -28,7 +32,7 @@ export function AutosaveIndicator({ status }: AutosaveIndicatorProps) {
       <span>
         {status === "saving" && t("take.submitting")}
         {status === "saved" && t("take.autosaveNote")}
-        {status === "failed" && tCommon("errors.unknown")}
+        {status === "failed" && (errorMessage ?? tCommon("errors.unknown"))}
       </span>
     </div>
   );

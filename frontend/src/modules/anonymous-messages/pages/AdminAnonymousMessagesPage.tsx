@@ -7,6 +7,7 @@ import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { AppPagination } from "@/components/common/AppPagination";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
+import { useApiError } from "@/hooks/useApiError";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   DropdownMenu,
@@ -14,7 +15,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { getApiErrorMessage } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useAnonymousMessages, useRetryDelivery } from "../hooks";
 import { AnonymousMessagesTable } from "../components/AnonymousMessagesTable";
@@ -44,6 +44,7 @@ const FILTERS: { value: StatusFilter; label: FilterLabel }[] = [
  */
 export function AdminAnonymousMessagesPage() {
   const { t } = useTranslation("anonymousMessages");
+  const describeError = useApiError();
   const [searchParams, setSearchParams] = useSearchParams();
 
   const filter = (searchParams.get("status") ?? "all") as StatusFilter;
@@ -162,7 +163,8 @@ export function AdminAnonymousMessagesPage() {
                 onRetry={(id) =>
                   retry.mutate(id, {
                     onSuccess: () => toast.success(t("admin.retry.success")),
-                    onError: (error) => toast.error(getApiErrorMessage(error)),
+                    onError: (error) =>
+                      toast.error(describeError(error).message),
                   })
                 }
               />

@@ -7,7 +7,8 @@ import { ArrowRight, Mail, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ApiError, requestPasswordReset } from "@/lib/api";
+import { useApiError } from "@/hooks/useApiError";
+import { requestPasswordReset } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import {
   forgotPasswordSchema,
@@ -20,6 +21,7 @@ interface ForgotPasswordFormProps {
 
 export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
   const { t } = useTranslation("forgotPassword");
+  const describeError = useApiError();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
@@ -45,11 +47,7 @@ export function ForgotPasswordForm({ onSuccess }: ForgotPasswordFormProps) {
       await requestPasswordReset({ email: values.email });
       onSuccess(values.email);
     } catch (error) {
-      if (error instanceof ApiError) {
-        setSubmitError(t("validation.requestFailed"));
-      } else {
-        setSubmitError(t("validation.networkError"));
-      }
+      setSubmitError(describeError(error).message);
     }
   });
 

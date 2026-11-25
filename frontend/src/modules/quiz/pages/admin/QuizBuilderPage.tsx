@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
+import { useApiError } from "@/hooks/useApiError";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Tooltip,
@@ -72,6 +73,7 @@ export default function QuizBuilderPage() {
   const { t } = useTranslation("quiz");
   const { t: tCommon } = useTranslation("common");
   const { t: tBible } = useTranslation("bible");
+  const describeError = useApiError();
   const navigate = useNavigate();
   const location = useLocation();
   const [searchParams] = useSearchParams();
@@ -168,8 +170,8 @@ export default function QuizBuilderPage() {
           onSuccess: () => {
             toast.success(t("admin.builder.savedToast"));
           },
-          onError: () => {
-            toast.error(t("admin.builder.saveError"));
+          onError: (error) => {
+            toast.error(describeError(error).message);
           },
         },
       );
@@ -186,8 +188,8 @@ export default function QuizBuilderPage() {
             toast.success(t("admin.builder.savedToast"));
             navigate(`/admin/quizzes/${created.id}/builder`, { replace: true });
           },
-          onError: () => {
-            toast.error(t("admin.builder.saveError"));
+          onError: (error) => {
+            toast.error(describeError(error).message);
           },
         },
       );
@@ -201,8 +203,8 @@ export default function QuizBuilderPage() {
         toast.success(t("admin.builder.publishedToast"));
         navigate("/admin/quizzes");
       },
-      onError: () => {
-        toast.error(t("admin.builder.publishError"));
+      onError: (error) => {
+        toast.error(describeError(error).message);
       },
     });
   };
@@ -223,8 +225,8 @@ export default function QuizBuilderPage() {
             state: { openQuestionEditor: true },
           });
         },
-        onError: () => {
-          toast.error(t("admin.builder.saveError"));
+        onError: (error) => {
+          toast.error(describeError(error).message);
         },
       },
     );
@@ -253,8 +255,8 @@ export default function QuizBuilderPage() {
         onSuccess: () => {
           toast.success(t("admin.manage.reorderSuccess"));
         },
-        onError: () => {
-          toast.error(t("admin.manage.reorderError"));
+        onError: (error) => {
+          toast.error(describeError(error).message);
         },
       },
     );

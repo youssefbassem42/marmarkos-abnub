@@ -31,6 +31,7 @@ import { AppPagination } from "@/components/common/AppPagination";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
 import { StatCard } from "@/components/common/StatCard";
+import { useApiError } from "@/hooks/useApiError";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -257,6 +258,7 @@ function QuizAnalyticsDetail({
   backHref: string;
 }) {
   const { t } = useTranslation("quiz");
+  const describeError = useApiError();
   const [userPage, setUserPage] = useState(1);
   const [exporting, setExporting] = useState(false);
   const analytics = useQuizAnalytics(quizId);
@@ -343,8 +345,8 @@ function QuizAnalyticsDetail({
         rows,
       );
       toast.success(t("admin.analytics.exportSuccess"));
-    } catch {
-      toast.error(t("admin.analytics.exportFailed"));
+    } catch (error) {
+      toast.error(describeError(error).message);
     } finally {
       setExporting(false);
     }

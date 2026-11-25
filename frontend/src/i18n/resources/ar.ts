@@ -331,6 +331,8 @@ export const ar = {
         invalidTitle: "رمز QR غير صالح",
         invalidPinTitle: "الرمز غير صحيح — لا يوجد عضو بهذا الرمز",
         forbiddenTitle: "لا تملك صلاحية تسجيل الحضور",
+        unauthorizedTitle: "انتهت صلاحية الجلسة",
+        serverTitle: "خطأ في الخادم",
         networkTitle: "مشكلة في الاتصال",
         name: "الاسم",
         meeting: "الاجتماع",
@@ -449,6 +451,7 @@ export const ar = {
       },
       export: {
         csv: "تصدير CSV",
+        failed: "تعذر إنشاء ملف الحضور. حاول مرة أخرى.",
         filename: "الحضور-{{year}}-{{month}}",
       },
     },
@@ -697,6 +700,14 @@ export const ar = {
         "هذا الحساب غير مفعّل بعد. تفقد بريدك الإلكتروني للعثور على رسالة التحقق.",
       networkError: "تعذر الاتصال بالخادم. حاول مرة أخرى.",
       loginFailed: "حدث خطأ غير متوقع. حاول مرة أخرى.",
+    },
+    google: {
+      working: "جارٍ إكمال تسجيل الدخول عبر Google...",
+      notConfigured: "تسجيل الدخول عبر Google غير مهيأ حاليًا.",
+      accountInactive: "هذا الحساب غير مفعّل. تواصل مع الإدارة.",
+      identityFailed:
+        "لم نتمكن من التحقق من حساب Google. تأكد أن بريدك الإلكتروني مُفعّل.",
+      failed: "تعذّر إكمال تسجيل الدخول عبر Google. حاول مرة أخرى.",
     },
     security: "بيانات حسابك محمية وآمنة.",
     noAccount: "ليس لديك حساب؟",
@@ -1670,6 +1681,7 @@ export const ar = {
       },
     },
     result: {
+      missingAttempt: "رابط نتيجة الاختبار غير صالح. عد إلى صفحة الاختبار.",
       completed: "أكملت الاختبار!",
       subtitle: "إليك نتيجة اختبارك",
       correct: "إجابات صحيحة",
@@ -1791,6 +1803,8 @@ export const ar = {
       preparing: "جارٍ تجهيز الرابط...",
       manualLabel: "انسخ الرابط يدويًا",
       failed: "تعذر تجهيز رابط المشاركة. حاول مرة أخرى.",
+      linkUnavailable:
+        "لا يوجد رابط مشاركة لهذا المنشور. حدّث الصفحة وحاول مرة أخرى.",
     },
     comments: {
       title: "التعليقات",

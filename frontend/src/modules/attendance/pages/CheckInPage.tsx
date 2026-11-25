@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { KeyRound, QrCode, ScanLine } from "lucide-react";
-import { ApiError } from "@/lib/api";
+import { useApiError } from "@/hooks/useApiError";
 import { cn } from "@/lib/utils";
 import { QRScanner, type CameraFailure } from "../components/QRScanner";
 import { ManualCodeEntry } from "../components/ManualCodeEntry";
@@ -29,32 +29,16 @@ type ScanState =
   | { kind: "duplicate"; message: string }
   | { kind: "invalid"; message: string }
   | { kind: "forbidden"; message: string }
+  | { kind: "unauthorized"; message: string }
+  | { kind: "server"; message: string }
   | { kind: "network"; message: string };
 
 const SUCCESS_RESUME_MS = 3000;
 const ERROR_RESUME_MS = 5000;
 
-function errorKey(error: ApiError): keyof typeof ERROR_KEYS | undefined {
-  if (error.code === "conflict" || error.status === 409) return "conflict";
-  if (error.code === "validation_error" || error.status === 422)
-    return "validation";
-  if (error.code === "forbidden" || error.status === 403) return "forbidden";
-  if (error.status === 401) return "unauthorized";
-  if (error.status === 0 || error.status >= 500) return "network";
-  return undefined;
-}
-
-const ERROR_KEYS = {
-  unauthorized: true,
-  forbidden: true,
-  conflict: true,
-  validation: true,
-  network: true,
-  unknown: true,
-} as const;
-
 export function CheckInPage() {
   const { t } = useTranslation("attendance");
+  const describeError = useApiError();
 
   const [state, setState] = useState<ScanState>({ kind: "idle" });
   const [torchAvailable, setTorchAvailable] = useState(false);
@@ -107,30 +91,33 @@ export function CheckInPage() {
           scheduleResume(SUCCESS_RESUME_MS);
         },
         onError: (error) => {
-          if (!(error instanceof ApiError)) {
-            setState({ kind: "network", message: t("errors.network") });
-            scheduleResume(ERROR_RESUME_MS);
-            return;
-          }
-          const key = errorKey(error);
-          const message =
-            (key ? t(`errors.${key}`) : undefined) ??
-            error.message ??
-            t("errors.unknown");
+          const described = describeError(error);
+          const message = described.message;
 
-          if (key === "conflict") setState({ kind: "duplicate", message });
-          else if (key === "validation") setState({ kind: "invalid", message });
-          else if (key === "forbidden")
+          if (described.code === "conflict" || described.status === 409) {
+            setState({ kind: "duplicate", message });
+          } else if (
+            described.code === "forbidden" ||
+            described.status === 403
+          ) {
             setState({ kind: "forbidden", message });
-          else if (key === "unauthorized")
+          } else if (described.status === 401) {
+            setState({ kind: "unauthorized", message });
+          } else if (described.kind === "server") {
+            setState({ kind: "server", message });
+          } else if (described.kind === "network") {
             setState({ kind: "network", message });
-          else setState({ kind: "network", message });
+          } else {
+            setState({ kind: "invalid", message });
+          }
 
-          if (key !== "forbidden") scheduleResume(ERROR_RESUME_MS);
+          if (described.code !== "forbidden" && described.status !== 403) {
+            scheduleResume(ERROR_RESUME_MS);
+          }
         },
       });
     },
-    [checkIn, clearResumeTimer, scheduleResume, t],
+    [checkIn, clearResumeTimer, describeError, scheduleResume],
   );
 
   const handleCameraFailure = useCallback((failure: CameraFailure) => {
@@ -149,6 +136,8 @@ export function CheckInPage() {
         state.kind === "duplicate" ||
         state.kind === "invalid" ||
         state.kind === "forbidden" ||
+        state.kind === "unauthorized" ||
+        state.kind === "server" ||
         state.kind === "network";
       if (event.key === "Enter" && isResult) {
         event.preventDefault();
@@ -202,6 +191,10 @@ export function CheckInPage() {
           : t("checkIn.result.invalidTitle");
       case "forbidden":
         return t("checkIn.result.forbiddenTitle");
+      case "unauthorized":
+        return t("checkIn.result.unauthorizedTitle");
+      case "server":
+        return t("checkIn.result.serverTitle");
       case "network":
         return t("checkIn.result.networkTitle");
       default:
@@ -237,6 +230,8 @@ export function CheckInPage() {
     state.kind === "duplicate" ||
     state.kind === "invalid" ||
     state.kind === "forbidden" ||
+    state.kind === "unauthorized" ||
+    state.kind === "server" ||
     state.kind === "network"
       ? state
       : null;
@@ -335,6 +330,8 @@ export function CheckInPage() {
                     state.kind === "duplicate" ||
                     state.kind === "invalid" ||
                     state.kind === "forbidden" ||
+                    state.kind === "unauthorized" ||
+                    state.kind === "server" ||
                     state.kind === "network"
                   }
                   onFailure={handleCameraFailure}
@@ -395,6 +392,7 @@ export function CheckInPage() {
             <ScanResultCard
               variant={resultVariant}
               title={heading}
+              message={resultState.message}
               onScanNext={
                 resultState.kind === "forbidden"
                   ? undefined

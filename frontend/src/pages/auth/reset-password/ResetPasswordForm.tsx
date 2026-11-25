@@ -6,7 +6,8 @@ import { useTranslation } from "react-i18next";
 import { ArrowRight, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { ApiError, resetPassword } from "@/lib/api";
+import { useApiError } from "@/hooks/useApiError";
+import { resetPassword } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { PasswordField } from "../components/PasswordField";
 import { PasswordRequirements } from "./PasswordRequirements";
@@ -25,6 +26,7 @@ export function ResetPasswordForm({
   onSuccess,
 }: ResetPasswordFormProps) {
   const { t } = useTranslation("resetPassword");
+  const describeError = useApiError();
   const [submitError, setSubmitError] = useState<string | null>(null);
 
   const {
@@ -60,15 +62,7 @@ export function ResetPasswordForm({
       await resetPassword({ token, password: values.password });
       onSuccess();
     } catch (error) {
-      if (error instanceof ApiError) {
-        if (error.status === 400 || error.status === 401) {
-          setSubmitError(t("validation.invalidToken"));
-        } else {
-          setSubmitError(t("validation.resetFailed"));
-        }
-      } else {
-        setSubmitError(t("validation.networkError"));
-      }
+      setSubmitError(describeError(error).message);
     }
   });
 

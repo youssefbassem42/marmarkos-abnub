@@ -7,7 +7,8 @@ import { Calendar, Mail, MapPin, Phone, UserPlus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ApiError, registerUser } from "@/lib/api";
+import { useApiError } from "@/hooks/useApiError";
+import { registerUser } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { FormField } from "./FormField";
 import { PasswordField } from "../components/PasswordField";
@@ -20,6 +21,7 @@ type RegisterFormProps = {
 
 export function RegistrationForm({ onSuccess }: RegisterFormProps) {
   const { t } = useTranslation("register");
+  const describeError = useApiError();
   const inputClass = cn(
     "h-11 rounded-xl border-border bg-background px-3 focus-ring font-arabic text-lg placeholder:text-base",
   );
@@ -78,14 +80,7 @@ export function RegistrationForm({ onSuccess }: RegisterFormProps) {
       });
       onSuccess(values.email);
     } catch (error) {
-      if (error instanceof ApiError) {
-        // The API answers 202 with a fixed body for every address (it
-        // must not reveal which addresses exist), so a duplicate no
-        // longer arrives as 409 - only real failures reach this branch.
-        setSubmitError(t("apiErrors.registrationFailed"));
-      } else {
-        setSubmitError(t("apiErrors.networkError"));
-      }
+      setSubmitError(describeError(error).message);
     }
   });
 

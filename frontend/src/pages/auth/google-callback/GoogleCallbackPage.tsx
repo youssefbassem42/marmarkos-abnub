@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import { Loader2, XCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Navbar } from "@/components/layout/Navbar";
-import { ApiError, getMe, scheduleTokenRefresh } from "@/lib/api";
+import { useApiError } from "@/hooks/useApiError";
+import { getMe, scheduleTokenRefresh } from "@/lib/api";
 import { saveAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 
@@ -17,6 +18,7 @@ type Phase = "working" | "done" | "failed";
  */
 export function GoogleCallbackPage() {
   const { t } = useTranslation("login");
+  const describeError = useApiError();
   const navigate = useNavigate();
   const location = useLocation();
   const [phase, setPhase] = useState<Phase>("working");
@@ -31,12 +33,12 @@ export function GoogleCallbackPage() {
     if (error || !accessToken) {
       setErrorMessage(
         error === "not_configured"
-          ? "تسجيل الدخول عبر Google غير مُهيأ بعد."
+          ? t("google.notConfigured")
           : error === "account_inactive"
-            ? "هذا الحساب غير نشط. تواصل مع الإدارة."
+            ? t("google.accountInactive")
             : error === "identity_failed"
-              ? "لم نتمكن من التحقق من حساب Google (تحقق من تأكيد البريد الإلكتروني)."
-              : null,
+              ? t("google.identityFailed")
+              : t("google.failed"),
       );
       setPhase("failed");
       return;
@@ -61,11 +63,7 @@ export function GoogleCallbackPage() {
         }
       } catch (err) {
         if (cancelled) return;
-        setErrorMessage(
-          err instanceof ApiError && err.status === 403
-            ? "الحساب غير نشط."
-            : null,
-        );
+        setErrorMessage(describeError(err).message);
         setPhase("failed");
       }
     })();
@@ -73,7 +71,7 @@ export function GoogleCallbackPage() {
     return () => {
       cancelled = true;
     };
-  }, [location.hash, navigate]);
+  }, [describeError, location.hash, navigate, t]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -87,14 +85,14 @@ export function GoogleCallbackPage() {
               aria-hidden="true"
             />
             <p className={cn("text-muted-foreground font-arabic text-lg")}>
-              جارٍ إكمال تسجيل الدخول...
+              {t("google.working")}
             </p>
           </>
         ) : (
           <>
             <XCircle className="h-12 w-12 text-brand-red" aria-hidden="true" />
             <p className={cn("text-ink font-arabic text-xl")}>
-              {errorMessage ?? "تعذّر إكمال تسجيل الدخول عبر Google."}
+              {errorMessage ?? t("google.failed")}
             </p>
             <Button
               asChild

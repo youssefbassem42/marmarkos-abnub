@@ -4,6 +4,7 @@ import { Share2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useApiError } from "@/hooks/useApiError";
 import { blogApi } from "../api";
 
 interface ShareablePost {
@@ -32,15 +33,18 @@ function tinyLink(shortCode: string): string {
  */
 export function ShareButton({ post }: ShareButtonProps) {
   const { t } = useTranslation("blog");
+  const describeError = useApiError();
   const inputId = useId();
   const [manualLink, setManualLink] = useState<string | null>(null);
   const [isCopied, setIsCopied] = useState(false);
   const [isPreparing, setIsPreparing] = useState(false);
   const [hasFailed, setHasFailed] = useState(false);
+  const [failureMessage, setFailureMessage] = useState<string | null>(null);
 
   const handleShare = async () => {
     setIsPreparing(true);
     setHasFailed(false);
+    setFailureMessage(null);
 
     try {
       let shortCode = post.short_code;
@@ -53,6 +57,7 @@ export function ShareButton({ post }: ShareButtonProps) {
 
       if (!shortCode) {
         setHasFailed(true);
+        setFailureMessage(t("share.linkUnavailable"));
         return;
       }
 
@@ -67,8 +72,9 @@ export function ShareButton({ post }: ShareButtonProps) {
       } catch {
         setManualLink(link);
       }
-    } catch {
+    } catch (error) {
       setHasFailed(true);
+      setFailureMessage(describeError(error).message);
     } finally {
       setIsPreparing(false);
     }
@@ -113,7 +119,7 @@ export function ShareButton({ post }: ShareButtonProps) {
 
       {hasFailed ? (
         <p role="alert" className="text-xs text-destructive">
-          {t("share.failed")}
+          {failureMessage ?? t("share.failed")}
         </p>
       ) : null}
     </div>

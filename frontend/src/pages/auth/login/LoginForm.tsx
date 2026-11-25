@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useApiError } from "@/hooks/useApiError";
 import { ApiError, loginUser } from "@/lib/api";
 import { saveAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,7 @@ import { loginSchema, type LoginFormValues } from "./loginSchema";
 
 export function LoginForm() {
   const { t } = useTranslation("login");
+  const describeError = useApiError();
   const navigate = useNavigate();
   const location = useLocation();
   const [submitError, setSubmitError] = useState<string | null>(null);
@@ -67,15 +69,9 @@ export function LoginForm() {
           });
           return;
         }
-        if (error.status === 401) {
-          setSubmitError(t("validation.invalidCredentials"));
-        } else if (error.status === 403) {
-          setSubmitError(t("validation.accountInactive"));
-        } else {
-          setSubmitError(t("validation.loginFailed"));
-        }
+        setSubmitError(describeError(error).message);
       } else {
-        setSubmitError(t("validation.networkError"));
+        setSubmitError(describeError(error).message);
       }
     }
   });

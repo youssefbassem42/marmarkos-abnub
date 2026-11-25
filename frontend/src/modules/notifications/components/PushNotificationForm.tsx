@@ -18,7 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { getApiErrorMessage } from "@/lib/api";
+import { useApiError } from "@/hooks/useApiError";
 import { cn } from "@/lib/utils";
 import { usePushNotification } from "../hooks";
 import { pushSchema, type PushFormValues } from "./pushSchema";
@@ -30,6 +30,7 @@ import { pushSchema, type PushFormValues } from "./pushSchema";
  */
 export function PushNotificationForm() {
   const { t } = useTranslation("notifications");
+  const describeError = useApiError();
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [sendEmail, setSendEmail] = useState(false);
   const [pendingValues, setPendingValues] = useState<PushFormValues | null>(
@@ -81,8 +82,7 @@ export function PushNotificationForm() {
           reset();
           setSendEmail(false);
         },
-        onError: (error) =>
-          toast.error(getApiErrorMessage(error, t("toast.pushFailed"))),
+        onError: (error) => toast.error(describeError(error).message),
       },
     );
   };

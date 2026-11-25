@@ -8,6 +8,7 @@ import { Calendar, CheckCircle, Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
+import { useApiError } from "@/hooks/useApiError";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -36,6 +37,7 @@ export default function VerseFormPage() {
   const isEdit = Boolean(verseId);
   const { t } = useTranslation("bible");
   const { t: tAdmin } = useTranslation("admin");
+  const describeError = useApiError();
   const navigate = useNavigate();
 
   const { data: verse, isLoading: verseLoading } = useVerse(verseId ?? "", {
@@ -134,8 +136,8 @@ export default function VerseFormPage() {
         navigate(`/admin/bible-verses/${saved.id}/edit`, { replace: true });
       }
       form.reset(form.getValues());
-    } catch {
-      toast.error(t("admin.form.saveFailed"));
+    } catch (error) {
+      toast.error(describeError(error).message);
     }
   });
 
@@ -145,8 +147,8 @@ export default function VerseFormPage() {
       if (saved) {
         navigate(`/admin/bible-verses/${saved.id}/schedule`);
       }
-    } catch {
-      toast.error(t("admin.form.saveFailed"));
+    } catch (error) {
+      toast.error(describeError(error).message);
     }
   });
 
@@ -160,8 +162,8 @@ export default function VerseFormPage() {
         toast.success(t("admin.form.published"));
         navigate("/admin/bible-verses");
       }
-    } catch {
-      toast.error(t("admin.form.publishFailed"));
+    } catch (error) {
+      toast.error(describeError(error).message);
     }
   });
 

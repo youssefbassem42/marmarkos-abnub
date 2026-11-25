@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Save, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { useApiError } from "@/hooks/useApiError";
 import {
   Card,
   CardContent,
@@ -41,6 +42,7 @@ export function BuilderQuestionEditor({
   onSaved,
 }: BuilderQuestionEditorProps) {
   const { t } = useTranslation("quiz");
+  const describeError = useApiError();
 
   const saveQuestion = useSaveQuestion();
   const updateQuestion = useUpdateQuestion();
@@ -101,8 +103,8 @@ export function BuilderQuestionEditor({
       toast.success(t("admin.question.savedToast"));
       onSaved();
     };
-    const onError = () => {
-      toast.error(t("admin.question.saveError"));
+    const onError = (error: unknown) => {
+      toast.error(describeError(error).message);
     };
 
     if (editing) {

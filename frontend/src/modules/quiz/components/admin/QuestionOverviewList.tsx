@@ -14,6 +14,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useApiError } from "@/hooks/useApiError";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
@@ -53,6 +54,7 @@ export function QuestionOverviewList({
   const { t } = useTranslation("quiz");
   const { t: tCommon } = useTranslation("common");
   const { t: tBible } = useTranslation("bible");
+  const describeError = useApiError();
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const deleteQuestion = useDeleteQuestion();
@@ -70,12 +72,12 @@ export function QuestionOverviewList({
           toast.success(t("admin.builder.deleteSuccess"));
           setDeleteId(null);
         },
-        onError: () => {
-          toast.error(tCommon("errors.unknown"));
+        onError: (error) => {
+          toast.error(describeError(error).message);
         },
       },
     );
-  }, [deleteId, quizId, deleteQuestion, t, tCommon]);
+  }, [deleteId, quizId, deleteQuestion, t, describeError]);
 
   const handleDuplicate = useCallback(
     (questionId: string) => {
@@ -85,13 +87,13 @@ export function QuestionOverviewList({
           onSuccess: () => {
             toast.success(t("admin.builder.duplicateSuccess"));
           },
-          onError: () => {
-            toast.error(tCommon("errors.unknown"));
+          onError: (error) => {
+            toast.error(describeError(error).message);
           },
         },
       );
     },
-    [quizId, duplicateQuestion, t, tCommon],
+    [quizId, duplicateQuestion, t, describeError],
   );
 
   if (isLoading) {

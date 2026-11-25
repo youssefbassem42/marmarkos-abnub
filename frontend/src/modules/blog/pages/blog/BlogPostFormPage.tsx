@@ -6,6 +6,7 @@ import { toast } from "sonner";
 
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
+import { useApiError } from "@/hooks/useApiError";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,6 +26,7 @@ import {
 
 export function BlogPostFormPage() {
   const { t } = useTranslation("blog");
+  const describeError = useApiError();
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
   const isEditing = Boolean(postId);
@@ -39,6 +41,7 @@ export function BlogPostFormPage() {
   const [autosaveState, setAutosaveState] = useState<
     "idle" | "saving" | "saved" | "error"
   >("idle");
+  const [autosaveError, setAutosaveError] = useState<string | null>(null);
   const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dirtySince = useRef(false);
 
@@ -98,11 +101,15 @@ export function BlogPostFormPage() {
     if (!dirtySince.current) return;
     if (!title.trim() || !body.trim()) return;
     setAutosaveState("saving");
+    setAutosaveError(null);
     const done = () => {
       dirtySince.current = false;
       setAutosaveState("saved");
     };
-    const failed = () => setAutosaveState("error");
+    const failed = (error: unknown) => {
+      setAutosaveState("error");
+      setAutosaveError(describeError(error).message);
+    };
 
     if (postId) {
       updatePost
@@ -125,7 +132,17 @@ export function BlogPostFormPage() {
     // `payload` is read when the timer fires: the closure is refreshed
     // on every render, so the latest values are the ones that are sent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [postId, title, body, excerpt, cover, tags, updatePost, createPost]);
+  }, [
+    postId,
+    title,
+    body,
+    excerpt,
+    cover,
+    tags,
+    updatePost,
+    createPost,
+    describeError,
+  ]);
 
   const scheduleAutosave = useCallback(() => {
     dirtySince.current = true;
@@ -158,7 +175,8 @@ export function BlogPostFormPage() {
       toast.success(t("admin.actions.save"));
       navigate("/blog");
     };
-    const onError = () => toast.error(t("admin.failed"));
+    const onError = (error: unknown) =>
+      toast.error(describeError(error).message);
 
     if (isEditing && postId) {
       updatePost.mutate({ postId, data: payload }, { onSuccess, onError });
@@ -182,8 +200,8 @@ export function BlogPostFormPage() {
       await publishPost.mutateAsync(targetPostId);
       toast.success(t("admin.published"));
       navigate("/blog");
-    } catch {
-      toast.error(t("admin.failed"));
+    } catch (error) {
+      toast.error(describeError(error).message);
     }
   };
 
@@ -208,8 +226,8 @@ export function BlogPostFormPage() {
       });
       toast.success(t("admin.scheduled"));
       navigate("/blog");
-    } catch {
-      toast.error(t("admin.failed"));
+    } catch (error) {
+      toast.error(describeError(error).message);
     }
   };
 
@@ -217,7 +235,7 @@ export function BlogPostFormPage() {
     if (!file) return;
     uploadCover.mutate(file, {
       onSuccess: (result) => setCover(result.url),
-      onError: () => toast.error(t("admin.failed")),
+      onError: (error) => toast.error(describeError(error).message),
     });
   };
 
@@ -299,7 +317,7 @@ export function BlogPostFormPage() {
                 : autosaveState === "saved"
                   ? t("admin.form.autosaveSaved")
                   : autosaveState === "error"
-                    ? t("admin.form.autosaveFailed")
+                    ? (autosaveError ?? t("admin.form.autosaveFailed"))
                     : ""}
             </p>
           </div>

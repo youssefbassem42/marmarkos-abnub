@@ -10,7 +10,7 @@ import {
 } from "./anonymousMessageSchema";
 import { AnonymityNotice } from "./AnonymityNotice";
 import { useSubmitAnonymousMessage } from "../hooks";
-import { ApiError } from "@/lib/api";
+import { useApiError } from "@/hooks/useApiError";
 import { cn } from "@/lib/utils";
 import type { AnonymousMessageCreateResponse } from "../types";
 
@@ -29,6 +29,7 @@ export function AnonymousMessageForm({
   onSubmitted,
 }: AnonymousMessageFormProps) {
   const { t } = useTranslation("anonymousMessages");
+  const describeError = useApiError();
   const [submitted, setSubmitted] =
     useState<AnonymousMessageCreateResponse | null>(null);
 
@@ -73,13 +74,8 @@ export function AnonymousMessageForm({
         sender_phone: values.sender_phone?.trim() || null,
       });
     } catch (error) {
-      // BR-15: a rate-limited submission is the one failure the sender
-      // must see — nothing was stored.
-      if (error instanceof ApiError && error.status === 429) {
-        setSubmissionError(t("validation.rateLimited"));
-        return;
-      }
-      throw error;
+      setSubmissionError(describeError(error).message);
+      return;
     }
     // BR-13: success state for delivered AND status FAILED alike —
     // the sender must never see a delivery failure.

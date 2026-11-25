@@ -28,6 +28,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useApiError } from "@/hooks/useApiError";
 import { useArchiveVerse } from "../../hooks";
 import type { VerseAdminItem } from "../../types";
 
@@ -37,6 +38,7 @@ interface VerseRowActionsProps {
 
 export function VerseRowActions({ verse }: VerseRowActionsProps) {
   const { t } = useTranslation("bible");
+  const describeError = useApiError();
   const navigate = useNavigate();
   const archiveVerse = useArchiveVerse();
   const [archiveOpen, setArchiveOpen] = useState(false);
@@ -47,11 +49,11 @@ export function VerseRowActions({ verse }: VerseRowActionsProps) {
         toast.success(t("admin.archived"));
         setArchiveOpen(false);
       },
-      onError: () => {
-        toast.error(t("admin.archiveFailed"));
+      onError: (error) => {
+        toast.error(describeError(error).message);
       },
     });
-  }, [archiveVerse, verse.id, t]);
+  }, [archiveVerse, describeError, verse.id, t]);
 
   return (
     <>

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
+import { useApiError } from "@/hooks/useApiError";
 import {
   Tooltip,
   TooltipContent,
@@ -44,8 +45,8 @@ import { QuizAnalyticsTeaser } from "../../components/admin/QuizAnalyticsTeaser"
 
 export default function QuizManagePage() {
   const { t } = useTranslation("quiz");
-  const { t: tCommon } = useTranslation("common");
   const { t: tBible } = useTranslation("bible");
+  const describeError = useApiError();
   const navigate = useNavigate();
   const { quizId: routeQuizId } = useParams<{ quizId?: string }>();
   const [searchParams] = useSearchParams();
@@ -78,8 +79,8 @@ export default function QuizManagePage() {
         toast.success(t("admin.manage.publishedToast"));
         navigate("/admin/quizzes");
       },
-      onError: () => {
-        toast.error(t("admin.manage.publishError"));
+      onError: (error) => {
+        toast.error(describeError(error).message);
       },
     });
   };
@@ -98,7 +99,7 @@ export default function QuizManagePage() {
     return (
       <div className="flex flex-col items-center justify-center p-12 text-center">
         <p className="text-muted-foreground font-arabic">
-          {tCommon("errors.unknown")}
+          {describeError(error).message}
         </p>
         <Button variant="link" asChild className="mt-2">
           <Link to="/admin/quizzes" className="font-arabic">

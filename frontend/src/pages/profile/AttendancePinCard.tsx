@@ -13,7 +13,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { ApiError } from "@/lib/api";
+import { useApiError } from "@/hooks/useApiError";
 import { cn } from "@/lib/utils";
 import { attendancePinApi } from "@/modules/attendance/api";
 import { PinEntry } from "@/modules/attendance/components/PinEntry";
@@ -27,6 +27,7 @@ type PinStatus = { kind: "ok" | "error"; text: string } | null;
  */
 export function AttendancePinCard() {
   const { t } = useTranslation("profile");
+  const describeError = useApiError();
 
   const [loaded, setLoaded] = useState(false);
   const [pinSet, setPinSet] = useState(false);
@@ -47,16 +48,16 @@ export function AttendancePinCard() {
           setLoaded(true);
         }
       })
-      .catch(() => {
+      .catch((error: unknown) => {
         if (!cancelled) {
           setLoaded(true);
-          setStatus({ kind: "error", text: t("pin.loadFailed") });
+          setStatus({ kind: "error", text: describeError(error).message });
         }
       });
     return () => {
       cancelled = true;
     };
-  }, [t]);
+  }, [describeError]);
 
   const handleSave = async (pin: string) => {
     setSaving(true);
@@ -67,14 +68,7 @@ export function AttendancePinCard() {
       setEditing(false);
       setStatus({ kind: "ok", text: t("pin.saved") });
     } catch (error) {
-      if (
-        error instanceof ApiError &&
-        (error.code === "conflict" || error.status === 409)
-      ) {
-        setStatus({ kind: "error", text: t("pin.taken") });
-      } else {
-        setStatus({ kind: "error", text: t("pin.saveFailed") });
-      }
+      setStatus({ kind: "error", text: describeError(error).message });
       setEditing(true);
     } finally {
       setSaving(false);
@@ -89,8 +83,8 @@ export function AttendancePinCard() {
       setPinSet(false);
       setEditing(false);
       setStatus({ kind: "ok", text: t("pin.deleted") });
-    } catch {
-      setStatus({ kind: "error", text: t("pin.deleteFailed") });
+    } catch (error) {
+      setStatus({ kind: "error", text: describeError(error).message });
     } finally {
       setDeleting(false);
     }

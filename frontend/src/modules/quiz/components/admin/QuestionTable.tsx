@@ -23,6 +23,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
+import { useApiError } from "@/hooks/useApiError";
 import {
   Table,
   TableBody,
@@ -50,6 +51,7 @@ export function QuestionTable({
 }: QuestionTableProps) {
   const { t } = useTranslation("quiz");
   const { t: tCommon } = useTranslation("common");
+  const describeError = useApiError();
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [announcement, setAnnouncement] = useState("");
   const dragItem = useRef<number | null>(null);
@@ -70,12 +72,12 @@ export function QuestionTable({
           toast.success(t("admin.manage.deleteSuccess"));
           setDeleteId(null);
         },
-        onError: () => {
-          toast.error(tCommon("errors.unknown"));
+        onError: (error) => {
+          toast.error(describeError(error).message);
         },
       },
     );
-  }, [deleteId, quizId, deleteQuestion, t, tCommon]);
+  }, [deleteId, quizId, deleteQuestion, t, describeError]);
 
   const handleDuplicate = useCallback(
     (questionId: string) => {
@@ -85,13 +87,13 @@ export function QuestionTable({
           onSuccess: () => {
             toast.success(t("admin.manage.duplicateSuccess"));
           },
-          onError: () => {
-            toast.error(tCommon("errors.unknown"));
+          onError: (error) => {
+            toast.error(describeError(error).message);
           },
         },
       );
     },
-    [quizId, duplicateQuestion, t, tCommon],
+    [quizId, duplicateQuestion, t, describeError],
   );
 
   const persistReorder = useCallback(
@@ -102,13 +104,13 @@ export function QuestionTable({
           onSuccess: () => {
             toast.success(t("admin.manage.reorderSuccess"));
           },
-          onError: () => {
-            toast.error(t("admin.manage.reorderError"));
+          onError: (error) => {
+            toast.error(describeError(error).message);
           },
         },
       );
     },
-    [quizId, reorderQuestions, t],
+    [quizId, reorderQuestions, t, describeError],
   );
 
   const handleDragStart = useCallback((index: number) => {
