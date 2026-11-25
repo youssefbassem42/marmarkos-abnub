@@ -95,20 +95,37 @@ export function BlogPostFormPage() {
    * the draft as it is.
    */
   const autosave = useCallback(() => {
-    if (!postId || !dirtySince.current) return;
+    if (!dirtySince.current) return;
     if (!title.trim() || !body.trim()) return;
     setAutosaveState("saving");
-    updatePost
-      .mutateAsync({ postId, data: payload })
-      .then(() => {
-        dirtySince.current = false;
-        setAutosaveState("saved");
+    const done = () => {
+      dirtySince.current = false;
+      setAutosaveState("saved");
+    };
+    const failed = () => setAutosaveState("error");
+
+    if (postId) {
+      updatePost
+        .mutateAsync({ postId, data: payload })
+        .then(done)
+        .catch(failed);
+      return;
+    }
+
+    // The post does not exist yet: the autosave **creates** the draft
+    // and the form continues on the draft it has just written, so the
+    // next pause updates it instead of creating a second post.
+    createPost
+      .mutateAsync(payload)
+      .then((created) => {
+        done();
+        navigate(`/blog/${created.id}/edit`, { replace: true });
       })
-      .catch(() => setAutosaveState("error"));
+      .catch(failed);
     // `payload` is read when the timer fires: the closure is refreshed
     // on every render, so the latest values are the ones that are sent.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [postId, title, body, excerpt, cover, tags, updatePost]);
+  }, [postId, title, body, excerpt, cover, tags, updatePost, createPost]);
 
   const scheduleAutosave = useCallback(() => {
     dirtySince.current = true;
@@ -272,21 +289,19 @@ export function BlogPostFormPage() {
               placeholder={t("editor.placeholder")}
               aria-label={t("admin.form.bodyLabel")}
             />
-            {isEditing ? (
-              <p
-                className="text-xs text-muted-foreground"
-                role="status"
-                aria-live="polite"
-              >
-                {autosaveState === "saving"
-                  ? t("admin.form.autosaveSaving")
-                  : autosaveState === "saved"
-                    ? t("admin.form.autosaveSaved")
-                    : autosaveState === "error"
-                      ? t("admin.form.autosaveFailed")
-                      : ""}
-              </p>
-            ) : null}
+            <p
+              className="text-xs text-muted-foreground"
+              role="status"
+              aria-live="polite"
+            >
+              {autosaveState === "saving"
+                ? t("admin.form.autosaveSaving")
+                : autosaveState === "saved"
+                  ? t("admin.form.autosaveSaved")
+                  : autosaveState === "error"
+                    ? t("admin.form.autosaveFailed")
+                    : ""}
+            </p>
           </div>
         </div>
 
