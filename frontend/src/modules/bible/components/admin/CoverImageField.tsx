@@ -21,7 +21,7 @@ export function CoverImageField({
   disabled,
 }: CoverImageFieldProps) {
   const { t } = useTranslation("bible");
-  const { t: tErrors } = useTranslation();
+  const { t: tErrors } = useTranslation("errors");
   const describeError = useApiError();
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -30,7 +30,7 @@ export function CoverImageField({
   const doUpload = useCallback(
     async (file: File) => {
       if (isImageTooLarge(file)) {
-        toast.error(tErrors("errors.api.imageTooLarge" as never));
+        toast.error(tErrors("api.imageTooLarge" as never));
         return;
       }
       const token = getAccessToken();

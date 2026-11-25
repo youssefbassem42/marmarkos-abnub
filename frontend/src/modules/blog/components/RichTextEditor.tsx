@@ -104,7 +104,7 @@ export function RichTextEditor({
   "aria-invalid": ariaInvalid,
 }: RichTextEditorProps) {
   const { t } = useTranslation("blog");
-  const { t: tErrors } = useTranslation();
+  const { t: tErrors } = useTranslation("errors");
   const describeError = useApiError();
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
@@ -157,7 +157,7 @@ export function RichTextEditor({
     if (!upload || !editor) return;
     setUploadError(null);
     if (isImageTooLarge(file)) {
-      setUploadError(tErrors("errors.api.imageTooLarge" as never));
+      setUploadError(tErrors("api.imageTooLarge" as never));
       return;
     }
     setUploading(true);

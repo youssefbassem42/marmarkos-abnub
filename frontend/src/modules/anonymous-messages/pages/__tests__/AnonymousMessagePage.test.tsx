@@ -164,7 +164,11 @@ describe("AnonymousMessagePage", () => {
     await typeMessage(user, "One more prayer request for today.");
     await user.click(screen.getByRole("button", { name: SUBMIT }));
 
-    expect(await screen.findByText(/عدة رسائل بالفعل/)).toBeInTheDocument();
+    expect(
+      await screen.findByText(
+        "لقد حاولت كثيرًا في وقت قصير. انتظر قليلًا ثم حاول مرة أخرى.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("renders for an anonymous visitor and issues no reads", async () => {

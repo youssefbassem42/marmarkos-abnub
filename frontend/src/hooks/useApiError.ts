@@ -5,7 +5,7 @@ import { describeApiError, type DescribedError } from "@/lib/errorMessages";
 
 /** Describe an API failure in Arabic from inside a React component. */
 export function useApiError(): (error: unknown) => DescribedError {
-  const { t } = useTranslation();
+  const { t } = useTranslation("errors");
 
   return useCallback((error: unknown) => describeApiError(error, t), [t]);
 }

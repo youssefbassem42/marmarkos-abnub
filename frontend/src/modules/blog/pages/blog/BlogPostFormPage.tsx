@@ -27,7 +27,7 @@ import {
 
 export function BlogPostFormPage() {
   const { t } = useTranslation("blog");
-  const { t: tErrors } = useTranslation();
+  const { t: tErrors } = useTranslation("errors");
   const describeError = useApiError();
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
@@ -236,7 +236,7 @@ export function BlogPostFormPage() {
   const handleCover = (file: File | undefined) => {
     if (!file) return;
     if (isImageTooLarge(file)) {
-      toast.error(tErrors("errors.api.imageTooLarge" as never));
+      toast.error(tErrors("api.imageTooLarge" as never));
       return;
     }
     uploadCover.mutate(file, {

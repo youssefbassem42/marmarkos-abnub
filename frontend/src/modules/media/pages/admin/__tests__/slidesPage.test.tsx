@@ -6,6 +6,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "@/i18n/LanguageProvider";
 import { SidebarProvider } from "@/components/ui/sidebar";
+import { Toaster } from "@/components/ui/sonner";
+import { ApiError } from "@/lib/api";
 import { clearAuth, saveAuth } from "@/lib/auth";
 import type { LandingSlideAdminItem } from "../../../types";
 
@@ -83,6 +85,7 @@ function renderSlidesPage(
           <SidebarProvider>
             <SlidesPage />
           </SidebarProvider>
+          <Toaster position="top-center" />
         </MemoryRouter>
       </LanguageProvider>
     </QueryClientProvider>,
@@ -135,6 +138,25 @@ describe("the management of the landing slides", () => {
     const formData = mockedCreate.mock.calls[0][0] as FormData;
     expect(formData.get("title")).toBe("عنوان جديد");
     expect(formData.get("file")).toBeNull();
+  });
+
+  it("shows the real reason when saving a slide fails", async () => {
+    mockedCreate.mockRejectedValue(
+      new ApiError(422, "Image must be 5 MB or smaller", "validation_error"),
+    );
+    const user = userEvent.setup();
+    renderSlidesPage();
+
+    await screen.findByText("العنوان الأول");
+    await user.click(screen.getByRole("button", { name: /إضافة شريحة/ }));
+    await user.type(screen.getByLabelText(/^العنوان$/), "عنوان جديد");
+    await user.click(screen.getByRole("button", { name: /تأكيد/ }));
+
+    expect(
+      await screen.findByText(
+        "حجم الصورة أكبر من 5 ميغابايت. اختر صورة أصغر وحاول مرة أخرى.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("shows the error state when the list fails", async () => {

@@ -54,7 +54,7 @@ function currentYearMonth(): { year: number; month: number } {
 export function ProfilePage() {
   const { t } = useTranslation("profile");
   const { t: tCommon } = useTranslation("common");
-  const { t: tErrors } = useTranslation();
+  const { t: tErrors } = useTranslation("errors");
   const describeError = useApiError();
   const navigate = useNavigate();
 
@@ -191,7 +191,7 @@ export function ProfilePage() {
     if (isImageTooLarge(file)) {
       setProfileStatus({
         kind: "error",
-        text: tErrors("errors.api.imageTooLarge" as never),
+        text: tErrors("api.imageTooLarge" as never),
       });
       if (fileInputRef.current) fileInputRef.current.value = "";
       return;

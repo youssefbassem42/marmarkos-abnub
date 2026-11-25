@@ -188,7 +188,7 @@ function SlideRow({
 export function SlidesPage() {
   const { t } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
-  const { t: tErrors } = useTranslation();
+  const { t: tErrors } = useTranslation("errors");
   const describeError = useApiError();
 
   const [page, setPage] = useState(1);
@@ -230,7 +230,7 @@ export function SlidesPage() {
     file: File | null;
   }) => {
     if (values.file && isImageTooLarge(values.file)) {
-      toast.error(tErrors("errors.api.imageTooLarge" as never));
+      toast.error(tErrors("api.imageTooLarge" as never));
       return;
     }
     const formData = new FormData();
