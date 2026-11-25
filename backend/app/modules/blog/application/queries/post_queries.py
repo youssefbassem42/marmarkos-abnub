@@ -1,8 +1,8 @@
 """Blog-post query use cases (Phase 7.2).
 
-The member queries expose published posts only.  The administration
-query exposes every lifecycle state so that drafts, scheduled posts,
-and archived posts remain manageable (BR-63/BR-65).
+The member queries expose published posts only.  An administrator or a
+servant may list and read every lifecycle state from the same routes, but
+a member's view is never widened by a status filter (BR-64/BR-86).
 """
 
 from __future__ import annotations
@@ -11,6 +11,7 @@ import uuid
 
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import selectinload
+from sqlalchemy.sql.elements import ColumnElement
 
 from app.core.pagination import Page, PageParams
 from app.core.time.clock import now_utc
@@ -21,13 +22,19 @@ from app.modules.blog.application.dto.post_dto import (
     BlogPostSummaryResponse,
     BlogTagResponse,
 )
-from app.modules.blog.domain.enums.post_status import PostStatus
+from app.modules.blog.domain.enums.post_status import PostStatus, PostStatusFilter
 from app.modules.blog.infrastructure.persistence.models import (
     BlogCategory,
     BlogPost,
     BlogPostLike,
 )
+from app.modules.users.infrastructure.persistence.models import User
+from app.shared.contracts.users import RoleName
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
+
+
+def _is_manager(viewer: User | None) -> bool:
+    return viewer is not None and viewer.role.name in (RoleName.ADMIN, RoleName.SERVANT)
 
 
 def _author(post: BlogPost) -> BlogAuthorResponse:
@@ -51,6 +58,7 @@ def _summary(post: BlogPost, likes_count: int) -> BlogPostSummaryResponse:
         cover_image=post.cover_image,
         tags=_tags(post),
         likes_count=max(0, likes_count),
+        status=post.status.value,
         published_at=post.published_at,
         author=_author(post),
     )
@@ -64,6 +72,7 @@ def _detail(post: BlogPost) -> BlogPostDetailResponse:
         body=post.content,
         cover_image=post.cover_image,
         tags=_tags(post),
+        status=post.status.value,
         published_at=post.published_at,
         author=_author(post),
     )
@@ -86,18 +95,45 @@ def _admin(post: BlogPost) -> BlogPostAdminResponse:
     )
 
 
-async def list_public_posts(
+def _status_conditions(status_filter: PostStatusFilter) -> list[ColumnElement[bool]]:
+    """Translate the list filter into the stored lifecycle state.
+
+    The database keeps a scheduled post as a draft (BR-63).  The public
+    filter still distinguishes the two: an unscheduled draft has no
+    publication date, while a scheduled draft has one.
+    """
+    if status_filter is PostStatusFilter.DRAFT:
+        return [BlogPost.status == PostStatus.DRAFT, BlogPost.published_at.is_(None)]
+    if status_filter is PostStatusFilter.SCHEDULED:
+        return [BlogPost.status == PostStatus.DRAFT, BlogPost.published_at.is_not(None)]
+    return [BlogPost.status == PostStatus(status_filter.value)]
+
+
+async def list_blog_posts(
     uow: UnitOfWork,
     page: PageParams,
     *,
+    viewer: User | None,
+    status_filter: PostStatusFilter | None = None,
     tag: str | None = None,
     search: str | None = None,
 ) -> Page[BlogPostSummaryResponse]:
-    """List published posts, optionally filtered by tag and title search."""
-    conditions = [
-        BlogPost.status == PostStatus.PUBLISHED,
-        or_(BlogPost.published_at.is_(None), BlogPost.published_at <= now_utc()),
-    ]
+    """List the posts visible to the caller, with the requested filters."""
+    manager = _is_manager(viewer)
+    conditions: list[ColumnElement[bool]] = []
+
+    if not manager:
+        # A member (and an anonymous reader) only ever receives published
+        # and due posts.  A status filter cannot widen that view.
+        conditions.extend(
+            [
+                BlogPost.status == PostStatus.PUBLISHED,
+                or_(BlogPost.published_at.is_(None), BlogPost.published_at <= now_utc()),
+            ]
+        )
+    elif status_filter is not None:
+        conditions.extend(_status_conditions(status_filter))
+
     join_categories = False
     if tag:
         join_categories = True
@@ -119,10 +155,15 @@ async def list_public_posts(
     if join_categories:
         statement = statement.join(BlogPost.categories)
         count_statement = count_statement.join(BlogPost.categories)
-    statement = statement.where(*conditions).order_by(
-        BlogPost.published_at.desc().nullslast(), BlogPost.created_at.desc()
-    )
+    statement = statement.where(*conditions)
     count_statement = count_statement.where(*conditions)
+
+    if manager:
+        statement = statement.order_by(BlogPost.created_at.desc())
+    else:
+        statement = statement.order_by(
+            BlogPost.published_at.desc().nullslast(), BlogPost.created_at.desc()
+        )
 
     total = int((await uow.session.execute(count_statement)).scalar_one())
     result = await uow.session.execute(statement.limit(page.size).offset(page.offset))
@@ -130,35 +171,33 @@ async def list_public_posts(
     return Page.build(posts, total, page)
 
 
-async def get_public_post_detail(
-    uow: UnitOfWork, post_id: uuid.UUID
+async def get_post_detail(
+    uow: UnitOfWork,
+    post_id: uuid.UUID,
+    viewer: User | None,
 ) -> BlogPostDetailResponse | None:
-    """Return a published post; a draft, scheduled, or archived row is hidden."""
+    """Return one post when it is visible to the caller.
+
+    A published and due post is visible to everybody.  Its author, an
+    administrator, and a servant may also read a draft, a scheduled post,
+    or an archived post.  Every other reader receives ``None`` (BR-64).
+    """
     result = await uow.session.execute(
         select(BlogPost)
         .options(selectinload(BlogPost.author), selectinload(BlogPost.categories))
-        .where(
-            BlogPost.id == post_id,
-            BlogPost.status == PostStatus.PUBLISHED,
-            or_(BlogPost.published_at.is_(None), BlogPost.published_at <= now_utc()),
-        )
+        .where(BlogPost.id == post_id)
     )
     post = result.scalar_one_or_none()
-    return _detail(post) if post is not None else None
+    if post is None:
+        return None
 
-
-async def list_admin_posts(uow: UnitOfWork, page: PageParams) -> Page[BlogPostAdminResponse]:
-    """List every post for the administration, newest first."""
-    total = int((await uow.session.execute(select(func.count(BlogPost.id)))).scalar_one())
-    result = await uow.session.execute(
-        select(BlogPost)
-        .options(selectinload(BlogPost.author), selectinload(BlogPost.categories))
-        .order_by(BlogPost.created_at.desc())
-        .limit(page.size)
-        .offset(page.offset)
+    is_public = post.status is PostStatus.PUBLISHED and (
+        post.published_at is None or post.published_at <= now_utc()
     )
-    posts = list(result.scalars().unique().all())
-    return Page.build([_admin(post) for post in posts], total, page)
+    may_manage = viewer is not None and (viewer.id == post.author_id or _is_manager(viewer))
+    if not is_public and not may_manage:
+        return None
+    return _detail(post)
 
 
 async def get_admin_post(uow: UnitOfWork, post_id: uuid.UUID) -> BlogPostAdminResponse | None:

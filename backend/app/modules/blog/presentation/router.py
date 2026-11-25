@@ -1,7 +1,8 @@
 """HTTP API for the blog posts (Phase 7.2).
 
-Members read published posts.  Administrators and servants manage the
-posts, including drafts, scheduled posts, and the soft-delete archive.
+The blog has one public route family.  Members read published posts;
+administrators and servants manage the posts, including drafts, scheduled
+posts, and the soft-delete archive, from the same URLs.
 Every answer declares its response model so the OpenAPI contract is
 honest.
 """
@@ -35,10 +36,10 @@ from app.modules.blog.application.dto.post_dto import (
 from app.modules.blog.application.queries.like_queries import get_post_likes
 from app.modules.blog.application.queries.post_queries import (
     get_admin_post,
-    get_public_post_detail,
-    list_admin_posts,
-    list_public_posts,
+    get_post_detail,
+    list_blog_posts,
 )
+from app.modules.blog.domain.enums.post_status import PostStatusFilter
 from app.modules.blog.presentation.dependencies import BlogManager, CurrentUser
 from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.infrastructure.persistence.models import User
@@ -99,22 +100,71 @@ async def _admin_response(uow: UnitOfWork, post_id: UUID) -> BlogPostAdminRespon
 
 
 @router.get("/blog/posts", response_model=Page[BlogPostSummaryResponse])
-async def list_blog_posts(
-    viewer: CurrentUser,
+async def list_blog_posts_route(
+    viewer: _OptionalViewer,
     uow: _UoW,
     tag: Annotated[str | None, Query(max_length=80)] = None,
     q: Annotated[str | None, Query(max_length=200)] = None,
+    status_filter: Annotated[PostStatusFilter | None, Query(alias="status")] = None,
     page: _Page = 1,
     size: _Size = 20,
 ) -> Page[BlogPostSummaryResponse]:
-    """List the published posts for the members."""
-    _ = viewer
-    return await list_public_posts(
+    """List the posts visible to the caller.
+
+    Members and anonymous readers receive published posts only.  An
+    administrator or a servant receives every post unless a status filter
+    narrows the list (BR-64/BR-86).
+    """
+    return await list_blog_posts(
         uow,
         PageParams(page=page, size=size),
+        viewer=viewer,
+        status_filter=status_filter,
         tag=tag,
         search=q,
     )
+
+
+@router.post(
+    "/blog/posts",
+    status_code=status.HTTP_201_CREATED,
+    response_model=BlogPostAdminResponse,
+    responses=_MANAGER_FAILURES,
+)
+async def create_blog_post(
+    payload: BlogPostCreateRequest,
+    actor: BlogManager,
+    uow: _UoW,
+) -> BlogPostAdminResponse:
+    """Create a post; a past date publishes it and a future date schedules it."""
+    post = await create_post(uow, actor, payload)
+    await uow.commit()
+    return await _admin_response(uow, post.id)
+
+
+# Literal paths are declared before the parameterised post path.  FastAPI
+# matches routes in declaration order, and the contract test compares the
+# Allow header with the schema (ST205).
+@router.post(
+    "/blog/posts/cover",
+    status_code=status.HTTP_201_CREATED,
+    response_model=BlogImageUploadResponse,
+    responses=_MANAGER_FAILURES,
+)
+async def upload_blog_cover(
+    actor: BlogManager,
+    file: Annotated[UploadFile, File(...)],
+) -> BlogImageUploadResponse:
+    """Upload a post cover through the shared media service (BR-67)."""
+    _ = actor
+    data = await file.read()
+    url = await upload_image(
+        data,
+        file.content_type or "",
+        folder="blog-covers",
+        max_bytes=1 * 1024 * 1024,
+    )
+    return BlogImageUploadResponse(url=url)
 
 
 @router.get(
@@ -124,12 +174,11 @@ async def list_blog_posts(
 )
 async def get_blog_post(
     post_id: UUID,
-    viewer: CurrentUser,
+    viewer: _OptionalViewer,
     uow: _UoW,
 ) -> BlogPostDetailResponse:
-    """Return one published post; a hidden post is a 404."""
-    _ = viewer
-    item = await get_public_post_detail(uow, post_id)
+    """Return one post; a hidden post is a 404 for an ordinary reader."""
+    item = await get_post_detail(uow, post_id, viewer)
     if item is None:
         raise NotFoundError("Post not found")
     return item
@@ -187,83 +236,8 @@ async def unlike_blog_post(
     return result
 
 
-@router.get(
-    "/admin/blog/posts",
-    response_model=Page[BlogPostAdminResponse],
-    responses={403: {"description": "Insufficient permissions"}},
-)
-async def list_admin_blog_posts(
-    actor: BlogManager,
-    uow: _UoW,
-    page: _Page = 1,
-    size: _Size = 20,
-) -> Page[BlogPostAdminResponse]:
-    """List every post for the administration."""
-    _ = actor
-    return await list_admin_posts(uow, PageParams(page=page, size=size))
-
-
-# The literal path is declared **before** the parameterised one: a
-# router that matches "/admin/blog/posts/{post_id}" first answers the
-# OPTIONS of "/admin/blog/posts/cover" with the methods of the post
-# (GET, PATCH, DELETE) and never with POST. The contract test of the
-# API compares the Allow header with the schema (ST205).
-@router.post(
-    "/admin/blog/posts/cover",
-    status_code=status.HTTP_201_CREATED,
-    response_model=BlogImageUploadResponse,
-    responses=_MANAGER_FAILURES,
-)
-async def upload_blog_cover(
-    actor: BlogManager,
-    file: Annotated[UploadFile, File(...)],
-) -> BlogImageUploadResponse:
-    """Upload a post cover through the shared media service (BR-67)."""
-    _ = actor
-    data = await file.read()
-    url = await upload_image(
-        data,
-        file.content_type or "",
-        folder="blog-covers",
-        max_bytes=1 * 1024 * 1024,
-    )
-    return BlogImageUploadResponse(url=url)
-
-
-@router.get(
-    "/admin/blog/posts/{post_id}",
-    response_model=BlogPostAdminResponse,
-    responses=_MANAGER_FAILURES,
-)
-async def get_admin_blog_post(
-    post_id: UUID,
-    actor: BlogManager,
-    uow: _UoW,
-) -> BlogPostAdminResponse:
-    """One post with its administration fields (a draft included)."""
-    _ = actor
-    return await _admin_response(uow, post_id)
-
-
-@router.post(
-    "/admin/blog/posts",
-    status_code=status.HTTP_201_CREATED,
-    response_model=BlogPostAdminResponse,
-    responses=_MANAGER_FAILURES,
-)
-async def create_blog_post(
-    payload: BlogPostCreateRequest,
-    actor: BlogManager,
-    uow: _UoW,
-) -> BlogPostAdminResponse:
-    """Create a post; a past date publishes it and a future date schedules it."""
-    post = await create_post(uow, actor, payload)
-    await uow.commit()
-    return await _admin_response(uow, post.id)
-
-
 @router.patch(
-    "/admin/blog/posts/{post_id}",
+    "/blog/posts/{post_id}",
     response_model=BlogPostAdminResponse,
     responses=_MANAGER_FAILURES,
 )
@@ -280,7 +254,7 @@ async def patch_blog_post(
 
 
 @router.delete(
-    "/admin/blog/posts/{post_id}",
+    "/blog/posts/{post_id}",
     status_code=status.HTTP_204_NO_CONTENT,
     response_model=None,
     responses=_MANAGER_FAILURES,
@@ -297,7 +271,7 @@ async def delete_blog_post(
 
 
 @router.post(
-    "/admin/blog/posts/{post_id}/publish",
+    "/blog/posts/{post_id}/publish",
     response_model=BlogPostAdminResponse,
     responses=_MANAGER_FAILURES,
 )
@@ -313,7 +287,7 @@ async def publish_blog_post(
 
 
 @router.post(
-    "/admin/blog/posts/{post_id}/schedule",
+    "/blog/posts/{post_id}/schedule",
     response_model=BlogPostAdminResponse,
     responses=_MANAGER_FAILURES
     | {422: {"description": "The publication date is not in the future"}},

@@ -12,7 +12,6 @@ from app.modules.users.domain.enums.role_name import RoleName
 from tests.utils import DEFAULT_PASSWORD, bearer, create_user_direct
 
 PUBLIC_URL = "/api/v1/blog/posts"
-ADMIN_URL = "/api/v1/admin/blog/posts"
 
 
 async def _auth_headers(
@@ -59,7 +58,7 @@ async def _create_post(
     published_at: datetime | None = None,
 ) -> dict[str, object]:
     response = await client.post(
-        ADMIN_URL,
+        PUBLIC_URL,
         json=_post_payload(title, tags=tags, published_at=published_at),
         headers=headers,
     )
@@ -94,6 +93,83 @@ async def test_admin_creates_a_draft_and_the_public_list_hides_it(
     assert public.json()["items"] == []
 
 
+async def test_the_list_never_widens_a_members_view_with_a_status_filter(
+    client: AsyncClient, db_engine
+) -> None:
+    admin = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-admin-filter-view@example.com",
+        role=RoleName.ADMIN,
+    )
+    member = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-member-filter-view@example.com",
+        role=RoleName.MEMBER,
+    )
+    draft = await _create_post(client, admin, title="مسودة مخفية")
+    published = await _create_post(
+        client,
+        admin,
+        title="منشور ظاهر",
+        published_at=datetime.now(UTC) - timedelta(minutes=1),
+    )
+
+    member_list = await client.get(
+        PUBLIC_URL,
+        params={"status": "DRAFT"},
+        headers=member,
+    )
+    assert member_list.status_code == 200
+    assert [item["id"] for item in member_list.json()["items"]] == [published["id"]]
+
+    admin_list = await client.get(PUBLIC_URL, headers=admin)
+    assert {item["id"] for item in admin_list.json()["items"]} == {
+        draft["id"],
+        published["id"],
+    }
+
+    admin_drafts = await client.get(
+        PUBLIC_URL,
+        params={"status": "DRAFT"},
+        headers=admin,
+    )
+    assert [item["id"] for item in admin_drafts.json()["items"]] == [draft["id"]]
+
+
+async def test_a_draft_detail_is_visible_to_its_author_and_an_admin_but_not_a_member(
+    client: AsyncClient, db_engine
+) -> None:
+    author = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-draft-author@example.com",
+        role=RoleName.SERVANT,
+    )
+    admin = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-draft-admin@example.com",
+        role=RoleName.ADMIN,
+    )
+    member = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-draft-member@example.com",
+        role=RoleName.MEMBER,
+    )
+    created = await _create_post(client, author, title="مسودة خاصة")
+
+    by_author = await client.get(f"{PUBLIC_URL}/{created['id']}", headers=author)
+    by_admin = await client.get(f"{PUBLIC_URL}/{created['id']}", headers=admin)
+    by_member = await client.get(f"{PUBLIC_URL}/{created['id']}", headers=member)
+
+    assert by_author.status_code == 200
+    assert by_admin.status_code == 200
+    assert by_member.status_code == 404
+
+
 async def test_servant_can_write_but_member_cannot(client: AsyncClient, db_engine) -> None:
     servant = await _auth_headers(
         client,
@@ -109,21 +185,22 @@ async def test_servant_can_write_but_member_cannot(client: AsyncClient, db_engin
     )
 
     created = await client.post(
-        ADMIN_URL,
+        PUBLIC_URL,
         json=_post_payload("موضوع الخادم"),
         headers=servant,
     )
     assert created.status_code == 201, created.text
 
     refused = await client.post(
-        ADMIN_URL,
+        PUBLIC_URL,
         json=_post_payload("موضوع العضو"),
         headers=member,
     )
     assert refused.status_code == 403
 
-    admin_list = await client.get(ADMIN_URL, headers=member)
-    assert admin_list.status_code == 403
+    member_list = await client.get(PUBLIC_URL, headers=member)
+    assert member_list.status_code == 200
+    assert member_list.json()["items"] == []
 
 
 async def test_the_author_admin_and_servant_can_update_but_a_member_cannot(
@@ -151,7 +228,7 @@ async def test_the_author_admin_and_servant_can_update_but_a_member_cannot(
     post_id = created["id"]
 
     by_author = await client.patch(
-        f"{ADMIN_URL}/{post_id}",
+        f"{PUBLIC_URL}/{post_id}",
         json={"title": "تعديل صاحب الموضوع"},
         headers=author,
     )
@@ -159,14 +236,14 @@ async def test_the_author_admin_and_servant_can_update_but_a_member_cannot(
     assert by_author.json()["title"] == "تعديل صاحب الموضوع"
 
     by_admin = await client.patch(
-        f"{ADMIN_URL}/{post_id}",
+        f"{PUBLIC_URL}/{post_id}",
         json={"excerpt": "تعديل الإدارة"},
         headers=admin,
     )
     assert by_admin.status_code == 200, by_admin.text
 
     by_member = await client.patch(
-        f"{ADMIN_URL}/{post_id}",
+        f"{PUBLIC_URL}/{post_id}",
         json={"title": "ممنوع"},
         headers=member,
     )
@@ -236,9 +313,23 @@ async def test_a_future_date_is_scheduled_and_hidden_from_the_public(
     detail = await client.get(f"{PUBLIC_URL}/{created['id']}", headers=member)
     assert detail.status_code == 404
 
-    administration = await client.get(ADMIN_URL, headers=admin)
+    administration = await client.get(PUBLIC_URL, headers=admin)
     assert [item["id"] for item in administration.json()["items"]] == [created["id"]]
     assert administration.json()["items"][0]["status"] == "DRAFT"
+
+    scheduled = await client.get(
+        PUBLIC_URL,
+        params={"status": "SCHEDULED"},
+        headers=admin,
+    )
+    assert [item["id"] for item in scheduled.json()["items"]] == [created["id"]]
+
+    unscheduled = await client.get(
+        PUBLIC_URL,
+        params={"status": "DRAFT"},
+        headers=admin,
+    )
+    assert unscheduled.json()["items"] == []
 
 
 async def test_explicit_publish_and_schedule_commands_change_the_state(
@@ -261,7 +352,7 @@ async def test_explicit_publish_and_schedule_commands_change_the_state(
 
     tomorrow = datetime.now(UTC) + timedelta(days=1)
     scheduled = await client.post(
-        f"{ADMIN_URL}/{post_id}/schedule",
+        f"{PUBLIC_URL}/{post_id}/schedule",
         json={"published_at": tomorrow.isoformat()},
         headers=admin,
     )
@@ -270,7 +361,7 @@ async def test_explicit_publish_and_schedule_commands_change_the_state(
     assert scheduled.json()["published_at"] is not None
 
     published = await client.post(
-        f"{ADMIN_URL}/{post_id}/publish",
+        f"{PUBLIC_URL}/{post_id}/publish",
         headers=admin,
     )
     assert published.status_code == 200, published.text
@@ -303,7 +394,7 @@ async def test_delete_is_soft_and_the_archived_post_stays_in_the_administration(
     )
     post_id = created["id"]
 
-    deleted = await client.delete(f"{ADMIN_URL}/{post_id}", headers=admin)
+    deleted = await client.delete(f"{PUBLIC_URL}/{post_id}", headers=admin)
     assert deleted.status_code == 204
 
     public = await client.get(PUBLIC_URL, headers=member)
@@ -311,7 +402,7 @@ async def test_delete_is_soft_and_the_archived_post_stays_in_the_administration(
     detail = await client.get(f"{PUBLIC_URL}/{post_id}", headers=member)
     assert detail.status_code == 404
 
-    administration = await client.get(ADMIN_URL, headers=admin)
+    administration = await client.get(PUBLIC_URL, headers=admin)
     assert administration.json()["items"][0]["id"] == post_id
     assert administration.json()["items"][0]["status"] == "ARCHIVED"
 
@@ -430,7 +521,7 @@ async def test_the_cover_upload_uses_the_one_megabyte_limit(
         _fake_upload,
     )
     response = await client.post(
-        f"{ADMIN_URL}/cover",
+        f"{PUBLIC_URL}/cover",
         files={"file": ("cover.jpg", b"x" * 16, "image/jpeg")},
         headers=admin,
     )
@@ -453,14 +544,57 @@ async def test_openapi_declares_the_blog_answers(client: AsyncClient) -> None:
 
     schema = build_openapi_schema(create_app())
     public = schema["paths"]["/api/v1/blog/posts"]["get"]
-    admin = schema["paths"]["/api/v1/admin/blog/posts"]["get"]
-    create = schema["paths"]["/api/v1/admin/blog/posts"]["post"]
+    create = schema["paths"]["/api/v1/blog/posts"]["post"]
 
     assert "200" in public["responses"]
-    assert "200" in admin["responses"]
     assert "201" in create["responses"]
     assert public["responses"]["200"]["content"]["application/json"]["schema"]
     assert create["responses"]["201"]["content"]["application/json"]["schema"]
+    assert "/api/v1/admin/blog/posts" not in schema["paths"]
+    assert "/api/v1/admin/blog/posts/{post_id}" not in schema["paths"]
+
+
+async def test_the_old_administration_blog_routes_do_not_exist(client: AsyncClient) -> None:
+    """The blog leaves the administration panel; the old URLs are gone."""
+    response = await client.get("/api/v1/admin/blog/posts")
+
+    assert response.status_code == 404
+
+
+async def test_an_anonymous_reader_sees_only_a_published_post(
+    client: AsyncClient, db_engine
+) -> None:
+    admin = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-anonymous-admin@example.com",
+        role=RoleName.ADMIN,
+    )
+    published = await _create_post(
+        client,
+        admin,
+        title="منشور للجميع",
+        published_at=datetime.now(UTC) - timedelta(minutes=1),
+    )
+    await _create_post(client, admin, title="مسودة لا تُرى")
+
+    listing = await client.get(PUBLIC_URL)
+    detail = await client.get(f"{PUBLIC_URL}/{published['id']}")
+
+    assert listing.status_code == 200
+    assert [item["id"] for item in listing.json()["items"]] == [published["id"]]
+    assert detail.status_code == 200
+    assert detail.json()["status"] == "PUBLISHED"
+
+
+async def test_the_literal_cover_route_precedes_the_parameterised_post_route(
+    client: AsyncClient,
+) -> None:
+    response = await client.request("OPTIONS", "/api/v1/blog/posts/cover")
+
+    assert response.status_code == 405
+    allowed = {method.strip() for method in response.headers["allow"].split(",")}
+    assert allowed == {"POST"}
 
 
 async def test_the_tick_publishes_the_scheduled_post_when_its_date_comes(
@@ -516,7 +650,7 @@ async def test_the_tick_publishes_the_scheduled_post_when_its_date_comes(
 async def test_the_administration_reads_one_post_with_its_fields(
     client: AsyncClient, db_engine
 ) -> None:
-    """The form of the administration needs the post it edits (a draft too)."""
+    """The merged detail gives the editor the draft and its state."""
     admin = await _auth_headers(
         client,
         db_engine,
@@ -525,14 +659,14 @@ async def test_the_administration_reads_one_post_with_its_fields(
     )
     created = await _create_post(client, admin, title="موضوع واحد")
 
-    response = await client.get(f"{ADMIN_URL}/{created['id']}", headers=admin)
+    response = await client.get(f"{PUBLIC_URL}/{created['id']}", headers=admin)
 
     assert response.status_code == 200, response.text
     body = response.json()
     assert body["id"] == created["id"]
     assert body["title"] == "موضوع واحد"
+    assert body["body"] == "نص الموضوع"
     assert body["status"] == "DRAFT"
-    assert body["author_id"]
 
 
 async def test_a_member_does_not_read_the_post_of_the_administration(
@@ -552,6 +686,6 @@ async def test_a_member_does_not_read_the_post_of_the_administration(
     )
     created = await _create_post(client, admin, title="موضوع محمي")
 
-    response = await client.get(f"{ADMIN_URL}/{created['id']}", headers=member)
+    response = await client.get(f"{PUBLIC_URL}/{created['id']}", headers=member)
 
-    assert response.status_code == 403
+    assert response.status_code == 404

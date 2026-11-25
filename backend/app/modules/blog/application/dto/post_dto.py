@@ -122,6 +122,7 @@ class BlogPostSummaryResponse(BaseModel):
     cover_image: str | None = Field(default=None, description="Cover image URL")
     tags: list[BlogTagResponse] = Field(description="Tags carried by the post")
     likes_count: int = Field(ge=0, description="Number of active likes")
+    status: str = Field(description="Lifecycle status")
     published_at: datetime | None = Field(default=None, description="Publication date")
     author: BlogAuthorResponse = Field(description="Post author")
 
@@ -135,6 +136,7 @@ class BlogPostDetailResponse(BaseModel):
     body: str = Field(description="Post body")
     cover_image: str | None = Field(default=None, description="Cover image URL")
     tags: list[BlogTagResponse] = Field(description="Tags carried by the post")
+    status: str = Field(description="Lifecycle status")
     published_at: datetime | None = Field(default=None, description="Publication date")
     author: BlogAuthorResponse = Field(description="Post author")
 
