@@ -5,21 +5,37 @@ rendered inside `<Layout>` (authenticated) or `<PublicLayout>` (guest).
 
 ## Route Table
 
-| Path                     | Component               | Access        | Description                     |
-| ------------------------ | ----------------------- | ------------- | ------------------------------- |
-| `/`                      | `HomePage`              | Public        | Landing page                    |
-| `/login`                 | `LoginPage`             | Public        | Email/password + Google login   |
-| `/register`              | `RegisterPage`          | Public        | New user registration           |
-| `/verify-email`          | `EmailVerificationPage` | Public        | Email verification callback     |
-| `/profile`               | `ProfilePage`           | Authenticated | User profile (edit name, photo) |
-| `/qrcode`                | `QrCodePage`            | Authenticated | Show personal QR code           |
-| `/notifications`         | `NotificationsPage`     | Authenticated | Bell notifications list         |
-| `/bible-verses`          | `BibleVersesPage`       | Authenticated | Member verse feed               |
-| `/bible-verses/:verseId` | `VerseDetailPage`       | Authenticated | Verse detail + quiz gate        |
-| `/quiz/:quizId`          | `QuizAttemptPage`       | Authenticated | Take a quiz (timer, auto-save)  |
-| `/quiz/:quizId/result`   | `QuizResultPage`        | Authenticated | Graded result + review          |
-| `/points`                | `PointsPage`            | Authenticated | My points history + chart       |
-| `/anonymous-messages`    | `AnonymousMessagesPage` | Authenticated | Send anonymous message          |
+| Path                      | Component                 | Access        | Description                            |
+| ------------------------- | ------------------------- | ------------- | -------------------------------------- |
+| `/`                       | `HomePage`                | Public        | Landing page                           |
+| `/login`                  | `LoginPage`               | Public        | Email/password + Google login          |
+| `/register`               | `RegisterPage`            | Public        | New user registration                  |
+| `/verify-email`           | `EmailVerificationPage`   | Public        | Email verification callback            |
+| `/profile`                | `ProfilePage`             | Authenticated | User profile (edit name, photo)        |
+| `/notifications`          | `NotificationsPage`       | Authenticated | Bell notifications list                |
+| `/points`                 | `PointsPage`              | Authenticated | My points history + chart              |
+| `/blog`                   | `BlogListPage`            | Public        | The posts, their filters, their counts |
+| `/blog/:slug`             | `BlogPostPage`            | Public        | One post, its comments, its likes      |
+| `/p/:code`                | `BlogShortLinkPage`       | Public        | The tiny link of a post                |
+| `/blog/new`               | `BlogPostFormPage`        | Admin/Servant | Write a post (the form of the blog)    |
+| `/blog/:postId/edit`      | `BlogPostFormPage`        | Admin/Servant | Edit a post                            |
+| `/attendance`             | `AttendancePage`          | Authenticated | The attendance of the member           |
+| `/attendance/check-in`    | `CheckInPage`             | Admin/Servant | Scan the code of a member              |
+| `/attendance/dashboard`   | `AttendanceDashboardPage` | Admin/Servant | The dashboard of the attendance        |
+| `/attendance/history`     | `AttendanceHistoryPage`   | Admin/Servant | The records of the attendance          |
+| `/anonymous-messages`     | `AnonymousMessagesPage`   | Authenticated | Send anonymous message                 |
+| `/bible-verses`           | `BibleVersesPage`         | Authenticated | Member verse feed                      |
+| `/bible-verses/:verseId`  | `VerseDetailPage`         | Authenticated | Verse detail + quiz gate               |
+| `/quizzes/:quizId/take`   | `QuizAttemptPage`         | Authenticated | Take a quiz (timer, auto-save)         |
+| `/quizzes/:quizId/result` | `QuizResultPage`          | Authenticated | Graded result + review                 |
+| `/gallery`                | `GalleryPage`             | Public        | The gallery of the platform            |
+| `/about-us`               | `AboutUsPage`             | Public        | About the platform                     |
+| `/bible-verses`           | `BibleVersesPage`         | Authenticated | Member verse feed                      |
+| `/bible-verses/:verseId`  | `VerseDetailPage`         | Authenticated | Verse detail + quiz gate               |
+| `/quiz/:quizId`           | `QuizAttemptPage`         | Authenticated | Take a quiz (timer, auto-save)         |
+| `/quiz/:quizId/result`    | `QuizResultPage`          | Authenticated | Graded result + review                 |
+| `/points`                 | `PointsPage`              | Authenticated | My points history + chart              |
+| `/anonymous-messages`     | `AnonymousMessagesPage`   | Authenticated | Send anonymous message                 |
 
 ### Admin / Manager Routes
 
