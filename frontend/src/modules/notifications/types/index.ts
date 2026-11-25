@@ -29,10 +29,15 @@ import type {
  * 7.6): the backend tells the author of a post that a member answered
  * their post. The fallback kept the list alive, but the notification
  * had the generic accent instead of the one of a comment.
+ *
+ * `BLOG_LIKE` came with the engagement of the blog (2026-11-25): the
+ * backend tells the author of a post or of a comment that a member
+ * liked it.
  */
 export type NotificationType =
   | "BLOG_POST"
   | "BLOG_COMMENT"
+  | "BLOG_LIKE"
   | "ANNOUNCEMENT"
   | "ATTENDANCE"
   | "SYSTEM"

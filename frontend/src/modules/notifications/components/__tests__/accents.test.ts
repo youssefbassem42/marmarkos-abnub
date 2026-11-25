@@ -24,6 +24,7 @@ import type { NotificationType } from "@/modules/notifications/types";
 const BACKEND_TYPES = [
   "BLOG_POST",
   "BLOG_COMMENT",
+  "BLOG_LIKE",
   "ANNOUNCEMENT",
   "ATTENDANCE",
   "SYSTEM",

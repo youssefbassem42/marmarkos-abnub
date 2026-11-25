@@ -392,6 +392,7 @@ with them:
 | 60 | The two agents of the wave wrote their business rules from the **same free identifiers** (BR-85, BR-86, BR-87 carried two meanings each) and the guard of the catalogue did not see it | Every rule has one identifier, the citations follow them, and the catalogue carries a guard that fails when a section lists an identifier twice |
 | 61 | The blog imported the **model of the comments** to count them, and the comments already know the posts: the two modules closed an **import cycle** | The comments own their rows, so they own the count; the blog asks through the unit of work and the graph is acyclic again |
 | 62 | Two frontend agents built the lookup of the tiny link **twice** (`getShortLink` and `getPostByShortCode`) and left the conflict markers in two files | The client, the schemas and the tests speak one language: the shared schema of the house, the paths of the blog, and the keys of the list and of the comment trees |
+| 63 | The backend created a notification of the type `BLOG_LIKE` (the like of a post or of a comment), and the **frontend did not know the type** | The bell fell back to the generic icon: the member could not tell a like from any other notice — the same defect as #50, in the same shape | The type and its accent (the glyph of the heart, the colour of the welcome) are in the map, and the test of the accents knows the type |
 
 The wave also **proved** the rule of the fleet once more: the review
 finds what the agents miss. The two rule identifiers that collided and

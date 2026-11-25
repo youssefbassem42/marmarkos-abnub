@@ -67,6 +67,14 @@ export const NOTIFICATION_ACCENTS: Record<NotificationType, AccentEntry> = {
     accentBg: "bg-brand-blue/10",
     accentBorder: "border-brand-blue",
   },
+  BLOG_LIKE: {
+    // A like is a greeting of a member on a post or on a comment: the
+    // colour of the welcome with the glyph of the heart.
+    Icon: Heart,
+    accentText: "text-brand-red",
+    accentBg: "bg-brand-red/10",
+    accentBorder: "border-brand-red",
+  },
 };
 
 /**
