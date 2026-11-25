@@ -401,6 +401,86 @@ the import cycle were neither in the report of the agents nor in their
 tests — they were in the gates, and the gates caught them.
 
 
+### 4.7 The fifth wave (2026-11-25) — the session that died at every reload, and the images that never arrived
+
+The owner reported two defects from the production: **every refresh of
+the page signed the member out** (with `{"detail":{"code":"unauthorized","message":"Not authenticated"}}`),
+and **the cover of a blog post was refused with a 422**.
+
+#### The diagnosis of the logout
+
+The access token lives in the **memory** of the page (SEC-004): a reload
+throws it away, and the session comes back from the HttpOnly refresh
+cookie. The answer the owner saw is exactly what the backend says when
+that cookie is **missing** (`POST /api/v1/auth/refresh`).
+
+The backend was cleared first: a local sign-in answers
+`Set-Cookie: refresh_token=…; HttpOnly; Path=/api/v1/auth; SameSite=lax`
+and the refresh with that cookie answers **200**. The frontend was
+cleared next: the journey *“the member stays signed in after a reload”*
+(the one the end-to-end suite never had) **passed** against the proxy of
+the development.
+
+⇒ The difference was the **deployment**, and the evidence was in the
+production itself:
+
+| The fact | How it was proved |
+|---|---|
+| The frontend of the production and the API live on **two different sites** (`marmarkosabnub.vercel.app` and `marmarkos-abnub-ny1l.vercel.app`), and the frontend calls the API **cross-site** because `VITE_API_BASE_URL` is absolute | The owner confirmed the variable; the CORS preflight with the real origin answers **200** with `allow-credentials: true` |
+| A `SameSite=lax` cookie is **never sent** with a cross-site call, and a browser does not even store it | The rule of the browsers; the `.env.example` of the frontend already warned about it ("the browser must never talk to a second domain") |
+| ⇒ the silent refresh found no cookie, the server answered "Not authenticated", and the member was signed out | The symptom the owner reported, reproduced by the shape of the deployment |
+
+**The fix (BR-96)**: the cookie follows the shape of the call — a
+same-site call keeps it first-party (`lax`), a cross-site call gets
+`none` with the `Secure` flag the browser demands — and the shape can
+be forced with `COOKIE_SAMESITE` and `COOKIE_SECURE`. The member is
+not signed out any more, whichever way the deployment is built.
+
+**The better shape** is still the owner's: with `VITE_API_BASE_URL`
+empty, the frontend calls its **own** origin and the rewrite of
+`frontend/vercel.json` forwards it to the API (the health check through
+that rewrite answers 200). The cookie is then first-party and no
+third-party cookie is involved at all. The backend fix is the safety
+net for the cross-site shape.
+
+#### The diagnosis of the 422
+
+The cover had **two** walls: the limit was **1 MB** for the cover and
+2 MB for the pictures of the body (a photo of a modern phone weighs 2 to
+5 MB), and the platform refused every format outside JPEG, PNG and
+WebP (the gallery of a phone sends HEIC or AVIF). The frontend made it
+invisible: the toast said only "فشل".
+
+**The fix (BR-95)**: every image of the platform shares the **5 MB**
+limit, and the format is **not screened** — Cloudinary accepts the image
+formats and refuses what is not an image, with its own message.
+
+#### The messages of the site
+
+The owner asked for every error of the platform to say **what happened**
+and **whether the fault is his or ours**. The backend already answers
+with a machine-readable code, a status and a reason; the frontend threw
+all of it away and showed one generic toast.
+
+The wave added the missing layer: the translator (`errorMessages.ts`)
+reads the code first, the status second and the known reason of the
+server third, and answers an Arabic sentence **and** the kind of the
+failure (`user`, `server`, `network`) — the sentence of a server error
+says plainly that the problem is not on the member's side. The map
+carries the ~90 reasons the server can send, and the upload surfaces
+check the **5 MB** in the browser before the file leaves it.
+
+#### What the review caught
+
+| # | The defect | The consequence | The fix |
+|---|---|---|---|
+| 65 | The delegated agent was killed twice by the **provider** (a 503 of its content-screening service, then the 60-minute watchdog) | The run had written the map of the server messages and the translator, but not the tests | The run was resumed with a delta brief; the missing tests were finished and the typing of the namespace was corrected (`tsc` was red: the translator read the `common` namespace instead of the `errors` one) |
+
+The wave also showed the value of the **journey**: the end-to-end suite
+had never reloaded a page, so the defect that the owner reported every
+day had no test to catch it. The journey now exists
+(`frontend/e2e/auth.spec.ts`).
+
 ---
 
 ## 5. How it was verified

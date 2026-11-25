@@ -317,3 +317,19 @@ finished the editor and landed the whole thing.
 | The pictures of the body | A post carries two kinds of images: the cover (1 MB) and the pictures of the body (2 MB) (BR-94) | `frontend/src/modules/blog/components/RichTextEditor.tsx` |
 | The defects of the review | Four more (#59…#62): two writing surfaces, the rule identifiers that collided, the import cycle, the two namings of the lookup | The gates of the house caught them |
 | The gates | Backend **742 tests**, frontend **496 tests**, the end-to-end run **11 journeys**, `ruff`/`mypy`/`eslint`/`tsc`/`prettier`/`npm audit`/`pip-audit` green | — |
+
+---
+
+## The fifth wave (2026-11-25) — the session that dies at every reload, and the images that never arrive
+
+The owner reported two defects from the production: **every refresh of the
+page signed the member out** (with `{"detail":{"code":"unauthorized","message":"Not authenticated"}}`),
+and **the cover of a blog post was refused with a 422**.
+
+| The concern | What it is | Where it lives |
+|---|---|---|
+| The session survives the reload | The frontend of the platform is served from one site and the API from another, so the browser calls the API **cross-site**: a `SameSite=lax` cookie is never sent back and the silent refresh answers "Not authenticated". The cookie now follows the shape of the call (`lax` same-site, `none` + `Secure` cross-site), and the shape can be forced with `COOKIE_SAMESITE` / `COOKIE_SECURE` (BR-96) | `backend/app/modules/auth/presentation/cookies.py` |
+| The images of the platform | Every image (the avatars, the verse covers, the slides, the cover and the pictures of a blog post) accepts **5 MB** and **any format**: the limit was 1 MB for the cover and 2 MB for the body, and the format was screened against JPEG/PNG/WebP alone (BR-95) | `backend/app/shared/infrastructure/services/image_upload.py` |
+| The errors say what happened | The member sees a real Arabic sentence for every failure — the code of the API, the status, and the known reason of the server — and knows whether the fault is his or ours | `frontend/src/lib/errorMessages.ts`, `frontend/src/hooks/useApiError.ts` |
+| The upload says what happened | The image that is too big is refused **before** it leaves the browser, with a clear Arabic sentence, and the real reason of the server replaces the generic "failed" | `frontend/src/modules/blog/pages/blog/BlogPostFormPage.tsx` and the other upload surfaces |
+| The journey of the reload | The end-to-end suite now proves that a member who signs in is still signed in after a reload of the page — the journey that was missing when the defect was reported | `frontend/e2e/auth.spec.ts` |
