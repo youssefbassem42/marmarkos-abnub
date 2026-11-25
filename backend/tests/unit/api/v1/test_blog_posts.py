@@ -602,6 +602,79 @@ async def test_the_cover_upload_uses_the_one_megabyte_limit(
     ]
 
 
+async def test_the_post_image_upload_uses_the_two_megabyte_limit(
+    client: AsyncClient,
+    db_engine,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    admin = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-image-admin@example.com",
+        role=RoleName.ADMIN,
+    )
+    member = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-image-member@example.com",
+        role=RoleName.MEMBER,
+    )
+    calls: list[dict[str, object]] = []
+
+    async def _fake_upload(
+        data: bytes,
+        content_type: str,
+        folder: str = "avatars",
+        max_bytes: int = 2 * 1024 * 1024,
+    ) -> str:
+        calls.append(
+            {
+                "size": len(data),
+                "content_type": content_type,
+                "folder": folder,
+                "max_bytes": max_bytes,
+            }
+        )
+        return "https://res.cloudinary.com/demo/image/upload/body.jpg"
+
+    monkeypatch.setattr(
+        "app.modules.blog.presentation.router.upload_image",
+        _fake_upload,
+    )
+    accepted = await client.post(
+        f"{PUBLIC_URL}/images",
+        files={"file": ("body.jpg", b"x" * 16, "image/jpeg")},
+        headers=admin,
+    )
+
+    assert accepted.status_code == 201, accepted.text
+    assert accepted.json() == {"url": "https://res.cloudinary.com/demo/image/upload/body.jpg"}
+    assert calls == [
+        {
+            "size": 16,
+            "content_type": "image/jpeg",
+            "folder": "blog-images",
+            "max_bytes": 2 * 1024 * 1024,
+        }
+    ]
+
+    refused = await client.post(
+        f"{PUBLIC_URL}/images",
+        files={"file": ("body.jpg", b"x" * (2 * 1024 * 1024 + 1), "image/jpeg")},
+        headers=admin,
+    )
+    assert refused.status_code == 422, refused.text
+    assert refused.json()["detail"]["code"] == "validation_error"
+    assert len(calls) == 1
+
+    forbidden = await client.post(
+        f"{PUBLIC_URL}/images",
+        files={"file": ("body.jpg", b"x" * 16, "image/jpeg")},
+        headers=member,
+    )
+    assert forbidden.status_code == 403
+
+
 async def test_openapi_declares_the_blog_answers(client: AsyncClient) -> None:
     from app.core.openapi import build_openapi_schema
     from app.main import create_app
@@ -609,9 +682,11 @@ async def test_openapi_declares_the_blog_answers(client: AsyncClient) -> None:
     schema = build_openapi_schema(create_app())
     public = schema["paths"]["/api/v1/blog/posts"]["get"]
     create = schema["paths"]["/api/v1/blog/posts"]["post"]
+    image = schema["paths"]["/api/v1/blog/posts/images"]["post"]
 
     assert "200" in public["responses"]
     assert "201" in create["responses"]
+    assert "201" in image["responses"]
     assert public["responses"]["200"]["content"]["application/json"]["schema"]
     assert create["responses"]["201"]["content"]["application/json"]["schema"]
     assert "/api/v1/admin/blog/posts" not in schema["paths"]

@@ -71,6 +71,7 @@ ENDPOINTS: dict[tuple[str, str], str] = {
     ("GET", "/blog/posts/short/{code}"): "blogShortLinkSchema",
     ("POST", "/blog/posts"): "blogPostAdminSchema",
     ("POST", "/blog/posts/cover"): "blogImageUploadSchema",
+    ("POST", "/blog/posts/images"): "blogImageUploadSchema",
 }
 
 # The fields of a schema of the frontend: `field: z.…`.

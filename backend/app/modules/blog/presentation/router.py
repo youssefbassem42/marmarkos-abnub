@@ -13,7 +13,7 @@ from uuid import UUID
 from fastapi import APIRouter, Depends, File, Header, Query, Response, UploadFile, status
 
 from app.core.database import get_unit_of_work
-from app.core.exceptions import NotFoundError, UnauthorizedError
+from app.core.exceptions import NotFoundError, UnauthorizedError, ValidationError
 from app.core.pagination import Page, PageParams
 from app.modules.blog.application.commands.like_commands import like_post, unlike_post
 from app.modules.blog.application.commands.post_commands import (
@@ -54,6 +54,8 @@ router = APIRouter(tags=["Blog"])
 _UoW = Annotated[UnitOfWork, Depends(get_unit_of_work)]
 _Page = Annotated[int, Query(ge=1, description="1-based page number")]
 _Size = Annotated[int, Query(ge=1, le=100, description="Items per page")]
+
+_BLOG_IMAGE_MAX_BYTES = 2 * 1024 * 1024
 
 _MANAGER_FAILURES: dict[int | str, dict[str, Any]] = {
     403: {"description": "Insufficient permissions"},
@@ -181,6 +183,30 @@ async def upload_blog_cover(
         file.content_type or "",
         folder="blog-covers",
         max_bytes=1 * 1024 * 1024,
+    )
+    return BlogImageUploadResponse(url=url)
+
+
+@router.post(
+    "/blog/posts/images",
+    status_code=status.HTTP_201_CREATED,
+    response_model=BlogImageUploadResponse,
+    responses=_MANAGER_FAILURES,
+)
+async def upload_blog_post_image(
+    actor: BlogManager,
+    file: Annotated[UploadFile, File(...)],
+) -> BlogImageUploadResponse:
+    """Upload an image used inside the body of a post."""
+    _ = actor
+    data = await file.read()
+    if len(data) > _BLOG_IMAGE_MAX_BYTES:
+        raise ValidationError("Image must be 2 MB or smaller")
+    url = await upload_image(
+        data,
+        file.content_type or "",
+        folder="blog-images",
+        max_bytes=_BLOG_IMAGE_MAX_BYTES,
     )
     return BlogImageUploadResponse(url=url)
 
