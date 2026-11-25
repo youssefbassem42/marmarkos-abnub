@@ -14,10 +14,25 @@ from pydantic import BaseModel, Field
 T = TypeVar("T")
 
 
+#: The largest page a client may ask for.
+#:
+#: The offset of a page is ``(page - 1) * size``; without a ceiling a
+#: client could ask for a page of 9 223 372 036 854 775 807 and the
+#: offset would overflow the ``bigint`` of PostgreSQL - the answer was a
+#: **500** where a **422** belongs (the contract test of the API found
+#: it on the list of the blog).
+MAX_PAGE_NUMBER = 1_000_000
+
+
 class PageParams(BaseModel):
     """Validated pagination input shared by all list endpoints."""
 
-    page: int = Field(1, ge=1, description="1-based page number")
+    page: int = Field(
+        1,
+        ge=1,
+        le=MAX_PAGE_NUMBER,
+        description="1-based page number",
+    )
     size: int = Field(20, ge=1, le=100, description="Items per page")
 
     @property

@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, Query, Response, status
 from app.config import settings
 from app.core.database import get_unit_of_work
 from app.core.exceptions import NotFoundError
-from app.core.pagination import Page, PageParams
+from app.core.pagination import MAX_PAGE_NUMBER, Page, PageParams
 from app.modules.bible.presentation.dependencies import BibleManager
 from app.modules.quiz.application.commands.attempt_commands import (
     heartbeat_attempt_use_case,
@@ -89,7 +89,7 @@ quiz_router = APIRouter(prefix="/quizzes", tags=["Quizzes"])
 question_router = APIRouter(prefix="/quiz-questions", tags=["Quizzes"])
 
 _UoW = Annotated[UnitOfWork, Depends(get_unit_of_work)]
-_Page = Annotated[int, Query(ge=1, description="1-based page number")]
+_Page = Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")]
 _Size = Annotated[
     int, Query(ge=1, le=settings.QUIZ_ANALYTICS_MAX_PAGE_SIZE, description="Items per page")
 ]

@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.config import settings
 from app.core.database import get_unit_of_work
-from app.core.pagination import Page, PageParams
+from app.core.pagination import MAX_PAGE_NUMBER, Page, PageParams
 from app.modules.points.application.dto.points_dto import (
     MonthlyPointsResponse,
     PointActivityItem,
@@ -25,7 +25,7 @@ from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 router = APIRouter(prefix="/users/me/points", tags=["Points"])
 
 _UoW = Annotated[UnitOfWork, Depends(get_unit_of_work)]
-_Page = Annotated[int, Query(ge=1, description="1-based page number")]
+_Page = Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")]
 _Size = Annotated[int, Query(ge=1, le=100, description="Items per page")]
 
 

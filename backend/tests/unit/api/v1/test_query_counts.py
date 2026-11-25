@@ -143,3 +143,21 @@ async def test_monthly_export_query_count(client: AsyncClient, admin_auth_header
     assert resp.status_code in (200, 204)
     count = get_count()
     assert count <= 10, f"Monthly export used {count} queries (expected <= 10)"
+
+
+async def test_a_huge_page_number_is_a_validation_error(
+    client: AsyncClient,
+) -> None:
+    """A page of 9 223 372 036 854 775 807 must not be a server error.
+
+    The offset of a page is ``(page - 1) * size``; without a ceiling the
+    offset overflows the ``bigint`` of PostgreSQL and the answer was a
+    **500** where a **422** belongs (the contract test of the API found
+    it on the list of the blog).
+    """
+    response = await client.get(
+        "/api/v1/blog/posts",
+        params={"page": 9223372036854775807},
+    )
+
+    assert response.status_code == 422, response.text

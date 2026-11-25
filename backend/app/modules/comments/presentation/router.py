@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, Query, Response, status
 
 from app.core.database import get_unit_of_work
 from app.core.exceptions import NotFoundError
-from app.core.pagination import Page, PageParams
+from app.core.pagination import MAX_PAGE_NUMBER, Page, PageParams
 from app.modules.comments.application.commands.comment_commands import (
     create_comment,
     delete_comment,
@@ -42,7 +42,7 @@ from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 router = APIRouter(tags=["Blog Comments"])
 
 _UoW = Annotated[UnitOfWork, Depends(get_unit_of_work)]
-_Page = Annotated[int, Query(ge=1, description="1-based page number")]
+_Page = Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")]
 _Size = Annotated[int, Query(ge=1, le=100, description="Top-level comments per page")]
 
 _COMMENT_FAILURES: dict[int | str, dict[str, Any]] = {

@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, File, Form, Query, Response, UploadFile,
 
 from app.core.database import get_unit_of_work
 from app.core.exceptions import NotFoundError
-from app.core.pagination import Page, PageParams
+from app.core.pagination import MAX_PAGE_NUMBER, Page, PageParams
 from app.modules.media.application.commands.landing_slide_commands import (
     create_landing_slide,
     delete_landing_slide,
@@ -53,7 +53,7 @@ _ADMIN_FAILURES: dict[int | str, dict[str, Any]] = {
 )
 async def public_landing_slides(
     uow: _UoW,
-    page: Annotated[int, Query(ge=1, description="1-based page number")] = 1,
+    page: Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")] = 1,
     size: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 20,
 ) -> Page[LandingSlidePublicItem]:
     """The active slides, in order. Public: no token required."""
@@ -68,7 +68,7 @@ async def public_landing_slides(
 async def admin_list_landing_slides(
     actor: AdminUser,
     uow: _UoW,
-    page: Annotated[int, Query(ge=1, description="1-based page number")] = 1,
+    page: Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")] = 1,
     size: Annotated[int, Query(ge=1, le=100, description="Items per page")] = 20,
 ) -> Page[LandingSlideAdminItem]:
     """Every slide (the inactive ones too) for the administration."""

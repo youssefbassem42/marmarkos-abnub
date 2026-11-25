@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, File, Header, Query, Response, UploadFil
 
 from app.core.database import get_unit_of_work
 from app.core.exceptions import NotFoundError, UnauthorizedError, ValidationError
-from app.core.pagination import Page, PageParams
+from app.core.pagination import MAX_PAGE_NUMBER, Page, PageParams
 from app.modules.blog.application.commands.like_commands import like_post, unlike_post
 from app.modules.blog.application.commands.post_commands import (
     create_post,
@@ -52,7 +52,7 @@ from app.shared.security import jwt_service
 router = APIRouter(tags=["Blog"])
 
 _UoW = Annotated[UnitOfWork, Depends(get_unit_of_work)]
-_Page = Annotated[int, Query(ge=1, description="1-based page number")]
+_Page = Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")]
 _Size = Annotated[int, Query(ge=1, le=100, description="Items per page")]
 
 _BLOG_IMAGE_MAX_BYTES = 2 * 1024 * 1024

@@ -14,7 +14,7 @@ from fastapi import APIRouter, Depends, Query
 from app.config import settings
 from app.core.database import get_unit_of_work
 from app.core.exceptions.errors import NotFoundError
-from app.core.pagination import Page, PageParams
+from app.core.pagination import MAX_PAGE_NUMBER, Page, PageParams
 from app.modules.notifications.application.dto.notification_dto import (
     MarkReadResponse,
     NotificationResponse,
@@ -41,7 +41,7 @@ _UoW = Annotated[UnitOfWork, Depends(get_unit_of_work)]
 _CurrentUser = Annotated[User, Depends(get_current_user)]
 _AdminUser = Annotated[User, Depends(require_role(RoleName.ADMIN))]
 _TabParam = Annotated[NotificationTab, Query(description="Feed tab filter (§3.4)")]
-_PageParam = Annotated[int, Query(ge=1, description="1-based page number")]
+_PageParam = Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")]
 _SizeParam = Annotated[
     int,
     Query(ge=1, le=settings.NOTIFICATIONS_MAX_PAGE_SIZE, description="Items per page"),

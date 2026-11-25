@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import settings
 from app.core.database import get_db_session, get_unit_of_work
+from app.core.pagination import MAX_PAGE_NUMBER
 from app.core.time import today_local
 from app.modules.attendance.application.commands.check_in_command import CheckInCommand
 from app.modules.attendance.application.commands.excuse_attendance_command import (
@@ -214,7 +215,7 @@ async def get_absent_users(
     current_user: AttendanceManager,
     session: DbSession,
     meeting_date: MeetingDateParam = None,
-    page: Annotated[int, Query(ge=1, description="1-based page number")] = 1,
+    page: Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")] = 1,
     size: Annotated[
         int | None,
         Query(
@@ -332,7 +333,7 @@ async def get_attendance_history(
     status_filter: Annotated[
         AttendanceStatus | None, Query(alias="status", description="Filter by status")
     ] = None,
-    page: Annotated[int, Query(ge=1, description="1-based page number")] = 1,
+    page: Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")] = 1,
     size: Annotated[
         int,
         Query(

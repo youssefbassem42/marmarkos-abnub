@@ -13,7 +13,7 @@ from fastapi import APIRouter, Depends, Query, Request
 
 from app.config import settings
 from app.core.database import get_unit_of_work
-from app.core.pagination import Page, PageParams
+from app.core.pagination import MAX_PAGE_NUMBER, Page, PageParams
 from app.core.rate_limit import SlidingWindowRateLimiter, client_ip, hash_key
 from app.modules.anonymous_messages.application.dto.anonymous_message_dto import (
     AnonymousMessageAdminResponse,
@@ -44,7 +44,7 @@ _PER_USER_DAILY = SlidingWindowRateLimiter(
 )
 
 _StatusParam = Annotated[MessageStatus | None, Query(description="Filter by status")]
-_PageParam = Annotated[int, Query(ge=1, description="1-based page number")]
+_PageParam = Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")]
 _SizeParam = Annotated[int, Query(ge=1, le=100, description="Items per page")]
 
 

@@ -12,7 +12,7 @@ from fastapi import APIRouter, Depends, File, Query, Response, UploadFile, statu
 
 from app.config import settings
 from app.core.database import get_unit_of_work
-from app.core.pagination import Page, PageParams
+from app.core.pagination import MAX_PAGE_NUMBER, Page, PageParams
 from app.modules.bible.application.commands.schedule_commands import (
     cancel_schedule as cancel_schedule_command,
 )
@@ -66,7 +66,7 @@ from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 router = APIRouter(prefix="/bible-verses", tags=["Bible Verses"])
 
 _UoW = Annotated[UnitOfWork, Depends(get_unit_of_work)]
-_Page = Annotated[int, Query(ge=1, description="1-based page number")]
+_Page = Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")]
 _Size = Annotated[
     int, Query(ge=1, le=settings.BIBLE_VERSES_MAX_PAGE_SIZE, description="Items per page")
 ]
