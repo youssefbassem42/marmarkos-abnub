@@ -18,6 +18,9 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker
 from app.core.time.clock import now_utc
 from app.modules.blog.domain.enums.post_status import PostStatus
 from app.modules.blog.domain.events.blog_post_published import BlogPostPublished
+from app.modules.points.application.services.blog_post_points_service import (
+    award_blog_post_publication_points,
+)
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 logger = logging.getLogger(__name__)
@@ -72,6 +75,12 @@ async def _publish_one(
             return "skipped"
         try:
             post.status = PostStatus.PUBLISHED
+            await award_blog_post_publication_points(
+                uow,
+                user_id=post.author_id,
+                blog_post_id=post.id,
+                awarded_at=reference,
+            )
             uow.record(
                 BlogPostPublished(
                     aggregate_id=post.id,

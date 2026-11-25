@@ -65,6 +65,8 @@ async def my_points_history_query(
             awarded_at=row["awarded_at"],
             quiz_id=row["quiz_id"],
             quiz_title=row["quiz_title"],
+            post_id=row["post_id"],
+            post_title=row["post_title"],
             verse_id=row["verse_id"],
             verse_reference=row["verse_reference"],
             source=row["source"],

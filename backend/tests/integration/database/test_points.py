@@ -6,6 +6,7 @@ from datetime import UTC, date, datetime
 from app.core.time.periods import iso_week_start, month_start
 from app.modules.bible.domain.enums import VerseStatus
 from app.modules.bible.infrastructure.persistence.models import BibleVerse
+from app.modules.points.domain.enums.point_source import PointSource
 from app.modules.points.infrastructure.persistence.models import PointTransaction
 from app.modules.quiz.infrastructure.persistence.models import (
     Quiz,
@@ -14,6 +15,7 @@ from app.modules.quiz.infrastructure.persistence.models import (
 )
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 from tests.integration.database.conftest import make_user
+from tests.integration.database.test_blog import make_post
 
 
 async def _attempt(
@@ -87,6 +89,36 @@ async def test_award_is_idempotent_per_attempt(uow: UnitOfWork) -> None:
 
     items, _total = await uow.point_transactions.history_page(user.id, limit=10, offset=0)
     assert len(items) == 1
+
+
+async def test_blog_post_award_is_idempotent_per_post(uow: UnitOfWork) -> None:
+    """BR-85: the post's unique index pays a published post exactly once."""
+    author = await make_user(uow, "post-earner@example.com")
+    post = await make_post(uow, author.id, slug="post-award")
+    await uow.commit()
+
+    row_one, inserted_one = await uow.point_transactions.award(
+        user_id=author.id,
+        blog_post_id=post.id,
+        points=3,
+        period_week_start=iso_week_start(datetime.now(UTC).date()),
+        period_month=month_start(datetime.now(UTC).date()),
+    )
+    await uow.commit()
+    assert inserted_one is True
+    assert row_one.source == PointSource.BLOG_POST
+    assert row_one.quiz_attempt_id is None
+
+    row_two, inserted_two = await uow.point_transactions.award(
+        user_id=author.id,
+        blog_post_id=post.id,
+        points=3,
+        period_week_start=iso_week_start(datetime.now(UTC).date()),
+        period_month=month_start(datetime.now(UTC).date()),
+    )
+    await uow.commit()
+    assert inserted_two is False
+    assert row_two.id == row_one.id
 
 
 async def test_negative_points_rejected_by_check(uow: UnitOfWork) -> None:

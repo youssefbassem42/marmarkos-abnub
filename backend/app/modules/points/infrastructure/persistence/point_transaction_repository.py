@@ -10,6 +10,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.time.periods import iso_week_start, month_start
+from app.modules.points.domain.enums.point_source import PointSource
 from app.modules.points.infrastructure.persistence.models import PointTransaction
 
 
@@ -31,6 +32,8 @@ class PointHistoryRow(TypedDict):
     source: str
     quiz_id: uuid.UUID | None
     quiz_title: str | None
+    post_id: uuid.UUID | None
+    post_title: str | None
     verse_id: uuid.UUID | None
     verse_reference: str | None
 
@@ -86,21 +89,29 @@ class PointTransactionRepository:
         self,
         *,
         user_id: uuid.UUID,
-        quiz_attempt_id: uuid.UUID,
         points: int,
         period_week_start: date,
         period_month: date,
+        quiz_attempt_id: uuid.UUID | None = None,
+        blog_post_id: uuid.UUID | None = None,
         awarded_at: datetime | None = None,
     ) -> tuple[PointTransaction, bool]:
-        """Insert one ledger row; on conflict return the existing row.
+        """Insert one quiz or blog-post ledger row idempotently.
 
-        The unique ``quiz_attempt_id`` index makes double-awarding
-        impossible (BR-31); the caller treats ``inserted=False`` as "the
-        attempt was already graded and paid out" (BR-29).
+        Exactly one source key must be supplied. The unique index on that
+        key makes a repeated award return the existing row instead of
+        creating a second one (BR-31/BR-85).
         """
+        if (quiz_attempt_id is None) == (blog_post_id is None):
+            raise ValueError("Exactly one of quiz_attempt_id or blog_post_id is required")
+
+        source = PointSource.QUIZ if quiz_attempt_id is not None else PointSource.BLOG_POST
+        conflict_column = "quiz_attempt_id" if quiz_attempt_id is not None else "blog_post_id"
         values: dict[str, object] = {
             "user_id": user_id,
             "quiz_attempt_id": quiz_attempt_id,
+            "blog_post_id": blog_post_id,
+            "source": source.value,
             "points": points,
             "period_week_start": period_week_start,
             "period_month": period_month,
@@ -110,7 +121,7 @@ class PointTransactionRepository:
         stmt = (
             pg_insert(PointTransaction)
             .values(**values)
-            .on_conflict_do_nothing(index_elements=["quiz_attempt_id"])
+            .on_conflict_do_nothing(index_elements=[conflict_column])
             .returning(PointTransaction.id)
         )
         result = await self._session.execute(stmt)
@@ -120,8 +131,15 @@ class PointTransactionRepository:
             if row is None:  # the row was inserted in this very transaction
                 raise RuntimeError("The point transaction disappeared right after the insert")
             return row, True
+
+        source_column = (
+            PointTransaction.quiz_attempt_id
+            if quiz_attempt_id is not None
+            else PointTransaction.blog_post_id
+        )
+        source_id = quiz_attempt_id if quiz_attempt_id is not None else blog_post_id
         existing = await self._session.execute(
-            select(PointTransaction).where(PointTransaction.quiz_attempt_id == quiz_attempt_id)
+            select(PointTransaction).where(source_column == source_id)
         )
         row = existing.scalar_one()
         return row, False
@@ -216,8 +234,9 @@ class PointTransactionRepository:
     async def history_page_with_titles(
         self, user_id: uuid.UUID, *, limit: int, offset: int
     ) -> tuple[list[PointHistoryRow], int]:
-        """Paginated history joined to quiz title + verse reference (P5-032)."""
+        """Paginated history joined to the quiz or blog-post title (P5-032)."""
         from app.modules.bible.infrastructure.persistence.models import BibleVerse
+        from app.modules.blog.infrastructure.persistence.models import BlogPost
         from app.modules.quiz.infrastructure.persistence.models import Quiz, QuizAttempt
 
         base = (
@@ -228,11 +247,14 @@ class PointTransactionRepository:
                 PointTransaction.source,
                 Quiz.id.label("quiz_id"),
                 Quiz.title.label("quiz_title"),
+                BlogPost.id.label("post_id"),
+                BlogPost.title.label("post_title"),
                 BibleVerse.id.label("verse_id"),
                 BibleVerse.verse_reference.label("verse_reference"),
             )
-            .join(QuizAttempt, QuizAttempt.id == PointTransaction.quiz_attempt_id)
-            .join(Quiz, Quiz.id == QuizAttempt.quiz_id)
+            .outerjoin(QuizAttempt, QuizAttempt.id == PointTransaction.quiz_attempt_id)
+            .outerjoin(Quiz, Quiz.id == QuizAttempt.quiz_id)
+            .outerjoin(BlogPost, BlogPost.id == PointTransaction.blog_post_id)
             .outerjoin(BibleVerse, BibleVerse.id == Quiz.verse_id)
             .where(PointTransaction.user_id == user_id)
         )

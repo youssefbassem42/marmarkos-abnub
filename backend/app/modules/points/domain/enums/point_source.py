@@ -5,3 +5,4 @@ from enum import StrEnum
 
 class PointSource(StrEnum):
     QUIZ = "QUIZ"
+    BLOG_POST = "BLOG_POST"

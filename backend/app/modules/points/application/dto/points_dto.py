@@ -34,6 +34,8 @@ class PointActivityItem(BaseModel):
     awarded_at: datetime = Field(description="Award moment (UTC)")
     quiz_id: uuid.UUID | None = Field(default=None, description="Quiz id")
     quiz_title: str | None = Field(default=None, description="Quiz title")
+    post_id: uuid.UUID | None = Field(default=None, description="Blog post id")
+    post_title: str | None = Field(default=None, description="Blog post title")
     verse_id: uuid.UUID | None = Field(default=None, description="Verse id")
     verse_reference: str | None = Field(default=None, description="Verse reference")
     source: str = Field(description="Point source")

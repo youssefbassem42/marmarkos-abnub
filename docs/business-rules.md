@@ -157,6 +157,7 @@ code cites an identifier that is not listed here.
 | `BR-36` | The persistence of the ledger | `app/modules/points/infrastructure/persistence/point_transaction_repository.py` |
 | `BR-39` | The monthly leaderboard and the exports | `app/modules/points/presentation/analytics_router.py` |
 | `BR-40` | The CSV export of the monthly users table | `app/modules/points/presentation/analytics_router.py` |
+| `BR-85` | Publishing a blog post awards its author 3 points exactly once; a scheduled post pays when it is published, and archiving never takes the points back | `app/modules/points/application/services/blog_post_points_service.py` |
 | `D-5` | The week and the month of the platform start on Monday and on the first of the month | `app/core/time/periods.py` |
 | `P5-007` | The persistence of the ledger | `app/modules/points/infrastructure/persistence/point_transaction_repository.py` |
 | `P5-008` | The shared dependencies of the module | `app/modules/points/presentation/dependencies.py` |

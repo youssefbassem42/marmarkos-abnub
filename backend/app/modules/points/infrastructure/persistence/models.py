@@ -1,9 +1,10 @@
 """SQLAlchemy ORM model for the points module (Part 1 §4.6).
 
 The ledger is append-only and immutable (BR-32): one row per completed
-attempt, unique on ``quiz_attempt_id`` so double-awarding is impossible
-at the database level (BR-31). Historical weekly/monthly reporting uses
-the stored ``period_week_start``/``period_month`` columns so August stays
+attempt or published blog post. The source-specific unique indexes make
+double-awarding impossible at the database level (BR-31/BR-85). Historical
+weekly/monthly reporting uses the stored
+``period_week_start``/``period_month`` columns so August stays
 August when September begins (BR-33).
 """
 
@@ -30,6 +31,7 @@ from app.shared.infrastructure.persistence.base import (
 )
 
 if TYPE_CHECKING:
+    from app.modules.blog.infrastructure.persistence.models import BlogPost
     from app.modules.quiz.infrastructure.persistence.models import QuizAttempt
     from app.modules.users.infrastructure.persistence.models import User
 
@@ -39,6 +41,8 @@ class PointTransaction(UUIDPrimaryKeyMixin, Base):
     __table_args__ = (
         # BR-31: one award per completed attempt, ever.
         Index("uq_point_transactions_attempt", "quiz_attempt_id", unique=True),
+        # A published post is paid exactly once, even when publication is replayed.
+        Index("uq_point_transactions_blog_post", "blog_post_id", unique=True),
         CheckConstraint("points >= 0", name="ck_point_transactions_points"),
         Index("ix_point_transactions_user_awarded", "user_id", "awarded_at"),
         Index("ix_point_transactions_month_user", "period_month", "user_id"),
@@ -48,8 +52,11 @@ class PointTransaction(UUIDPrimaryKeyMixin, Base):
     user_id: Mapped[uuid.UUID] = mapped_column(
         ForeignKey("users.id", ondelete="CASCADE"), nullable=False
     )
-    quiz_attempt_id: Mapped[uuid.UUID] = mapped_column(
-        ForeignKey("quiz_attempts.id", ondelete="CASCADE"), nullable=False
+    quiz_attempt_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("quiz_attempts.id", ondelete="CASCADE"), nullable=True
+    )
+    blog_post_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("blog_posts.id", ondelete="CASCADE"), nullable=True
     )
     source: Mapped[PointSource] = mapped_column(
         String(20), default=PointSource.QUIZ.value, nullable=False
@@ -66,4 +73,5 @@ class PointTransaction(UUIDPrimaryKeyMixin, Base):
     )
 
     user: Mapped["User"] = relationship(back_populates="point_transactions")
-    quiz_attempt: Mapped["QuizAttempt"] = relationship()
+    quiz_attempt: Mapped["QuizAttempt | None"] = relationship()
+    blog_post: Mapped["BlogPost | None"] = relationship()

@@ -25,6 +25,9 @@ from app.modules.blog.application.dto.post_dto import (
 from app.modules.blog.domain.enums.post_status import PostStatus
 from app.modules.blog.domain.events.blog_post_published import BlogPostPublished
 from app.modules.blog.infrastructure.persistence.models import BlogCategory, BlogPost
+from app.modules.points.application.services.blog_post_points_service import (
+    award_blog_post_publication_points,
+)
 from app.shared.contracts.users import RoleName
 
 if TYPE_CHECKING:
@@ -143,6 +146,12 @@ async def create_post(uow: UnitOfWork, actor: User, payload: BlogPostCreateReque
     )
     await uow.blog_posts.add(post)
     if is_published:
+        await award_blog_post_publication_points(
+            uow,
+            user_id=post.author_id,
+            blog_post_id=post.id,
+            awarded_at=now_utc(),
+        )
         _record_published(uow, post)
     await _audit(uow, actor, "blog_post.create", post)
     return post
@@ -188,6 +197,12 @@ async def update_post(
             if moment <= now_utc():
                 post.status = PostStatus.PUBLISHED
                 if not was_published:
+                    await award_blog_post_publication_points(
+                        uow,
+                        user_id=post.author_id,
+                        blog_post_id=post.id,
+                        awarded_at=now_utc(),
+                    )
                     _record_published(uow, post)
             else:
                 post.status = PostStatus.DRAFT
@@ -222,6 +237,12 @@ async def publish_post(uow: UnitOfWork, actor: User, post_id: uuid.UUID) -> Blog
     if post.published_at is None or post.published_at > moment:
         post.published_at = moment
     if not was_published:
+        await award_blog_post_publication_points(
+            uow,
+            user_id=post.author_id,
+            blog_post_id=post.id,
+            awarded_at=moment,
+        )
         _record_published(uow, post)
     await _audit(uow, actor, "blog_post.publish", post)
     return post

@@ -13,6 +13,9 @@ from app.modules.blog.domain.enums.post_status import PostStatus
 from app.modules.notifications.application.services.notification_service import (
     NotificationService,
 )
+from app.modules.points.application.services.blog_post_points_service import (
+    award_blog_post_publication_points,
+)
 from app.shared.application.outbox_dispatcher import register_handler
 from app.shared.infrastructure.persistence.outbox import OutboxEvent
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
@@ -34,6 +37,13 @@ async def handle_blog_post_published(uow: UnitOfWork, event: OutboxEvent) -> Non
             post.id,
         )
         return
+
+    await award_blog_post_publication_points(
+        uow,
+        user_id=post.author_id,
+        blog_post_id=post.id,
+        awarded_at=now_utc(),
+    )
 
     await NotificationService(uow).notify_blog_post_published(
         post_id=post.id,
