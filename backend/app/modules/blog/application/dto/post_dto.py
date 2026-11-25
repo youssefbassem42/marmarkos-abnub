@@ -34,7 +34,7 @@ def _clean_tags(value: list[str] | None) -> list[str] | None:
 
 
 class BlogPostCreateRequest(BaseModel):
-    """POST /admin/blog/posts body."""
+    """POST /blog/posts body."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
@@ -70,7 +70,7 @@ class BlogPostCreateRequest(BaseModel):
 
 
 class BlogPostUpdateRequest(BaseModel):
-    """PATCH /admin/blog/posts/{id} body; omitted fields stay unchanged."""
+    """PATCH /blog/posts/{id} body; omitted fields stay unchanged."""
 
     model_config = ConfigDict(str_strip_whitespace=True)
 
@@ -93,7 +93,7 @@ class BlogPostUpdateRequest(BaseModel):
 
 
 class BlogPostScheduleRequest(BaseModel):
-    """POST /admin/blog/posts/{id}/schedule body."""
+    """POST /blog/posts/{id}/schedule body."""
 
     published_at: datetime = Field(description="Future publication date")
 
