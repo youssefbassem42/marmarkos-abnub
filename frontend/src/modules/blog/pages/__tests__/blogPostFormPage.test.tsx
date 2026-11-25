@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
-import { screen, waitFor } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { fireEvent, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 import { BlogPostFormPage } from "@/modules/blog/pages/blog/BlogPostFormPage";
@@ -133,5 +133,80 @@ describe("the form of a post of the blog", () => {
     const body = JSON.parse(String(call?.data ?? "{}"));
     expect(body.title).toBe("عنوان جديد");
     expect(body.tags).toEqual([]);
+  });
+
+  it("saves the draft by itself after the writer stops typing", async () => {
+    const calls = renderPage(<BlogPostFormPage />, {
+      route: "/blog/22222222-2222-4222-8222-222222222222/edit",
+      path: "/blog/:postId/edit",
+      answers: {
+        "/blog/posts/22222222-2222-4222-8222-222222222222": A_POST,
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("عنوان المنشور")).toHaveValue(
+        "موضوع في الإيمان",
+      );
+    });
+
+    // The clock of the test is fake from here: the pause of the
+    // autosave is the only thing that moves.
+    vi.useFakeTimers();
+    try {
+      // The writer changes a field of the draft: the pause starts.
+      fireEvent.change(screen.getByLabelText("عنوان المنشور"), {
+        target: { value: "عنوان جديد" },
+      });
+
+      // Nothing yet: the pause has not passed.
+      expect(
+        calls.calls.some(
+          (call) =>
+            call.method === "patch" &&
+            call.url === "/blog/posts/22222222-2222-4222-8222-222222222222",
+        ),
+      ).toBe(false);
+
+      await vi.advanceTimersByTimeAsync(11_000);
+
+      expect(
+        calls.calls.some(
+          (call) =>
+            call.method === "patch" &&
+            call.url === "/blog/posts/22222222-2222-4222-8222-222222222222",
+        ),
+      ).toBe(true);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("uploads a picture of the body and inserts it in the text", async () => {
+    const user = userEvent.setup();
+    const calls = renderPage(<BlogPostFormPage />, {
+      route: "/blog/new",
+      path: "/blog/new",
+      answers: {
+        "POST /blog/posts/images": { url: "https://example.com/picture.png" },
+      },
+    });
+
+    const button = await screen.findByRole("button", { name: /إدراج صورة/ });
+    const input =
+      document.querySelector<HTMLInputElement>('input[type="file"]');
+    expect(input).not.toBeNull();
+
+    const file = new File(["picture"], "picture.png", { type: "image/png" });
+    fireEvent.change(input!, { target: { files: [file] } });
+
+    await waitFor(() => {
+      expect(
+        calls.calls.some(
+          (call) => call.method === "post" && call.url === "/blog/posts/images",
+        ),
+      ).toBe(true);
+    });
+    expect(button).toBeInTheDocument();
   });
 });

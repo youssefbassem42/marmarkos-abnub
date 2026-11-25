@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { EditorContent, useEditor, type Editor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -7,8 +7,10 @@ import TextAlign from "@tiptap/extension-text-align";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import Placeholder from "@tiptap/extension-placeholder";
+import Image from "@tiptap/extension-image";
 import {
   Bold,
+  ImageIcon,
   Italic,
   List,
   ListOrdered,
@@ -32,6 +34,15 @@ interface RichTextEditorProps {
   value: string;
   /** Called with the HTML whenever the writer changes the text. */
   onChange: (html: string) => void;
+  /**
+   * Upload a picture of the body and return its address.
+   *
+   * The editor does not upload by itself: the page owns the client and
+   * the media service, and the editor only inserts the address it gets
+   * back. When the callback is missing, the button of the picture is
+   * not shown.
+   */
+  onUploadImage?: (file: File) => Promise<string>;
   disabled?: boolean;
   placeholder?: string;
   className?: string;
@@ -83,6 +94,7 @@ function ToolbarButton({
 export function RichTextEditor({
   value,
   onChange,
+  onUploadImage,
   disabled = false,
   placeholder,
   className,
@@ -92,6 +104,11 @@ export function RichTextEditor({
   const { t } = useTranslation("blog");
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
+  const uploadRef = useRef(onUploadImage);
+  uploadRef.current = onUploadImage;
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   const editor = useEditor({
     immediatelyRender: false,
@@ -106,6 +123,12 @@ export function RichTextEditor({
       }),
       Placeholder.configure({
         placeholder: placeholder ?? t("editor.placeholder"),
+      }),
+      Image.configure({
+        // The picture of the body is uploaded by the media service of
+        // the platform; the editor only holds its address.
+        allowBase64: false,
+        inline: false,
       }),
     ],
     content: value,
@@ -123,6 +146,22 @@ export function RichTextEditor({
     if (!editor || editor.getHTML() === value) return;
     editor.commands.setContent(value, { emitUpdate: false });
   }, [editor, value]);
+
+  /** Upload the picture the writer chose and insert it in the body. */
+  const insertImage = async (file: File) => {
+    const upload = uploadRef.current;
+    if (!upload || !editor) return;
+    setUploadError(null);
+    setUploading(true);
+    try {
+      const url = await upload(file);
+      editor.chain().focus().setImage({ src: url, alt: file.name }).run();
+    } catch {
+      setUploadError(t("editor.imageFailed"));
+    } finally {
+      setUploading(false);
+    }
+  };
 
   if (!editor) {
     return (
@@ -200,6 +239,32 @@ export function RichTextEditor({
         >
           <ListOrdered className="h-4 w-4" aria-hidden="true" />
         </ToolbarButton>
+
+        {onUploadImage ? (
+          <>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              aria-hidden="true"
+              tabIndex={-1}
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                event.target.value = "";
+                if (file) void insertImage(file);
+              }}
+            />
+            <ToolbarButton
+              editor={editor}
+              label={uploading ? t("editor.imageUploading") : t("editor.image")}
+              disabled={disabled || !editor.isEditable || uploading}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <ImageIcon className="h-4 w-4" aria-hidden="true" />
+            </ToolbarButton>
+          </>
+        ) : null}
 
         <Popover>
           <PopoverTrigger asChild>
@@ -309,9 +374,15 @@ export function RichTextEditor({
         </ToolbarButton>
       </div>
 
+      {uploadError ? (
+        <p className="border-t border-border bg-soft px-4 py-2 text-xs text-brand-red">
+          {uploadError}
+        </p>
+      ) : null}
+
       <EditorContent
         editor={editor}
-        className="prose-editor min-h-48 px-4 py-3 font-arabic text-ink focus:outline-none [&_h1]:font-heading [&_h2]:font-heading [&_li]:my-1 [&_ol]:list-decimal [&_p]:my-2 [&_ul]:list-disc"
+        className="prose-editor min-h-48 px-4 py-3 font-arabic text-ink focus:outline-none [&_h1]:font-heading [&_h2]:font-heading [&_img]:my-3 [&_img]:max-w-full [&_img]:rounded-xl [&_li]:my-1 [&_ol]:list-decimal [&_p]:my-2 [&_ul]:list-disc"
       />
     </div>
   );

@@ -220,4 +220,20 @@ export const blogApi = {
     });
     return response.data;
   },
+
+  /**
+   * Upload a picture of the body of a post.
+   *
+   * The cover and the pictures of the body are two kinds of images: the
+   * cover has its own route (1 MB) and the pictures of the body have
+   * theirs (2 MB).
+   */
+  uploadBodyImage: async (file: File): Promise<BlogImageUpload> => {
+    const form = new FormData();
+    form.append("file", file);
+    const response = await apiClient.post("/blog/posts/images", form, {
+      schema: blogImageUploadSchema,
+    });
+    return response.data;
+  },
 };

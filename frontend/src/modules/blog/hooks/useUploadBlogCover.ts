@@ -7,3 +7,10 @@ export function useUploadBlogCover() {
     mutationFn: (file: File) => blogApi.uploadCover(file),
   });
 }
+
+/** Upload a picture that the writer inserts in the body of a post. */
+export function useUploadBlogBodyImage() {
+  return useMutation({
+    mutationFn: (file: File) => blogApi.uploadBodyImage(file),
+  });
+}

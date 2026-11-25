@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ArrowRight, CalendarClock, Image, Save, Send } from "lucide-react";
@@ -19,6 +19,7 @@ import {
   usePublishBlogPost,
   useScheduleBlogPost,
   useUpdateBlogPost,
+  useUploadBlogBodyImage,
   useUploadBlogCover,
 } from "../../hooks";
 
@@ -34,6 +35,12 @@ export function BlogPostFormPage() {
   const [tags, setTags] = useState("");
   const [cover, setCover] = useState<string | null>(null);
   const [publishedAt, setPublishedAt] = useState("");
+  /** The state of the autosave of the editor (BR-93). */
+  const [autosaveState, setAutosaveState] = useState<
+    "idle" | "saving" | "saved" | "error"
+  >("idle");
+  const autosaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dirtySince = useRef(false);
 
   const query = useBlogPost(postId ?? "", { enabled: isEditing });
 
@@ -53,6 +60,7 @@ export function BlogPostFormPage() {
   const publishPost = usePublishBlogPost();
   const schedulePost = useScheduleBlogPost();
   const uploadCover = useUploadBlogCover();
+  const uploadBodyImage = useUploadBlogBodyImage();
   const isSaving =
     createPost.isPending ||
     updatePost.isPending ||
@@ -76,6 +84,48 @@ export function BlogPostFormPage() {
     cover_image: cover,
     tags: tagNames,
     published_at: null,
+  };
+
+  /**
+   * The autosave of the editor (BR-93).
+   *
+   * The post is a draft on the server; the form saves it after the
+   * writer stops typing, so a crash or a closed tab never costs the
+   * work. The autosave never publishes and never schedules: it saves
+   * the draft as it is.
+   */
+  const autosave = useCallback(() => {
+    if (!postId || !dirtySince.current) return;
+    if (!title.trim() || !body.trim()) return;
+    setAutosaveState("saving");
+    updatePost
+      .mutateAsync({ postId, data: payload })
+      .then(() => {
+        dirtySince.current = false;
+        setAutosaveState("saved");
+      })
+      .catch(() => setAutosaveState("error"));
+    // `payload` is read when the timer fires: the closure is refreshed
+    // on every render, so the latest values are the ones that are sent.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [postId, title, body, excerpt, cover, tags, updatePost]);
+
+  const scheduleAutosave = useCallback(() => {
+    dirtySince.current = true;
+    setAutosaveState("idle");
+    if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(() => autosave(), 10_000);
+  }, [autosave]);
+
+  useEffect(() => {
+    return () => {
+      if (autosaveTimer.current) clearTimeout(autosaveTimer.current);
+    };
+  }, []);
+
+  const handleUploadImage = async (file: File): Promise<string> => {
+    const result = await uploadBodyImage.mutateAsync(file);
+    return result.url;
   };
 
   const validate = () => {
@@ -188,7 +238,10 @@ export function BlogPostFormPage() {
             <Input
               id="blog-title"
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              onChange={(event) => {
+                setTitle(event.target.value);
+                scheduleAutosave();
+              }}
               placeholder={t("admin.form.titlePlaceholder")}
             />
           </div>
@@ -198,7 +251,10 @@ export function BlogPostFormPage() {
             <Textarea
               id="blog-excerpt"
               value={excerpt}
-              onChange={(event) => setExcerpt(event.target.value)}
+              onChange={(event) => {
+                setExcerpt(event.target.value);
+                scheduleAutosave();
+              }}
               placeholder={t("admin.form.excerptPlaceholder")}
               rows={3}
             />
@@ -208,10 +264,29 @@ export function BlogPostFormPage() {
             <Label>{t("admin.form.bodyLabel")}</Label>
             <RichTextEditor
               value={body}
-              onChange={setBody}
+              onChange={(html) => {
+                setBody(html);
+                scheduleAutosave();
+              }}
+              onUploadImage={handleUploadImage}
               placeholder={t("editor.placeholder")}
               aria-label={t("admin.form.bodyLabel")}
             />
+            {isEditing ? (
+              <p
+                className="text-xs text-muted-foreground"
+                role="status"
+                aria-live="polite"
+              >
+                {autosaveState === "saving"
+                  ? t("admin.form.autosaveSaving")
+                  : autosaveState === "saved"
+                    ? t("admin.form.autosaveSaved")
+                    : autosaveState === "error"
+                      ? t("admin.form.autosaveFailed")
+                      : ""}
+              </p>
+            ) : null}
           </div>
         </div>
 
@@ -221,7 +296,10 @@ export function BlogPostFormPage() {
             <Input
               id="blog-tags"
               value={tags}
-              onChange={(event) => setTags(event.target.value)}
+              onChange={(event) => {
+                setTags(event.target.value);
+                scheduleAutosave();
+              }}
               placeholder={t("admin.form.tagsPlaceholder")}
             />
           </div>
