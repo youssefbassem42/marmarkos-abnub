@@ -140,7 +140,7 @@ async def test_push_with_email_targets_only_active_verified(
     assert response.recipients == 2
 
 
-async def test_blog_post_consumer_creates_a_personal_notification_with_cta(
+async def test_blog_post_consumer_creates_a_personal_notification_with_cta_and_no_mail(
     uow: UnitOfWork, captured_emails: list
 ) -> None:
     admin = await _make_user(uow, "blog.admin@t.com", role=RoleName.ADMIN)
@@ -170,8 +170,4 @@ async def test_blog_post_consumer_creates_a_personal_notification_with_cta(
     ]
     assert author_rows == []
 
-    assert {to for to, _ in captured_emails} == {"reader@t.com"}
-    # The platform ships Arabic copy only (the English bundle was removed in
-    # the Arabic-only i18n change), so the subject is the Arabic one.
-    assert all("منشور جديد" in c.subject for _, c in captured_emails)
-    assert all("رجاء جديد" in c.subject for _, c in captured_emails)
+    assert captured_emails == []

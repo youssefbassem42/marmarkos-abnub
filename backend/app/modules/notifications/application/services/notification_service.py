@@ -16,6 +16,8 @@ from app.core.exceptions.errors import ForbiddenError
 from app.modules.notifications.application.copy import (
     NotificationCopy,
     attendance_recorded_copy,
+    blog_comment_liked_copy,
+    blog_post_liked_copy,
     blog_post_published_copy,
 )
 from app.modules.notifications.application.dto.notification_dto import (
@@ -29,10 +31,7 @@ from app.modules.users.domain.enums.role_name import RoleName
 from app.modules.users.domain.enums.user_status import UserStatus
 from app.modules.users.infrastructure.persistence.models import User
 from app.shared.contracts.attendance import AttendanceStatus
-from app.shared.infrastructure.email.messages import (
-    new_post_email,
-    notification_email,
-)
+from app.shared.infrastructure.email.messages import notification_email
 from app.shared.infrastructure.email.service import EmailService
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
@@ -40,11 +39,25 @@ logger = logging.getLogger(__name__)
 
 _ANNOUNCEMENT_CTA_LABEL = "افتح التطبيق — OPEN APP"
 _BLOG_POST_NOTIFICATION_KEY_PREFIX = "marmarkos:notifications:blog-post"
+_BLOG_POST_LIKE_KEY_PREFIX = "marmarkos:notifications:blog-post-like"
+_BLOG_COMMENT_LIKE_KEY_PREFIX = "marmarkos:notifications:blog-comment-like"
 
 
 def _blog_post_notification_id(post_id: uuid.UUID, user_id: uuid.UUID) -> uuid.UUID:
     """The stable database key of one member's notification for one post."""
     key = f"{_BLOG_POST_NOTIFICATION_KEY_PREFIX}:{post_id}:{user_id}"
+    return uuid.uuid5(uuid.NAMESPACE_URL, key)
+
+
+def _blog_post_like_notification_id(post_id: uuid.UUID, liker_id: uuid.UUID) -> uuid.UUID:
+    """The stable key of one member's like notification for one post."""
+    key = f"{_BLOG_POST_LIKE_KEY_PREFIX}:{post_id}:{liker_id}"
+    return uuid.uuid5(uuid.NAMESPACE_URL, key)
+
+
+def _blog_comment_like_notification_id(comment_id: uuid.UUID, liker_id: uuid.UUID) -> uuid.UUID:
+    """The stable key of one member's like notification for one comment."""
+    key = f"{_BLOG_COMMENT_LIKE_KEY_PREFIX}:{comment_id}:{liker_id}"
     return uuid.uuid5(uuid.NAMESPACE_URL, key)
 
 
@@ -86,6 +99,79 @@ class NotificationService:
             title_en=copy.title_en,
             message_en=copy.message_en,
             data=data,
+        )
+
+    async def notify_blog_post_liked(
+        self,
+        *,
+        post_id: uuid.UUID,
+        author_id: uuid.UUID,
+        slug: str,
+        liker_id: uuid.UUID,
+        liker_name: str,
+    ) -> None:
+        """Notify the post author of one member's like, idempotently.
+
+        The notification is written in the caller's transaction and the
+        command that owns the like commits both together. A member never
+        notifies themself (BR-86).
+        """
+        if author_id == liker_id:
+            return
+        author = await self._uow.users.get_by_id(author_id)
+        if author is None or author.status is not UserStatus.ACTIVE:
+            return
+
+        copy = blog_post_liked_copy(actor_name=liker_name)
+        await self._uow.notifications.create_idempotent_for_user(
+            notification_id=_blog_post_like_notification_id(post_id, liker_id),
+            user_id=author_id,
+            type=NotificationType.BLOG_LIKE,
+            title=copy.title_ar,
+            message=copy.message_ar,
+            title_en=copy.title_en,
+            message_en=copy.message_en,
+            data={
+                "post_id": str(post_id),
+                "slug": slug,
+                "cta_url": f"/blog/{slug}",
+                "icon": "Heart",
+            },
+        )
+
+    async def notify_blog_comment_liked(
+        self,
+        *,
+        post_id: uuid.UUID,
+        comment_id: uuid.UUID,
+        slug: str,
+        comment_author_id: uuid.UUID,
+        liker_id: uuid.UUID,
+        liker_name: str,
+    ) -> None:
+        """Notify a comment author of one like, idempotently (BR-86)."""
+        if comment_author_id == liker_id:
+            return
+        author = await self._uow.users.get_by_id(comment_author_id)
+        if author is None or author.status is not UserStatus.ACTIVE:
+            return
+
+        copy = blog_comment_liked_copy(actor_name=liker_name)
+        await self._uow.notifications.create_idempotent_for_user(
+            notification_id=_blog_comment_like_notification_id(comment_id, liker_id),
+            user_id=comment_author_id,
+            type=NotificationType.BLOG_LIKE,
+            title=copy.title_ar,
+            message=copy.message_ar,
+            title_en=copy.title_en,
+            message_en=copy.message_en,
+            data={
+                "post_id": str(post_id),
+                "comment_id": str(comment_id),
+                "slug": slug,
+                "cta_url": f"/blog/{slug}",
+                "icon": "Heart",
+            },
         )
 
     async def push_announcement(
@@ -158,11 +244,10 @@ class NotificationService:
         title_en: str | None = None,
         excerpt: str | None = None,
     ) -> None:
-        """Notify every eligible member about one published post (BR-73/BR-75).
+        """Notify every active member about one published post (BR-73/BR-75).
 
-        Each member gets a personal notification. The author is excluded,
-        and only an active member with a verified address may receive the
-        mail. The notification rows are committed before delivery starts.
+        Each member except the author gets a personal in-app notification.
+        Blog publication has no mail fan-out; announcements keep theirs.
         """
         copy = blog_post_published_copy(
             title_ar=title_ar,
@@ -176,7 +261,7 @@ class NotificationService:
             key=lambda user: user.id,
         )
 
-        created_users: list[User] = []
+        created_count = 0
         for user in recipients:
             notification = await self._uow.notifications.create_idempotent_for_user(
                 notification_id=_blog_post_notification_id(post_id, user.id),
@@ -194,11 +279,11 @@ class NotificationService:
                 },
             )
             if notification is not None:
-                created_users.append(user)
+                created_count += 1
 
-        if not created_users:
-            # A replay of an already delivered event must not create a
-            # second audit trail or send the mail again (BR-75).
+        if not created_count:
+            # A replay of an already delivered event creates no second
+            # notification or audit trail (BR-75).
             return
 
         await self._uow.audit.record(
@@ -208,26 +293,11 @@ class NotificationService:
             metadata={
                 "post_id": str(post_id),
                 "slug": slug,
-                "notifications_created": len(created_users),
+                "notifications_created": created_count,
             },
         )
         await self._uow.commit()
-
-        content = new_post_email(
-            title_ar=copy.title_ar,
-            title_en=copy.title_en,
-            message_ar=copy.message_ar,
-            message_en=copy.message_en,
-            cta_url=cta_url,
-        )
-        sent, failed = await self._fan_out_content(content, users=created_users)
-        logger.info(
-            "Blog post %s notified %d members: emails sent=%d failed=%d",
-            post_id,
-            len(created_users),
-            sent,
-            failed,
-        )
+        logger.info("Blog post %s created %d in-app notifications", post_id, created_count)
 
     async def email_fan_out(
         self, *, copy: NotificationCopy, cta_url: str | None

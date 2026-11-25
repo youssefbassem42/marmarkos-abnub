@@ -1,6 +1,5 @@
-"""The notification and mail fan-out of a published blog post (BR-72..BR-76)."""
+"""The in-app notification of a published blog post (BR-72..BR-76)."""
 
-import asyncio
 import uuid
 from collections.abc import AsyncIterator
 from datetime import UTC, datetime, timedelta
@@ -95,7 +94,7 @@ async def _notifications(uow: UnitOfWork) -> list[Notification]:
     return list(result.scalars().all())
 
 
-async def test_published_event_creates_one_notification_per_active_member(
+async def test_published_event_creates_one_web_notification_and_no_mail_per_active_member(
     uow: UnitOfWork, captured_emails: list
 ) -> None:
     author = await _make_user(uow, "blog-author@test.com", role=RoleName.SERVANT)
@@ -116,11 +115,7 @@ async def test_published_event_creates_one_notification_per_active_member(
         row.data is not None and row.data["cta_url"].endswith(f"/blog/{post.slug}") for row in rows
     )
 
-    assert {to for to, _ in captured_emails} == {"blog-first@test.com", "blog-second@test.com"}
-    for _, content in captured_emails:
-        assert "عنوان الموضوع" in content.subject
-        assert content.cta_url is not None
-        assert content.cta_url.endswith(f"/blog/{post.slug}")
+    assert captured_emails == []
 
 
 async def test_the_author_receives_neither_a_notification_nor_a_mail(
@@ -138,7 +133,7 @@ async def test_the_author_receives_neither_a_notification_nor_a_mail(
     assert "only-author@test.com" not in {to for to, _ in captured_emails}
 
 
-async def test_member_who_did_not_opt_in_to_mail_gets_the_notification_without_a_mail(
+async def test_an_unverified_member_still_gets_the_web_notification(
     uow: UnitOfWork, captured_emails: list
 ) -> None:
     author = await _make_user(uow, "mail-pref-author@test.com", role=RoleName.SERVANT)
@@ -154,7 +149,7 @@ async def test_member_who_did_not_opt_in_to_mail_gets_the_notification_without_a
 
     rows = await _notifications(uow)
     assert [row.user_id for row in rows] == [opted_out.id]
-    assert "mail-opted-out@test.com" not in {to for to, _ in captured_emails}
+    assert captured_emails == []
 
 
 async def test_replaying_the_event_does_not_duplicate_the_notification_or_the_mail(
@@ -172,7 +167,7 @@ async def test_replaying_the_event_does_not_duplicate_the_notification_or_the_ma
     rows = await _notifications(uow)
     assert len(rows) == 1
     assert rows[0].user_id == member.id
-    assert [to for to, _ in captured_emails] == ["replay-member@test.com"]
+    assert captured_emails == []
 
 
 async def test_a_suspended_member_receives_nothing(uow: UnitOfWork, captured_emails: list) -> None:
@@ -192,30 +187,24 @@ async def test_a_suspended_member_receives_nothing(uow: UnitOfWork, captured_ema
     assert "suspended-member@test.com" not in {to for to, _ in captured_emails}
 
 
-async def test_one_mail_failure_does_not_stop_the_other_members(
+async def test_publication_never_calls_the_mail_service(
     uow: UnitOfWork, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    author = await _make_user(uow, "failure-author@test.com", role=RoleName.SERVANT)
-    failed = await _make_user(uow, "mail-fails@test.com")
-    delivered = await _make_user(uow, "mail-delivered@test.com")
+    author = await _make_user(uow, "no-mail-author@test.com", role=RoleName.SERVANT)
+    member = await _make_user(uow, "no-mail-member@test.com")
     post = await _make_post(uow, author)
     await uow.commit()
-    sent: list[str] = []
 
-    async def _fail_one(self: EmailService, *, to_email: str, content: object) -> bool:
-        del self, content
-        if to_email == failed.email:
-            raise RuntimeError("mail provider failed")
-        sent.append(to_email)
-        return True
+    async def _unexpected_mail(self: EmailService, *, to_email: str, content: object) -> bool:
+        del self, to_email, content
+        raise AssertionError("blog publication must not send mail")
 
-    monkeypatch.setattr(EmailService, "send", _fail_one)
+    monkeypatch.setattr(EmailService, "send", _unexpected_mail)
 
     await handle_blog_post_published(uow, _published_event(post))
 
     rows = await _notifications(uow)
-    assert {row.user_id for row in rows} == {failed.id, delivered.id}
-    assert sent == [delivered.email]
+    assert [row.user_id for row in rows] == [member.id]
 
 
 @pytest.mark.parametrize(
@@ -248,35 +237,13 @@ async def test_a_post_that_is_not_published_and_due_notifies_nobody(
     assert captured_emails == []
 
 
-async def test_the_mail_fan_out_respects_the_configured_concurrency(
-    uow: UnitOfWork, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    from app.config import settings
-
-    monkeypatch.setattr(settings, "NOTIFICATION_EMAIL_CONCURRENCY", 2)
-    author = await _make_user(uow, "concurrency-author@test.com", role=RoleName.SERVANT)
+async def test_every_active_member_receives_a_web_notification(uow: UnitOfWork) -> None:
+    author = await _make_user(uow, "fanout-author@test.com", role=RoleName.SERVANT)
     for index in range(5):
-        await _make_user(uow, f"concurrency-member-{index}@test.com")
+        await _make_user(uow, f"fanout-member-{index}@test.com")
     post = await _make_post(uow, author)
     await uow.commit()
 
-    active = 0
-    maximum_active = 0
-    sent: list[str] = []
-
-    async def _track_send(self: EmailService, *, to_email: str, content: object) -> bool:
-        nonlocal active, maximum_active
-        del self, content
-        active += 1
-        maximum_active = max(maximum_active, active)
-        await asyncio.sleep(0.01)
-        active -= 1
-        sent.append(to_email)
-        return True
-
-    monkeypatch.setattr(EmailService, "send", _track_send)
-
     await handle_blog_post_published(uow, _published_event(post))
 
-    assert len(sent) == 5
-    assert maximum_active <= 2
+    assert len(await _notifications(uow)) == 5

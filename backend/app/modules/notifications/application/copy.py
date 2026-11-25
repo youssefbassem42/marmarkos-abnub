@@ -41,6 +41,26 @@ def attendance_recorded_copy(*, meeting_date: date, status: AttendanceStatus) ->
     )
 
 
+def blog_post_liked_copy(*, actor_name: str) -> NotificationCopy:
+    """The bell card for a member who liked a blog post."""
+    return NotificationCopy(
+        title_ar="تم الإعجاب بمنشورك",
+        title_en="Your post was liked",
+        message_ar=f"أعجب {actor_name} بمنشورك.",
+        message_en=f"{actor_name} liked your post.",
+    )
+
+
+def blog_comment_liked_copy(*, actor_name: str) -> NotificationCopy:
+    """The bell card for a member who liked a comment or a reply."""
+    return NotificationCopy(
+        title_ar="تم الإعجاب بتعليقك",
+        title_en="Your comment was liked",
+        message_ar=f"أعجب {actor_name} بتعليقك.",
+        message_en=f"{actor_name} liked your comment.",
+    )
+
+
 def blog_post_published_copy(
     *, title_ar: str, title_en: str, excerpt: str | None = None
 ) -> NotificationCopy:

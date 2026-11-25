@@ -7,11 +7,13 @@ from datetime import UTC, datetime
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import insert
+from sqlalchemy import insert, select
 
 from app.modules.blog.domain.enums.post_status import PostStatus
 from app.modules.blog.infrastructure.persistence.like_repository import BlogPostLikeRepository
 from app.modules.blog.infrastructure.persistence.models import BlogPost, BlogPostLike
+from app.modules.notifications.domain.enums.notification_type import NotificationType
+from app.modules.notifications.infrastructure.persistence.models import Notification
 from app.modules.users.domain.enums.role_name import RoleName
 from tests.utils import DEFAULT_PASSWORD, bearer, create_user_direct
 
@@ -84,6 +86,59 @@ async def test_liking_twice_keeps_one_like(client: AsyncClient, db_engine) -> No
     assert second.status_code == 200, second.text
     assert second.json()["likes_count"] == 1
     assert second.json()["liked"] is True
+
+
+async def test_a_post_like_notifies_its_author_once_even_after_unliking_and_liking_again(
+    client: AsyncClient, db_engine
+) -> None:
+    author_id, _ = await _member(client, db_engine, email="blog-like-author@example.com")
+    _, liker = await _member(client, db_engine, email="blog-like-notified@example.com")
+    post_id = await _published_post(db_engine, author_id, title="منشور liked")
+
+    liked = await client.post(f"{POSTS_URL}/{post_id}/like", headers=liker)
+    assert liked.status_code == 200, liked.text
+    unliked = await client.delete(f"{POSTS_URL}/{post_id}/like", headers=liker)
+    assert unliked.status_code == 200, unliked.text
+    liked_again = await client.post(f"{POSTS_URL}/{post_id}/like", headers=liker)
+    assert liked_again.status_code == 200, liked_again.text
+
+    async with db_engine.begin() as connection:
+        rows = list(
+            (
+                await connection.execute(
+                    select(Notification.user_id, Notification.data).where(
+                        Notification.type == NotificationType.BLOG_LIKE
+                    )
+                )
+            ).all()
+        )
+
+    assert len(rows) == 1
+    recipient_id, data = rows[0]
+    assert recipient_id == author_id
+    assert data is not None
+    assert data["post_id"] == str(post_id)
+    assert data["slug"] == f"post-{post_id.hex}"
+    assert data["cta_url"] == f"/blog/post-{post_id.hex}"
+    assert data["icon"] == "Heart"
+
+
+async def test_a_member_does_not_notify_themself_when_they_like_their_post(
+    client: AsyncClient, db_engine
+) -> None:
+    member_id, headers = await _member(client, db_engine, email="blog-like-self-notify@example.com")
+    post_id = await _published_post(db_engine, member_id)
+
+    liked = await client.post(f"{POSTS_URL}/{post_id}/like", headers=headers)
+    assert liked.status_code == 200, liked.text
+
+    async with db_engine.begin() as connection:
+        count = (
+            await connection.execute(
+                select(Notification.id).where(Notification.type == NotificationType.BLOG_LIKE)
+            )
+        ).all()
+    assert count == []
 
 
 async def test_a_member_takes_the_like_back(client: AsyncClient, db_engine) -> None:

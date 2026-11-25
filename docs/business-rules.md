@@ -307,9 +307,10 @@ number.
 |---|---|---|
 | `BR-72` | Only a post whose current state is `PUBLISHED` and whose publication date is due can notify the members; a draft, a scheduled post that is not due, and an archived post notify nobody | `app/modules/blog/application/handlers/blog_post_published_handler.py` |
 | `BR-73` | Every active member except the author receives one personal `BLOG_POST` notification with the post id and the link to the post | `app/modules/notifications/application/services/notification_service.py` |
-| `BR-74` | Only an active member with a verified email address has opted in to the blog mail; the author never receives it | `app/modules/notifications/application/services/notification_service.py` |
-| `BR-75` | The delivery is idempotent: a repeated publication event creates neither a second notification nor a second mail for the same member and post | `app/modules/notifications/infrastructure/persistence/notification_repository.py` |
-| `BR-76` | The mails are sent with bounded concurrency and the failure of one member never stops the other members | `app/modules/notifications/application/services/notification_service.py` |
+| `BR-74` | Publishing a blog post creates in-app notifications only; it sends no mail | `app/modules/notifications/application/services/notification_service.py` |
+| `BR-75` | The delivery is idempotent: a repeated publication event creates neither a second notification nor a second audit trail for the same member and post | `app/modules/notifications/infrastructure/persistence/notification_repository.py` |
+| `BR-76` | Announcement mails are sent with bounded concurrency and the failure of one member never stops the other members | `app/modules/notifications/application/services/notification_service.py` |
+| `BR-86` | Liking a post or a comment notifies its author once with a `BLOG_LIKE` notification; nobody notifies themself, and the notification id is derived from the liked item and the member who liked it | `app/modules/notifications/application/services/notification_service.py` |
 
 ## The comments of the blog posts (the point 7 of the plan)
 

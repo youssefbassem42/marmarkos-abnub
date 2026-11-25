@@ -15,14 +15,23 @@ from sqlalchemy.exc import IntegrityError
 
 from app.core.exceptions import ConflictError, NotFoundError
 from app.modules.blog.application.dto.like_dto import LikeResponse
-from app.modules.blog.infrastructure.persistence.models import BlogPostLike
+from app.modules.blog.infrastructure.persistence.models import BlogPost, BlogPostLike
+from app.modules.notifications.application.services.notification_service import (
+    NotificationService,
+)
 from app.modules.users.infrastructure.persistence.models import User
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 
 
-async def _require_post(uow: UnitOfWork, post_id: uuid.UUID) -> None:
-    if await uow.blog_posts.get_by_id(post_id) is None:
+async def _require_post(uow: UnitOfWork, post_id: uuid.UUID) -> BlogPost:
+    post = await uow.blog_posts.get_by_id(post_id)
+    if post is None:
         raise NotFoundError("Post not found")
+    return post
+
+
+def _display_name(user: User) -> str:
+    return " ".join(part for part in (user.first_name, user.last_name) if part) or "عضو"
 
 
 async def _like_response(
@@ -41,7 +50,7 @@ async def like_post(
     post_id: uuid.UUID,
 ) -> LikeResponse:
     """Like a post once; a repeated request keeps the same like (BR-70)."""
-    await _require_post(uow, post_id)
+    post = await _require_post(uow, post_id)
 
     if await uow.blog_likes.has_liked(post_id, actor.id):
         return await _like_response(uow, post_id, liked=True)
@@ -53,6 +62,13 @@ async def like_post(
         # A concurrent request inserted the unique (post, user) pair first.
         raise ConflictError("The post is already liked") from exc
 
+    await NotificationService(uow).notify_blog_post_liked(
+        post_id=post_id,
+        author_id=post.author_id,
+        slug=post.slug,
+        liker_id=actor.id,
+        liker_name=_display_name(actor),
+    )
     return await _like_response(uow, post_id, liked=True)
 
 
