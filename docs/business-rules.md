@@ -315,6 +315,12 @@ number.
 | `BR-93` | The editor of a post saves the draft on the server ten seconds after the writer stops typing; the autosave never publishes, never schedules, and never resets the text under the writer's hands | `frontend/src/modules/blog/pages/blog/BlogPostFormPage.tsx` |
 | `BR-94` | A post carries two kinds of images: the **cover** (its own route, 1 MB) and the **pictures of the body** (their own route, 2 MB), uploaded through the shared media service | `app/modules/blog/presentation/router.py` |
 
+## The session of a cross-site deployment
+
+| Identifier | The rule | Where it lives |
+|---|---|---|
+| `BR-96` | The cookie of the refresh token follows the shape of the deployment: a same-site call keeps it first-party (`SameSite=lax`), a cross-site call (the API on another site than the frontend) gets `SameSite=None` with the `Secure` flag, otherwise the browser would never send it back and the member would be logged out at every reload | `app/modules/auth/presentation/cookies.py` |
+
 ## The comments of the blog posts (the point 7 of the plan)
 
 | Identifier | The rule | Where it lives |

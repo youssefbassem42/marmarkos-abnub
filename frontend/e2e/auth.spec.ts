@@ -33,6 +33,29 @@ test.describe("signing in", () => {
     ).toBeVisible({ timeout: 20_000 });
   });
 
+  test("the member stays signed in after a reload", async ({ page }) => {
+    // The access token lives in the memory of the page: a reload throws
+    // it away, and the session comes back from the HttpOnly refresh
+    // cookie. The member who is logged out at every refresh is the
+    // symptom of a cookie that does not survive the reload.
+    await page.goto("/login");
+    await page.locator("#email").fill(MEMBER.email);
+    await page.locator("#password").fill(MEMBER.password);
+    await page
+      .getByRole("button", { name: /تسجيل الدخول|دخول|sign in/i })
+      .click();
+    await page.waitForURL(/\/profile|\/$/, { timeout: 20_000 });
+
+    await page.reload();
+
+    // The member is still signed in and the private page answers.
+    await page.goto("/profile");
+    await expect(
+      page.getByRole("heading", { name: /ملفي|بروفايل|profile/i }),
+    ).toBeVisible({ timeout: 20_000 });
+    await expect(page).not.toHaveURL(/\/login/, { timeout: 20_000 });
+  });
+
   test("a wrong password signs nobody in", async ({ page }) => {
     await page.goto("/login");
 

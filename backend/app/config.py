@@ -54,6 +54,18 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: str = "http://localhost:5173"
 
+    # -- The cookie of the refresh token ------------------------------------
+    # "lax" (the default) keeps the cookie first-party: the browser only
+    # sends it with the same site. "none" is needed when the API is
+    # served from another site than the frontend - the cookie is then
+    # only sent over HTTPS (the browser refuses it otherwise).
+    # The default is "auto": the cookie follows the shape of the call
+    # (same site -> lax, cross site -> none).
+    COOKIE_SAMESITE: str = "auto"
+    # None = the flag follows the request (HTTPS -> Secure). True/False
+    # force it.
+    COOKIE_SECURE: bool | None = None
+
     TELEGRAM_BOT_TOKEN: str | None = None
     TELEGRAM_CHAT_ID: str | None = None
 
