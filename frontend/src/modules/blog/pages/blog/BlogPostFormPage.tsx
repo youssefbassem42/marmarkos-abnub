@@ -14,8 +14,9 @@ import { Textarea } from "@/components/ui/textarea";
 
 import { RichTextEditor } from "../../components/RichTextEditor";
 import {
-  useAdminBlogPost,
+  useBlogPost,
   useCreateBlogPost,
+  usePublishBlogPost,
   useScheduleBlogPost,
   useUpdateBlogPost,
   useUploadBlogCover,
@@ -34,7 +35,7 @@ export function BlogPostFormPage() {
   const [cover, setCover] = useState<string | null>(null);
   const [publishedAt, setPublishedAt] = useState("");
 
-  const query = useAdminBlogPost(postId ?? "", { enabled: isEditing });
+  const query = useBlogPost(postId ?? "", { enabled: isEditing });
 
   useEffect(() => {
     const post = query.data;
@@ -49,11 +50,13 @@ export function BlogPostFormPage() {
 
   const createPost = useCreateBlogPost();
   const updatePost = useUpdateBlogPost();
+  const publishPost = usePublishBlogPost();
   const schedulePost = useScheduleBlogPost();
   const uploadCover = useUploadBlogCover();
   const isSaving =
     createPost.isPending ||
     updatePost.isPending ||
+    publishPost.isPending ||
     schedulePost.isPending ||
     uploadCover.isPending;
 
@@ -75,17 +78,18 @@ export function BlogPostFormPage() {
     published_at: null,
   };
 
-  const handleSave = (publishNow: boolean) => {
-    if (!payload.title || !payload.body) {
-      toast.error(t("admin.form.required"));
-      return;
-    }
+  const validate = () => {
+    if (payload.title && payload.body) return true;
+    toast.error(t("admin.form.required"));
+    return false;
+  };
+
+  const handleSave = () => {
+    if (!validate()) return;
 
     const onSuccess = () => {
-      toast.success(
-        publishNow ? t("admin.published") : t("admin.actions.save"),
-      );
-      navigate("/admin/blog/posts");
+      toast.success(t("admin.actions.save"));
+      navigate("/blog");
     };
     const onError = () => toast.error(t("admin.failed"));
 
@@ -96,21 +100,50 @@ export function BlogPostFormPage() {
     createPost.mutate(payload, { onSuccess, onError });
   };
 
-  const handleSchedule = () => {
-    if (!postId || !publishedAt) {
+  const handlePublish = async () => {
+    if (!validate()) return;
+
+    try {
+      let targetPostId = postId;
+      if (targetPostId) {
+        await updatePost.mutateAsync({ postId: targetPostId, data: payload });
+      } else {
+        const created = await createPost.mutateAsync(payload);
+        targetPostId = created.id;
+      }
+      if (!targetPostId) return;
+      await publishPost.mutateAsync(targetPostId);
+      toast.success(t("admin.published"));
+      navigate("/blog");
+    } catch {
+      toast.error(t("admin.failed"));
+    }
+  };
+
+  const handleSchedule = async () => {
+    if (!publishedAt) {
       toast.error(t("admin.form.scheduleHint"));
       return;
     }
-    schedulePost.mutate(
-      { postId, data: { published_at: new Date(publishedAt).toISOString() } },
-      {
-        onSuccess: () => {
-          toast.success(t("admin.actions.schedule"));
-          navigate("/admin/blog/posts");
-        },
-        onError: () => toast.error(t("admin.failed")),
-      },
-    );
+
+    try {
+      let targetPostId = postId;
+      if (targetPostId) {
+        await updatePost.mutateAsync({ postId: targetPostId, data: payload });
+      } else {
+        const created = await createPost.mutateAsync(payload);
+        targetPostId = created.id;
+      }
+      if (!targetPostId) return;
+      await schedulePost.mutateAsync({
+        postId: targetPostId,
+        data: { published_at: new Date(publishedAt).toISOString() },
+      });
+      toast.success(t("admin.scheduled"));
+      navigate("/blog");
+    } catch {
+      toast.error(t("admin.failed"));
+    }
   };
 
   const handleCover = (file: File | undefined) => {
@@ -124,11 +157,7 @@ export function BlogPostFormPage() {
   if (isEditing && query.isError) {
     return (
       <div className="space-y-6 p-6">
-        <AdminTopbar
-          title={t("admin.form.editTitle")}
-          backHref="/admin/blog/posts"
-          showSidebarTrigger
-        />
+        <AdminTopbar title={t("admin.form.editTitle")} backHref="/blog" />
         <ErrorRetry onRetry={() => void query.refetch()} />
       </div>
     );
@@ -137,11 +166,7 @@ export function BlogPostFormPage() {
   if (isEditing && query.isLoading) {
     return (
       <div className="space-y-6 p-6">
-        <AdminTopbar
-          title={t("admin.form.editTitle")}
-          backHref="/admin/blog/posts"
-          showSidebarTrigger
-        />
+        <AdminTopbar title={t("admin.form.editTitle")} backHref="/blog" />
         <Skeleton className="h-10 w-full" />
         <Skeleton className="h-40 w-full" />
       </div>
@@ -153,8 +178,7 @@ export function BlogPostFormPage() {
       <AdminTopbar
         title={isEditing ? t("admin.form.editTitle") : t("admin.form.newTitle")}
         subtitle={t("admin.form.subtitle")}
-        backHref="/admin/blog/posts"
-        showSidebarTrigger
+        backHref="/blog"
       />
 
       <div className="grid gap-6 lg:grid-cols-3">
@@ -265,7 +289,7 @@ export function BlogPostFormPage() {
               type="button"
               className="btn-primary"
               disabled={isSaving}
-              onClick={() => handleSave(false)}
+              onClick={handleSave}
             >
               <Save className="h-4 w-4" aria-hidden="true" />
               {t("admin.actions.save")}
@@ -274,7 +298,7 @@ export function BlogPostFormPage() {
               type="button"
               variant="outline"
               disabled={isSaving}
-              onClick={() => handleSave(true)}
+              onClick={() => void handlePublish()}
             >
               <Send className="h-4 w-4" aria-hidden="true" />
               {t("admin.actions.saveAndPublish")}
@@ -291,9 +315,9 @@ export function BlogPostFormPage() {
               </Button>
             )}
             <Button asChild variant="ghost">
-              <Link to="/admin/blog/posts">
+              <Link to="/blog">
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                {t("admin.actions.edit")}
+                {t("admin.form.backToList")}
               </Link>
             </Button>
           </div>

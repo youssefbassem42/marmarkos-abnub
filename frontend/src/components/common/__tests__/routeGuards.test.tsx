@@ -21,6 +21,7 @@ function renderAt(path: string, element: React.ReactNode) {
         <Route path="/login" element={<div>login page</div>} />
         <Route path="/admin" element={element} />
         <Route path="/profile" element={<div>profile page</div>} />
+        <Route path="/blog" element={<div>blog page</div>} />
       </Routes>
     </MemoryRouter>,
   );
@@ -89,6 +90,21 @@ describe("RequireRole", () => {
     );
 
     expect(screen.getByText("admin page")).toBeInTheDocument();
+  });
+
+  it("sends a member to the safe route when the guard names one", () => {
+    vi.spyOn(auth, "getAccessToken").mockReturnValue("token");
+    vi.spyOn(auth, "hasAnyRole").mockReturnValue(false);
+
+    renderAt(
+      "/admin",
+      <RequireRole roles={["ADMIN", "SERVANT"]} redirectTo="/blog">
+        <div>admin page</div>
+      </RequireRole>,
+    );
+
+    expect(screen.getByText("blog page")).toBeInTheDocument();
+    expect(screen.queryByText("admin page")).not.toBeInTheDocument();
   });
 
   it("asks for the roles it was given", () => {

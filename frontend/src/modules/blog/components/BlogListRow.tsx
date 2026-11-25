@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { CalendarDays, ImageOff, UserRound } from "lucide-react";
@@ -10,10 +11,11 @@ import type { BlogPostSummary } from "../types";
 interface BlogListRowProps {
   post: BlogPostSummary;
   className?: string;
+  management?: ReactNode;
 }
 
 /** One published post as a compact row of the list view. */
-export function BlogListRow({ post, className }: BlogListRowProps) {
+export function BlogListRow({ post, className, management }: BlogListRowProps) {
   const { t } = useTranslation("blog");
   const [searchParams] = useSearchParams();
 
@@ -87,6 +89,8 @@ export function BlogListRow({ post, className }: BlogListRowProps) {
             {post.excerpt}
           </p>
         ) : null}
+
+        {management}
 
         <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-muted-foreground">
           <span className="inline-flex items-center gap-1.5">

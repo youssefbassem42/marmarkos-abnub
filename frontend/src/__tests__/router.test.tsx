@@ -86,6 +86,8 @@ describe("the table of the routes", () => {
       "/reset-password",
       "/profile",
       "/notifications",
+      "/blog/new",
+      "/blog/:postId/edit",
       "*",
     ]) {
       expect(paths).toContain(expected);
@@ -151,6 +153,35 @@ describe("the table of the routes", () => {
         ).toBeInTheDocument(),
       { timeout: 5_000 },
     );
+  });
+
+  it("sends a member away from the post editor", async () => {
+    await renderRouterAt("/blog/new", MEMBER);
+
+    await waitFor(() => expect(window.location.pathname).toBe("/blog"));
+  });
+
+  it("opens the static new-post route as the editor", async () => {
+    await renderRouterAt("/blog/new", {
+      ...MEMBER,
+      role: "ADMIN",
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: "منشور جديد" }),
+    ).toBeInTheDocument();
+    expect(window.location.pathname).toBe("/blog/new");
+  });
+
+  it("does not keep the old administration route of the posts", async () => {
+    await renderRouterAt("/admin/blog/posts", {
+      ...MEMBER,
+      role: "ADMIN",
+    });
+
+    expect(
+      await screen.findByRole("heading", { name: "الصفحة غير موجودة" }),
+    ).toBeInTheDocument();
   });
 
   it("redirects the old gallery address to the landing page", async () => {
@@ -224,6 +255,8 @@ describe("the map of the parents", () => {
     expect(parentOf("/quizzes/:quizId/result")).toBe("/");
     expect(parentOf("/anonymous-messages")).toBe("/");
     expect(parentOf("/points")).toBe("/");
+    expect(parentOf("/blog/new")).toBe("/blog");
+    expect(parentOf("/blog/:postId/edit")).toBe("/blog");
   });
 
   it("keeps the administration and its sections on their declared parents", async () => {

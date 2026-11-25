@@ -175,11 +175,8 @@ const BlogListPage = lazyWithRetry(
 const BlogPostPage = lazyWithRetry(
   () => import("@/modules/blog/pages/blog/BlogPostPage"),
 );
-const BlogAdminListPage = lazyWithRetry(
-  () => import("@/modules/blog/pages/admin/BlogAdminListPage"),
-);
 const BlogPostFormPage = lazyWithRetry(
-  () => import("@/modules/blog/pages/admin/BlogPostFormPage"),
+  () => import("@/modules/blog/pages/blog/BlogPostFormPage"),
 );
 
 // eslint-disable-next-line react-refresh/only-export-components
@@ -394,41 +391,6 @@ export const router = createBrowserRouter([
             ),
           },
           {
-            // The blog is written by the admin and the servant (D-6); the
-            // list of the posts is the way back of the form (9.1).
-            path: "blog/posts",
-            handle: { parent: "/admin/dashboard" },
-            element: (
-              <RequireRole roles={["ADMIN", "SERVANT"]}>
-                <Suspense fallback={<PageSkeleton />}>
-                  <BlogAdminListPage />
-                </Suspense>
-              </RequireRole>
-            ),
-          },
-          {
-            path: "blog/posts/new",
-            handle: { parent: "/admin/blog/posts" },
-            element: (
-              <RequireRole roles={["ADMIN", "SERVANT"]}>
-                <Suspense fallback={<PageSkeleton />}>
-                  <BlogPostFormPage />
-                </Suspense>
-              </RequireRole>
-            ),
-          },
-          {
-            path: "blog/posts/:postId/edit",
-            handle: { parent: "/admin/blog/posts" },
-            element: (
-              <RequireRole roles={["ADMIN", "SERVANT"]}>
-                <Suspense fallback={<PageSkeleton />}>
-                  <BlogPostFormPage />
-                </Suspense>
-              </RequireRole>
-            ),
-          },
-          {
             // The slides are managed by the admin alone (the owner,
             // 2026-10-29): SERVANT gets the visible 403 page.
             path: "landing/slides",
@@ -622,6 +584,30 @@ export const router = createBrowserRouter([
       <Suspense fallback={<PageSkeleton />}>
         <BlogListPage />
       </Suspense>
+    ),
+  },
+  {
+    // The static segment comes before the dynamic one: a post whose slug
+    // happens to be "new" can never steal the editor's route.
+    path: "/blog/new",
+    handle: { parent: "/blog" },
+    element: (
+      <RequireRole roles={["ADMIN", "SERVANT"]} redirectTo="/blog">
+        <Suspense fallback={<PageSkeleton />}>
+          <BlogPostFormPage />
+        </Suspense>
+      </RequireRole>
+    ),
+  },
+  {
+    path: "/blog/:postId/edit",
+    handle: { parent: "/blog" },
+    element: (
+      <RequireRole roles={["ADMIN", "SERVANT"]} redirectTo="/blog">
+        <Suspense fallback={<PageSkeleton />}>
+          <BlogPostFormPage />
+        </Suspense>
+      </RequireRole>
     ),
   },
   {

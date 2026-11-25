@@ -3,10 +3,10 @@ import { blogApi } from "../api";
 import { blogKeys } from "../api/queryKeys";
 import type { BlogPostsListParams } from "../types";
 
-/** The published posts for the member-facing list. */
+/** The blog list (published posts for members, every state for staff). */
 export function useBlogPosts(params?: BlogPostsListParams) {
   return useQuery({
-    queryKey: blogKeys.publicList(params),
+    queryKey: blogKeys.list(params),
     queryFn: () => blogApi.getPosts(params),
     placeholderData: keepPreviousData,
   });

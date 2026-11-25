@@ -14,9 +14,9 @@ import {
   blogPostAdminSchema,
   blogPostDetailSchema,
   blogPostSummarySchema,
+  blogShortLinkSchema,
 } from "@/lib/schemas/blog";
 import type {
-  AdminBlogPostsListParams,
   BlogComment,
   BlogCommentCreatePayload,
   BlogCommentUpdatePayload,
@@ -30,11 +30,12 @@ import type {
   BlogPostSummary,
   BlogPostUpdatePayload,
   BlogPostsListParams,
+  BlogShortLink,
   Paginated,
 } from "../types";
 
 export const blogApi = {
-  /** The published posts, with the optional tag and title filters. */
+  /** The blog posts, with the optional tag, title and status filters. */
   getPosts: async (
     params?: BlogPostsListParams,
   ): Promise<Paginated<BlogPostSummary>> => {
@@ -45,10 +46,18 @@ export const blogApi = {
     return response.data;
   },
 
-  /** One published post. */
+  /** One post (a draft is visible to its author and to the staff). */
   getPost: async (postId: string): Promise<BlogPostDetail> => {
     const response = await apiClient.get(`/blog/posts/${postId}`, {
       schema: blogPostDetailSchema,
+    });
+    return response.data;
+  },
+
+  /** Resolve the stable short address of a post. */
+  getShortLink: async (code: string): Promise<BlogShortLink> => {
+    const response = await apiClient.get(`/blog/posts/short/${code}`, {
+      schema: blogShortLinkSchema,
     });
     return response.data;
   },
@@ -124,28 +133,9 @@ export const blogApi = {
     await apiClient.delete(`/blog/comments/${commentId}`);
   },
 
-  /** Every post, including drafts, scheduled posts and archived posts. */
-  getAdminPosts: async (
-    params?: AdminBlogPostsListParams,
-  ): Promise<Paginated<BlogPostAdmin>> => {
-    const response = await apiClient.get("/admin/blog/posts", {
-      params,
-      schema: paginated(blogPostAdminSchema),
-    });
-    return response.data;
-  },
-
-  /** One post for the administration (a draft included). */
-  getAdminPost: async (postId: string): Promise<BlogPostAdmin> => {
-    const response = await apiClient.get(`/admin/blog/posts/${postId}`, {
-      schema: blogPostAdminSchema,
-    });
-    return response.data;
-  },
-
   /** Create a draft, or a post with a publication date. */
   createPost: async (data: BlogPostCreatePayload): Promise<BlogPostAdmin> => {
-    const response = await apiClient.post("/admin/blog/posts", data, {
+    const response = await apiClient.post("/blog/posts", data, {
       schema: blogPostAdminSchema,
     });
     return response.data;
@@ -156,25 +146,21 @@ export const blogApi = {
     postId: string,
     data: BlogPostUpdatePayload,
   ): Promise<BlogPostAdmin> => {
-    const response = await apiClient.patch(
-      `/admin/blog/posts/${postId}`,
-      data,
-      {
-        schema: blogPostAdminSchema,
-      },
-    );
+    const response = await apiClient.patch(`/blog/posts/${postId}`, data, {
+      schema: blogPostAdminSchema,
+    });
     return response.data;
   },
 
   /** Archive a post (the deletion is soft). */
   deletePost: async (postId: string): Promise<void> => {
-    await apiClient.delete(`/admin/blog/posts/${postId}`);
+    await apiClient.delete(`/blog/posts/${postId}`);
   },
 
   /** Publish a post immediately. */
   publishPost: async (postId: string): Promise<BlogPostAdmin> => {
     const response = await apiClient.post(
-      `/admin/blog/posts/${postId}/publish`,
+      `/blog/posts/${postId}/publish`,
       undefined,
       { schema: blogPostAdminSchema },
     );
@@ -187,7 +173,7 @@ export const blogApi = {
     data: BlogPostSchedulePayload,
   ): Promise<BlogPostAdmin> => {
     const response = await apiClient.post(
-      `/admin/blog/posts/${postId}/schedule`,
+      `/blog/posts/${postId}/schedule`,
       data,
       { schema: blogPostAdminSchema },
     );
@@ -198,7 +184,7 @@ export const blogApi = {
   uploadCover: async (file: File): Promise<BlogImageUpload> => {
     const form = new FormData();
     form.append("file", file);
-    const response = await apiClient.post("/admin/blog/posts/cover", form, {
+    const response = await apiClient.post("/blog/posts/cover", form, {
       schema: blogImageUploadSchema,
     });
     return response.data;

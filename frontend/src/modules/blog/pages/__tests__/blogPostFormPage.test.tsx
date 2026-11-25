@@ -2,8 +2,31 @@ import { describe, expect, it } from "vitest";
 import { screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-import { BlogPostFormPage } from "@/modules/blog/pages/admin/BlogPostFormPage";
+import { BlogPostFormPage } from "@/modules/blog/pages/blog/BlogPostFormPage";
 import { renderPage } from "@/test/pageHarness";
+
+Object.defineProperty(HTMLElement.prototype, "getClientRects", {
+  configurable: true,
+  value: () => [],
+});
+Object.defineProperty(Range.prototype, "getClientRects", {
+  configurable: true,
+  value: () => [],
+});
+Object.defineProperty(Range.prototype, "getBoundingClientRect", {
+  configurable: true,
+  value: () => ({
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    width: 0,
+    height: 0,
+    x: 0,
+    y: 0,
+    toJSON: () => ({}),
+  }),
+});
 
 const A_POST = {
   id: "22222222-2222-4222-8222-222222222222",
@@ -24,8 +47,11 @@ const A_POST = {
 };
 
 describe("the form of a post of the blog", () => {
-  it("shows the empty form of a new post", async () => {
-    renderPage(<BlogPostFormPage />, { admin: true });
+  it("shows the empty form on the new-post route", async () => {
+    renderPage(<BlogPostFormPage />, {
+      route: "/blog/new",
+      path: "/blog/new",
+    });
 
     expect(await screen.findByLabelText("عنوان المنشور")).toHaveValue("");
     expect(screen.getByLabelText("مقتطف المنشور")).toHaveValue("");
@@ -33,15 +59,17 @@ describe("the form of a post of the blog", () => {
     expect(
       screen.getByRole("button", { name: /^\s*حفظ\s*$/ }),
     ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "العودة إلى المدونة" }),
+    ).toHaveAttribute("href", "/blog");
   });
 
-  it("fills the form with the post of the administration", async () => {
+  it("fills the form from the blog detail route", async () => {
     renderPage(<BlogPostFormPage />, {
-      admin: true,
-      route: "/admin/blog/posts/22222222-2222-4222-8222-222222222222/edit",
-      path: "/admin/blog/posts/:postId/edit",
+      route: "/blog/22222222-2222-4222-8222-222222222222/edit",
+      path: "/blog/:postId/edit",
       answers: {
-        "/admin/blog/posts/22222222-2222-4222-8222-222222222222": A_POST,
+        "/blog/posts/22222222-2222-4222-8222-222222222222": A_POST,
       },
     });
 
@@ -55,7 +83,10 @@ describe("the form of a post of the blog", () => {
 
   it("refuses to save a post without a title", async () => {
     const user = userEvent.setup();
-    const calls = renderPage(<BlogPostFormPage />, { admin: true });
+    const calls = renderPage(<BlogPostFormPage />, {
+      route: "/blog/new",
+      path: "/blog/new",
+    });
 
     await user.click(
       await screen.findByRole("button", { name: /^\s*حفظ\s*$/ }),
@@ -69,23 +100,36 @@ describe("the form of a post of the blog", () => {
     );
   });
 
-  it("creates a post with what the administrator wrote", async () => {
+  it("creates a post through the blog route", async () => {
     const user = userEvent.setup();
     const calls = renderPage(<BlogPostFormPage />, {
-      admin: true,
-      answers: { "POST /admin/blog/posts": A_POST },
+      route: "/blog/new",
+      path: "/blog/new",
+      answers: { "POST /blog/posts": A_POST },
     });
 
     await user.type(
       await screen.findByLabelText("عنوان المنشور"),
       "عنوان جديد",
     );
+    const editor = document.querySelector<HTMLElement>(
+      '[contenteditable="true"]',
+    );
+    expect(editor).not.toBeNull();
+    editor!.focus();
+    await user.keyboard("نص جديد");
     await user.click(screen.getByRole("button", { name: /^\s*حفظ\s*$/ }));
 
     await waitFor(() => {
-      expect(calls.calls.some((call) => call.method === "post")).toBe(true);
+      expect(
+        calls.calls.some(
+          (call) => call.method === "post" && call.url === "/blog/posts",
+        ),
+      ).toBe(true);
     });
-    const call = calls.calls.find((entry) => entry.method === "post");
+    const call = calls.calls.find(
+      (entry) => entry.method === "post" && entry.url === "/blog/posts",
+    );
     const body = JSON.parse(String(call?.data ?? "{}"));
     expect(body.title).toBe("عنوان جديد");
     expect(body.tags).toEqual([]);

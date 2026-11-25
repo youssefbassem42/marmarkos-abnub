@@ -823,7 +823,6 @@ export const ar = {
       monthlyAnalytics: "التحليلات الشهرية",
       contentManagement: "إدارة المحتوى",
       slides: "السلايدر",
-      blogPosts: "المدونة",
     },
     slides: {
       title: "إدارة السلايدر",
@@ -1481,6 +1480,9 @@ export const ar = {
     },
   },
   blog: {
+    management: {
+      writePost: "اكتب منشورًا",
+    },
     public: {
       title: "المدونة",
       subtitle: "اقرأ ما يكتبه خدام الخدمة وشباب الاجتماع",
@@ -1583,6 +1585,7 @@ export const ar = {
       emptyTitle: "لا توجد منشورات بعد",
       emptyDescription: "ابدأ بكتابة أول منشور لك.",
       published: "تم نشر المنشور",
+      scheduled: "تمت جدولة المنشور",
       archived: "تم أرشفة المنشور",
       failed: "تعذّر إتمام العملية، حاول مرة أخرى",
       archiveTitle: "أرشفة المنشور",
@@ -1602,6 +1605,7 @@ export const ar = {
         save: "حفظ",
         schedule: "جدولة",
         saveAndPublish: "حفظ ونشر",
+        groupLabel: "إجراءات إدارة المنشور",
       },
       status: {
         draft: "مسودة",
@@ -1625,6 +1629,7 @@ export const ar = {
         removeCover: "إزالة الغلاف",
         scheduleLabel: "موعد النشر",
         scheduleHint: "التاريخ في المستقبل يجدول المنشور",
+        backToList: "العودة إلى المدونة",
         required: "العنوان والنص مطلوبان",
       },
     },

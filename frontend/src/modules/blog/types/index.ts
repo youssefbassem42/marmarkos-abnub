@@ -40,6 +40,8 @@ export interface BlogPostsListParams {
   q?: string;
   page?: number;
   size?: number;
+  /** Read only by an administrator or a servant. */
+  status?: BlogPostStatus;
 }
 
 /** The top-level comments are paginated; every root keeps its replies. */
@@ -55,11 +57,6 @@ export interface BlogCommentCreatePayload {
 
 export interface BlogCommentUpdatePayload {
   content: string;
-}
-
-export interface AdminBlogPostsListParams {
-  page?: number;
-  size?: number;
 }
 
 export interface BlogPostCreatePayload {

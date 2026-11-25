@@ -142,6 +142,16 @@ describe("admin sidebar (D-8)", () => {
     expect(section.getAttribute("href")).toBe("/admin/landing/slides");
   });
 
+  it("has no blog entry in the administration", () => {
+    signInAsAdmin();
+    renderWithProviders(<AdminSidebar />, ["/admin/dashboard"]);
+
+    expect(screen.queryByText("المدونة")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /المدونة/ }),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows the slider carousel inside the Content Management section", () => {
     signInAsAdmin();
     renderWithProviders(<AdminSidebar />, ["/admin/landing/slides"]);

@@ -37,21 +37,16 @@ beforeEach(() => {
       pages: 1,
       has_next: false,
     },
-    "/admin/blog/posts": {
-      items: [POST],
-      total: 1,
-      page: 1,
-      size: 20,
-      pages: 1,
-      has_next: false,
+    "POST /blog/posts/cover": { url: "https://example.com/cover.jpg" },
+    "POST /blog/posts": POST,
+    "GET /blog/posts/short/abc123": {
+      post_id: POST.id,
+      slug: "short-slug",
     },
-    "POST /admin/blog/posts/cover": { url: "https://example.com/cover.jpg" },
-    "POST /admin/blog/posts": POST,
-    "GET /blog/posts/11111111-1111-4111-8111-111111111111": POST,
-    "PATCH /admin/blog/posts/11111111-1111-4111-8111-111111111111": POST,
-    "POST /admin/blog/posts/11111111-1111-4111-8111-111111111111/publish": POST,
-    "POST /admin/blog/posts/11111111-1111-4111-8111-111111111111/schedule":
-      POST,
+    [`GET /blog/posts/${POST.id}`]: POST,
+    [`PATCH /blog/posts/${POST.id}`]: POST,
+    [`POST /blog/posts/${POST.id}/publish`]: POST,
+    [`POST /blog/posts/${POST.id}/schedule`]: POST,
   });
 });
 
@@ -60,8 +55,14 @@ afterEach(() => {
 });
 
 describe("blogApi", () => {
-  it("lists the published posts with their filters", async () => {
-    await blogApi.getPosts({ tag: "خدمة", q: "عنوان", page: 2, size: 10 });
+  it("lists the posts with their filters", async () => {
+    await blogApi.getPosts({
+      tag: "خدمة",
+      q: "عنوان",
+      page: 2,
+      size: 10,
+      status: "DRAFT",
+    });
 
     const call = onlyCall(recorder.calls);
     expect(call.method).toBe("get");
@@ -71,6 +72,7 @@ describe("blogApi", () => {
       q: "عنوان",
       page: 2,
       size: 10,
+      status: "DRAFT",
     });
   });
 
@@ -80,12 +82,14 @@ describe("blogApi", () => {
     expect(onlyCall(recorder.calls).url).toBe(`/blog/posts/${POST.id}`);
   });
 
-  it("lists every post for the administration", async () => {
-    await blogApi.getAdminPosts({ page: 1, size: 20 });
+  it("resolves a short link", async () => {
+    const answer = await blogApi.getShortLink("abc123");
 
-    const call = onlyCall(recorder.calls);
-    expect(call.url).toBe("/admin/blog/posts");
-    expect(call.params).toEqual({ page: 1, size: 20 });
+    expect(answer).toEqual({
+      post_id: POST.id,
+      slug: "short-slug",
+    });
+    expect(onlyCall(recorder.calls).url).toBe("/blog/posts/short/abc123");
   });
 
   it("creates, updates, publishes and schedules a post", async () => {
@@ -104,17 +108,19 @@ describe("blogApi", () => {
     });
 
     expect(recorder.calls.map((call) => `${call.method} ${call.url}`)).toEqual([
-      "post /admin/blog/posts",
-      "patch /admin/blog/posts/11111111-1111-4111-8111-111111111111",
-      "post /admin/blog/posts/11111111-1111-4111-8111-111111111111/publish",
-      "post /admin/blog/posts/11111111-1111-4111-8111-111111111111/schedule",
+      "post /blog/posts",
+      "patch /blog/posts/11111111-1111-4111-8111-111111111111",
+      "post /blog/posts/11111111-1111-4111-8111-111111111111/publish",
+      "post /blog/posts/11111111-1111-4111-8111-111111111111/schedule",
     ]);
   });
 
   it("archives a post", async () => {
     await blogApi.deletePost(POST.id);
 
-    expect(onlyCall(recorder.calls).method).toBe("delete");
+    const call = onlyCall(recorder.calls);
+    expect(call.method).toBe("delete");
+    expect(call.url).toBe(`/blog/posts/${POST.id}`);
   });
 
   it("uploads the cover as multipart data", async () => {
@@ -124,7 +130,7 @@ describe("blogApi", () => {
 
     expect(answer.url).toBe("https://example.com/cover.jpg");
     const call = onlyCall(recorder.calls);
-    expect(call.url).toBe("/admin/blog/posts/cover");
+    expect(call.url).toBe("/blog/posts/cover");
     expect(call.data).toBeInstanceOf(FormData);
   });
 });
