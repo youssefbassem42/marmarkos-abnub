@@ -14,7 +14,7 @@ const A_COMMENT = {
   content: "<p>تعليق أول</p>",
   status: "VISIBLE",
   author: { id: "55555555-5555-4555-8555-555555555555", full_name: "محمود" },
-  likes_count: 0,
+  likes_count: 2,
   liked: false,
   replies: [
     {
@@ -24,7 +24,7 @@ const A_COMMENT = {
       content: "<p>رد على التعليق</p>",
       status: "VISIBLE",
       author: { id: "77777777-7777-4777-8777-777777777777", full_name: "سارة" },
-      likes_count: 0,
+      likes_count: 1,
       liked: false,
       replies: [],
       created_at: "2026-10-02T00:00:00Z",
@@ -77,6 +77,125 @@ describe("the comments of a post of the blog", () => {
       await screen.findByText("سجّل الدخول لتكتب تعليقًا."),
     ).toBeInTheDocument();
     expect(screen.queryByLabelText("اكتب تعليقك")).not.toBeInTheDocument();
+  });
+
+  it("gives a comment a like and writes the server answer into the tree", async () => {
+    updateStoredUser(A_MEMBER);
+    const user = userEvent.setup();
+    const calls = renderPage(<CommentSection postId="post-1" />, {
+      answers: {
+        "/blog/posts/post-1/comments": PAGE,
+        "POST /blog/comments/44444444-4444-4444-8444-444444444444/like": {
+          comment_id: A_COMMENT.id,
+          likes_count: 3,
+          liked: true,
+        },
+      },
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: "أعجبني التعليق (2)" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        calls.calls.some(
+          (call) =>
+            call.method === "post" &&
+            call.url.includes(
+              "/blog/comments/44444444-4444-4444-8444-444444444444/like",
+            ),
+        ),
+      ).toBe(true);
+    });
+    expect(
+      await screen.findByRole("button", { name: "أعجبك التعليق (3)" }),
+    ).toBeInTheDocument();
+    expect(
+      calls.calls.filter(
+        (call) =>
+          call.method === "get" &&
+          call.url.includes("/blog/posts/post-1/comments"),
+      ),
+    ).toHaveLength(1);
+  });
+
+  it("gives a reply a like just like a top-level comment", async () => {
+    updateStoredUser(A_MEMBER);
+    const user = userEvent.setup();
+    const calls = renderPage(<CommentSection postId="post-1" />, {
+      answers: {
+        "/blog/posts/post-1/comments": PAGE,
+        "POST /blog/comments/66666666-6666-4666-8666-666666666666/like": {
+          comment_id: "66666666-6666-4666-8666-666666666666",
+          likes_count: 2,
+          liked: true,
+        },
+      },
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: "أعجبني التعليق (1)" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        calls.calls.some(
+          (call) =>
+            call.method === "post" &&
+            call.url.includes(
+              "/blog/comments/66666666-6666-4666-8666-666666666666/like",
+            ),
+        ),
+      ).toBe(true);
+    });
+    expect(
+      await screen.findByRole("button", { name: "أعجبك التعليق (2)" }),
+    ).toBeInTheDocument();
+  });
+
+  it("takes the like of a comment back without refetching the tree", async () => {
+    updateStoredUser(A_MEMBER);
+    const user = userEvent.setup();
+    const calls = renderPage(<CommentSection postId="post-1" />, {
+      answers: {
+        "/blog/posts/post-1/comments": {
+          ...PAGE,
+          items: [{ ...A_COMMENT, likes_count: 2, liked: true }],
+        },
+        "DELETE /blog/comments/44444444-4444-4444-8444-444444444444/like": {
+          comment_id: A_COMMENT.id,
+          likes_count: 1,
+          liked: false,
+        },
+      },
+    });
+
+    await user.click(
+      await screen.findByRole("button", { name: "أعجبك التعليق (2)" }),
+    );
+
+    await waitFor(() => {
+      expect(
+        calls.calls.some(
+          (call) =>
+            call.method === "delete" &&
+            call.url.includes(
+              "/blog/comments/44444444-4444-4444-8444-444444444444/like",
+            ),
+        ),
+      ).toBe(true);
+    });
+    expect(
+      await screen.findAllByRole("button", { name: "أعجبني التعليق (1)" }),
+    ).toHaveLength(2);
+    expect(
+      calls.calls.filter(
+        (call) =>
+          call.method === "get" &&
+          call.url.includes("/blog/posts/post-1/comments"),
+      ),
+    ).toHaveLength(1);
   });
 
   it("publishes the comment of a signed-in member", async () => {

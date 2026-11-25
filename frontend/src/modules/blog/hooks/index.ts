@@ -11,5 +11,6 @@ export * from "./usePublishBlogPost";
 export * from "./usePostLikes";
 export * from "./useScheduleBlogPost";
 export * from "./useToggleLike";
+export * from "./useToggleCommentLike";
 export * from "./useUpdateBlogPost";
 export * from "./useUploadBlogCover";

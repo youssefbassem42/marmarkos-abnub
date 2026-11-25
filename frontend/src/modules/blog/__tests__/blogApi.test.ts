@@ -43,10 +43,39 @@ beforeEach(() => {
       post_id: POST.id,
       slug: "short-slug",
     },
+<<<<<<< HEAD
     [`GET /blog/posts/${POST.id}`]: POST,
     [`PATCH /blog/posts/${POST.id}`]: POST,
     [`POST /blog/posts/${POST.id}/publish`]: POST,
     [`POST /blog/posts/${POST.id}/schedule`]: POST,
+=======
+    "POST /admin/blog/posts/cover": { url: "https://example.com/cover.jpg" },
+    "/blog/comments/44444444-4444-4444-8444-444444444444/likes": {
+      comment_id: "44444444-4444-4444-8444-444444444444",
+      likes_count: 2,
+      liked: false,
+    },
+    "POST /blog/comments/44444444-4444-4444-8444-444444444444/like": {
+      comment_id: "44444444-4444-4444-8444-444444444444",
+      likes_count: 3,
+      liked: true,
+    },
+    "DELETE /blog/comments/44444444-4444-4444-8444-444444444444/like": {
+      comment_id: "44444444-4444-4444-8444-444444444444",
+      likes_count: 2,
+      liked: false,
+    },
+    "POST /admin/blog/posts": POST,
+    "GET /blog/posts/11111111-1111-4111-8111-111111111111": POST,
+    "/blog/posts/short/a1b2c3d4": {
+      post_id: "11111111-1111-4111-8111-111111111111",
+      slug: "the-published-post",
+    },
+    "PATCH /admin/blog/posts/11111111-1111-4111-8111-111111111111": POST,
+    "POST /admin/blog/posts/11111111-1111-4111-8111-111111111111/publish": POST,
+    "POST /admin/blog/posts/11111111-1111-4111-8111-111111111111/schedule":
+      POST,
+>>>>>>> 45b32e3 (feat(blog): let members like comments and replies)
   });
 });
 
@@ -89,7 +118,33 @@ describe("blogApi", () => {
       post_id: POST.id,
       slug: "short-slug",
     });
+<<<<<<< HEAD
     expect(onlyCall(recorder.calls).url).toBe("/blog/posts/short/abc123");
+=======
+    expect(onlyCall(recorder.calls).url).toBe("/blog/posts/short/a1b2c3d4");
+  });
+
+  it("reads, gives and takes back the like of a comment", async () => {
+    const commentId = "44444444-4444-4444-8444-444444444444";
+
+    await blogApi.getCommentLikes(commentId);
+    await blogApi.likeComment(commentId);
+    await blogApi.unlikeComment(commentId);
+
+    expect(recorder.calls.map((call) => `${call.method} ${call.url}`)).toEqual([
+      `get /blog/comments/${commentId}/likes`,
+      `post /blog/comments/${commentId}/like`,
+      `delete /blog/comments/${commentId}/like`,
+    ]);
+  });
+
+  it("lists every post for the administration", async () => {
+    await blogApi.getAdminPosts({ page: 1, size: 20 });
+
+    const call = onlyCall(recorder.calls);
+    expect(call.url).toBe("/admin/blog/posts");
+    expect(call.params).toEqual({ page: 1, size: 20 });
+>>>>>>> 45b32e3 (feat(blog): let members like comments and replies)
   });
 
   it("creates, updates, publishes and schedules a post", async () => {

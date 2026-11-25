@@ -9,6 +9,7 @@
 import { apiClient } from "@/lib/api";
 import { paginated } from "@/lib/schemas/common";
 import {
+  blogCommentLikeSchema,
   blogCommentSchema,
   blogImageUploadSchema,
   blogLikeSchema,
@@ -34,6 +35,7 @@ import type {
   BlogShortLink,
   Paginated,
 } from "../types";
+import type { BlogCommentLike } from "../types";
 
 export const blogApi = {
   /** The blog posts, with the optional tag, title and status filters. */
@@ -87,6 +89,34 @@ export const blogApi = {
     const response = await apiClient.delete(`/blog/posts/${postId}/like`, {
       schema: blogLikeSchema,
     });
+    return response.data;
+  },
+
+  /** The active likes of a comment and the caller's own like state. */
+  getCommentLikes: async (commentId: string): Promise<BlogCommentLike> => {
+    const response = await apiClient.get(
+      `/blog/comments/${encodeURIComponent(commentId)}/likes`,
+      { schema: blogCommentLikeSchema },
+    );
+    return response.data;
+  },
+
+  /** Give a comment a like as the signed-in member. */
+  likeComment: async (commentId: string): Promise<BlogCommentLike> => {
+    const response = await apiClient.post(
+      `/blog/comments/${encodeURIComponent(commentId)}/like`,
+      undefined,
+      { schema: blogCommentLikeSchema },
+    );
+    return response.data;
+  },
+
+  /** Take back the signed-in member's like of a comment. */
+  unlikeComment: async (commentId: string): Promise<BlogCommentLike> => {
+    const response = await apiClient.delete(
+      `/blog/comments/${encodeURIComponent(commentId)}/like`,
+      { schema: blogCommentLikeSchema },
+    );
     return response.data;
   },
 

@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { getAuthUser } from "@/lib/auth";
 import { formatDateOrEmpty } from "@/lib/datetime";
 
+import { CommentLikeButton } from "./CommentLikeButton";
 import {
   useBlogComments,
   useCreateBlogComment,
@@ -91,6 +92,10 @@ function CommentItem({ comment, postId, depth }: CommentItemProps) {
 
   const [isReplying, setIsReplying] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
+  const likeState = comment as typeof comment & {
+    likes_count?: number;
+    liked?: boolean;
+  };
 
   const createComment = useCreateBlogComment(postId);
   const updateComment = useUpdateBlogComment(postId);
@@ -140,39 +145,48 @@ function CommentItem({ comment, postId, depth }: CommentItemProps) {
           />
         )}
 
-        {!isEditing && viewer && (
-          <div className="flex flex-wrap gap-2 pt-1">
-            <Button
-              type="button"
-              size="sm"
-              variant="ghost"
-              onClick={() => setIsReplying((open) => !open)}
-            >
-              <Reply className="h-4 w-4" aria-hidden="true" />
-              {t("comments.reply")}
-            </Button>
-            {isOwner && (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => setIsEditing(true)}
-              >
-                <Pencil className="h-4 w-4" aria-hidden="true" />
-                {t("comments.edit")}
-              </Button>
-            )}
-            {(isOwner || isModerator) && (
-              <Button
-                type="button"
-                size="sm"
-                variant="ghost"
-                onClick={() => void handleDelete()}
-                disabled={deleteComment.isPending}
-              >
-                <Trash2 className="h-4 w-4" aria-hidden="true" />
-                {t("comments.delete")}
-              </Button>
+        {!isEditing && (
+          <div className="flex flex-wrap items-center gap-2 pt-1">
+            <CommentLikeButton
+              commentId={comment.id}
+              likesCount={likeState.likes_count ?? 0}
+              liked={likeState.liked ?? false}
+            />
+            {viewer && (
+              <>
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setIsReplying((open) => !open)}
+                >
+                  <Reply className="h-4 w-4" aria-hidden="true" />
+                  {t("comments.reply")}
+                </Button>
+                {isOwner && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                    {t("comments.edit")}
+                  </Button>
+                )}
+                {(isOwner || isModerator) && (
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => void handleDelete()}
+                    disabled={deleteComment.isPending}
+                  >
+                    <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    {t("comments.delete")}
+                  </Button>
+                )}
+              </>
             )}
           </div>
         )}
