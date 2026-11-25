@@ -59,7 +59,9 @@ describe("the management of the posts from the blog", () => {
     });
 
     expect(await screen.findByText("موضوع في الإيمان")).toBeInTheDocument();
-    expect(screen.getByText("مسودة")).toBeInTheDocument();
+    // The state of the draft: the badge of the card (the filter of the
+    // staff carries the same word in its list).
+    expect(screen.getAllByText("مسودة").length).toBeGreaterThan(0);
     expect(screen.getByText(/محمود/)).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "اكتب منشورًا" })).toHaveAttribute(
       "href",

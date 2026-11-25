@@ -1495,6 +1495,8 @@ export const ar = {
       searchPlaceholder: "اكتب عنوان المنشور…",
       tagLabel: "وسم المنشور",
       tagPlaceholder: "اسم الوسم…",
+      statusLabel: "حالة المنشور",
+      statusAll: "كل الحالات",
       apply: "تطبيق",
       clear: "مسح التصفية",
       viewLabel: "طريقة عرض المنشورات",
@@ -1629,6 +1631,7 @@ export const ar = {
       status: {
         draft: "مسودة",
         published: "منشور",
+        scheduled: "مُجدَّل",
         archived: "مؤرشف",
       },
       form: {

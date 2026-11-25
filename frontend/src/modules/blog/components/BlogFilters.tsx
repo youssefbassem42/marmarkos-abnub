@@ -13,8 +13,13 @@ interface BlogFiltersProps {
   search: string;
   tag: string;
   view: BlogView;
+  /** The lifecycle of the posts; only the staff filters by it. */
+  status?: string;
+  /** The staff may filter by the state of the post. */
+  canFilterByStatus?: boolean;
   onFiltersChange: (search: string, tag: string) => void;
   onViewChange: (value: BlogView) => void;
+  onStatusChange?: (value: string) => void;
 }
 
 /** The title search, the tag filter, and the card/list switch. */
@@ -22,8 +27,11 @@ export function BlogFilters({
   search,
   tag,
   view,
+  status = "",
+  canFilterByStatus = false,
   onFiltersChange,
   onViewChange,
+  onStatusChange,
 }: BlogFiltersProps) {
   const { t } = useTranslation("blog");
   const [searchDraft, setSearchDraft] = useState(search);
@@ -82,6 +90,24 @@ export function BlogFilters({
             />
           </div>
         </div>
+
+        {canFilterByStatus ? (
+          <div className="space-y-2">
+            <Label htmlFor="blog-status">{t("filters.statusLabel")}</Label>
+            <select
+              id="blog-status"
+              value={status}
+              onChange={(event) => onStatusChange?.(event.target.value)}
+              className="h-10 w-full rounded-xl border border-border bg-card px-3 text-sm text-ink focus-ring"
+            >
+              <option value="">{t("filters.statusAll")}</option>
+              <option value="DRAFT">{t("admin.status.draft")}</option>
+              <option value="PUBLISHED">{t("admin.status.published")}</option>
+              <option value="SCHEDULED">{t("admin.status.scheduled")}</option>
+              <option value="ARCHIVED">{t("admin.status.archived")}</option>
+            </select>
+          </div>
+        ) : null}
 
         <div className="flex flex-wrap gap-2">
           <Button type="submit">{t("filters.apply")}</Button>

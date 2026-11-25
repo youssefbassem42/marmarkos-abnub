@@ -31,7 +31,11 @@ import {
   usePublishBlogPost,
   useScheduleBlogPost,
 } from "../../hooks";
-import type { BlogPostSummary, BlogPostsListParams } from "../../types";
+import type {
+  BlogPostStatus,
+  BlogPostSummary,
+  BlogPostsListParams,
+} from "../../types";
 
 const PAGE_SIZE = 12;
 
@@ -49,6 +53,9 @@ export function BlogListPage() {
   const tag = searchParams.get("tag") ?? "";
   const page = Math.max(Number(searchParams.get("page") ?? "1") || 1, 1);
   const view: BlogView = searchParams.get("view") === "list" ? "list" : "cards";
+  // The lifecycle filter belongs to the staff: a member never widens
+  // his view with it (BR-89).
+  const status = canManage ? (searchParams.get("status") ?? "") : "";
 
   const apiParams = useMemo<BlogPostsListParams>(
     () => ({
@@ -56,8 +63,9 @@ export function BlogListPage() {
       size: PAGE_SIZE,
       ...(search ? { q: search } : {}),
       ...(tag ? { tag } : {}),
+      ...(status ? { status: status as BlogPostStatus } : {}),
     }),
-    [page, search, tag],
+    [page, search, tag, status],
   );
   const query = useBlogPosts(apiParams);
   const publishPost = usePublishBlogPost();
@@ -155,6 +163,9 @@ export function BlogListPage() {
           search={search}
           tag={tag}
           view={view}
+          status={status}
+          canFilterByStatus={canManage}
+          onStatusChange={(value) => patchParams({ status: value, page: 1 })}
           onFiltersChange={(searchValue, tagValue) =>
             patchParams({ q: searchValue, tag: tagValue })
           }
