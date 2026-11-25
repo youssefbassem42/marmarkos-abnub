@@ -619,7 +619,7 @@ export const ar = {
     avatar: {
       change: "تغيير الصورة",
       uploading: "جارٍ الرفع...",
-      hint: "JPEG أو PNG أو WebP · بحد أقصى 2 ميجابايت",
+      hint: "أي صيغة صورة · بحد أقصى 5 ميجابايت",
       removeAlt: "الصورة الشخصية",
     },
     form: {
@@ -1066,7 +1066,8 @@ export const ar = {
         subtitle: "العنوان الفرعي",
       },
       upload: "انقر لاختيار الصورة",
-      uploadHint: "PNG, JPG أو WebP. الحد الأقصى 5 ميغابايت.",
+      uploadHint: "أي صيغة صورة. الحد الأقصى 5 ميغابايت.",
+      saving: "جارٍ الحفظ...",
       saved: "تم حفظ الشريحة",
       saveFailed: "فشل حفظ الشريحة، حاول مرة تاني",
       actions: {
@@ -1304,7 +1305,7 @@ export const ar = {
           imageUrl: "رابط الصورة",
           uploading: "جارٍ الرفع...",
           dragDrop: "اسحب الصورة هنا أو انقر للاختيار",
-          dragDropHint: "PNG, JPG أو WebP. الحد الأقصى 5 ميغابايت.",
+          dragDropHint: "أي صيغة صورة. الحد الأقصى 5 ميغابايت.",
           bodyAr: "المحتوى (بالعربية)",
           bodyEn: "المحتوى (بالإنجليزية)",
         },
@@ -1872,7 +1873,7 @@ export const ar = {
         tagsLabel: "الوسوم",
         tagsPlaceholder: "افصل بين الوسوم بفاصلة",
         coverLabel: "صورة الغلاف",
-        coverHint: "الحد الأقصى للحجم 1 ميجابايت",
+        coverHint: "الحد الأقصى للحجم 5 ميجابايت",
         chooseCover: "اختر صورة",
         removeCover: "إزالة الغلاف",
         scheduleLabel: "موعد النشر",

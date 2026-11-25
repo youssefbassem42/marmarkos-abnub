@@ -41,6 +41,7 @@ import {
 } from "@/lib/api";
 import { getAccessToken, getAuthUser, updateStoredUser } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { isImageTooLarge } from "@/lib/imageUpload";
 
 type Status = { kind: "ok" | "error"; text: string } | null;
 
@@ -53,6 +54,7 @@ function currentYearMonth(): { year: number; month: number } {
 export function ProfilePage() {
   const { t } = useTranslation("profile");
   const { t: tCommon } = useTranslation("common");
+  const { t: tErrors } = useTranslation();
   const describeError = useApiError();
   const navigate = useNavigate();
 
@@ -186,6 +188,14 @@ export function ProfilePage() {
 
   const handleAvatarChange = async (file: File | undefined) => {
     if (!file) return;
+    if (isImageTooLarge(file)) {
+      setProfileStatus({
+        kind: "error",
+        text: tErrors("errors.api.imageTooLarge" as never),
+      });
+      if (fileInputRef.current) fileInputRef.current.value = "";
+      return;
+    }
     setUploading(true);
     try {
       const updated = await uploadAvatar(file, getAccessToken()!);
@@ -310,7 +320,6 @@ export function ProfilePage() {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/jpeg,image/png,image/webp"
               className="hidden"
               onChange={(e) => void handleAvatarChange(e.target.files?.[0])}
             />

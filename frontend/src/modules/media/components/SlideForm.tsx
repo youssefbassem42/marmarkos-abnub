@@ -120,7 +120,7 @@ export function SlideForm({
                   <div className="relative group">
                     <img
                       src={preview}
-                      alt="معاينة الصورة"
+                      alt={t("slides.fields.image")}
                       className="w-full h-48 object-cover rounded-lg border"
                     />
                     <Button
@@ -153,7 +153,6 @@ export function SlideForm({
                 <input
                   ref={inputRef}
                   type="file"
-                  accept="image/jpeg,image/png,image/webp"
                   className="hidden"
                   onChange={handleFileChange}
                   disabled={isSaving}
@@ -218,7 +217,7 @@ export function SlideForm({
                 {tCommon("cancel")}
               </Button>
               <Button type="submit" disabled={isSaving}>
-                {isSaving ? "جارٍ الحفظ..." : tCommon("confirm")}
+                {isSaving ? t("slides.saving") : tCommon("confirm")}
               </Button>
             </DialogFooter>
           </form>

@@ -28,6 +28,8 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { useApiError } from "@/hooks/useApiError";
+import { isImageTooLarge } from "@/lib/imageUpload";
 
 interface RichTextEditorProps {
   /** The sanitized HTML held by the server. */
@@ -102,6 +104,8 @@ export function RichTextEditor({
   "aria-invalid": ariaInvalid,
 }: RichTextEditorProps) {
   const { t } = useTranslation("blog");
+  const { t: tErrors } = useTranslation();
+  const describeError = useApiError();
   const onChangeRef = useRef(onChange);
   onChangeRef.current = onChange;
   const uploadRef = useRef(onUploadImage);
@@ -152,12 +156,16 @@ export function RichTextEditor({
     const upload = uploadRef.current;
     if (!upload || !editor) return;
     setUploadError(null);
+    if (isImageTooLarge(file)) {
+      setUploadError(tErrors("errors.api.imageTooLarge" as never));
+      return;
+    }
     setUploading(true);
     try {
       const url = await upload(file);
       editor.chain().focus().setImage({ src: url, alt: file.name }).run();
-    } catch {
-      setUploadError(t("editor.imageFailed"));
+    } catch (error) {
+      setUploadError(describeError(error).message);
     } finally {
       setUploading(false);
     }
@@ -245,7 +253,6 @@ export function RichTextEditor({
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
               className="hidden"
               aria-hidden="true"
               tabIndex={-1}

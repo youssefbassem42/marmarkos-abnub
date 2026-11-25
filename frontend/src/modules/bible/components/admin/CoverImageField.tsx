@@ -6,6 +6,8 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { getAccessToken } from "@/lib/auth";
 import { uploadVerseCover } from "@/lib/api";
+import { useApiError } from "@/hooks/useApiError";
+import { isImageTooLarge } from "@/lib/imageUpload";
 
 interface CoverImageFieldProps {
   value: string;
@@ -19,25 +21,31 @@ export function CoverImageField({
   disabled,
 }: CoverImageFieldProps) {
   const { t } = useTranslation("bible");
+  const { t: tErrors } = useTranslation();
+  const describeError = useApiError();
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const doUpload = useCallback(
     async (file: File) => {
+      if (isImageTooLarge(file)) {
+        toast.error(tErrors("errors.api.imageTooLarge" as never));
+        return;
+      }
       const token = getAccessToken();
       if (!token) return;
       setUploading(true);
       try {
         const { url } = await uploadVerseCover(file, token);
         onChange(url);
-      } catch {
-        toast.error(t("admin.form.saveFailed"));
+      } catch (error) {
+        toast.error(describeError(error).message);
       } finally {
         setUploading(false);
       }
     },
-    [onChange, t],
+    [describeError, onChange, tErrors],
   );
 
   const handleDrop = useCallback(
@@ -45,9 +53,7 @@ export function CoverImageField({
       e.preventDefault();
       setIsDragOver(false);
       const file = e.dataTransfer.files?.[0];
-      if (file && file.type.startsWith("image/")) {
-        doUpload(file);
-      }
+      if (file) doUpload(file);
     },
     [doUpload],
   );
@@ -76,7 +82,7 @@ export function CoverImageField({
         <div className="relative group">
           <img
             src={value}
-            alt="Cover preview"
+            alt={t("admin.form.fields.image")}
             className="w-full h-48 object-cover rounded-lg border"
           />
           <Button
@@ -123,7 +129,6 @@ export function CoverImageField({
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={handleFileChange}
         disabled={disabled || uploading}

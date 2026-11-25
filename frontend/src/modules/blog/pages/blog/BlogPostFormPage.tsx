@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { AdminTopbar } from "@/components/layout/AdminTopbar";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
 import { useApiError } from "@/hooks/useApiError";
+import { isImageTooLarge } from "@/lib/imageUpload";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,7 @@ import {
 
 export function BlogPostFormPage() {
   const { t } = useTranslation("blog");
+  const { t: tErrors } = useTranslation();
   const describeError = useApiError();
   const { postId } = useParams<{ postId: string }>();
   const navigate = useNavigate();
@@ -233,6 +235,10 @@ export function BlogPostFormPage() {
 
   const handleCover = (file: File | undefined) => {
     if (!file) return;
+    if (isImageTooLarge(file)) {
+      toast.error(tErrors("errors.api.imageTooLarge" as never));
+      return;
+    }
     uploadCover.mutate(file, {
       onSuccess: (result) => setCover(result.url),
       onError: (error) => toast.error(describeError(error).message),
@@ -362,9 +368,11 @@ export function BlogPostFormPage() {
                 {t("admin.form.chooseCover")}
                 <input
                   type="file"
-                  accept="image/*"
                   className="sr-only"
-                  onChange={(event) => handleCover(event.target.files?.[0])}
+                  onChange={(event) => {
+                    handleCover(event.target.files?.[0]);
+                    event.currentTarget.value = "";
+                  }}
                 />
               </label>
               {cover && (

@@ -7,6 +7,7 @@ import { AppPagination } from "@/components/common/AppPagination";
 import { EmptyState } from "@/components/common/EmptyState";
 import { ErrorRetry } from "@/components/common/ErrorRetry";
 import { useApiError } from "@/hooks/useApiError";
+import { isImageTooLarge } from "@/lib/imageUpload";
 import { Button } from "@/components/ui/button";
 import {
   Table,
@@ -187,6 +188,7 @@ function SlideRow({
 export function SlidesPage() {
   const { t } = useTranslation("admin");
   const { t: tCommon } = useTranslation("common");
+  const { t: tErrors } = useTranslation();
   const describeError = useApiError();
 
   const [page, setPage] = useState(1);
@@ -227,6 +229,10 @@ export function SlidesPage() {
     subtitle: string | null;
     file: File | null;
   }) => {
+    if (values.file && isImageTooLarge(values.file)) {
+      toast.error(tErrors("errors.api.imageTooLarge" as never));
+      return;
+    }
     const formData = new FormData();
     formData.append("title", values.title);
     if (values.subtitle) formData.append("subtitle", values.subtitle);

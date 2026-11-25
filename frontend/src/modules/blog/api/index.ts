@@ -211,7 +211,7 @@ export const blogApi = {
     return response.data;
   },
 
-  /** Upload a cover image (the server enforces the 1 MB limit). */
+  /** Upload a cover image (the server enforces the 5 MB limit). */
   uploadCover: async (file: File): Promise<BlogImageUpload> => {
     const form = new FormData();
     form.append("file", file);
@@ -224,9 +224,8 @@ export const blogApi = {
   /**
    * Upload a picture of the body of a post.
    *
-   * The cover and the pictures of the body are two kinds of images: the
-   * cover has its own route (1 MB) and the pictures of the body have
-   * theirs (2 MB).
+   * The cover and the pictures of the body have separate routes, and the
+   * server enforces the same 5 MB limit on both.
    */
   uploadBodyImage: async (file: File): Promise<BlogImageUpload> => {
     const form = new FormData();

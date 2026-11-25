@@ -556,7 +556,7 @@ export async function changePassword(
   return data;
 }
 
-/** Upload a profile photo (JPEG/PNG/WebP, max 2 MB). Returns the updated user. */
+/** Upload a profile photo (any image format, max 5 MB). Returns the updated user. */
 export async function uploadAvatar(
   file: File,
   accessToken: string,
@@ -576,7 +576,7 @@ export async function uploadAvatar(
   return data;
 }
 
-/** Upload a bible verse cover image (JPEG/PNG/WebP, max 2 MB). Returns { url }. */
+/** Upload a bible verse cover image (any image format, max 5 MB). Returns { url }. */
 export async function uploadVerseCover(
   file: File,
   accessToken: string,
