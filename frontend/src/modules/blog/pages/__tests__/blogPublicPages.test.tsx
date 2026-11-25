@@ -12,13 +12,11 @@ const POST = {
   excerpt: "ملخص المنشور",
   cover_image: "https://example.com/cover.jpg",
   tags: [{ id: "tag-1", name: "خدمة", slug: "khdma-1" }],
-  likes_count: 0,
-  comments_count: 0,
+  likes_count: 4,
+  comments_count: 2,
   status: "PUBLISHED",
   published_at: "2026-10-29T10:00:00Z",
   author: { id: "author-1", full_name: "كاتب المنشور" },
-  likes_count: 4,
-  comments_count: 2,
 };
 
 const PAGE = {
