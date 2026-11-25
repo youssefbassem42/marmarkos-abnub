@@ -5,7 +5,7 @@ The unique post index is the database-level guarantee that a published
 post is paid exactly once.
 
 Revision ID: f6a7b8c9d0e1
-Revises: d4e5f6a7b8c9
+Revises: e5f6a7b8c9d0
 Create Date: 2026-11-24
 """
 
@@ -16,7 +16,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = "f6a7b8c9d0e1"
-down_revision: Union[str, None] = "d4e5f6a7b8c9"
+down_revision: Union[str, None] = "e5f6a7b8c9d0"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
