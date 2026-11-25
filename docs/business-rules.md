@@ -261,7 +261,7 @@ number.
 | `BR-52` | The public list answers only the active slides, ordered by their `order` | `app/modules/media/application/queries/landing_slide_queries.py` |
 | `BR-53` | A slide is created with an uploaded image, an optional title and an optional subtitle | `app/modules/media/application/commands/landing_slide_commands.py` |
 | `BR-54` | Deleting a slide removes it physically; the media module has no soft-delete pattern | `app/modules/media/application/commands/landing_slide_commands.py` |
-| `BR-55` | The image goes through the shared media upload service; slides use the 2 MB limit, like the verse covers | `app/shared/infrastructure/services/image_upload.py` |
+| `BR-55` | The image goes through the shared media upload service; every image of the platform shares the 5 MB limit | `app/shared/infrastructure/services/image_upload.py` |
 
 
 ## The points of each quiz (the point 2 of the plan)
@@ -284,7 +284,7 @@ number.
 | `BR-64` | The member-facing list and detail expose published posts only; a draft, scheduled, or archived post is hidden | `app/modules/blog/application/queries/post_queries.py` |
 | `BR-65` | Deleting a blog post is soft: its status becomes `ARCHIVED`, the row remains, and the member-facing answers never show it | `app/modules/blog/application/commands/post_commands.py` |
 | `BR-66` | A post's tags are the existing blog categories; the public list may be filtered by one tag | `app/modules/blog/application/commands/post_commands.py`, `app/modules/blog/application/queries/post_queries.py` |
-| `BR-67` | A blog cover is uploaded through the shared media service with the 1 MB limit | `app/modules/blog/presentation/router.py` |
+| `BR-67` | A blog cover is uploaded through the shared media service with the 5 MB limit | `app/modules/blog/presentation/router.py` |
 | `BR-68` | The shared scheduler tick publishes the scheduled posts of the blog whose date has come; the runner is idempotent and safe when two ticks run at the same time | `app/modules/blog/application/services/publication_service.py` |
 | `BR-88` | The administrator and the servant write, publish, schedule, edit, and archive blog posts under `/blog`; the administration panel has no blog route | `app/modules/blog/presentation/router.py` |
 | `BR-89` | A member and an anonymous reader receive published blog posts only; a lifecycle filter never widens their view | `app/modules/blog/application/queries/post_queries.py` |
@@ -313,7 +313,13 @@ number.
 | `BR-91` | Liking a post or a comment notifies its author once with a `BLOG_LIKE` notification; nobody notifies themself, and the notification id is derived from the liked item and the member who liked it | `app/modules/notifications/application/services/notification_service.py` |
 | `BR-92` | A member may like a comment or reply once; taking the like back is idempotent, the count is never negative, and every comment in the tree carries its count and the caller's own like state | `app/modules/comments/application/commands/comment_like_commands.py` |
 | `BR-93` | The editor of a post saves the draft on the server ten seconds after the writer stops typing; the autosave never publishes, never schedules, and never resets the text under the writer's hands | `frontend/src/modules/blog/pages/blog/BlogPostFormPage.tsx` |
-| `BR-94` | A post carries two kinds of images: the **cover** (its own route, 1 MB) and the **pictures of the body** (their own route, 2 MB), uploaded through the shared media service | `app/modules/blog/presentation/router.py` |
+| `BR-94` | A post carries two kinds of images: the **cover** (its own route) and the **pictures of the body** (their own route); both share the 5 MB limit and go through the shared media service | `app/modules/blog/presentation/router.py` |
+
+## The images of the platform
+
+| Identifier | The rule | Where it lives |
+|---|---|---|
+| `BR-95` | Every image of the platform (the avatars, the verse covers, the slides, the cover and the pictures of a blog post) is uploaded through the shared media service with the **5 MB** limit; the platform does **not** screen the format of the file - Cloudinary accepts the image formats and refuses what is not an image | `app/shared/infrastructure/services/image_upload.py` |
 
 ## The session of a cross-site deployment
 

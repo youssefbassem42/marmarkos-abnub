@@ -551,7 +551,7 @@ async def test_the_public_list_is_paginated(client: AsyncClient, db_engine) -> N
     assert second.json()["has_next"] is False
 
 
-async def test_the_cover_upload_uses_the_one_megabyte_limit(
+async def test_the_cover_upload_uses_the_five_megabyte_limit(
     client: AsyncClient,
     db_engine,
     monkeypatch: pytest.MonkeyPatch,
@@ -597,12 +597,12 @@ async def test_the_cover_upload_uses_the_one_megabyte_limit(
             "size": 16,
             "content_type": "image/jpeg",
             "folder": "blog-covers",
-            "max_bytes": 1 * 1024 * 1024,
+            "max_bytes": 5 * 1024 * 1024,
         }
     ]
 
 
-async def test_the_post_image_upload_uses_the_two_megabyte_limit(
+async def test_the_post_image_upload_uses_the_five_megabyte_limit(
     client: AsyncClient,
     db_engine,
     monkeypatch: pytest.MonkeyPatch,
@@ -654,13 +654,13 @@ async def test_the_post_image_upload_uses_the_two_megabyte_limit(
             "size": 16,
             "content_type": "image/jpeg",
             "folder": "blog-images",
-            "max_bytes": 2 * 1024 * 1024,
+            "max_bytes": 5 * 1024 * 1024,
         }
     ]
 
     refused = await client.post(
         f"{PUBLIC_URL}/images",
-        files={"file": ("body.jpg", b"x" * (2 * 1024 * 1024 + 1), "image/jpeg")},
+        files={"file": ("body.jpg", b"x" * (5 * 1024 * 1024 + 1), "image/jpeg")},
         headers=admin,
     )
     assert refused.status_code == 422, refused.text

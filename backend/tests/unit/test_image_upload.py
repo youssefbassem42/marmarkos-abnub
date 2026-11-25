@@ -1,8 +1,13 @@
 """The image upload service: the size limit is a parameter.
 
-The default stays 2 MB (the avatars and the verse covers) while other
-callers - the blog, with its 1 MB photo - pass their own limit. A file
-that is too big is refused with a ``ValidationError``, never with a 500.
+The default is 5 MB - the weight of a photo of a modern phone - and the
+blog uses the same limit for its cover and for the pictures of its
+body. A file that is too big is refused with a ``ValidationError``,
+never with a 500.
+
+The content of the file is **not** screened by the platform: the owner
+asked for every image format to be accepted, and Cloudinary itself
+refuses what is not an image.
 """
 
 import pytest
@@ -12,7 +17,7 @@ import app.shared.infrastructure.services.image_upload as module
 from app.core.exceptions.errors import ValidationError
 from app.shared.infrastructure.services.image_upload import upload_image
 
-_TWO_MEBIBYTES = 2 * 1024 * 1024
+_FIVE_MEBIBYTES = 5 * 1024 * 1024
 _ONE_MEBIBYTE = 1024 * 1024
 
 
@@ -49,7 +54,7 @@ def _configure_cloudinary(monkeypatch: MonkeyPatch) -> None:
 async def test_a_file_of_the_limit_is_accepted(monkeypatch: MonkeyPatch) -> None:
     _configure_cloudinary(monkeypatch)
 
-    url = await upload_image(b"x" * _TWO_MEBIBYTES, "image/jpeg", max_bytes=_TWO_MEBIBYTES)
+    url = await upload_image(b"x" * _FIVE_MEBIBYTES, "image/jpeg")
 
     assert url == "https://demo.cloudinary.com/secure.jpg"
 
@@ -58,30 +63,65 @@ async def test_a_file_one_byte_over_the_limit_is_refused(monkeypatch: MonkeyPatc
     _configure_cloudinary(monkeypatch)
 
     with pytest.raises(ValidationError) as excinfo:
-        await upload_image(b"x" * (_TWO_MEBIBYTES + 1), "image/jpeg", max_bytes=_TWO_MEBIBYTES)
+        await upload_image(b"x" * (_FIVE_MEBIBYTES + 1), "image/jpeg")
 
     assert excinfo.value.status_code == 422
-    assert str(excinfo.value) == "Image must be 2 MB or smaller"
+    assert str(excinfo.value) == "Image must be 5 MB or smaller"
 
 
-async def test_the_default_limit_is_still_two_mebibytes(monkeypatch: MonkeyPatch) -> None:
+async def test_the_default_limit_is_five_mebibytes(monkeypatch: MonkeyPatch) -> None:
     _configure_cloudinary(monkeypatch)
 
     # Exactly the default limit is accepted.
-    assert await upload_image(b"x" * _TWO_MEBIBYTES, "image/png")
+    assert await upload_image(b"x" * _FIVE_MEBIBYTES, "image/png")
 
     # One byte over the default limit is refused.
     with pytest.raises(ValidationError):
-        await upload_image(b"x" * (_TWO_MEBIBYTES + 1), "image/webp")
+        await upload_image(b"x" * (_FIVE_MEBIBYTES + 1), "image/webp")
 
 
 async def test_a_caller_can_pass_its_own_limit(monkeypatch: MonkeyPatch) -> None:
     _configure_cloudinary(monkeypatch)
 
-    # The blog's photo: exactly 1 MB is accepted.
+    # Exactly the caller's limit is accepted.
     assert await upload_image(b"x" * _ONE_MEBIBYTE, "image/jpeg", max_bytes=_ONE_MEBIBYTE)
 
     # One byte over the caller's limit is refused with the limit in the message.
     with pytest.raises(ValidationError) as excinfo:
         await upload_image(b"x" * (_ONE_MEBIBYTE + 1), "image/png", max_bytes=_ONE_MEBIBYTE)
     assert str(excinfo.value) == "Image must be 1 MB or smaller"
+
+
+async def test_an_empty_file_is_refused(monkeypatch: MonkeyPatch) -> None:
+    _configure_cloudinary(monkeypatch)
+
+    with pytest.raises(ValidationError) as excinfo:
+        await upload_image(b"", "image/jpeg")
+
+    assert str(excinfo.value) == "The uploaded file is empty"
+
+
+@pytest.mark.parametrize(
+    "content_type",
+    [
+        "image/jpeg",
+        "image/png",
+        "image/webp",
+        "image/gif",
+        "image/avif",
+        "image/heic",
+        "image/heif",
+        "image/tiff",
+        "image/bmp",
+        # The owner asked for no screening of the content: the platform
+        # does not refuse a format, Cloudinary decides what it accepts.
+        "application/octet-stream",
+        "",
+    ],
+)
+async def test_no_image_format_is_screened(monkeypatch: MonkeyPatch, content_type: str) -> None:
+    _configure_cloudinary(monkeypatch)
+
+    url = await upload_image(b"x" * 1024, content_type)
+
+    assert url == "https://demo.cloudinary.com/secure.jpg"

@@ -55,7 +55,9 @@ _UoW = Annotated[UnitOfWork, Depends(get_unit_of_work)]
 _Page = Annotated[int, Query(ge=1, le=MAX_PAGE_NUMBER, description="1-based page number")]
 _Size = Annotated[int, Query(ge=1, le=100, description="Items per page")]
 
-_BLOG_IMAGE_MAX_BYTES = 2 * 1024 * 1024
+# The cover and the pictures of the body share the same limit: 5 MB,
+# the size of a photo of a modern phone (BR-95).
+_BLOG_IMAGE_MAX_BYTES = 5 * 1024 * 1024
 
 _MANAGER_FAILURES: dict[int | str, dict[str, Any]] = {
     403: {"description": "Insufficient permissions"},
@@ -182,7 +184,7 @@ async def upload_blog_cover(
         data,
         file.content_type or "",
         folder="blog-covers",
-        max_bytes=1 * 1024 * 1024,
+        max_bytes=_BLOG_IMAGE_MAX_BYTES,
     )
     return BlogImageUploadResponse(url=url)
 
@@ -201,7 +203,7 @@ async def upload_blog_post_image(
     _ = actor
     data = await file.read()
     if len(data) > _BLOG_IMAGE_MAX_BYTES:
-        raise ValidationError("Image must be 2 MB or smaller")
+        raise ValidationError("Image must be 5 MB or smaller")
     url = await upload_image(
         data,
         file.content_type or "",

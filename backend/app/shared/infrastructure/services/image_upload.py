@@ -14,8 +14,11 @@ from app.config import settings
 from app.core.exceptions import ForbiddenError, ValidationError
 
 _CLOUDINARY_UPLOAD_URL = "https://api.cloudinary.com/v1_1/{cloud_name}/image/upload"
-_ALLOWED_CONTENT_TYPES = ("image/jpeg", "image/png", "image/webp")
-_MAX_IMAGE_BYTES = 2 * 1024 * 1024
+# The platform does not screen the content of an upload: Cloudinary itself
+# decides what it accepts (it refuses a file that is not an image), and a
+# whitelist here only rejected the formats the members actually use
+# (HEIC from the phones, AVIF, GIF).
+_MAX_IMAGE_BYTES = 5 * 1024 * 1024
 _HTTP_TIMEOUT_SECONDS = 20.0
 
 
@@ -56,13 +59,16 @@ async def upload_image(
 
     ``max_bytes`` caps the size of the uploaded file: a file that is too
     big is refused with a ``ValidationError`` instead of reaching
-    Cloudinary. The default keeps the historic 2 MB limit, so the avatars
-    and the verse covers keep their behaviour.
+    Cloudinary. The default is 5 MB - the size of a photo of a modern
+    phone - so a member never loses an image because of its weight.
+
+    The content of the file is **not** screened here: Cloudinary accepts
+    the image formats and refuses what is not an image, with its own
+    message. The server only refuses an empty file.
     """
+    _ = content_type
     if not cloudinary_configured():
         raise ForbiddenError("Image uploads are not configured")
-    if content_type not in _ALLOWED_CONTENT_TYPES:
-        raise ValidationError("Only JPEG, PNG or WebP images are allowed")
     if len(data) == 0:
         raise ValidationError("The uploaded file is empty")
     if len(data) > max_bytes:
