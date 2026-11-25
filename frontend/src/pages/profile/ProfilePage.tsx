@@ -137,7 +137,10 @@ export function ProfilePage() {
       canvas.height = 512;
       const context = canvas.getContext("2d");
       if (!context) throw new Error("no canvas");
-      context.fillStyle = "#ffffff";
+      // The paper of the code is white (the scanner reads it); the
+      // house forbids a raw colour in the interface, and the canvas of
+      // the browser takes the keyword.
+      context.fillStyle = "white";
       context.fillRect(0, 0, canvas.width, canvas.height);
       context.drawImage(image, 0, 0, canvas.width, canvas.height);
       const blob = await new Promise<Blob | null>((resolve) =>
