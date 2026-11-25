@@ -244,7 +244,7 @@ describe("the pages of the verification", () => {
 
     await waitFor(() =>
       expect(
-        screen.getByText(/تسجيل الدخول عبر Google غير مُهيأ/),
+        screen.getByText(/تسجيل الدخول عبر Google غير مهيأ/),
       ).toBeInTheDocument(),
     );
   });

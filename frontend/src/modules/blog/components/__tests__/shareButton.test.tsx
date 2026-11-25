@@ -112,13 +112,20 @@ describe("the share button of a blog post", () => {
     setClipboard({ writeText: vi.fn().mockResolvedValue(undefined) });
 
     renderPage(<ShareButton post={{ id: "post-1" }} />, {
-      answers: { "/blog/posts/post-1": { ...DETAIL, short_code: undefined } },
+      // The platform answers with a post that carries no tiny link (an
+      // empty code): the member gets the sentence that says exactly
+      // that, not a generic failure.
+      answers: { "/blog/posts/post-1": { ...DETAIL, short_code: "" } },
     });
 
     await user.click(screen.getByRole("button", { name: "نسخ الرابط" }));
 
+    // The post has no tiny link: the member gets a sentence that says
+    // exactly that, not a generic failure.
     expect(
-      await screen.findByText("تعذر تجهيز رابط المشاركة. حاول مرة أخرى."),
+      await screen.findByText(
+        "لا يوجد رابط مشاركة لهذا المنشور. حدّث الصفحة وحاول مرة أخرى.",
+      ),
     ).toBeInTheDocument();
   });
 });

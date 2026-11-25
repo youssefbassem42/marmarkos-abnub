@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { useApiError } from "@/hooks/useApiError";
+import { ApiError } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { attendancePinApi } from "@/modules/attendance/api";
 import { PinEntry } from "@/modules/attendance/components/PinEntry";
@@ -68,7 +69,16 @@ export function AttendancePinCard() {
       setEditing(false);
       setStatus({ kind: "ok", text: t("pin.saved") });
     } catch (error) {
-      setStatus({ kind: "error", text: describeError(error).message });
+      // The card knows its domain: a PIN that belongs to another member
+      // has its own sentence, clearer than the generic conflict.
+      if (
+        error instanceof ApiError &&
+        (error.code === "conflict" || error.status === 409)
+      ) {
+        setStatus({ kind: "error", text: t("pin.taken") });
+      } else {
+        setStatus({ kind: "error", text: describeError(error).message });
+      }
       setEditing(true);
     } finally {
       setSaving(false);

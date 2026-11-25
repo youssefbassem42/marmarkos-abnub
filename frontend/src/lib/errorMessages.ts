@@ -109,6 +109,11 @@ export function describeApiError(
   const fallbackDescription = statusDescription(apiError.status);
   const description = codeDescription ?? fallbackDescription;
 
+  // The reason of the server is the most precise answer there is: it
+  // says *what* happened ("this PIN belongs to another member"), while
+  // the code only says the family of the failure ("a conflict"). The
+  // code and the status are the fallback for a reason the platform
+  // does not know.
   const knownMessageKey = (apiServerMessageKeys as Record<string, string>)[
     apiError.message
   ];
