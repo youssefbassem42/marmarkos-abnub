@@ -21,7 +21,11 @@ class CommentRepository:
     async def get_by_id(self, comment_id: uuid.UUID) -> Comment | None:
         result = await self._session.execute(
             select(Comment)
-            .options(selectinload(Comment.author), selectinload(Comment.replies))
+            .options(
+                selectinload(Comment.author),
+                selectinload(Comment.post),
+                selectinload(Comment.replies),
+            )
             .where(Comment.id == comment_id)
         )
         return result.scalar_one_or_none()

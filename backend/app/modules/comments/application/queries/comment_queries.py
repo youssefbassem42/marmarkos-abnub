@@ -19,6 +19,7 @@ from app.core.time.clock import now_utc
 from app.modules.blog.domain.enums.post_status import PostStatus
 from app.modules.comments.application.dto.comment_dto import (
     CommentAuthorResponse,
+    CommentLikeResponse,
     CommentResponse,
 )
 from app.modules.comments.application.services.comment_content import (
@@ -35,7 +36,13 @@ def _author(comment: Comment) -> CommentAuthorResponse:
     return CommentAuthorResponse(id=comment.author.id, full_name=full_name)
 
 
-def _response(comment: Comment, replies: list[CommentResponse]) -> CommentResponse:
+def _response(
+    comment: Comment,
+    replies: list[CommentResponse],
+    *,
+    likes_count: int,
+    liked: bool,
+) -> CommentResponse:
     content = comment.content
     if comment.status is CommentStatus.DELETED:
         content = DELETED_COMMENT_CONTENT
@@ -46,6 +53,8 @@ def _response(comment: Comment, replies: list[CommentResponse]) -> CommentRespon
         content=content,
         status=comment.status.value,
         author=_author(comment),
+        likes_count=max(0, likes_count),
+        liked=liked,
         replies=replies,
         created_at=comment.created_at,
         updated_at=comment.updated_at,
@@ -55,6 +64,8 @@ def _response(comment: Comment, replies: list[CommentResponse]) -> CommentRespon
 def _render_tree(
     comment: Comment,
     children_by_parent: dict[uuid.UUID, list[Comment]],
+    counts: dict[uuid.UUID, int],
+    liked_ids: set[uuid.UUID],
 ) -> CommentResponse | None:
     """Render one branch, hiding moderated branches completely."""
     if comment.status not in {CommentStatus.VISIBLE, CommentStatus.DELETED}:
@@ -62,10 +73,15 @@ def _render_tree(
 
     replies: list[CommentResponse] = []
     for child in children_by_parent.get(comment.id, []):
-        rendered = _render_tree(child, children_by_parent)
+        rendered = _render_tree(child, children_by_parent, counts, liked_ids)
         if rendered is not None:
             replies.append(rendered)
-    return _response(comment, replies)
+    return _response(
+        comment,
+        replies,
+        likes_count=counts.get(comment.id, 0),
+        liked=comment.id in liked_ids,
+    )
 
 
 async def _post_is_visible(uow: UnitOfWork, post_id: uuid.UUID) -> bool:
@@ -79,6 +95,8 @@ async def list_comment_tree(
     uow: UnitOfWork,
     post_id: uuid.UUID,
     page: PageParams,
+    *,
+    viewer_id: uuid.UUID,
 ) -> Page[CommentResponse] | None:
     """Return the visible comment tree, or ``None`` for a hidden post."""
     if not await _post_is_visible(uow, post_id):
@@ -91,6 +109,9 @@ async def list_comment_tree(
         .order_by(Comment.created_at, Comment.id)
     )
     comments = list(result.scalars().all())
+    comment_ids = [comment.id for comment in comments]
+    counts = await uow.comment_likes.counts_for_comments(comment_ids)
+    liked_ids = await uow.comment_likes.liked_comment_ids(comment_ids, viewer_id)
     children_by_parent: dict[uuid.UUID, list[Comment]] = defaultdict(list)
     for comment in comments:
         if comment.parent_comment_id is not None:
@@ -100,7 +121,7 @@ async def list_comment_tree(
         rendered
         for comment in comments
         if comment.parent_comment_id is None
-        if (rendered := _render_tree(comment, children_by_parent)) is not None
+        if (rendered := _render_tree(comment, children_by_parent, counts, liked_ids)) is not None
     ]
     page_items = roots[page.offset : page.offset + page.size]
     return Page.build(page_items, len(roots), page)
@@ -109,6 +130,8 @@ async def list_comment_tree(
 async def get_comment_response(
     uow: UnitOfWork,
     comment_id: uuid.UUID,
+    *,
+    viewer_id: uuid.UUID,
 ) -> CommentResponse | None:
     """Return one comment with its direct replies for a write answer."""
     result = await uow.session.execute(
@@ -127,5 +150,40 @@ async def get_comment_response(
         )
         .order_by(Comment.created_at, Comment.id)
     )
-    replies = [_response(reply, []) for reply in replies_result.scalars().all()]
-    return _response(comment, replies)
+    replies = list(replies_result.scalars().all())
+    comment_ids = [comment.id, *(reply.id for reply in replies)]
+    counts = await uow.comment_likes.counts_for_comments(comment_ids)
+    liked_ids = await uow.comment_likes.liked_comment_ids(comment_ids, viewer_id)
+    reply_responses = [
+        _response(
+            reply,
+            [],
+            likes_count=counts.get(reply.id, 0),
+            liked=reply.id in liked_ids,
+        )
+        for reply in replies
+    ]
+    return _response(
+        comment,
+        reply_responses,
+        likes_count=counts.get(comment.id, 0),
+        liked=comment.id in liked_ids,
+    )
+
+
+async def get_comment_likes(
+    uow: UnitOfWork,
+    comment_id: uuid.UUID,
+    *,
+    viewer_id: uuid.UUID,
+) -> CommentLikeResponse | None:
+    """Return one comment's active likes and the caller's own state."""
+    if await uow.comments.get_by_id(comment_id) is None:
+        return None
+    likes_count = max(0, await uow.comment_likes.count_for_comment(comment_id))
+    liked = await uow.comment_likes.has_liked(comment_id, viewer_id)
+    return CommentLikeResponse(
+        comment_id=comment_id,
+        likes_count=likes_count,
+        liked=liked,
+    )

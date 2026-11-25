@@ -42,7 +42,7 @@ if TYPE_CHECKING:
         BlogPost,
         BlogPostLike,
     )
-    from app.modules.comments.infrastructure.persistence.models import Comment
+    from app.modules.comments.infrastructure.persistence.models import BlogCommentLike, Comment
     from app.modules.notifications.infrastructure.persistence.models import Notification
     from app.modules.points.infrastructure.persistence.models import PointTransaction
     from app.modules.quiz.infrastructure.persistence.models import QuizAttempt
@@ -159,6 +159,9 @@ class User(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="user", passive_deletes=True
     )
     comments: Mapped[list["Comment"]] = relationship(back_populates="author", passive_deletes=True)
+    comment_likes: Mapped[list["BlogCommentLike"]] = relationship(
+        back_populates="user", passive_deletes=True
+    )
     notifications: Mapped[list["Notification"]] = relationship(
         back_populates="user", passive_deletes=True
     )

@@ -51,6 +51,9 @@ from app.modules.blog.infrastructure.persistence.category_repository import (
 from app.modules.blog.infrastructure.persistence.like_repository import (
     BlogPostLikeRepository,
 )
+from app.modules.comments.infrastructure.persistence.comment_like_repository import (
+    BlogCommentLikeRepository,
+)
 from app.modules.comments.infrastructure.persistence.comment_repository import (
     CommentRepository,
 )
@@ -232,6 +235,10 @@ class UnitOfWork:
     @property
     def comments(self) -> CommentRepository:
         return CommentRepository(self._session)
+
+    @property
+    def comment_likes(self) -> BlogCommentLikeRepository:
+        return BlogCommentLikeRepository(self._session)
 
     @property
     def notifications(self) -> NotificationRepository:

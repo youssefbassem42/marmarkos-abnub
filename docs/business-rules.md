@@ -311,6 +311,7 @@ number.
 | `BR-75` | The delivery is idempotent: a repeated publication event creates neither a second notification nor a second audit trail for the same member and post | `app/modules/notifications/infrastructure/persistence/notification_repository.py` |
 | `BR-76` | Announcement mails are sent with bounded concurrency and the failure of one member never stops the other members | `app/modules/notifications/application/services/notification_service.py` |
 | `BR-86` | Liking a post or a comment notifies its author once with a `BLOG_LIKE` notification; nobody notifies themself, and the notification id is derived from the liked item and the member who liked it | `app/modules/notifications/application/services/notification_service.py` |
+| `BR-87` | A member may like a comment or reply once; taking the like back is idempotent, the count is never negative, and every comment in the tree carries its count and the caller's own like state | `app/modules/comments/application/commands/comment_like_commands.py` |
 
 ## The comments of the blog posts (the point 7 of the plan)
 

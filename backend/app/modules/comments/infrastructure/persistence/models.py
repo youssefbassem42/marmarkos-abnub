@@ -9,12 +9,13 @@ import uuid
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Enum as SAEnum
-from sqlalchemy import ForeignKey, Text
+from sqlalchemy import ForeignKey, Index, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.modules.comments.domain.enums.comment_status import CommentStatus
 from app.shared.infrastructure.persistence.base import (
     Base,
+    CreatedAtMixin,
     TimestampMixin,
     UUIDPrimaryKeyMixin,
 )
@@ -50,3 +51,25 @@ class Comment(UUIDPrimaryKeyMixin, TimestampMixin, Base):
         back_populates="replies", remote_side="Comment.id"
     )
     replies: Mapped[list["Comment"]] = relationship(back_populates="parent")
+    likes: Mapped[list["BlogCommentLike"]] = relationship(
+        back_populates="comment", passive_deletes=True
+    )
+
+
+class BlogCommentLike(UUIDPrimaryKeyMixin, CreatedAtMixin, Base):
+    """One member's like of a comment or a reply."""
+
+    __tablename__ = "blog_comment_likes"
+    __table_args__ = (
+        Index("uq_blog_comment_likes_comment_user", "comment_id", "user_id", unique=True),
+    )
+
+    comment_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("comments.id", ondelete="CASCADE"), nullable=False
+    )
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        ForeignKey("users.id", ondelete="CASCADE"), nullable=False
+    )
+
+    comment: Mapped["Comment"] = relationship(back_populates="likes")
+    user: Mapped["User"] = relationship(back_populates="comment_likes")

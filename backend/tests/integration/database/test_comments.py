@@ -1,10 +1,12 @@
 """Comment/reply and moderation persistence tests."""
 
-from sqlalchemy import select
+import pytest
+from sqlalchemy import insert, select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import selectinload
 
 from app.modules.comments.domain.enums.comment_status import CommentStatus
-from app.modules.comments.infrastructure.persistence.models import Comment
+from app.modules.comments.infrastructure.persistence.models import BlogCommentLike, Comment
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
 from tests.integration.database.conftest import make_user
 from tests.integration.database.test_blog import make_post
@@ -84,6 +86,28 @@ async def test_comment_never_physically_deleted(uow: UnitOfWork, db_session) -> 
     rows = list((await db_session.execute(select(Comment))).scalars().all())
     assert len(rows) == 1
     assert rows[0].status is CommentStatus.DELETED
+
+
+async def test_comment_like_unique_pair(uow: UnitOfWork, db_session) -> None:
+    """BR-87: one member cannot like the same comment twice."""
+    author = await make_user(uow, "like-comment-author@example.com")
+    liker = await make_user(uow, "like-comment-liker@example.com")
+    post = await make_post(uow, author.id)
+    comment = Comment(post_id=post.id, user_id=author.id, content="Like me")
+    await uow.comments.add(comment)
+    await uow.commit()
+
+    await db_session.execute(
+        insert(BlogCommentLike).values(comment_id=comment.id, user_id=liker.id)
+    )
+    await db_session.commit()
+
+    with pytest.raises(IntegrityError):
+        await db_session.execute(
+            insert(BlogCommentLike).values(comment_id=comment.id, user_id=liker.id)
+        )
+        await db_session.commit()
+    await db_session.rollback()
 
 
 async def test_reply_depth_is_free(uow: UnitOfWork) -> None:

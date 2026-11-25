@@ -18,8 +18,13 @@ from app.modules.comments.application.commands.comment_commands import (
     delete_comment,
     update_comment,
 )
+from app.modules.comments.application.commands.comment_like_commands import (
+    like_comment,
+    unlike_comment,
+)
 from app.modules.comments.application.dto.comment_dto import (
     CommentCreateRequest,
+    CommentLikeResponse,
     CommentResponse,
     CommentUpdateRequest,
 )
@@ -27,6 +32,7 @@ from app.modules.comments.application.dto.comment_dto import (
 # Importing the consumer registers its outbox handler with the dispatcher.
 from app.modules.comments.application.handlers import comment_created_handler  # noqa: F401
 from app.modules.comments.application.queries.comment_queries import (
+    get_comment_likes,
     get_comment_response,
     list_comment_tree,
 )
@@ -46,8 +52,13 @@ _COMMENT_FAILURES: dict[int | str, dict[str, Any]] = {
 }
 
 
-async def _comment_response(uow: UnitOfWork, comment_id: UUID) -> CommentResponse:
-    item = await get_comment_response(uow, comment_id)
+async def _comment_response(
+    uow: UnitOfWork,
+    comment_id: UUID,
+    *,
+    viewer_id: UUID,
+) -> CommentResponse:
+    item = await get_comment_response(uow, comment_id, viewer_id=viewer_id)
     if item is None:
         raise NotFoundError("Comment not found")
     return item
@@ -66,8 +77,12 @@ async def list_blog_comments(
     size: _Size = 20,
 ) -> Page[CommentResponse]:
     """Return the visible comment tree of a published post."""
-    _ = viewer
-    result = await list_comment_tree(uow, post_id, PageParams(page=page, size=size))
+    result = await list_comment_tree(
+        uow,
+        post_id,
+        PageParams(page=page, size=size),
+        viewer_id=viewer.id,
+    )
     if result is None:
         raise NotFoundError("Post not found")
     return result
@@ -88,7 +103,56 @@ async def create_blog_comment(
     """Create a comment or a reply after sanitizing and counting its HTML."""
     comment = await create_comment(uow, actor, post_id, payload)
     await uow.commit()
-    return await _comment_response(uow, comment.id)
+    return await _comment_response(uow, comment.id, viewer_id=actor.id)
+
+
+@router.get(
+    "/blog/comments/{comment_id}/likes",
+    response_model=CommentLikeResponse,
+    responses=_COMMENT_FAILURES,
+)
+async def get_blog_comment_likes(
+    comment_id: UUID,
+    viewer: CurrentUser,
+    uow: _UoW,
+) -> CommentLikeResponse:
+    """Return one comment's active likes and the caller's own state."""
+    item = await get_comment_likes(uow, comment_id, viewer_id=viewer.id)
+    if item is None:
+        raise NotFoundError("Comment not found")
+    return item
+
+
+@router.post(
+    "/blog/comments/{comment_id}/like",
+    response_model=CommentLikeResponse,
+    responses=_COMMENT_FAILURES | {409: {"description": "The comment is already liked"}},
+)
+async def like_blog_comment(
+    comment_id: UUID,
+    actor: CurrentUser,
+    uow: _UoW,
+) -> CommentLikeResponse:
+    """Like a comment or reply once; repeating the request is idempotent."""
+    result = await like_comment(uow, actor, comment_id)
+    await uow.commit()
+    return result
+
+
+@router.delete(
+    "/blog/comments/{comment_id}/like",
+    response_model=CommentLikeResponse,
+    responses=_COMMENT_FAILURES,
+)
+async def unlike_blog_comment(
+    comment_id: UUID,
+    actor: CurrentUser,
+    uow: _UoW,
+) -> CommentLikeResponse:
+    """Take back the caller's like; repeating the request stays successful."""
+    result = await unlike_comment(uow, actor, comment_id)
+    await uow.commit()
+    return result
 
 
 @router.patch(
@@ -105,7 +169,7 @@ async def patch_blog_comment(
     """Edit a comment; only its owner may make the change."""
     await update_comment(uow, actor, comment_id, payload)
     await uow.commit()
-    return await _comment_response(uow, comment_id)
+    return await _comment_response(uow, comment_id, viewer_id=actor.id)
 
 
 @router.delete(
