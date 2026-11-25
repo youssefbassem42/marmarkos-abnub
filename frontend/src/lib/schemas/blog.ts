@@ -11,7 +11,7 @@ import { z } from "zod";
 import { loose } from "./common";
 
 /** The lifecycle state of a post. */
-export const blogPostStatusSchema = z.enum(["DRAFT", "PUBLISHED", "ARCHIVED"]);
+export const blogPostStatusSchema = z.string();
 
 /** One tag (the interface name of a blog category). */
 export const blogTagSchema = loose({
@@ -33,6 +33,9 @@ export const blogPostSummarySchema = loose({
   excerpt: z.string().nullable(),
   cover_image: z.string().nullable(),
   tags: z.array(blogTagSchema),
+  likes_count: z.number().int().nonnegative(),
+  comments_count: z.number().int().nonnegative(),
+  status: z.string(),
   published_at: z.string().nullable(),
   author: blogAuthorSchema,
 });
@@ -45,6 +48,10 @@ export const blogPostDetailSchema = loose({
   body: z.string(),
   cover_image: z.string().nullable(),
   tags: z.array(blogTagSchema),
+  likes_count: z.number().int().nonnegative(),
+  comments_count: z.number().int().nonnegative(),
+  status: z.string(),
+  short_code: z.string(),
   published_at: z.string().nullable(),
   author: blogAuthorSchema,
 });
@@ -57,12 +64,21 @@ export const blogPostAdminSchema = loose({
   body: z.string(),
   cover_image: z.string().nullable(),
   tags: z.array(blogTagSchema),
+  likes_count: z.number().int().nonnegative(),
+  comments_count: z.number().int().nonnegative(),
   status: blogPostStatusSchema,
+  short_code: z.string(),
   published_at: z.string().nullable(),
   author: blogAuthorSchema,
   author_id: z.string(),
   created_at: z.string(),
   updated_at: z.string(),
+});
+
+/** The stable short address of a post. */
+export const blogShortLinkSchema = loose({
+  post_id: z.string(),
+  slug: z.string(),
 });
 
 /** The secure URL returned after a cover upload. */
@@ -98,6 +114,8 @@ const blogCommentBaseSchema = loose({
   content: z.string(),
   status: z.string(),
   author: blogCommentAuthorSchema,
+  likes_count: z.number().int().nonnegative(),
+  liked: z.boolean(),
   created_at: z.string(),
   updated_at: z.string(),
 });
@@ -113,3 +131,10 @@ export const blogCommentSchema = z.lazy((): z.ZodType<BlogCommentValue> =>
     replies: z.array(blogCommentSchema),
   }),
 );
+
+/** The active likes of a comment and the signed-in member's own like state. */
+export const blogCommentLikeSchema = loose({
+  comment_id: z.string(),
+  likes_count: z.number().int().nonnegative(),
+  liked: z.boolean(),
+});

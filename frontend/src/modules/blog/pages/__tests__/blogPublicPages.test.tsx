@@ -12,6 +12,9 @@ const POST = {
   excerpt: "ملخص المنشور",
   cover_image: "https://example.com/cover.jpg",
   tags: [{ id: "tag-1", name: "خدمة", slug: "khdma-1" }],
+  likes_count: 0,
+  comments_count: 0,
+  status: "PUBLISHED",
   published_at: "2026-10-29T10:00:00Z",
   author: { id: "author-1", full_name: "كاتب المنشور" },
 };
@@ -28,6 +31,7 @@ const PAGE = {
 const DETAIL = {
   ...POST,
   body: "<p>نص المنشور الآمن</p>",
+  short_code: "abc123",
 };
 
 describe("the public list of the blog", () => {

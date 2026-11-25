@@ -14,6 +14,8 @@ const A_COMMENT = {
   content: "<p>تعليق أول</p>",
   status: "VISIBLE",
   author: { id: "55555555-5555-4555-8555-555555555555", full_name: "محمود" },
+  likes_count: 0,
+  liked: false,
   replies: [
     {
       id: "66666666-6666-4666-8666-666666666666",
@@ -22,6 +24,8 @@ const A_COMMENT = {
       content: "<p>رد على التعليق</p>",
       status: "VISIBLE",
       author: { id: "77777777-7777-4777-8777-777777777777", full_name: "سارة" },
+      likes_count: 0,
+      liked: false,
       replies: [],
       created_at: "2026-10-02T00:00:00Z",
       updated_at: "2026-10-02T00:00:00Z",

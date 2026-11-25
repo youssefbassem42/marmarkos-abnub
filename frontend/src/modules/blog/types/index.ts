@@ -10,6 +10,7 @@ import type { z } from "zod";
 import type {
   blogAuthorSchema,
   blogCommentAuthorSchema,
+  blogCommentLikeSchema,
   blogCommentSchema,
   blogImageUploadSchema,
   blogLikeSchema,
@@ -17,6 +18,7 @@ import type {
   blogPostDetailSchema,
   blogPostStatusSchema,
   blogPostSummarySchema,
+  blogShortLinkSchema,
   blogTagSchema,
 } from "@/lib/schemas/blog";
 
@@ -30,6 +32,8 @@ export type BlogImageUpload = z.infer<typeof blogImageUploadSchema>;
 export type BlogLike = z.infer<typeof blogLikeSchema>;
 export type BlogCommentAuthor = z.infer<typeof blogCommentAuthorSchema>;
 export type BlogComment = z.infer<typeof blogCommentSchema>;
+export type BlogCommentLike = z.infer<typeof blogCommentLikeSchema>;
+export type BlogShortLink = z.infer<typeof blogShortLinkSchema>;
 
 export interface BlogPostsListParams {
   tag?: string;
