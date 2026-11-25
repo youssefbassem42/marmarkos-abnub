@@ -6,6 +6,7 @@ import { CalendarDays, ImageOff, UserRound } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { formatDateOrEmpty } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
+import { BlogEngagementCounts } from "./BlogEngagementCounts";
 import type { BlogPostSummary } from "../types";
 
 interface BlogListRowProps {
@@ -103,6 +104,7 @@ export function BlogListRow({ post, className, management }: BlogListRowProps) {
               {t("card.publishedAt", { date: publishedDate })}
             </span>
           ) : null}
+          <BlogEngagementCounts post={post} />
         </div>
       </div>
     </article>

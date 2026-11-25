@@ -17,6 +17,8 @@ const POST = {
   status: "PUBLISHED",
   published_at: "2026-10-29T10:00:00Z",
   author: { id: "author-1", full_name: "كاتب المنشور" },
+  likes_count: 4,
+  comments_count: 2,
 };
 
 const PAGE = {
@@ -53,6 +55,14 @@ describe("the public list of the blog", () => {
     expect(screen.getByRole("link", { name: "خدمة" })).toHaveAttribute(
       "href",
       "/blog?view=cards&tag=khdma-1",
+    );
+    expect(screen.getByRole("link", { name: "4 إعجاب" })).toHaveAttribute(
+      "href",
+      "/blog/post-1",
+    );
+    expect(screen.getByRole("link", { name: "2 تعليق" })).toHaveAttribute(
+      "href",
+      "/blog/post-1",
     );
   });
 
@@ -92,6 +102,66 @@ describe("the public list of the blog", () => {
     await waitFor(() =>
       expect(listButton).toHaveAttribute("aria-pressed", "true"),
     );
+    expect(
+      await screen.findByRole("link", { name: "4 إعجاب" }),
+    ).toHaveAttribute("href", "/blog/post-1");
+    expect(
+      await screen.findByRole("link", { name: "2 تعليق" }),
+    ).toHaveAttribute("href", "/blog/post-1");
+  });
+
+  it("leaves a zero count out of the card and the list row", async () => {
+    renderPage(<BlogListPage />, {
+      route: "/blog",
+      answers: {
+        "/blog/posts": {
+          ...PAGE,
+          items: [{ ...POST, likes_count: 0, comments_count: 0 }],
+        },
+      },
+    });
+
+    expect(await screen.findByText("عنوان المنشور")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /إعجاب|تعليق/ }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("keeps the card and the list row complete when details are absent", async () => {
+    const user = userEvent.setup();
+    renderPage(<BlogListPage />, {
+      route: "/blog",
+      answers: {
+        "/blog/posts": {
+          ...PAGE,
+          items: [
+            {
+              ...POST,
+              excerpt: null,
+              cover_image: null,
+              published_at: null,
+              likes_count: 0,
+              comments_count: 2,
+            },
+          ],
+        },
+      },
+    });
+
+    expect(await screen.findByText("عنوان المنشور")).toBeInTheDocument();
+    expect(screen.getByText("لا توجد صورة غلاف")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "2 تعليق" })).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /إعجاب/ }),
+    ).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "قائمة" }));
+    expect(
+      await screen.findByRole("link", { name: "2 تعليق" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: /إعجاب/ }),
+    ).not.toBeInTheDocument();
   });
 
   it("shows the empty state when no post matches", async () => {

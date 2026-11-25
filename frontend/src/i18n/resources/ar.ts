@@ -1506,6 +1506,8 @@ export const ar = {
       noCover: "لا توجد صورة غلاف",
       byAuthor: "بواسطة {{name}}",
       publishedAt: "نُشر في {{date}}",
+      likesCount: "{{count}} إعجاب",
+      commentsCount: "{{count}} تعليق",
     },
     post: {
       backToList: "العودة إلى المدونة",
