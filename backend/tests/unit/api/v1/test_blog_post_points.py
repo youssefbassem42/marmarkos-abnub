@@ -14,7 +14,8 @@ from app.modules.blog.infrastructure.persistence.models import BlogPost
 from app.modules.users.domain.enums.role_name import RoleName
 from tests.utils import DEFAULT_PASSWORD, bearer, create_user_direct
 
-ADMIN_POSTS_URL = "/api/v1/admin/blog/posts"
+# The blog left the administration panel: the writing lives under /blog.
+POSTS_URL = "/api/v1/blog/posts"
 POINTS_URL = "/api/v1/users/me/points"
 
 
@@ -52,7 +53,7 @@ async def _create_draft(
     }
     if published_at is not None:
         payload["published_at"] = published_at.isoformat()
-    response = await client.post(ADMIN_POSTS_URL, json=payload, headers=headers)
+    response = await client.post(POSTS_URL, json=payload, headers=headers)
     assert response.status_code == 201, response.text
     return response.json()
 
@@ -71,14 +72,14 @@ async def test_publishing_a_post_awards_three_points_once_and_shows_the_post_tit
     created = await _create_draft(client, headers, title="موضوع earns نقاط")
 
     published = await client.post(
-        f"{ADMIN_POSTS_URL}/{created['id']}/publish",
+        f"{POSTS_URL}/{created['id']}/publish",
         headers=headers,
     )
     assert published.status_code == 200, published.text
 
     # Publishing the same post again never pays a second award.
     published_again = await client.post(
-        f"{ADMIN_POSTS_URL}/{created['id']}/publish",
+        f"{POSTS_URL}/{created['id']}/publish",
         headers=headers,
     )
     assert published_again.status_code == 200, published_again.text
@@ -155,9 +156,9 @@ async def test_archiving_a_published_post_does_not_take_its_points_back(
 ) -> None:
     _, headers = await _author(client, db_engine, email="post-points-archive@example.com")
     created = await _create_draft(client, headers, title="موضوع مؤرشف")
-    await client.post(f"{ADMIN_POSTS_URL}/{created['id']}/publish", headers=headers)
+    await client.post(f"{POSTS_URL}/{created['id']}/publish", headers=headers)
 
-    archived = await client.delete(f"{ADMIN_POSTS_URL}/{created['id']}", headers=headers)
+    archived = await client.delete(f"{POSTS_URL}/{created['id']}", headers=headers)
     assert archived.status_code == 204
 
     totals = await _points(client, headers)
