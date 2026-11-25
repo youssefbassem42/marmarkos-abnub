@@ -446,6 +446,69 @@ async def test_the_public_list_filters_by_tag_and_searches_the_title(
     assert [item["id"] for item in by_title.json()["items"]] == [youth["id"]]
 
 
+async def test_the_summary_carries_the_like_and_comment_counts(
+    client: AsyncClient, db_engine
+) -> None:
+    admin = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-counts-admin@example.com",
+        role=RoleName.ADMIN,
+    )
+    member = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-counts-member@example.com",
+        role=RoleName.MEMBER,
+    )
+    created = await _create_post(
+        client,
+        admin,
+        title="موضوع بالتفاعل",
+        published_at=datetime.now(UTC) - timedelta(minutes=1),
+    )
+    post_id = str(created["id"])
+
+    liked = await client.post(f"{PUBLIC_URL}/{post_id}/like", headers=member)
+    assert liked.status_code == 200, liked.text
+
+    root = await client.post(
+        f"{PUBLIC_URL}/{post_id}/comments",
+        json={"content": "<p>تعليق رئيسي</p>"},
+        headers=member,
+    )
+    assert root.status_code == 201, root.text
+    reply = await client.post(
+        f"{PUBLIC_URL}/{post_id}/comments",
+        json={
+            "content": "<p>رد على التعليق</p>",
+            "parent_comment_id": root.json()["id"],
+        },
+        headers=member,
+    )
+    assert reply.status_code == 201, reply.text
+
+    listing = await client.get(PUBLIC_URL, headers=member)
+    assert listing.status_code == 200
+    summary = listing.json()["items"][0]
+    assert summary["likes_count"] == 1
+    assert summary["comments_count"] == 2
+
+    detail = await client.get(f"{PUBLIC_URL}/{post_id}", headers=member)
+    assert detail.status_code == 200
+    assert detail.json()["likes_count"] == 1
+    assert detail.json()["comments_count"] == 2
+
+    updated = await client.patch(
+        f"{PUBLIC_URL}/{post_id}",
+        json={"excerpt": "مقتطف جديد"},
+        headers=admin,
+    )
+    assert updated.status_code == 200
+    assert updated.json()["likes_count"] == 1
+    assert updated.json()["comments_count"] == 2
+
+
 async def test_the_public_list_is_paginated(client: AsyncClient, db_engine) -> None:
     admin = await _auth_headers(
         client,

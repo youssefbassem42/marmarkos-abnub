@@ -12,6 +12,7 @@ during each request.
 from __future__ import annotations
 
 import typing
+from datetime import UTC, datetime, timedelta
 
 import pytest
 
@@ -27,6 +28,33 @@ if typing.TYPE_CHECKING:
 # ---------------------------------------------------------------------------
 # Tests
 # ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_blog_post_list_query_count(client: AsyncClient, admin_auth_headers: dict[str, str]):
+    """GET /blog/posts should use <= 7 queries for the whole page."""
+    published_at = (datetime.now(UTC) - timedelta(minutes=1)).isoformat()
+    for number in range(3):
+        created = await client.post(
+            "/api/v1/blog/posts",
+            json={
+                "title": f"موضوع {number}",
+                "body": "نص الموضوع",
+                "published_at": published_at,
+            },
+            headers=admin_auth_headers,
+        )
+        assert created.status_code == 201, created.text
+
+    async with count_queries() as get_count:
+        response = await client.get(
+            "/api/v1/blog/posts",
+            headers=admin_auth_headers,
+        )
+
+    assert response.status_code == 200
+    count = get_count()
+    assert count <= 7, f"Blog list used {count} queries (expected <= 7)"
 
 
 @pytest.mark.asyncio

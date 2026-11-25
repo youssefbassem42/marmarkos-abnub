@@ -12,6 +12,7 @@ import uuid
 from sqlalchemy import func, or_, select
 from sqlalchemy.orm import selectinload
 from sqlalchemy.sql.elements import ColumnElement
+from sqlalchemy.sql.selectable import ScalarSelect
 
 from app.core.pagination import Page, PageParams
 from app.core.time.clock import now_utc
@@ -29,6 +30,7 @@ from app.modules.blog.infrastructure.persistence.models import (
     BlogPost,
     BlogPostLike,
 )
+from app.modules.comments.infrastructure.persistence.models import Comment
 from app.modules.users.infrastructure.persistence.models import User
 from app.shared.contracts.users import RoleName
 from app.shared.infrastructure.persistence.unit_of_work import UnitOfWork
@@ -51,7 +53,11 @@ def _tags(post: BlogPost) -> list[BlogTagResponse]:
     ]
 
 
-def _summary(post: BlogPost, likes_count: int) -> BlogPostSummaryResponse:
+def _summary(
+    post: BlogPost,
+    likes_count: int,
+    comments_count: int,
+) -> BlogPostSummaryResponse:
     return BlogPostSummaryResponse(
         id=post.id,
         title=post.title,
@@ -59,13 +65,18 @@ def _summary(post: BlogPost, likes_count: int) -> BlogPostSummaryResponse:
         cover_image=post.cover_image,
         tags=_tags(post),
         likes_count=max(0, likes_count),
+        comments_count=max(0, comments_count),
         status=post.status.value,
         published_at=post.published_at,
         author=_author(post),
     )
 
 
-def _detail(post: BlogPost) -> BlogPostDetailResponse:
+def _detail(
+    post: BlogPost,
+    likes_count: int,
+    comments_count: int,
+) -> BlogPostDetailResponse:
     return BlogPostDetailResponse(
         id=post.id,
         title=post.title,
@@ -73,6 +84,8 @@ def _detail(post: BlogPost) -> BlogPostDetailResponse:
         body=post.content,
         cover_image=post.cover_image,
         tags=_tags(post),
+        likes_count=max(0, likes_count),
+        comments_count=max(0, comments_count),
         status=post.status.value,
         short_code=post.short_code or "",
         published_at=post.published_at,
@@ -80,7 +93,11 @@ def _detail(post: BlogPost) -> BlogPostDetailResponse:
     )
 
 
-def _admin(post: BlogPost) -> BlogPostAdminResponse:
+def _admin(
+    post: BlogPost,
+    likes_count: int,
+    comments_count: int,
+) -> BlogPostAdminResponse:
     return BlogPostAdminResponse(
         id=post.id,
         title=post.title,
@@ -88,6 +105,8 @@ def _admin(post: BlogPost) -> BlogPostAdminResponse:
         body=post.content,
         cover_image=post.cover_image,
         tags=_tags(post),
+        likes_count=max(0, likes_count),
+        comments_count=max(0, comments_count),
         status=post.status.value,
         short_code=post.short_code or "",
         published_at=post.published_at,
@@ -110,6 +129,39 @@ def _status_conditions(status_filter: PostStatusFilter) -> list[ColumnElement[bo
     if status_filter is PostStatusFilter.SCHEDULED:
         return [BlogPost.status == PostStatus.DRAFT, BlogPost.published_at.is_not(None)]
     return [BlogPost.status == PostStatus(status_filter.value)]
+
+
+def _likes_count_query() -> ScalarSelect[int]:
+    return (
+        select(func.count(BlogPostLike.id))
+        .where(BlogPostLike.post_id == BlogPost.id)
+        .correlate(BlogPost)
+        .scalar_subquery()
+    )
+
+
+def _comments_count_query() -> ScalarSelect[int]:
+    return (
+        select(func.count(Comment.id))
+        .where(Comment.post_id == BlogPost.id)
+        .correlate(BlogPost)
+        .scalar_subquery()
+    )
+
+
+async def _comment_counts(
+    uow: UnitOfWork,
+    post_ids: list[uuid.UUID],
+) -> dict[uuid.UUID, int]:
+    """Count the comments of a whole page with one grouped query."""
+    if not post_ids:
+        return {}
+    result = await uow.session.execute(
+        select(Comment.post_id, func.count(Comment.id))
+        .where(Comment.post_id.in_(post_ids))
+        .group_by(Comment.post_id)
+    )
+    return {post_id: int(count) for post_id, count in result.all()}
 
 
 async def list_blog_posts(
@@ -144,12 +196,7 @@ async def list_blog_posts(
     if search:
         conditions.append(BlogPost.title.ilike(f"%{search.strip()}%"))
 
-    likes_count = (
-        select(func.count(BlogPostLike.id))
-        .where(BlogPostLike.post_id == BlogPost.id)
-        .correlate(BlogPost)
-        .scalar_subquery()
-    )
+    likes_count = _likes_count_query()
     statement = select(BlogPost, likes_count.label("likes_count")).options(
         selectinload(BlogPost.author),
         selectinload(BlogPost.categories),
@@ -170,7 +217,12 @@ async def list_blog_posts(
 
     total = int((await uow.session.execute(count_statement)).scalar_one())
     result = await uow.session.execute(statement.limit(page.size).offset(page.offset))
-    posts = [_summary(post, int(likes_count)) for post, likes_count in result.all()]
+    rows = result.all()
+    comments_counts = await _comment_counts(uow, [post.id for post, _ in rows])
+    posts = [
+        _summary(post, int(likes_count), comments_counts.get(post.id, 0))
+        for post, likes_count in rows
+    ]
     return Page.build(posts, total, page)
 
 
@@ -185,14 +237,17 @@ async def get_post_detail(
     administrator, and a servant may also read a draft, a scheduled post,
     or an archived post.  Every other reader receives ``None`` (BR-64).
     """
+    likes_count = _likes_count_query()
+    comments_count = _comments_count_query()
     result = await uow.session.execute(
-        select(BlogPost)
+        select(BlogPost, likes_count.label("likes_count"), comments_count.label("comments_count"))
         .options(selectinload(BlogPost.author), selectinload(BlogPost.categories))
         .where(BlogPost.id == post_id)
     )
-    post = result.scalar_one_or_none()
-    if post is None:
+    row = result.one_or_none()
+    if row is None:
         return None
+    post, post_likes_count, post_comments_count = row
 
     is_public = post.status is PostStatus.PUBLISHED and (
         post.published_at is None or post.published_at <= now_utc()
@@ -200,7 +255,7 @@ async def get_post_detail(
     may_manage = viewer is not None and (viewer.id == post.author_id or _is_manager(viewer))
     if not is_public and not may_manage:
         return None
-    return _detail(post)
+    return _detail(post, int(post_likes_count), int(post_comments_count))
 
 
 async def get_short_link(
@@ -220,10 +275,15 @@ async def get_short_link(
 
 async def get_admin_post(uow: UnitOfWork, post_id: uuid.UUID) -> BlogPostAdminResponse | None:
     """Return one post with its administration fields."""
+    likes_count = _likes_count_query()
+    comments_count = _comments_count_query()
     result = await uow.session.execute(
-        select(BlogPost)
+        select(BlogPost, likes_count.label("likes_count"), comments_count.label("comments_count"))
         .options(selectinload(BlogPost.author), selectinload(BlogPost.categories))
         .where(BlogPost.id == post_id)
     )
-    post = result.scalar_one_or_none()
-    return _admin(post) if post is not None else None
+    row = result.one_or_none()
+    if row is None:
+        return None
+    post, post_likes_count, post_comments_count = row
+    return _admin(post, int(post_likes_count), int(post_comments_count))
