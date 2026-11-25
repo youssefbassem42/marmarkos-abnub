@@ -293,3 +293,27 @@ double-labelled column.
 | The defects of the review | Five more (#50…#54): the notification of a comment without an accent, a link inside a link in the menu, the refetch that made the number of the likes jump backwards, a test that imported a type from the wrong module, the raw colours |
 | The gates | Backend **714 tests** (the coverage 77.79 %, the floor 77.7), frontend **469 tests** (the coverage 74.63 %, the floors 74/64/67/76), `ruff`/`mypy`/`eslint`/`tsc`/`prettier`/`npm audit`/`pip-audit` green |
 | What is still open | The **frontend of the production** answers `DEPLOYMENT_NOT_FOUND` (the alias of Vercel has no deployment), the **rotation of the secrets** (a human), the **journeys of the end-to-end run** (the agent of the wave is writing them) |
+
+---
+
+## The fourth wave (2026-11-25) — the blog of the owner
+
+The owner gave eight changes to the blog in one instruction and
+answered the seven questions of the clarification in the same day. The
+wave ran with two agents at a time and four branches; the integrator
+finished the editor and landed the whole thing.
+
+| The concern | What it is | Where it lives |
+|---|---|---|
+| The blog leaves the administration panel | The admin and the servant write, publish, schedule, edit and archive from `/blog`; the panel has no blog any more (BR-88) | `backend/app/modules/blog/presentation/router.py`, `frontend/src/router.tsx` |
+| The member never widens his view | A member (or an anonymous reader) receives the published posts only, whatever the lifecycle filter says (BR-89) | `backend/app/modules/blog/application/queries/post_queries.py` |
+| The tiny link of our own | Every post carries a stable code of eight characters; `/p/<code>` opens the post; the share button copies it (BR-90) | `backend/app/modules/blog/…`, `frontend/src/modules/blog/components/ShareButton.tsx` |
+| The counts on the cards | Every card shows the number of the likes and the number of the comments before the post is opened | `BlogCard.tsx`, `BlogListRow.tsx` |
+| The three points of the author | A published post pays its author three points, once; a scheduled post pays when it is published; archiving never takes them back (BR-85) | `backend/app/modules/points/application/services/blog_post_points_service.py` |
+| The web notifications only | The publication sends no mail any more; a like on a post or on a comment notifies its author once, and nobody notifies themself (BR-74, BR-91) | `backend/app/modules/notifications/…` |
+| The like of a comment | Every comment and every reply carries a like button with its count (BR-92) | `frontend/src/modules/blog/components/CommentLikeButton.tsx` |
+| The deletion takes the replies | Deleting a comment removes it and its whole subtree from the database (BR-80) | `backend/app/modules/comments/application/commands/comment_commands.py` |
+| The autosave of the editor | The draft is saved on the server ten seconds after the writer stops typing; it never publishes (BR-93) | `frontend/src/modules/blog/pages/blog/BlogPostFormPage.tsx` |
+| The pictures of the body | A post carries two kinds of images: the cover (1 MB) and the pictures of the body (2 MB) (BR-94) | `frontend/src/modules/blog/components/RichTextEditor.tsx` |
+| The defects of the review | Four more (#59…#62): two writing surfaces, the rule identifiers that collided, the import cycle, the two namings of the lookup | The gates of the house caught them |
+| The gates | Backend **742 tests**, frontend **496 tests**, the end-to-end run **11 journeys**, `ruff`/`mypy`/`eslint`/`tsc`/`prettier`/`npm audit`/`pip-audit` green | — |

@@ -365,6 +365,40 @@ the analysis of a quiz.
   commits survived — the worktrees live now in `~/wt` ✔, and the briefs
   say "commit early" ✔).
 
+### 4.6 The fourth wave (2026-11-25) — the blog of the owner
+
+The owner asked for eight changes to the blog in one instruction, and
+the answers to the questions were given the same day: the blog leaves
+the administration panel, the mail of the blog goes away, the author of
+a published post earns three points, a deleted comment takes its
+replies with it (the rows leave the database), the cards show the
+counts, the share button copies a **tiny link of our own**, the editor
+saves the draft by itself and a post carries pictures in its body.
+
+The wave ran with **two agents at a time** (the provider refuses more)
+and four branches: the structure of the blog (the routes, the DTO, the
+migration, the counts, the tiny link, the upload of the pictures), the
+reward and the notifications (the points, the `BLOG_LIKE`, the mail
+that goes away), the route move of the frontend, and the cards with the
+share and the like of the comments. The editor (the autosave and the
+pictures) was finished by the integrator when the agent ran out of time.
+
+The review found **four more defects** — the ones the agents bring
+with them:
+
+| # | The defect | The consequence | The fix |
+|---|---|---|---|
+| 59 | The blog had **two writing surfaces**: the administration panel and the blog. The writer had to learn two screens, and the member had no way to reach the writing from the place he reads | The blog now lives in one place: the admin and the servant write, publish, schedule, edit and archive from `/blog`; the administration panel has no blog any more (BR-88) |
+| 60 | The two agents of the wave wrote their business rules from the **same free identifiers** (BR-85, BR-86, BR-87 carried two meanings each) and the guard of the catalogue did not see it | Every rule has one identifier, the citations follow them, and the catalogue carries a guard that fails when a section lists an identifier twice |
+| 61 | The blog imported the **model of the comments** to count them, and the comments already know the posts: the two modules closed an **import cycle** | The comments own their rows, so they own the count; the blog asks through the unit of work and the graph is acyclic again |
+| 62 | Two frontend agents built the lookup of the tiny link **twice** (`getShortLink` and `getPostByShortCode`) and left the conflict markers in two files | The client, the schemas and the tests speak one language: the shared schema of the house, the paths of the blog, and the keys of the list and of the comment trees |
+
+The wave also **proved** the rule of the fleet once more: the review
+finds what the agents miss. The two rule identifiers that collided and
+the import cycle were neither in the report of the agents nor in their
+tests — they were in the gates, and the gates caught them.
+
+
 ---
 
 ## 5. How it was verified
