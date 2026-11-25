@@ -33,7 +33,7 @@ const PAGE = {
 const DETAIL = {
   ...POST,
   body: "<p>نص المنشور الآمن</p>",
-  short_code: "abc123",
+  short_code: "a1b2c3d4",
 };
 
 describe("the public list of the blog", () => {
@@ -64,6 +64,9 @@ describe("the public list of the blog", () => {
       "href",
       "/blog/post-1",
     );
+    expect(
+      screen.getByRole("button", { name: "نسخ الرابط" }),
+    ).toBeInTheDocument();
   });
 
   it("searches by title and filters by tag through the URL", async () => {
@@ -205,6 +208,9 @@ describe("the public page of a blog post", () => {
 
     const back = screen.getByRole("link", { name: "العودة إلى المدونة" });
     expect(back).toHaveAttribute("href", "/blog");
+    expect(
+      screen.getByRole("button", { name: "نسخ الرابط" }),
+    ).toBeInTheDocument();
   });
 
   it("shows a retry state when the post cannot be loaded", async () => {

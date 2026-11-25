@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDateOrEmpty } from "@/lib/datetime";
 import { cn } from "@/lib/utils";
 import { BlogEngagementCounts } from "./BlogEngagementCounts";
+import { ShareButton } from "./ShareButton";
 import type { BlogPostSummary } from "../types";
 
 interface BlogCardProps {
@@ -107,6 +108,7 @@ export function BlogCard({ post, className, management }: BlogCardProps) {
             </span>
           ) : null}
           <BlogEngagementCounts post={post} />
+          <ShareButton post={post} />
         </div>
       </div>
     </article>

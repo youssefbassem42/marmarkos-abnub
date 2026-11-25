@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { formatDateOrEmpty } from "@/lib/datetime";
 import { CommentSection } from "../../components/CommentSection";
 import { LikeButton } from "../../components/LikeButton";
+import { ShareButton } from "../../components/ShareButton";
 import { useBlogPost } from "../../hooks";
 
 /** One published post and its server-sanitised HTML body. */
@@ -134,7 +135,8 @@ export function BlogPostPage() {
           </div>
         </article>
 
-        <div className="flex justify-end">
+        <div className="flex flex-wrap justify-end gap-2">
+          <ShareButton post={post} />
           <LikeButton postId={post.id} />
         </div>
 
