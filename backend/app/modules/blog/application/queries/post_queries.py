@@ -20,6 +20,7 @@ from app.modules.blog.application.dto.post_dto import (
     BlogPostAdminResponse,
     BlogPostDetailResponse,
     BlogPostSummaryResponse,
+    BlogShortLinkResponse,
     BlogTagResponse,
 )
 from app.modules.blog.domain.enums.post_status import PostStatus, PostStatusFilter
@@ -73,6 +74,7 @@ def _detail(post: BlogPost) -> BlogPostDetailResponse:
         cover_image=post.cover_image,
         tags=_tags(post),
         status=post.status.value,
+        short_code=post.short_code or "",
         published_at=post.published_at,
         author=_author(post),
     )
@@ -87,6 +89,7 @@ def _admin(post: BlogPost) -> BlogPostAdminResponse:
         cover_image=post.cover_image,
         tags=_tags(post),
         status=post.status.value,
+        short_code=post.short_code or "",
         published_at=post.published_at,
         author=_author(post),
         author_id=post.author_id,
@@ -198,6 +201,21 @@ async def get_post_detail(
     if not is_public and not may_manage:
         return None
     return _detail(post)
+
+
+async def get_short_link(
+    uow: UnitOfWork,
+    code: str,
+) -> BlogShortLinkResponse | None:
+    """Resolve a stable tiny code to its post (BR-87)."""
+    result = await uow.session.execute(
+        select(BlogPost.id, BlogPost.slug).where(BlogPost.short_code == code)
+    )
+    row = result.one_or_none()
+    if row is None:
+        return None
+    post_id, slug = row
+    return BlogShortLinkResponse(post_id=post_id, slug=slug)
 
 
 async def get_admin_post(uow: UnitOfWork, post_id: uuid.UUID) -> BlogPostAdminResponse | None:

@@ -20,6 +20,7 @@ from sqlalchemy import Enum as SAEnum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.modules.blog.domain.enums.post_status import PostStatus
+from app.modules.blog.domain.short_code import generate_short_code
 from app.shared.infrastructure.persistence.base import (
     Base,
     CreatedAtMixin,
@@ -41,6 +42,13 @@ class BlogPost(UUIDPrimaryKeyMixin, TimestampMixin, Base):
     )
     title: Mapped[str] = mapped_column(String(255), nullable=False)
     slug: Mapped[str] = mapped_column(String(255), unique=True, index=True, nullable=False)
+    short_code: Mapped[str | None] = mapped_column(
+        String(16),
+        unique=True,
+        index=True,
+        nullable=True,
+        default=generate_short_code,
+    )
     excerpt: Mapped[str | None] = mapped_column(String(500))
     content: Mapped[str] = mapped_column(Text, nullable=False)
     cover_image: Mapped[str | None] = mapped_column(String(500))

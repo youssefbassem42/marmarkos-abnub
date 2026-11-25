@@ -68,6 +68,7 @@ ENDPOINTS: dict[tuple[str, str], str] = {
     ("GET", "/anonymous-messages"): "anonymousMessageAdminSchema",
     ("GET", "/blog/posts"): "blogPostSummarySchema",
     ("GET", "/blog/posts/{post_id}"): "blogPostDetailSchema",
+    ("GET", "/blog/posts/short/{code}"): "blogShortLinkSchema",
     ("POST", "/blog/posts"): "blogPostAdminSchema",
     ("POST", "/blog/posts/cover"): "blogImageUploadSchema",
 }

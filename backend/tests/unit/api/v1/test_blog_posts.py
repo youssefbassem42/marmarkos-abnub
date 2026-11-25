@@ -1,11 +1,12 @@
 """Blog-post API tests (Phase 7.2)."""
 
+import string
 import uuid
 from datetime import UTC, datetime, timedelta
 
 import pytest
 from httpx import AsyncClient
-from sqlalchemy import update
+from sqlalchemy import select, update
 
 from app.modules.blog.infrastructure.persistence.models import BlogPost
 from app.modules.users.domain.enums.role_name import RoleName
@@ -585,6 +586,50 @@ async def test_an_anonymous_reader_sees_only_a_published_post(
     assert [item["id"] for item in listing.json()["items"]] == [published["id"]]
     assert detail.status_code == 200
     assert detail.json()["status"] == "PUBLISHED"
+
+
+async def test_the_short_code_resolves_to_the_post_and_never_changes(
+    client: AsyncClient, db_engine
+) -> None:
+    admin = await _auth_headers(
+        client,
+        db_engine,
+        email="blog-short-code-admin@example.com",
+        role=RoleName.ADMIN,
+    )
+    created = await _create_post(client, admin, title="موضوع قابل للمشاركة")
+    code = str(created["short_code"])
+
+    assert len(code) == 8
+    assert code.isalnum()
+    assert set(code) <= set(string.ascii_letters + string.digits)
+
+    lookup = await client.get(f"{PUBLIC_URL}/short/{code}")
+    assert lookup.status_code == 200, lookup.text
+    assert lookup.json()["post_id"] == created["id"]
+
+    async with db_engine.begin() as connection:
+        slug = (
+            await connection.execute(
+                select(BlogPost.slug).where(BlogPost.id == uuid.UUID(str(created["id"])))
+            )
+        ).scalar_one()
+    assert lookup.json()["slug"] == slug
+
+    unknown = await client.get(f"{PUBLIC_URL}/short/unknowncode")
+    assert unknown.status_code == 404
+
+    updated = await client.patch(
+        f"{PUBLIC_URL}/{created['id']}",
+        json={"title": "عنوان جديد"},
+        headers=admin,
+    )
+    assert updated.status_code == 200
+    assert updated.json()["short_code"] == code
+
+    detail = await client.get(f"{PUBLIC_URL}/{created['id']}", headers=admin)
+    assert detail.status_code == 200
+    assert detail.json()["short_code"] == code
 
 
 async def test_the_literal_cover_route_precedes_the_parameterised_post_route(

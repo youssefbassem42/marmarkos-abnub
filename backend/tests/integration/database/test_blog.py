@@ -46,6 +46,9 @@ async def test_blog_post_creation(uow: UnitOfWork) -> None:
     assert stored is not None
     assert stored.author_id == author.id
     assert stored.status is PostStatus.PUBLISHED
+    assert stored.short_code is not None
+    assert len(stored.short_code) == 8
+    assert stored.short_code.isalnum()
 
 
 async def test_unique_blog_slug(uow: UnitOfWork) -> None:

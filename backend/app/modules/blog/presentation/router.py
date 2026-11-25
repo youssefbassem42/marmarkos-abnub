@@ -32,11 +32,13 @@ from app.modules.blog.application.dto.post_dto import (
     BlogPostScheduleRequest,
     BlogPostSummaryResponse,
     BlogPostUpdateRequest,
+    BlogShortLinkResponse,
 )
 from app.modules.blog.application.queries.like_queries import get_post_likes
 from app.modules.blog.application.queries.post_queries import (
     get_admin_post,
     get_post_detail,
+    get_short_link,
     list_blog_posts,
 )
 from app.modules.blog.domain.enums.post_status import PostStatusFilter
@@ -145,6 +147,22 @@ async def create_blog_post(
 # Literal paths are declared before the parameterised post path.  FastAPI
 # matches routes in declaration order, and the contract test compares the
 # Allow header with the schema (ST205).
+@router.get(
+    "/blog/posts/short/{code}",
+    response_model=BlogShortLinkResponse,
+    responses={404: {"description": "Short code not found"}},
+)
+async def get_blog_post_short_link(
+    code: str,
+    uow: _UoW,
+) -> BlogShortLinkResponse:
+    """Resolve the tiny code of a share link to its post."""
+    item = await get_short_link(uow, code)
+    if item is None:
+        raise NotFoundError("Short code not found")
+    return item
+
+
 @router.post(
     "/blog/posts/cover",
     status_code=status.HTTP_201_CREATED,

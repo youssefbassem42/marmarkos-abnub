@@ -137,6 +137,7 @@ class BlogPostDetailResponse(BaseModel):
     cover_image: str | None = Field(default=None, description="Cover image URL")
     tags: list[BlogTagResponse] = Field(description="Tags carried by the post")
     status: str = Field(description="Lifecycle status")
+    short_code: str = Field(description="Stable tiny link code")
     published_at: datetime | None = Field(default=None, description="Publication date")
     author: BlogAuthorResponse = Field(description="Post author")
 
@@ -151,6 +152,7 @@ class BlogPostAdminResponse(BaseModel):
     cover_image: str | None = Field(default=None, description="Cover image URL")
     tags: list[BlogTagResponse] = Field(description="Tags carried by the post")
     status: str = Field(description="Lifecycle status")
+    short_code: str = Field(description="Stable tiny link code")
     published_at: datetime | None = Field(default=None, description="Publication date")
     author: BlogAuthorResponse = Field(description="Post author")
     author_id: UUID = Field(description="Author id")
@@ -162,3 +164,10 @@ class BlogImageUploadResponse(BaseModel):
     """The secure URL returned after a cover upload."""
 
     url: str = Field(description="Secure URL of the uploaded image")
+
+
+class BlogShortLinkResponse(BaseModel):
+    """The post resolved by a tiny share code."""
+
+    post_id: UUID = Field(description="Post id")
+    slug: str = Field(description="Post slug")
