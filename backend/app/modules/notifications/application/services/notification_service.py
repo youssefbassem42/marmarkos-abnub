@@ -114,7 +114,7 @@ class NotificationService:
 
         The notification is written in the caller's transaction and the
         command that owns the like commits both together. A member never
-        notifies themself (BR-86).
+        notifies themself (BR-91).
         """
         if author_id == liker_id:
             return
@@ -149,7 +149,7 @@ class NotificationService:
         liker_id: uuid.UUID,
         liker_name: str,
     ) -> None:
-        """Notify a comment author of one like, idempotently (BR-86)."""
+        """Notify a comment author of one like, idempotently (BR-91)."""
         if comment_author_id == liker_id:
             return
         author = await self._uow.users.get_by_id(comment_author_id)

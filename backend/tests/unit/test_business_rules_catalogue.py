@@ -68,6 +68,43 @@ def test_the_catalogue_explains_every_identifier_it_lists() -> None:
     assert missing == [], f"catalogue entries without a statement: {missing}"
 
 
+def test_the_catalogue_lists_every_identifier_once() -> None:
+    """Two statements for one identifier: the reader does not know the rule.
+
+    The wave of the blog found it: two agents wrote their rules from the
+    same free identifier, so ``BR-85`` carried two different meanings.
+    The catalogue is the reference; an identifier that appears twice is
+    a defect that hides behind a passing test.
+    """
+    # The numbering restarts in every phase (the rule is written down in
+    # the header of the catalogue), so the same identifier may live in
+    # two sections. It may **never** live twice in the same section: two
+    # statements for one identifier leave the reader guessing.
+    section = ""
+    seen: dict[tuple[str, str], int] = {}
+    for line in CATALOGUE.read_text(encoding="utf-8").split("\n"):
+        if line.startswith("## "):
+            section = line[3:].strip()
+            continue
+        if not line.startswith("| `"):
+            continue
+        cells = [cell.strip() for cell in line.strip("|").split("|")]
+        if len(cells) < 3:
+            continue
+        identifier = cells[0].strip("`")
+        key = (section, identifier)
+        seen[key] = seen.get(key, 0) + 1
+
+    duplicated = sorted(
+        f"{section}/{identifier}" for (section, identifier), count in seen.items() if count > 1
+    )
+
+    assert duplicated == [], (
+        f"the catalogue lists these identifiers more than once in the same "
+        f"section: {duplicated} - a rule has one identifier and one statement"
+    )
+
+
 def test_the_catalogue_names_the_module_of_every_rule() -> None:
     """The numbering restarts per phase: the module is the second key."""
     catalogue = CATALOGUE.read_text(encoding="utf-8")

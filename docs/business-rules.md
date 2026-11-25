@@ -286,9 +286,9 @@ number.
 | `BR-66` | A post's tags are the existing blog categories; the public list may be filtered by one tag | `app/modules/blog/application/commands/post_commands.py`, `app/modules/blog/application/queries/post_queries.py` |
 | `BR-67` | A blog cover is uploaded through the shared media service with the 1 MB limit | `app/modules/blog/presentation/router.py` |
 | `BR-68` | The shared scheduler tick publishes the scheduled posts of the blog whose date has come; the runner is idempotent and safe when two ticks run at the same time | `app/modules/blog/application/services/publication_service.py` |
-| `BR-85` | The administrator and the servant write, publish, schedule, edit, and archive blog posts under `/blog`; the administration panel has no blog route | `app/modules/blog/presentation/router.py` |
-| `BR-86` | A member and an anonymous reader receive published blog posts only; a lifecycle filter never widens their view | `app/modules/blog/application/queries/post_queries.py` |
-| `BR-87` | The short code of a blog post never changes; it resolves to that post, and an unknown code answers 404 | `app/modules/blog/presentation/router.py` |
+| `BR-88` | The administrator and the servant write, publish, schedule, edit, and archive blog posts under `/blog`; the administration panel has no blog route | `app/modules/blog/presentation/router.py` |
+| `BR-89` | A member and an anonymous reader receive published blog posts only; a lifecycle filter never widens their view | `app/modules/blog/application/queries/post_queries.py` |
+| `BR-90` | The short code of a blog post never changes; it resolves to that post, and an unknown code answers 404 | `app/modules/blog/presentation/router.py` |
 | `D-4` | The interface calls the blog categories "tags"; the database tables keep their names | `app/modules/blog/application/dto/post_dto.py` |
 | `D-6` | The admin and the servant may write a blog post | `app/modules/blog/application/commands/post_commands.py` |
 
@@ -310,8 +310,8 @@ number.
 | `BR-74` | Publishing a blog post creates in-app notifications only; it sends no mail | `app/modules/notifications/application/services/notification_service.py` |
 | `BR-75` | The delivery is idempotent: a repeated publication event creates neither a second notification nor a second audit trail for the same member and post | `app/modules/notifications/infrastructure/persistence/notification_repository.py` |
 | `BR-76` | Announcement mails are sent with bounded concurrency and the failure of one member never stops the other members | `app/modules/notifications/application/services/notification_service.py` |
-| `BR-86` | Liking a post or a comment notifies its author once with a `BLOG_LIKE` notification; nobody notifies themself, and the notification id is derived from the liked item and the member who liked it | `app/modules/notifications/application/services/notification_service.py` |
-| `BR-87` | A member may like a comment or reply once; taking the like back is idempotent, the count is never negative, and every comment in the tree carries its count and the caller's own like state | `app/modules/comments/application/commands/comment_like_commands.py` |
+| `BR-91` | Liking a post or a comment notifies its author once with a `BLOG_LIKE` notification; nobody notifies themself, and the notification id is derived from the liked item and the member who liked it | `app/modules/notifications/application/services/notification_service.py` |
+| `BR-92` | A member may like a comment or reply once; taking the like back is idempotent, the count is never negative, and every comment in the tree carries its count and the caller's own like state | `app/modules/comments/application/commands/comment_like_commands.py` |
 
 ## The comments of the blog posts (the point 7 of the plan)
 

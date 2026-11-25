@@ -1,4 +1,4 @@
-"""Like and unlike commands for a blog comment or reply (BR-87)."""
+"""Like and unlike commands for a blog comment or reply (BR-92)."""
 
 from __future__ import annotations
 

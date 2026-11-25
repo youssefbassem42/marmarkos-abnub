@@ -117,7 +117,7 @@ async def list_blog_posts_route(
 
     Members and anonymous readers receive published posts only.  An
     administrator or a servant receives every post unless a status filter
-    narrows the list (BR-64/BR-86).
+    narrows the list (BR-64/BR-89).
     """
     return await list_blog_posts(
         uow,

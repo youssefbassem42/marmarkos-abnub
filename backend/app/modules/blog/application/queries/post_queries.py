@@ -2,7 +2,7 @@
 
 The member queries expose published posts only.  An administrator or a
 servant may list and read every lifecycle state from the same routes, but
-a member's view is never widened by a status filter (BR-64/BR-86).
+a member's view is never widened by a status filter (BR-64/BR-89).
 """
 
 from __future__ import annotations
@@ -262,7 +262,7 @@ async def get_short_link(
     uow: UnitOfWork,
     code: str,
 ) -> BlogShortLinkResponse | None:
-    """Resolve a stable tiny code to its post (BR-87)."""
+    """Resolve a stable tiny code to its post (BR-90)."""
     result = await uow.session.execute(
         select(BlogPost.id, BlogPost.slug).where(BlogPost.short_code == code)
     )
