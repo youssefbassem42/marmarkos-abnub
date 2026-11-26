@@ -19,6 +19,11 @@ import type { BlogComment } from "../types";
 
 interface CommentSectionProps {
   postId: string;
+  /**
+   * The lifecycle of the post. Only a published post accepts comments:
+   * the tree of a draft is not public, so the server refuses it (BR-64).
+   */
+  status: string;
 }
 
 interface CommentItemProps {
@@ -230,10 +235,11 @@ function CommentItem({ comment, postId, depth }: CommentItemProps) {
  * comment before it is stored, so the markup rendered here is the
  * server's contract and never a member's raw value.
  */
-export function CommentSection({ postId }: CommentSectionProps) {
+export function CommentSection({ postId, status }: CommentSectionProps) {
   const { t } = useTranslation("blog");
   const viewer = getAuthUser();
-  const query = useBlogComments(postId);
+  const isPublished = status === "PUBLISHED";
+  const query = useBlogComments(postId, undefined, { enabled: isPublished });
   const createComment = useCreateBlogComment(postId);
 
   const comments = query.data?.items ?? [];
@@ -245,12 +251,25 @@ export function CommentSection({ postId }: CommentSectionProps) {
         {t("comments.title")}
       </h2>
 
-      {viewer ? (
+      {!isPublished ? (
+        /*
+          The comments of a draft are not public: the server refuses them.
+          The box is not shown, so the member is not invited to write a
+          comment that can never be stored.
+        */
+        <p className="text-sm text-muted-foreground">
+          {t("comments.notPublished")}
+        </p>
+      ) : viewer ? (
         <CommentForm
           submitLabel={t("comments.send")}
           onSubmit={async (content) => {
-            await createComment.mutateAsync({ content });
-            toast.success(t("comments.sent"));
+            try {
+              await createComment.mutateAsync({ content });
+              toast.success(t("comments.sent"));
+            } catch {
+              // The reason was already told by the hook (a toast).
+            }
           }}
         />
       ) : (
@@ -259,11 +278,11 @@ export function CommentSection({ postId }: CommentSectionProps) {
         </p>
       )}
 
-      {query.isPending ? (
+      {isPublished && query.isPending ? (
         <p className="text-sm text-muted-foreground">{t("comments.loading")}</p>
-      ) : comments.length === 0 ? (
+      ) : isPublished && comments.length === 0 ? (
         <p className="text-sm text-muted-foreground">{t("comments.empty")}</p>
-      ) : (
+      ) : isPublished ? (
         <ul className="space-y-6">
           {comments.map((comment) => (
             <CommentItem
@@ -274,7 +293,7 @@ export function CommentSection({ postId }: CommentSectionProps) {
             />
           ))}
         </ul>
-      )}
+      ) : null}
     </section>
   );
 }

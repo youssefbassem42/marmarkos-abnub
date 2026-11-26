@@ -22,6 +22,7 @@ export const apiServerMessageKeys = {
     "api.invalidVerificationLink",
   "This reset link is invalid or has expired": "api.invalidResetLink",
   "Could not complete Google sign-in": "api.googleSignInFailed",
+  "The post is not published yet": "api.postNotPublished",
   "Google did not return an identity": "api.googleSignInFailed",
   "The Google account has no verified email": "api.googleEmailNotVerified",
   "Google sign-in is not configured": "api.googleNotConfigured",
@@ -131,6 +132,7 @@ export const ar = {
       invalidResetLink:
         "رابط إعادة تعيين كلمة المرور غير صالح أو انتهت صلاحيته. اطلب رابطًا جديدًا.",
       googleSignInFailed: "تعذّر إكمال تسجيل الدخول عبر Google. حاول مرة أخرى.",
+      postNotPublished: "المقال لم يُنشر بعد، فالتعليقات متاحة بعد النشر.",
       googleEmailNotVerified:
         "البريد الإلكتروني في حساب Google غير مُفعّل. فعّله ثم حاول مرة أخرى.",
       googleNotConfigured:
@@ -1801,6 +1803,7 @@ export const ar = {
       empty: "لا توجد تعليقات بعد، كن أول التعليقات.",
       loading: "جارٍ تحميل التعليقات…",
       signInHint: "سجّل الدخول لتكتب تعليقًا.",
+      notPublished: "التعليقات متاحة بعد نشر المقال.",
       like: "أعجبني التعليق ({{count}})",
       liked: "أعجبك التعليق ({{count}})",
       signInToLike: "سجّل الدخول لتعبير عن إعجابك بالتعليق",

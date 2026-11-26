@@ -59,7 +59,7 @@ describe("the comments of a post of the blog", () => {
   });
 
   it("shows the tree of the comments and the empty state", async () => {
-    renderPage(<CommentSection postId="post-1" />, {
+    renderPage(<CommentSection postId="post-1" status="PUBLISHED" />, {
       answers: { "/blog/posts/post-1/comments": PAGE },
     });
 
@@ -69,7 +69,7 @@ describe("the comments of a post of the blog", () => {
   });
 
   it("asks a visitor to sign in before writing", async () => {
-    renderPage(<CommentSection postId="post-1" />, {
+    renderPage(<CommentSection postId="post-1" status="PUBLISHED" />, {
       answers: { "/blog/posts/post-1/comments": PAGE },
     });
 
@@ -79,19 +79,41 @@ describe("the comments of a post of the blog", () => {
     expect(screen.queryByLabelText("اكتب تعليقك")).not.toBeInTheDocument();
   });
 
+  it("does not invite a member to comment on a draft", async () => {
+    updateStoredUser(A_MEMBER);
+    const calls = renderPage(
+      <CommentSection postId="post-1" status="DRAFT" />,
+      {
+        answers: { "/blog/posts/post-1/comments": PAGE },
+      },
+    );
+
+    expect(
+      await screen.findByText("التعليقات متاحة بعد نشر المقال."),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("اكتب تعليقك")).not.toBeInTheDocument();
+    // The tree of a draft is not public: the server is not asked for it.
+    expect(calls.calls.some((call) => call.url.includes("/comments"))).toBe(
+      false,
+    );
+  });
+
   it("gives a comment a like and writes the server answer into the tree", async () => {
     updateStoredUser(A_MEMBER);
     const user = userEvent.setup();
-    const calls = renderPage(<CommentSection postId="post-1" />, {
-      answers: {
-        "/blog/posts/post-1/comments": PAGE,
-        "POST /blog/comments/44444444-4444-4444-8444-444444444444/like": {
-          comment_id: A_COMMENT.id,
-          likes_count: 3,
-          liked: true,
+    const calls = renderPage(
+      <CommentSection postId="post-1" status="PUBLISHED" />,
+      {
+        answers: {
+          "/blog/posts/post-1/comments": PAGE,
+          "POST /blog/comments/44444444-4444-4444-8444-444444444444/like": {
+            comment_id: A_COMMENT.id,
+            likes_count: 3,
+            liked: true,
+          },
         },
       },
-    });
+    );
 
     await user.click(
       await screen.findByRole("button", { name: "أعجبني التعليق (2)" }),
@@ -123,16 +145,19 @@ describe("the comments of a post of the blog", () => {
   it("gives a reply a like just like a top-level comment", async () => {
     updateStoredUser(A_MEMBER);
     const user = userEvent.setup();
-    const calls = renderPage(<CommentSection postId="post-1" />, {
-      answers: {
-        "/blog/posts/post-1/comments": PAGE,
-        "POST /blog/comments/66666666-6666-4666-8666-666666666666/like": {
-          comment_id: "66666666-6666-4666-8666-666666666666",
-          likes_count: 2,
-          liked: true,
+    const calls = renderPage(
+      <CommentSection postId="post-1" status="PUBLISHED" />,
+      {
+        answers: {
+          "/blog/posts/post-1/comments": PAGE,
+          "POST /blog/comments/66666666-6666-4666-8666-666666666666/like": {
+            comment_id: "66666666-6666-4666-8666-666666666666",
+            likes_count: 2,
+            liked: true,
+          },
         },
       },
-    });
+    );
 
     await user.click(
       await screen.findByRole("button", { name: "أعجبني التعليق (1)" }),
@@ -157,19 +182,22 @@ describe("the comments of a post of the blog", () => {
   it("takes the like of a comment back without refetching the tree", async () => {
     updateStoredUser(A_MEMBER);
     const user = userEvent.setup();
-    const calls = renderPage(<CommentSection postId="post-1" />, {
-      answers: {
-        "/blog/posts/post-1/comments": {
-          ...PAGE,
-          items: [{ ...A_COMMENT, likes_count: 2, liked: true }],
-        },
-        "DELETE /blog/comments/44444444-4444-4444-8444-444444444444/like": {
-          comment_id: A_COMMENT.id,
-          likes_count: 1,
-          liked: false,
+    const calls = renderPage(
+      <CommentSection postId="post-1" status="PUBLISHED" />,
+      {
+        answers: {
+          "/blog/posts/post-1/comments": {
+            ...PAGE,
+            items: [{ ...A_COMMENT, likes_count: 2, liked: true }],
+          },
+          "DELETE /blog/comments/44444444-4444-4444-8444-444444444444/like": {
+            comment_id: A_COMMENT.id,
+            likes_count: 1,
+            liked: false,
+          },
         },
       },
-    });
+    );
 
     await user.click(
       await screen.findByRole("button", { name: "أعجبك التعليق (2)" }),
@@ -201,12 +229,15 @@ describe("the comments of a post of the blog", () => {
   it("publishes the comment of a signed-in member", async () => {
     updateStoredUser(A_MEMBER);
     const user = userEvent.setup();
-    const calls = renderPage(<CommentSection postId="post-1" />, {
-      answers: {
-        "/blog/posts/post-1/comments": PAGE,
-        "POST /blog/posts/post-1/comments": A_COMMENT,
+    const calls = renderPage(
+      <CommentSection postId="post-1" status="PUBLISHED" />,
+      {
+        answers: {
+          "/blog/posts/post-1/comments": PAGE,
+          "POST /blog/posts/post-1/comments": A_COMMENT,
+        },
       },
-    });
+    );
 
     await user.type(await screen.findByLabelText("اكتب تعليقك"), "تعليق جديد");
     await user.click(screen.getByRole("button", { name: "اكتب تعليقك" }));
@@ -224,15 +255,49 @@ describe("the comments of a post of the blog", () => {
     expect(JSON.parse(String(call?.data ?? "{}")).content).toBe("تعليق جديد");
   });
 
+  it("tells the member why a comment was refused", async () => {
+    updateStoredUser(A_MEMBER);
+    const user = userEvent.setup();
+    renderPage(<CommentSection postId="post-1" status="PUBLISHED" />, {
+      answers: {
+        "/blog/posts/post-1/comments": PAGE,
+        "POST /blog/posts/post-1/comments": {
+          status: 409,
+          body: {
+            detail: {
+              code: "conflict",
+              message: "The post is not published yet",
+            },
+          },
+        },
+      },
+    });
+
+    await user.type(await screen.findByLabelText("اكتب تعليقك"), "تعليق");
+    await user.click(screen.getByRole("button", { name: "اكتب تعليقك" }));
+
+    // The reason of the server is told to the member: a silent failure
+    // looks like a comment that was swallowed.
+    expect(
+      await screen.findByText(
+        "المقال لم يُنشر بعد، فالتعليقات متاحة بعد النشر.",
+      ),
+    ).toBeInTheDocument();
+  });
+
   it("lets the owner edit their comment", async () => {
     updateStoredUser(A_MEMBER);
     const user = userEvent.setup();
-    const calls = renderPage(<CommentSection postId="post-1" />, {
-      answers: {
-        "/blog/posts/post-1/comments": PAGE,
-        "PATCH /blog/comments/44444444-4444-4444-8444-444444444444": A_COMMENT,
+    const calls = renderPage(
+      <CommentSection postId="post-1" status="PUBLISHED" />,
+      {
+        answers: {
+          "/blog/posts/post-1/comments": PAGE,
+          "PATCH /blog/comments/44444444-4444-4444-8444-444444444444":
+            A_COMMENT,
+        },
       },
-    });
+    );
 
     await user.click(await screen.findByRole("button", { name: /تعديل/ }));
 
@@ -259,7 +324,7 @@ describe("the comments of a post of the blog", () => {
       ...A_MEMBER,
       id: "88888888-8888-4888-8888-888888888888",
     } as unknown as RegisteredUser);
-    renderPage(<CommentSection postId="post-1" />, {
+    renderPage(<CommentSection postId="post-1" status="PUBLISHED" />, {
       answers: { "/blog/posts/post-1/comments": PAGE },
     });
 
@@ -272,12 +337,15 @@ describe("the comments of a post of the blog", () => {
   it("removes a comment when its owner asks for it", async () => {
     updateStoredUser(A_MEMBER);
     const user = userEvent.setup();
-    const calls = renderPage(<CommentSection postId="post-1" />, {
-      answers: {
-        "/blog/posts/post-1/comments": PAGE,
-        "DELETE /blog/comments/44444444-4444-4444-8444-444444444444": {},
+    const calls = renderPage(
+      <CommentSection postId="post-1" status="PUBLISHED" />,
+      {
+        answers: {
+          "/blog/posts/post-1/comments": PAGE,
+          "DELETE /blog/comments/44444444-4444-4444-8444-444444444444": {},
+        },
       },
-    });
+    );
 
     await user.click(await screen.findByRole("button", { name: /حذف/ }));
 

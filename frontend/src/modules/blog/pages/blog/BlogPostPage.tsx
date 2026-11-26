@@ -140,7 +140,7 @@ export function BlogPostPage() {
           <LikeButton postId={post.id} />
         </div>
 
-        <CommentSection postId={post.id} />
+        <CommentSection postId={post.id} status={post.status} />
       </main>
     </div>
   );
