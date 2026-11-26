@@ -14,7 +14,7 @@ import pytest
 from _pytest.monkeypatch import MonkeyPatch
 
 import app.shared.infrastructure.services.image_upload as module
-from app.core.exceptions.errors import ValidationError
+from app.core.exceptions.errors import ImageServiceError, ValidationError
 from app.shared.infrastructure.services.image_upload import upload_image
 
 _FIVE_MEBIBYTES = 5 * 1024 * 1024
@@ -22,17 +22,31 @@ _ONE_MEBIBYTE = 1024 * 1024
 
 
 class _FakeResponse:
-    def __init__(self, secure_url: str = "https://demo.cloudinary.com/secure.jpg") -> None:
-        self.status_code = 200
+    def __init__(
+        self,
+        secure_url: str = "https://demo.cloudinary.com/secure.jpg",
+        *,
+        status_code: int = 200,
+        error: str | None = None,
+    ) -> None:
+        self.status_code = status_code
         self._secure_url = secure_url
+        self._error = error
 
-    def json(self) -> dict[str, str]:
+    def json(self) -> dict[str, object]:
+        if self._error is not None:
+            return {"error": {"message": self._error}}
         return {"secure_url": self._secure_url}
+
+    @property
+    def text(self) -> str:
+        return self._error or ""
 
 
 class _FakeClient:
     def __init__(self, *args: object, **kwargs: object) -> None:
         self.response = _FakeResponse()
+        self.calls = 0
 
     async def __aenter__(self) -> "_FakeClient":
         return self
@@ -41,6 +55,7 @@ class _FakeClient:
         return None
 
     async def post(self, url: str, data: dict, files: dict) -> _FakeResponse:
+        self.calls += 1
         return self.response
 
 
@@ -125,3 +140,105 @@ async def test_no_image_format_is_screened(monkeypatch: MonkeyPatch, content_typ
     url = await upload_image(b"x" * 1024, content_type)
 
     assert url == "https://demo.cloudinary.com/secure.jpg"
+
+
+async def test_a_refused_signature_is_the_fault_of_the_platform(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """A broken credential must not look like a bad picture.
+
+    The production answered "Image upload failed; please try again" for
+    every upload: the reason of Cloudinary was thrown away, so a member
+    (and the owner) saw a validation error instead of a broken
+    credential.
+    """
+    _configure_cloudinary(monkeypatch)
+    client = _FakeClient()
+    client.response = _FakeResponse(status_code=401, error="Invalid Signature")
+    monkeypatch.setattr(module.httpx, "AsyncClient", lambda *a, **k: client)
+
+    with pytest.raises(ImageServiceError) as excinfo:
+        await upload_image(b"x" * 1024, "image/png")
+
+    assert excinfo.value.status_code == 503
+    assert str(excinfo.value) == "The image service refused the credentials of the platform"
+
+
+async def test_the_reason_of_cloudinary_is_written_in_the_log(
+    monkeypatch: MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    _configure_cloudinary(monkeypatch)
+    client = _FakeClient()
+    client.response = _FakeResponse(status_code=401, error="Invalid Signature")
+    monkeypatch.setattr(module.httpx, "AsyncClient", lambda *a, **k: client)
+
+    with caplog.at_level("ERROR"):
+        with pytest.raises(ImageServiceError):
+            await upload_image(b"x" * 1024, "image/png")
+
+    assert "Invalid Signature" in caplog.text
+
+
+async def test_a_file_that_cloudinary_refuses_is_the_fault_of_the_member(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    _configure_cloudinary(monkeypatch)
+    client = _FakeClient()
+    client.response = _FakeResponse(status_code=400, error="Unsupported file type")
+    monkeypatch.setattr(module.httpx, "AsyncClient", lambda *a, **k: client)
+
+    with pytest.raises(ValidationError) as excinfo:
+        await upload_image(b"x" * 1024, "image/png")
+
+    assert excinfo.value.status_code == 422
+    assert str(excinfo.value) == "This file is not an image"
+
+
+async def test_a_file_that_is_too_big_for_cloudinary_names_the_limit(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    _configure_cloudinary(monkeypatch)
+    client = _FakeClient()
+    client.response = _FakeResponse(status_code=413, error="File size too large")
+    monkeypatch.setattr(module.httpx, "AsyncClient", lambda *a, **k: client)
+
+    with pytest.raises(ValidationError) as excinfo:
+        await upload_image(b"x" * 1024, "image/png")
+
+    assert str(excinfo.value) == "Image must be 5 MB or smaller"
+
+
+async def test_an_answer_without_a_url_is_the_fault_of_the_platform(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    _configure_cloudinary(monkeypatch)
+    client = _FakeClient()
+    client.response = _FakeResponse(secure_url="")
+    monkeypatch.setattr(module.httpx, "AsyncClient", lambda *a, **k: client)
+
+    with pytest.raises(ImageServiceError):
+        await upload_image(b"x" * 1024, "image/png")
+
+
+async def test_a_secret_that_repeats_the_key_is_refused_before_the_call(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    """The copy-paste mistake of the credentials is caught immediately.
+
+    The API secret of the deployment repeated the API key: every upload
+    was refused by Cloudinary with an "Invalid Signature" that the
+    platform hid. The upload now fails with the truth, without waiting
+    for the answer of the service.
+    """
+    _configure_cloudinary(monkeypatch)
+    monkeypatch.setattr(module.settings, "CLOUDINARY_API_KEY", "661358426227631")
+    monkeypatch.setattr(module.settings, "CLOUDINARY_API_SECRET", "661358426227631")
+    client = _FakeClient()
+    monkeypatch.setattr(module.httpx, "AsyncClient", lambda *a, **k: client)
+
+    with pytest.raises(ImageServiceError) as excinfo:
+        await upload_image(b"x" * 1024, "image/png")
+
+    assert excinfo.value.status_code == 503
+    assert str(excinfo.value) == "The image service refused the credentials of the platform"
+    assert client.calls == 0

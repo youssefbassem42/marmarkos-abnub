@@ -47,6 +47,20 @@ class ValidationError(AppError):
     message = "Request could not be processed"
 
 
+class ImageServiceError(AppError):
+    """The image service (Cloudinary) refused the upload.
+
+    The failure is on the side of the platform (the credentials, the
+    quota, the service itself), not on the side of the member, so the
+    answer is a 503: the translator then tells the member that the
+    problem is ours and not something he has to fix.
+    """
+
+    status_code = 503
+    code = "image_service_unavailable"
+    message = "The image service is not available"
+
+
 class RateLimitedError(AppError):
     """BR-15: too many anonymous submissions within the sliding window."""
 
