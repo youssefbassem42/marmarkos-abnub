@@ -56,6 +56,33 @@ test.describe("signing in", () => {
     await expect(page).not.toHaveURL(/\/login/, { timeout: 20_000 });
   });
 
+  test("the member stays signed in when he moves to another page", async ({
+    page,
+  }) => {
+    // The session lives in the memory of the page and in the HttpOnly
+    // cookie: moving from one page to another must not ask the member
+    // to sign in again.
+    await page.goto("/login");
+    await page.locator("#email").fill(MEMBER.email);
+    await page.locator("#password").fill(MEMBER.password);
+    await page
+      .getByRole("button", { name: /تسجيل الدخول|دخول|sign in/i })
+      .click();
+    await page.waitForURL(/\/profile|\/$/, { timeout: 20_000 });
+
+    // The member walks through the platform: the blog, then the points.
+    await page.goto("/blog");
+    await expect(page).not.toHaveURL(/\/login/, { timeout: 20_000 });
+    await page.goto("/points");
+    await expect(page).not.toHaveURL(/\/login/, { timeout: 20_000 });
+
+    // The private page still answers for the member who is signed in.
+    await page.goto("/profile");
+    await expect(
+      page.getByRole("heading", { name: /ملفي|بروفايل|profile/i }),
+    ).toBeVisible({ timeout: 20_000 });
+  });
+
   test("a wrong password signs nobody in", async ({ page }) => {
     await page.goto("/login");
 

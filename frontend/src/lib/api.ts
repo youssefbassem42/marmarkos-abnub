@@ -3,18 +3,27 @@ import type { AxiosRequestConfig, InternalAxiosRequestConfig } from "axios";
 import { z } from "zod";
 import { clearAuth, getAccessToken, updateAccessToken } from "@/lib/auth";
 
+/**
+ * The API of the browser is **always** its own origin.
+ *
+ * The refresh cookie of the session is HttpOnly and scoped to
+ * `/api/v1/auth`. When the browser calls the API from another site, the
+ * cookie is a **third-party** cookie: the browser blocks it (or never
+ * sends it back), the silent refresh answers "Not authenticated", and the
+ * member has to sign in again at every reload and at every page that
+ * needs a fresh token.
+ *
+ * The same-origin path is served by the rewrite of `vercel.json` in the
+ * production, by the proxy of `vite.config.ts` in the development and by
+ * the proxy of nginx in the container image - the API is always reachable
+ * without leaving the origin of the page.
+ *
+ * A base URL on another origin is therefore **ignored**, whatever the
+ * environment says: the session of the member matters more than the
+ * address of the API. (An operator who really splits the two has to put
+ * the API behind the same origin - the rewrite does it in one line.)
+ */
 function resolveApiBaseUrl(): string {
-  // The default is the relative path on purpose: the browser must only ever
-  // talk to its own origin, or the HttpOnly refresh cookie (SameSite=Lax,
-  // path=/api/v1/auth) is dropped and the session dies after 30 minutes with
-  // no way to recover. The relative path is served by the Vite proxy in the
-  // development, by the rewrite in vercel.json and by the nginx proxy in the
-  // container image.
-  //
-  // The old default was the absolute "http://localhost:8000/api/v1": without
-  // VITE_API_BASE_URL in the environment (the Docker image, a fresh clone),
-  // the browser of the member then called *its own* localhost - the API was
-  // unreachable and the refresh cookie never came back.
   const raw = import.meta.env.VITE_API_BASE_URL ?? "/api/v1";
 
   if (raw.startsWith("/")) {
@@ -22,18 +31,18 @@ function resolveApiBaseUrl(): string {
     return /\/api\/v\d+$/.test(trimmed) ? trimmed : `${trimmed}/api/v1`;
   }
 
-  // Guard against a base URL set without its scheme (axios would then treat
-  // "example.com/api/v1" as a relative path on the current origin).
-  let absolute = raw;
-  if (!/^https?:\/\//i.test(absolute)) {
-    absolute =
-      absolute.startsWith("localhost") || absolute.startsWith("127.")
-        ? `http://${absolute}`
-        : `https://${absolute}`;
-  }
-  // All backend routes live under /api/v1; tolerate a bare host.
-  const trimmed = absolute.replace(/\/+$/, "");
-  return /\/api\/v\d+$/.test(trimmed) ? trimmed : `${trimmed}/api/v1`;
+  // An absolute URL would make the browser talk to another site: the
+  // session cookie would not survive. The same-origin path is used
+  // instead, and the reason is written in the console of the browser so
+  // the cause is never a mystery.
+  console.warn(
+    "[marmarkos] VITE_API_BASE_URL points at another origin (" +
+      raw +
+      "). The same-origin path is used instead: the refresh cookie of " +
+      "the session is a third-party cookie on another site, and the " +
+      "member would have to sign in again at every reload.",
+  );
+  return "/api/v1";
 }
 
 // withCredentials lets the HttpOnly refresh cookie ride along. It is required

@@ -3,11 +3,12 @@ import { describe, expect, it, vi, afterEach } from "vitest";
 /**
  * The API of the browser is always the same origin (SEC-004 / the cookie).
  *
- * The refresh cookie is HttpOnly and SameSite=Lax: a call to a second
- * origin drops it and the session dies after 30 minutes with no way to
- * recover. The base URL must therefore be relative by default - the
- * absolute "http://localhost:8000/api/v1" made the browser of the member
- * call its own machine (the Docker image and a fresh clone were broken).
+ * The refresh cookie is HttpOnly: on another site it is a third-party
+ * cookie, the browser blocks it, and the session dies at every reload -
+ * the member has to sign in again and again. The base URL must therefore
+ * be relative, and an absolute URL is **ignored** whatever the
+ * environment says: the session of the member matters more than the
+ * address of the API.
  */
 
 async function loadBaseUrl(env: Record<string, string | undefined>) {
@@ -41,11 +42,28 @@ describe("the base URL of the API", () => {
     expect(baseURL).toBe("/api/v1");
   });
 
-  it("still accepts an absolute URL when one is asked for", async () => {
+  it("ignores an absolute URL: the session cookie would not survive", async () => {
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
     const baseURL = await loadBaseUrl({
       VITE_API_BASE_URL: "https://api.example.com/api/v1",
     });
-    expect(baseURL).toBe("https://api.example.com/api/v1");
+
+    expect(baseURL).toBe("/api/v1");
+    // The reason is never a mystery: it is written in the console.
+    expect(warn).toHaveBeenCalled();
+    warn.mockRestore();
+  });
+
+  it("ignores an absolute URL without its scheme too", async () => {
+    vi.spyOn(console, "warn").mockImplementation(() => undefined);
+
+    const baseURL = await loadBaseUrl({
+      VITE_API_BASE_URL: "marmarkos-abnub-ny1l.vercel.app/api/v1",
+    });
+
+    expect(baseURL).toBe("/api/v1");
+    vi.restoreAllMocks();
   });
 
   it("completes a bare path with the version of the API", async () => {
