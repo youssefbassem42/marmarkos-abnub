@@ -320,6 +320,7 @@ number.
 | Identifier | The rule | Where it lives |
 |---|---|---|
 | `BR-95` | Every image of the platform (the avatars, the verse covers, the slides, the cover and the pictures of a blog post) is uploaded through the shared media service with the **5 MB** limit; the platform does **not** screen the format of the file - Cloudinary accepts the image formats and refuses what is not an image | `app/shared/infrastructure/services/image_upload.py` |
+| `BR-99` | The image service is never silenced: the reason Cloudinary gives is written in the log of the deployment and translated into an answer that tells the member whose fault it is - a reason about the file (the format, the weight) stays a `422`, a reason about the service (the credentials, the quota) is a `503`, the fault is ours; an API secret that repeats the API key is refused before the call, because it can never work | `app/shared/infrastructure/services/image_upload.py` |
 
 ## The session of a cross-site deployment
 

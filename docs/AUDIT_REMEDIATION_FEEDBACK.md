@@ -610,7 +610,60 @@ answer of a post that does not exist, so a draft cannot be discovered.
 | `7f31322` | the honest answer of a comment on an unpublished post (backend) |
 | `1a91753` | the comment box of a draft and the reason of a refused comment (frontend) |
 | `8a21c0c` | the four sentences of the Google sign-in (frontend) |
-| the documentation | BR-97 and BR-98, this section, and the plan |
+| `c7c86a2` | the reason of the image service is never swallowed (backend) |
+| `09c71de` | the four Arabic sentences of the image service (frontend) |
+| the documentation | BR-97, BR-98 and BR-99, this section, and the plan |
+
+#### The third defect of the wave — the photo that never arrived
+
+The owner reported a third failure while the wave was running: **the
+upload of a photo answers 422** with
+`{"detail":{"code":"validation_error","message":"Image upload failed; please try again"}}`.
+
+The same answer was produced for a **1×1 pixel PNG** — the smallest
+image that exists — and through the rewrite as well as directly, so the
+file was never the problem.
+
+The message was the clue: it is the answer of the platform for **every**
+refusal of Cloudinary, because the reason of the service was thrown
+away. Reading the credentials of the environment showed the copy-paste
+mistake:
+
+```
+CLOUDINARY_API_KEY=661358426227631
+CLOUDINARY_API_SECRET=661358426227631   ← the key, pasted twice
+```
+
+The API secret is **not** the API key: with that pair Cloudinary
+answers `401 {"error":{"message":"Invalid Signature ..."}}` — and the
+platform answered "try again" for everything.
+
+**The fix (BR-99)**: the reason of the service is written in the log of
+the deployment and translated into an answer that tells the member whose
+fault it is — a reason about the file stays a `422`, a reason about the
+service (the credentials, the quota) is a `503` — and the copy-paste
+mistake is caught **before** the call, because a secret that repeats
+the key can never work.
+
+The production now answers the truth:
+
+```json
+{"detail":{"code":"image_service_unavailable",
+           "message":"The image service refused the credentials of the platform"}}
+```
+
+⇒ **The owner has one action left**: copy the **API secret** of the
+Cloudinary dashboard (Settings → API keys) into the variable
+`CLOUDINARY_API_SECRET` of the Vercel project (and of the local
+`backend/.env`). The value that is there now is the API key.
+
+#### The verification of the wave in the production
+
+| The check | The answer |
+|---|---|
+| The Google sign-in, in a browser context | the start answers `303` with the state cookie on the **frontend origin**; the callback of the **API domain** answers `303 → https://marmarkosabnub.vercel.app/api/v1/auth/google/callback?…&handoff=1` (the hand-off); the callback of the frontend origin answers `#error=identity_failed` — the **exchange with Google was attempted**, so the state was verified and the sign-in now only waits for a real code |
+| The upload of a 1×1 PNG | `503 image_service_unavailable` — the truth instead of "try again" |
+| The bundle of the frontend in the production | carries the four sentences of the Google sign-in, the sentence of the draft and the sentence of the image service |
 
 ---
 
