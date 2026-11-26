@@ -249,6 +249,30 @@ describe("the pages of the verification", () => {
     );
   });
 
+  it("says that the attempt expired when the state was lost", async () => {
+    renderPage(<GoogleCallbackPage />, {
+      route: "/auth/google/callback#error=invalid_state",
+    });
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/انتهت صلاحية محاولة تسجيل الدخول عبر Google/),
+      ).toBeInTheDocument(),
+    );
+  });
+
+  it("says that the attempt was cancelled", async () => {
+    renderPage(<GoogleCallbackPage />, {
+      route: "/auth/google/callback#error=access_denied",
+    });
+
+    await waitFor(() =>
+      expect(
+        screen.getByText(/تم إلغاء تسجيل الدخول عبر Google/),
+      ).toBeInTheDocument(),
+    );
+  });
+
   it("waits for Google when the callback carries a token", async () => {
     renderPage(<GoogleCallbackPage />, {
       route: "/auth/google/callback#access_token=abc",

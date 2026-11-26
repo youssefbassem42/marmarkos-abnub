@@ -31,15 +31,29 @@ export function GoogleCallbackPage() {
     const expiresIn = Number(hash.get("expires_in") ?? 0);
 
     if (error || !accessToken) {
-      setErrorMessage(
-        error === "not_configured"
-          ? t("google.notConfigured")
-          : error === "account_inactive"
-            ? t("google.accountInactive")
-            : error === "identity_failed"
-              ? t("google.identityFailed")
-              : t("google.failed"),
-      );
+      /*
+        Every answer of the backend has its own sentence: the member
+        must know whether Google is not configured, whether the account
+        is closed, whether he cancelled, or whether the attempt simply
+        expired. One sentence for all of them hides the truth.
+      */
+      const message = (() => {
+        switch (error) {
+          case "not_configured":
+            return t("google.notConfigured");
+          case "account_inactive":
+            return t("google.accountInactive");
+          case "identity_failed":
+            return t("google.identityFailed");
+          case "invalid_state":
+            return t("google.invalidState");
+          case "access_denied":
+            return t("google.accessDenied");
+          default:
+            return t("google.failed");
+        }
+      })();
+      setErrorMessage(message);
       setPhase("failed");
       return;
     }
@@ -49,7 +63,8 @@ export function GoogleCallbackPage() {
       try {
         const user = await getMe(accessToken);
         if (cancelled) return;
-        // The refresh cookie was set by the backend on the API domain.
+        // The refresh cookie was set by the backend on this origin (the
+        // rewrite of the frontend forwards the callback to the API).
         saveAuth({ accessToken, user }, true);
         // The session must outlive the access token (the proactive
         // refresh).
