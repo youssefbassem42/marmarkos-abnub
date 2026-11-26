@@ -515,6 +515,103 @@ had never reloaded a page, so the defect that the owner reported every
 day had no test to catch it. The journey now exists
 (`frontend/e2e/auth.spec.ts`).
 
+### 4.8 The sixth wave (2026-11-26) — the Google sign-in and the comment that vanished
+
+The owner reported two defects from the production: **the sign-in with
+Google does not work**, and **a comment that was posted does not
+appear** — and the database holds nothing.
+
+#### The migrations first (the owner asked to run them)
+
+The production database was read before anything was changed:
+
+| The question | The answer |
+|---|---|
+| `alembic current` | `a7b8c9d0e1f2` — **the head** |
+| `alembic heads` | `a7b8c9d0e1f2` — one head, no fork |
+| `alembic check` | "No new upgrade operations detected" — **no drift** between the models and the migrations |
+| The three blog migrations of the fourth wave | **applied** (`e5f6a7b8c9d0`, `f6a7b8c9d0e1`, `a7b8c9d0e1f2`) |
+| `refresh_tokens.token_hash` / `auth_tokens.token_hash` | `varchar(128)` — wide enough for the 67 characters of a `v2:` hash |
+| The stored hashes | 36 `v2:` and 112 legacy, the longest **67 characters**, none truncated |
+
+⇒ **There was nothing to migrate, and no schema to fix.** The fourth
+round had blamed a truncated column; the production says the opposite.
+The hypothesis was tested in a scratch database (a column of 64
+characters really does refuse the 67-character hash) and then dropped:
+the column of the production has been 128 for a long time.
+
+#### The diagnosis of the Google sign-in
+
+The flow was read from the top and then **watched in the production**:
+
+| The step | What it said |
+|---|---|
+| `GET /api/v1/auth/google/login` (through the rewrite of the frontend) | answers `303` with `Set-Cookie: google_oauth_state=…; Path=/api/v1/auth/google; SameSite=lax; Secure` — the browser stores it for **the frontend origin** |
+| the same answer | sends the browser to Google with `redirect_uri=https://marmarkos-abnub-ny1l.vercel.app/api/v1/auth/google/callback` — **the API domain** (the rewrite replaces the host, so the API sees its own host) |
+| Google sends the browser to that callback | the browser goes to the **API domain** |
+| the callback reads `request.cookies` | the state cookie is on the **frontend origin** ⇒ **it is not sent** ⇒ `expected_state` is empty ⇒ `303 → /google/callback#error=invalid_state` |
+| the frontend | `invalid_state` was in no list ⇒ one generic sentence for every failure |
+
+The proof that the URI of the Google Console is the API domain: the
+frontend origin as the `redirect_uri` answers **"Error 400:
+redirect_uri_mismatch"** at Google, while the API domain passes to the
+sign-in page. The flow was therefore broken **for every member**, and
+never by a cookie attribute: the cookie never left the browser.
+
+**The fix (BR-97)**: the callback hands the browser back to the origin
+that started the sign-in. The rewrite of the frontend forwards it to
+the API **with** the cookie, the state is verified, the code is
+exchanged, and the cookie of the session is set on the frontend origin
+— where the member's browser can send it back. The hand-off happens
+**once**: the marker in the query turns a second missing cookie into an
+honest error instead of a loop. The redirect URI does not change: the
+host the API sees is the same in the authorization request and in the
+exchange of the code, so the Google Console needs nothing.
+
+The frontend now says what happened: an expired attempt, a cancelled
+attempt, a closed account and a missing configuration have four
+different Arabic sentences.
+
+#### The diagnosis of the comment
+
+The database answered first:
+
+| The question | The answer |
+|---|---|
+| The rows of `comments` | **0** — the comment was never written |
+| The rows of `blog_comment_likes` | 0 |
+| The posts of the production | two `DRAFT`, one `ARCHIVED` — **no published post at all** |
+
+The reason is in the rules: the comments of a post are public, so only
+a **published and due** post accepts them (BR-81). The owner wrote the
+comment on a draft — the administration shows a draft to its author —
+and the backend answered `404 "Post not found"`.
+
+Two faults made the failure invisible:
+
+1. the frontend offered the comment box on a draft, where the server
+   refuses every comment;
+2. the mutation had no `onError`: the rejection vanished, the box came
+   back empty, and the member was left with the belief that the comment
+   had been sent.
+
+**The fix (BR-98)**: the box is shown only for a published post (the
+others are told when the comments arrive), the reason of the server is
+shown in a toast, and the backend tells the **truth** to the people who
+may see the draft anyway (its author, an administrator, a servant):
+"The post is not published yet" (409). Every other member keeps the
+answer of a post that does not exist, so a draft cannot be discovered.
+
+#### The commits of the wave
+
+| The commit | The concern |
+|---|---|
+| `299baa8` | the hand-off of the Google callback to the origin that started the sign-in (backend) |
+| `7f31322` | the honest answer of a comment on an unpublished post (backend) |
+| `1a91753` | the comment box of a draft and the reason of a refused comment (frontend) |
+| `8a21c0c` | the four sentences of the Google sign-in (frontend) |
+| the documentation | BR-97 and BR-98, this section, and the plan |
+
 ---
 
 ## 5. How it was verified

@@ -327,6 +327,13 @@ number.
 |---|---|---|
 | `BR-96` | The cookie of the refresh token follows the shape of the deployment: a same-site call keeps it first-party (`SameSite=lax`), a cross-site call (the API on another site than the frontend) gets `SameSite=None` with the `Secure` flag, otherwise the browser would never send it back and the member would be logged out at every reload | `app/modules/auth/presentation/cookies.py` |
 
+## The Google sign-in of a split deployment
+
+| Identifier | The rule | Where it lives |
+|---|---|---|
+| `BR-97` | The Google sign-in finishes on the origin that started it: the state cookie lives on the frontend origin, so the callback that Google sends to the API domain hands the browser back to the frontend origin (once - the marker in the query stops a loop), where the rewrite forwards it to the API together with the cookie; the sign-in never ends with "invalid_state" because the cookie stayed on another domain | `app/modules/auth/presentation/router.py` |
+| `BR-98` | Only a published and due post accepts comments: the author of the post, an administrator and a servant are told the truth (\"The post is not published yet\", 409), every other member gets the answer of a post that does not exist (404) so a draft cannot be discovered, and the platform offers the comment box only for a published post | `app/modules/comments/application/commands/comment_commands.py`, `frontend/src/modules/blog/components/CommentSection.tsx` |
+
 ## The comments of the blog posts (the point 7 of the plan)
 
 | Identifier | The rule | Where it lives |

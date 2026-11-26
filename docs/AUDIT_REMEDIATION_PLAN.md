@@ -333,3 +333,19 @@ and **the cover of a blog post was refused with a 422**.
 | The errors say what happened | The member sees a real Arabic sentence for every failure — the code of the API, the status, and the known reason of the server — and knows whether the fault is his or ours | `frontend/src/lib/errorMessages.ts`, `frontend/src/hooks/useApiError.ts` |
 | The upload says what happened | The image that is too big is refused **before** it leaves the browser, with a clear Arabic sentence, and the real reason of the server replaces the generic "failed" | `frontend/src/modules/blog/pages/blog/BlogPostFormPage.tsx` and the other upload surfaces |
 | The journey of the reload | The end-to-end suite now proves that a member who signs in is still signed in after a reload of the page — the journey that was missing when the defect was reported | `frontend/e2e/auth.spec.ts` |
+
+## The sixth wave (2026-11-26) — the Google sign-in and the comment that vanished
+
+The owner reported two defects from the production: **the sign-in with
+Google does not work**, and **a comment that was posted does not
+appear** — and the database holds nothing. The owner also asked to run
+the migrations: the production database is already at the head
+(`a7b8c9d0e1f2`), `alembic check` finds no drift, and **there was
+nothing to migrate and no schema to fix**.
+
+| The concern | What it is | Where it lives |
+|---|---|---|
+| The Google sign-in finishes | Google sends the browser to the callback of the **API domain**, but the state cookie lives on the **frontend origin** (the browser stored it there), and a cookie of one domain is never sent to another one: the callback always answered `invalid_state` and the sign-in never finished. The callback now hands the browser back to the origin that started the sign-in — once, so a missing cookie cannot loop — and the redirect URI of the Google Console stays the same (BR-97) | `backend/app/modules/auth/presentation/router.py` |
+| The Google sign-in says what happened | An expired attempt, a cancelled attempt, a closed account and a missing configuration have four different Arabic sentences instead of one generic failure | `frontend/src/pages/auth/google-callback/GoogleCallbackPage.tsx` |
+| A comment on a draft tells the truth | Only a published and due post accepts comments (the tree of a draft is not public). The author of the post and the administration are told the truth ("The post is not published yet", 409); every other member keeps the answer of a post that does not exist, so a draft cannot be discovered (BR-98) | `backend/app/modules/comments/application/commands/comment_commands.py` |
+| A comment on a draft explains itself | The comment box is shown only for a published post (the others are told when the comments arrive), and the reason of a refused comment is shown in a toast instead of vanishing | `frontend/src/modules/blog/components/CommentSection.tsx` |
