@@ -1,7 +1,8 @@
 import logging
 import secrets
+from urllib.parse import urlencode
 
-from fastapi import APIRouter, BackgroundTasks, Request, Response
+from fastapi import APIRouter, BackgroundTasks, Query, Request, Response
 from fastapi.responses import RedirectResponse
 
 from app.config import settings
@@ -53,6 +54,11 @@ logger = logging.getLogger(__name__)
 _REFRESH_COOKIE_MAX_AGE = settings.JWT_REFRESH_TOKEN_EXPIRE_DAYS * 24 * 60 * 60
 _OAUTH_STATE_COOKIE = "google_oauth_state"
 _OAUTH_STATE_MAX_AGE = 600
+_GOOGLE_CALLBACK_PATH = "/api/v1/auth/google/callback"
+# The marker that tells the callback "the browser was already sent back
+# to the frontend origin once"; it keeps a missing cookie from causing a
+# loop of hand-offs.
+_GOOGLE_HANDOFF_PARAM = "handoff"
 
 
 def _frontend_url() -> str:
@@ -62,9 +68,43 @@ def _frontend_url() -> str:
 
 
 def _google_redirect_uri(request: Request) -> str:
-    """Callback URL on this API deployment; must match Google Console."""
+    """Callback URL on this API deployment; must match Google Console.
+
+    It is derived from the host of the request, so the authorization
+    request and the exchange of the code always name the same URL: the
+    hand-off below sends the browser back to the frontend origin, but
+    the host the API sees does not change (the rewrite replaces it with
+    the host of the API), so both steps keep naming the API domain -
+    the one the Google Console knows.
+    """
     base = str(request.base_url).rstrip("/")
-    return f"{base}/api/v1/auth/google/callback"
+    return f"{base}{_GOOGLE_CALLBACK_PATH}"
+
+
+def _google_handoff_response(request: Request) -> RedirectResponse:
+    """Send the browser back to the origin that started the sign-in.
+
+    Google sends the browser to the callback of the **API** domain, but
+    the state cookie lives on the **frontend** domain: the browser
+    stored it there when the flow started, and a cookie of one domain
+    is never sent to another one. The callback on the API domain would
+    therefore always answer "invalid_state" and the sign-in would never
+    finish.
+
+    The browser is sent back to the frontend origin instead, where the
+    rewrite forwards the callback to the API - this time with the cookie
+    in the request. The hand-off happens only once: the marker in the
+    query turns a second missing cookie into an honest error instead of
+    a loop.
+    """
+    params = {
+        key: value for key, value in request.query_params.items() if key != _GOOGLE_HANDOFF_PARAM
+    }
+    params[_GOOGLE_HANDOFF_PARAM] = "1"
+    return RedirectResponse(
+        f"{_frontend_url()}{_GOOGLE_CALLBACK_PATH}?{urlencode(params)}",
+        status_code=303,
+    )
 
 
 @router.get(
@@ -108,6 +148,10 @@ async def google_login_callback(
     code: str | None = None,
     state: str | None = None,
     error: str | None = None,
+    handoff: str | None = Query(
+        default=None,
+        description="Set by the hand-off between the API domain and the frontend origin",
+    ),
 ) -> RedirectResponse:
     """Handle Google's redirect: verify state, sign the user in, bounce home."""
     frontend = _frontend_url()
@@ -119,7 +163,14 @@ async def google_login_callback(
         return back(f"#error={error}")
 
     expected_state = request.cookies.get(_OAUTH_STATE_COOKIE)
-    if not code or not state or not expected_state or state != expected_state:
+    if not expected_state:
+        # The state cookie did not arrive: the callback landed on
+        # another origin than the one that started the flow. The
+        # browser goes back there - once.
+        if handoff != "1":
+            return _google_handoff_response(request)
+        return back("#error=invalid_state")
+    if not code or not state or state != expected_state:
         return back("#error=invalid_state")
 
     try:

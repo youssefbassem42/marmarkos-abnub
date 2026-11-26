@@ -102,11 +102,83 @@ async def test_callback_links_existing_account(client: AsyncClient, patch_exchan
 
 
 async def test_callback_rejects_forged_state(client: AsyncClient, patch_exchange) -> None:
+    """A state that does not match the cookie of the browser is refused."""
+    mock = patch_exchange()
+    mock.assert_not_called()
+
+    # The flow starts, so the browser holds a state cookie of its own.
+    await _start_flow(client)
+
+    response = await client.get(
+        f"{GOOGLE_CALLBACK_URL}?code=abc123&state=forged", follow_redirects=False
+    )
+
+    assert response.status_code == 303
+    assert response.headers["location"].endswith("#error=invalid_state")
+
+
+async def test_callback_hands_the_browser_back_to_the_frontend_origin(
+    client: AsyncClient, patch_exchange
+) -> None:
+    """The callback of the API domain must return to the frontend origin.
+
+    The state cookie lives on the frontend origin (the browser stored it
+    there when the flow started), so the API domain cannot verify the
+    state: it sends the browser back, where the rewrite hands the
+    callback to the API together with the cookie.
+    """
     mock = patch_exchange()
     mock.assert_not_called()
 
     response = await client.get(
-        f"{GOOGLE_CALLBACK_URL}?code=abc123&state=forged", follow_redirects=False
+        f"{GOOGLE_CALLBACK_URL}?code=abc123&state=some-state", follow_redirects=False
+    )
+
+    assert response.status_code == 303
+    location = response.headers["location"]
+    assert location.startswith("https://app.example.com/api/v1/auth/google/callback?")
+    assert "code=abc123" in location
+    assert "state=some-state" in location
+    assert "handoff=1" in location
+
+
+async def test_the_sign_in_completes_after_the_handoff(
+    client: AsyncClient, db_engine, patch_exchange
+) -> None:
+    """The whole flow: Google -> the API domain -> the frontend origin."""
+    patch_exchange()
+    state = await _start_flow(client)
+
+    # The browser arrives at the API domain without the cookie.
+    original = next(cookie for cookie in client.cookies.jar if cookie.name == "google_oauth_state")
+    client.cookies.delete("google_oauth_state")
+    first = await client.get(
+        f"{GOOGLE_CALLBACK_URL}?code=abc123&state={state}", follow_redirects=False
+    )
+
+    assert first.status_code == 303
+    assert "handoff=1" in first.headers["location"]
+
+    # The browser is back on the frontend origin, where the cookie lives.
+    client.cookies.set("google_oauth_state", state, domain=original.domain, path=original.path)
+    second = await client.get(
+        f"{GOOGLE_CALLBACK_URL}?code=abc123&state={state}&handoff=1", follow_redirects=False
+    )
+
+    assert second.status_code == 303
+    assert "access_token=" in second.headers["location"]
+
+
+async def test_callback_without_the_cookie_after_the_handoff_is_rejected(
+    client: AsyncClient, patch_exchange
+) -> None:
+    """A second hand-off must not happen: the error is honest instead."""
+    mock = patch_exchange()
+    mock.assert_not_called()
+
+    response = await client.get(
+        f"{GOOGLE_CALLBACK_URL}?code=abc123&state=some-state&handoff=1",
+        follow_redirects=False,
     )
 
     assert response.status_code == 303
