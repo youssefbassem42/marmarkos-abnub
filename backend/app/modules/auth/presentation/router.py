@@ -95,7 +95,7 @@ def _google_handoff_response(request: Request) -> RedirectResponse:
     rewrite forwards the callback to the API - this time with the cookie
     in the request. The hand-off happens only once: the marker in the
     query turns a second missing cookie into an honest error instead of
-    a loop.
+    a loop (BR-97).
     """
     params = {
         key: value for key, value in request.query_params.items() if key != _GOOGLE_HANDOFF_PARAM

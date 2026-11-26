@@ -21,7 +21,8 @@ interface CommentSectionProps {
   postId: string;
   /**
    * The lifecycle of the post. Only a published post accepts comments:
-   * the tree of a draft is not public, so the server refuses it (BR-64).
+   * the tree of a draft is not public, so the server refuses it (BR-64,
+   * BR-98).
    */
   status: string;
 }

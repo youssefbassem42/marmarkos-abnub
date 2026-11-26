@@ -45,7 +45,8 @@ async def _require_published_post(uow: UnitOfWork, post_id: uuid.UUID, actor: Us
     The manager of a post (its author, an administrator, a servant) sees
     the draft in the administration, so telling them "not found" would
     be a lie: they are told the truth. Everybody else gets the answer of
-    a post that does not exist, so a draft cannot be discovered (BR-64).
+    a post that does not exist, so a draft cannot be discovered (BR-64,
+    BR-98).
     """
     post = await uow.blog_posts.get_by_id(post_id)
     if post is None:
