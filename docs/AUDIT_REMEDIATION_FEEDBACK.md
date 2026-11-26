@@ -470,6 +470,40 @@ says plainly that the problem is not on the member's side. The map
 carries the ~90 reasons the server can send, and the upload surfaces
 check the **5 MB** in the browser before the file leaves it.
 
+#### The second round on the same defect (the owner reported it again)
+
+The owner came back with the same 401 after the wave had landed:
+`{"detail":{"code":"unauthorized","message":"Not authenticated"}}`, and
+a re-authentication at every reload **and** at every page that needs a
+fresh token.
+
+The message was the clue. The router raises it **only** when the
+cookie is missing (`router.py`); the service that checks the token
+itself answers *"Invalid or expired refresh token"*. ⇒ The token in
+the database was never the problem: **the cookie never arrived**.
+
+The chain was then read from the top:
+
+| The step | What it said |
+|---|---|
+| The public suffix list carries `vercel.app` | ⇒ `marmarkosabnub.vercel.app` and `marmarkos-abnub-ny1l.vercel.app` are **two different sites** |
+| The frontend of the production called the API on the other site | ⇒ the cookie of the session is a **third-party** cookie |
+| A third-party cookie is blocked by the browser (and `SameSite=None` cannot save it) | ⇒ the cookie is never stored, the silent refresh finds nothing, and the member is signed out |
+| The bundle in production was built **before** the owner deleted `VITE_API_BASE_URL` | ⇒ the deletion alone could not fix the running build: the value is baked into the bundle by the build |
+
+⇒ The fix could not be "the environment variable is right now": **the
+code itself** had to refuse to send the member's browser to another
+site. `resolveApiBaseUrl()` now returns the same-origin path whatever
+the environment says, and writes the reason in the console of the
+browser. The rewrite of `vercel.json` was verified to forward the
+cookies with their path (`Path=/api/v1/auth`, `SameSite=lax`,
+`Secure`) — so the same-origin path carries the session.
+
+The refresh also writes the origin and the host of a call that arrives
+without its cookie: a visitor who is not signed in yet stays quiet, a
+member who still carries an access token raises a warning. The cause is
+in the log of the deployment instead of being a mystery for the member.
+
 #### What the review caught
 
 | # | The defect | The consequence | The fix |
