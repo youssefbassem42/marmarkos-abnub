@@ -695,6 +695,28 @@ cd frontend
 npx playwright test --reporter=list         # 5 passed (18s)
 ```
 
+The gates of the sixth wave (2026-11-26):
+
+```bash
+# Backend
+.venv/bin/ruff check app tests             # All checks passed!
+.venv/bin/ruff format --check app tests    # 557 files already formatted
+.venv/bin/mypy app                         # Success: no issues found in 441 source files
+.venv/bin/python -m pytest --cov=app       # 773 passed, coverage 77.98% (floor 77.7)
+.venv/bin/alembic check                    # No new upgrade operations detected (the migrated database)
+.venv/bin/schemathesis run http://127.0.0.1:18099/openapi.json   # 4388 cases, 0 failures
+
+# Frontend
+npm run format:check                       # All matched files use Prettier code style!
+npm run lint -- --max-warnings 0           # clean
+npx tsc -b --force                         # clean
+npx vitest run                             # 82 files, 548 tests passed
+npm run build                              # built successfully
+
+# End-to-end
+npx playwright test --reporter=list        # 13 passed (58s)
+```
+
 The end-to-end run is hermetic: it **rebuilds its own database**
 (`marmarkos_e2e`) from the migrations before every run — only a database
 whose name says "e2e" is ever dropped, the database of the unit tests is
