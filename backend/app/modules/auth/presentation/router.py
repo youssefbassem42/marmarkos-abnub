@@ -305,6 +305,29 @@ async def refresh(
     check_refresh_attempt(request)
     refresh_token = request.cookies.get(REFRESH_TOKEN_COOKIE_NAME)
     if refresh_token is None:
+        # The cookie of the session is missing: the browser either never
+        # stored it (it arrived from another site and the browser blocked
+        # the third-party cookie) or never sent it back. The origin of
+        # the call is written in the log, so the cause is visible in the
+        # deployment instead of being a mystery for the member.
+        #
+        # A member who is not signed in yet also arrives here (the
+        # restore of the start-up): that is normal and stays quiet. A
+        # member who **carries an access token** and still has no cookie
+        # is the real problem, and it is a warning.
+        if request.headers.get("authorization"):
+            logger.warning(
+                "The silent refresh arrived without the session cookie "
+                "while the member carries an access token (origin=%r "
+                "host=%r). The frontend must call its own origin.",
+                request.headers.get("origin"),
+                request.headers.get("host"),
+            )
+        else:
+            logger.debug(
+                "The silent refresh arrived without the session cookie (origin=%r).",
+                request.headers.get("origin"),
+            )
         raise UnauthorizedError("Not authenticated")
     result = await AuthenticationService(session).refresh(
         refresh_token,
