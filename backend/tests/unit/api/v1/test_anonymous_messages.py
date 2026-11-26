@@ -119,9 +119,20 @@ async def test_browser_payload_with_explicit_nulls_is_accepted(
     validator with ``None`` and raise a TypeError — a 500 in production
     while every test here passed, because they all omitted the keys.
     """
+    marker = uuid.uuid4().hex
     for payload in (
-        {**_VALID, "sender_name": None, "sender_phone": None},
-        {**_VALID, "sender_name": "", "sender_phone": ""},
+        {
+            **_VALID,
+            "message": f"{_VALID['message']} {marker}",
+            "sender_name": None,
+            "sender_phone": None,
+        },
+        {
+            **_VALID,
+            "message": f"{_VALID['message']} {marker}",
+            "sender_name": "",
+            "sender_phone": "",
+        },
     ):
         response = await client.post(ANONYMOUS_URL, json=payload)
 
@@ -132,7 +143,18 @@ async def test_browser_payload_with_explicit_nulls_is_accepted(
 
     from app.modules.anonymous_messages.infrastructure.persistence.models import AnonymousMessage
 
-    rows = (await uow.session.execute(select(AnonymousMessage))).scalars().all()
+    # Only the rows of this test are counted: the table is shared with
+    # the other tests (and with a database that was used before), and a
+    # row that is not ours must not fail the count.
+    rows = (
+        (
+            await uow.session.execute(
+                select(AnonymousMessage).where(AnonymousMessage.message.like(f"%{marker}%"))
+            )
+        )
+        .scalars()
+        .all()
+    )
     assert len(rows) == 2
     # A blank input is stored as NULL, never as an empty string.
     assert all(row.sender_name is None and row.sender_phone is None for row in rows)
