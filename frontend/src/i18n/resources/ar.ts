@@ -9,6 +9,11 @@ export const apiServerMessageKeys = {
   "The uploaded file is empty": "api.imageEmpty",
   "Image upload failed; please try again": "api.imageUploadFailed",
   "Image uploads are not configured": "api.imageUploadsDisabled",
+  "The image service refused the credentials of the platform":
+    "api.imageServiceCredentials",
+  "The image service has no room left": "api.imageServiceQuota",
+  "The image service is not available": "api.imageServiceUnavailable",
+  "This file is not an image": "api.notAnImage",
   "Only JPEG, PNG or WebP images are allowed": "api.imageUploadFailed",
   "Invalid credentials": "api.invalidCredentials",
   "Account is not active": "api.accountInactive",
@@ -122,6 +127,13 @@ export const ar = {
       imageUploadFailed: "فشل رفع الصورة. تأكد أن الملف صورة ثم حاول مرة أخرى.",
       imageUploadsDisabled:
         "خدمة رفع الصور غير مهيأة حاليًا. تواصل مع الإدارة للمساعدة.",
+      imageServiceCredentials:
+        "تعذّر على المنصة رفع الصورة لأن خدمة الصور رفضت بيانات الاعتماد. المشكلة عندنا، يرجى المحاولة بعد قليل.",
+      imageServiceQuota:
+        "نفدت المساحة المتاحة في خدمة الصور. المشكلة عندنا، يرجى المحاولة بعد قليل.",
+      imageServiceUnavailable:
+        "خدمة رفع الصور غير متاحة الآن. المشكلة عندنا، يرجى المحاولة بعد قليل.",
+      notAnImage: "الملف الذي اخترته ليس صورة. اختر ملفًا آخر وحاول مرة أخرى.",
       invalidCredentials: "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
       emailNotVerified:
         "يجب تأكيد بريدك الإلكتروني أولًا. افتح رسالة التحقق المرسلة إليك.",

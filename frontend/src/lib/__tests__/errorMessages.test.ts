@@ -249,6 +249,16 @@ describe("the Arabic translator of API errors", () => {
       "فشل رفع الصورة. تأكد أن الملف صورة ثم حاول مرة أخرى.",
     ],
     [
+      "The image service refused the credentials of the platform",
+      "image_service_unavailable",
+      "تعذّر على المنصة رفع الصورة لأن خدمة الصور رفضت بيانات الاعتماد. المشكلة عندنا، يرجى المحاولة بعد قليل.",
+    ],
+    [
+      "This file is not an image",
+      "validation_error",
+      "الملف الذي اخترته ليس صورة. اختر ملفًا آخر وحاول مرة أخرى.",
+    ],
+    [
       "Invalid credentials",
       "unauthorized",
       "البريد الإلكتروني أو كلمة المرور غير صحيحة.",
