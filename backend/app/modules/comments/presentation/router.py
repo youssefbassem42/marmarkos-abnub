@@ -48,6 +48,7 @@ _Size = Annotated[int, Query(ge=1, le=100, description="Top-level comments per p
 _COMMENT_FAILURES: dict[int | str, dict[str, Any]] = {
     403: {"description": "Insufficient permissions"},
     404: {"description": "Post or comment not found"},
+    409: {"description": "The post is not published yet"},
     422: {"description": "The comment is empty or has more than 500 words"},
 }
 

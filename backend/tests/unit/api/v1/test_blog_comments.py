@@ -117,6 +117,22 @@ async def _published_post(db_engine, author_id: uuid.UUID) -> uuid.UUID:
     return post_id
 
 
+async def _draft_post(db_engine, author_id: uuid.UUID) -> uuid.UUID:
+    post_id = uuid.uuid4()
+    async with db_engine.begin() as connection:
+        await connection.execute(
+            insert(BlogPost).values(
+                id=post_id,
+                author_id=author_id,
+                title="مسودة بلا نشر",
+                slug=f"draft-{post_id.hex}",
+                content="نص المسودة",
+                status=PostStatus.DRAFT,
+            )
+        )
+    return post_id
+
+
 async def _create_comment(
     client: AsyncClient,
     headers: dict[str, str],
@@ -412,3 +428,35 @@ async def test_a_missing_post_and_an_anonymous_member_are_refused(
 
     assert missing.status_code == 404
     assert anonymous.status_code == 401
+
+
+async def test_the_manager_of_a_draft_is_told_the_truth(client: AsyncClient, db_engine) -> None:
+    """A draft cannot be commented on, but its author deserves the truth.
+
+    The author of the post and the administration see the draft, so
+    "not found" would be a lie: they are told that the post is not
+    published yet (409).
+    """
+    author_id, author = await _actor(client, db_engine, email="comment-draft-author@example.com")
+    _, admin = await _actor(
+        client, db_engine, email="comment-draft-admin@example.com", role=RoleName.ADMIN
+    )
+    _, member = await _actor(client, db_engine, email="comment-draft-member@example.com")
+    post_id = await _draft_post(db_engine, author_id)
+
+    for headers in (author, admin):
+        response = await client.post(
+            f"{POSTS_URL}/{post_id}/comments",
+            json={"content": "تعليق على المسودة"},
+            headers=headers,
+        )
+        assert response.status_code == 409, response.text
+        assert response.json()["detail"]["message"] == "The post is not published yet"
+
+    # A member who does not manage the post learns nothing about it.
+    hidden = await client.post(
+        f"{POSTS_URL}/{post_id}/comments",
+        json={"content": "تعليق على المسودة"},
+        headers=member,
+    )
+    assert hidden.status_code == 404
